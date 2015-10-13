@@ -16,17 +16,17 @@ const (
 	/**
 	 * \brief A language keyword.
 	 */
-	Token_Keyword TokenKind = C.CXToken_Keyword
+	Token_Keyword = C.CXToken_Keyword
 	/**
 	 * \brief An identifier (that is not a keyword).
 	 */
-	Token_Identifier TokenKind = C.CXToken_Identifier
+	Token_Identifier = C.CXToken_Identifier
 	/**
 	 * \brief A numeric, string, or character literal.
 	 */
-	Token_Literal TokenKind = C.CXToken_Literal
+	Token_Literal = C.CXToken_Literal
 	/**
 	 * \brief A comment.
 	 */
-	Token_Comment TokenKind = C.CXToken_Comment
+	Token_Comment = C.CXToken_Comment
 )

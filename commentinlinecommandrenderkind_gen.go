@@ -17,14 +17,14 @@ const (
 	/**
 	 * \brief Command argument should be rendered in a bold font.
 	 */
-	CommentInlineCommandRenderKind_Bold CommentInlineCommandRenderKind = C.CXCommentInlineCommandRenderKind_Bold
+	CommentInlineCommandRenderKind_Bold = C.CXCommentInlineCommandRenderKind_Bold
 	/**
 	 * \brief Command argument should be rendered in a monospaced font.
 	 */
-	CommentInlineCommandRenderKind_Monospaced CommentInlineCommandRenderKind = C.CXCommentInlineCommandRenderKind_Monospaced
+	CommentInlineCommandRenderKind_Monospaced = C.CXCommentInlineCommandRenderKind_Monospaced
 	/**
 	 * \brief Command argument should be rendered emphasized (typically italic
 	 * font).
 	 */
-	CommentInlineCommandRenderKind_Emphasized CommentInlineCommandRenderKind = C.CXCommentInlineCommandRenderKind_Emphasized
+	CommentInlineCommandRenderKind_Emphasized = C.CXCommentInlineCommandRenderKind_Emphasized
 )

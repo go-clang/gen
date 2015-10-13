@@ -57,7 +57,7 @@ const (
 	 * expected to filter the code-completion results based on the text in this
 	 * chunk.
 	 */
-	CompletionChunk_TypedText CompletionChunkKind = C.CXCompletionChunk_TypedText
+	CompletionChunk_TypedText = C.CXCompletionChunk_TypedText
 	/**
 	 * \brief Text that should be inserted as part of a code-completion result.
 	 *
@@ -65,7 +65,7 @@ const (
 	 * inserted into user code should this particular code-completion result
 	 * be selected.
 	 */
-	CompletionChunk_Text CompletionChunkKind = C.CXCompletionChunk_Text
+	CompletionChunk_Text = C.CXCompletionChunk_Text
 	/**
 	 * \brief Placeholder text that should be replaced by the user.
 	 *
@@ -76,7 +76,7 @@ const (
 	 * text in a placeholder is a suggestion for the text to display before
 	 * the user replaces the placeholder with real code.
 	 */
-	CompletionChunk_Placeholder CompletionChunkKind = C.CXCompletionChunk_Placeholder
+	CompletionChunk_Placeholder = C.CXCompletionChunk_Placeholder
 	/**
 	 * \brief Informative text that should be displayed but never inserted as
 	 * part of the template.
@@ -86,7 +86,7 @@ const (
 	 * right option, but which is not part of the actual template to be inserted
 	 * by code completion.
 	 */
-	CompletionChunk_Informative CompletionChunkKind = C.CXCompletionChunk_Informative
+	CompletionChunk_Informative = C.CXCompletionChunk_Informative
 	/**
 	 * \brief Text that describes the current parameter when code-completion is
 	 * referring to function call, message send, or template specialization.
@@ -106,45 +106,45 @@ const (
 	 * point is after the ","), the code-completion string will contain a
 	 * "current paremeter" chunk to "int y".
 	 */
-	CompletionChunk_CurrentParameter CompletionChunkKind = C.CXCompletionChunk_CurrentParameter
+	CompletionChunk_CurrentParameter = C.CXCompletionChunk_CurrentParameter
 	/**
 	 * \brief A left parenthesis ('('), used to initiate a function call or
 	 * signal the beginning of a function parameter list.
 	 */
-	CompletionChunk_LeftParen CompletionChunkKind = C.CXCompletionChunk_LeftParen
+	CompletionChunk_LeftParen = C.CXCompletionChunk_LeftParen
 	/**
 	 * \brief A right parenthesis (')'), used to finish a function call or
 	 * signal the end of a function parameter list.
 	 */
-	CompletionChunk_RightParen CompletionChunkKind = C.CXCompletionChunk_RightParen
+	CompletionChunk_RightParen = C.CXCompletionChunk_RightParen
 	/**
 	 * \brief A left bracket ('[').
 	 */
-	CompletionChunk_LeftBracket CompletionChunkKind = C.CXCompletionChunk_LeftBracket
+	CompletionChunk_LeftBracket = C.CXCompletionChunk_LeftBracket
 	/**
 	 * \brief A right bracket (']').
 	 */
-	CompletionChunk_RightBracket CompletionChunkKind = C.CXCompletionChunk_RightBracket
+	CompletionChunk_RightBracket = C.CXCompletionChunk_RightBracket
 	/**
 	 * \brief A left brace ('{').
 	 */
-	CompletionChunk_LeftBrace CompletionChunkKind = C.CXCompletionChunk_LeftBrace
+	CompletionChunk_LeftBrace = C.CXCompletionChunk_LeftBrace
 	/**
 	 * \brief A right brace ('}').
 	 */
-	CompletionChunk_RightBrace CompletionChunkKind = C.CXCompletionChunk_RightBrace
+	CompletionChunk_RightBrace = C.CXCompletionChunk_RightBrace
 	/**
 	 * \brief A left angle bracket ('<').
 	 */
-	CompletionChunk_LeftAngle CompletionChunkKind = C.CXCompletionChunk_LeftAngle
+	CompletionChunk_LeftAngle = C.CXCompletionChunk_LeftAngle
 	/**
 	 * \brief A right angle bracket ('>').
 	 */
-	CompletionChunk_RightAngle CompletionChunkKind = C.CXCompletionChunk_RightAngle
+	CompletionChunk_RightAngle = C.CXCompletionChunk_RightAngle
 	/**
 	 * \brief A comma separator (',').
 	 */
-	CompletionChunk_Comma CompletionChunkKind = C.CXCompletionChunk_Comma
+	CompletionChunk_Comma = C.CXCompletionChunk_Comma
 	/**
 	 * \brief Text that specifies the result type of a given result.
 	 *
@@ -152,26 +152,26 @@ const (
 	 * the text buffer. Rather, it is meant to illustrate the type that an
 	 * expression using the given completion string would have.
 	 */
-	CompletionChunk_ResultType CompletionChunkKind = C.CXCompletionChunk_ResultType
+	CompletionChunk_ResultType = C.CXCompletionChunk_ResultType
 	/**
 	 * \brief A colon (':').
 	 */
-	CompletionChunk_Colon CompletionChunkKind = C.CXCompletionChunk_Colon
+	CompletionChunk_Colon = C.CXCompletionChunk_Colon
 	/**
 	 * \brief A semicolon (';').
 	 */
-	CompletionChunk_SemiColon CompletionChunkKind = C.CXCompletionChunk_SemiColon
+	CompletionChunk_SemiColon = C.CXCompletionChunk_SemiColon
 	/**
 	 * \brief An '=' sign.
 	 */
-	CompletionChunk_Equal CompletionChunkKind = C.CXCompletionChunk_Equal
+	CompletionChunk_Equal = C.CXCompletionChunk_Equal
 	/**
 	 * Horizontal space (' ').
 	 */
-	CompletionChunk_HorizontalSpace CompletionChunkKind = C.CXCompletionChunk_HorizontalSpace
+	CompletionChunk_HorizontalSpace = C.CXCompletionChunk_HorizontalSpace
 	/**
 	 * Vertical space ('\n'), after which it is generally a good idea to
 	 * perform indentation.
 	 */
-	CompletionChunk_VerticalSpace CompletionChunkKind = C.CXCompletionChunk_VerticalSpace
+	CompletionChunk_VerticalSpace = C.CXCompletionChunk_VerticalSpace
 )

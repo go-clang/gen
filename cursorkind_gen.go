@@ -20,96 +20,96 @@ const (
 	 */
 	Cursor_UnexposedDecl CursorKind = C.CXCursor_UnexposedDecl
 	/** \brief A C or C++ struct. */
-	Cursor_StructDecl CursorKind = C.CXCursor_StructDecl
+	Cursor_StructDecl = C.CXCursor_StructDecl
 	/** \brief A C or C++ union. */
-	Cursor_UnionDecl CursorKind = C.CXCursor_UnionDecl
+	Cursor_UnionDecl = C.CXCursor_UnionDecl
 	/** \brief A C++ class. */
-	Cursor_ClassDecl CursorKind = C.CXCursor_ClassDecl
+	Cursor_ClassDecl = C.CXCursor_ClassDecl
 	/** \brief An enumeration. */
-	Cursor_EnumDecl CursorKind = C.CXCursor_EnumDecl
+	Cursor_EnumDecl = C.CXCursor_EnumDecl
 	/**
 	 * \brief A field (in C) or non-static data member (in C++) in a
 	 * struct, union, or C++ class.
 	 */
-	Cursor_FieldDecl CursorKind = C.CXCursor_FieldDecl
+	Cursor_FieldDecl = C.CXCursor_FieldDecl
 	/** \brief An enumerator constant. */
-	Cursor_EnumConstantDecl CursorKind = C.CXCursor_EnumConstantDecl
+	Cursor_EnumConstantDecl = C.CXCursor_EnumConstantDecl
 	/** \brief A function. */
-	Cursor_FunctionDecl CursorKind = C.CXCursor_FunctionDecl
+	Cursor_FunctionDecl = C.CXCursor_FunctionDecl
 	/** \brief A variable. */
-	Cursor_VarDecl CursorKind = C.CXCursor_VarDecl
+	Cursor_VarDecl = C.CXCursor_VarDecl
 	/** \brief A function or method parameter. */
-	Cursor_ParmDecl CursorKind = C.CXCursor_ParmDecl
+	Cursor_ParmDecl = C.CXCursor_ParmDecl
 	/** \brief An Objective-C \@interface. */
-	Cursor_ObjCInterfaceDecl CursorKind = C.CXCursor_ObjCInterfaceDecl
+	Cursor_ObjCInterfaceDecl = C.CXCursor_ObjCInterfaceDecl
 	/** \brief An Objective-C \@interface for a category. */
-	Cursor_ObjCCategoryDecl CursorKind = C.CXCursor_ObjCCategoryDecl
+	Cursor_ObjCCategoryDecl = C.CXCursor_ObjCCategoryDecl
 	/** \brief An Objective-C \@protocol declaration. */
-	Cursor_ObjCProtocolDecl CursorKind = C.CXCursor_ObjCProtocolDecl
+	Cursor_ObjCProtocolDecl = C.CXCursor_ObjCProtocolDecl
 	/** \brief An Objective-C \@property declaration. */
-	Cursor_ObjCPropertyDecl CursorKind = C.CXCursor_ObjCPropertyDecl
+	Cursor_ObjCPropertyDecl = C.CXCursor_ObjCPropertyDecl
 	/** \brief An Objective-C instance variable. */
-	Cursor_ObjCIvarDecl CursorKind = C.CXCursor_ObjCIvarDecl
+	Cursor_ObjCIvarDecl = C.CXCursor_ObjCIvarDecl
 	/** \brief An Objective-C instance method. */
-	Cursor_ObjCInstanceMethodDecl CursorKind = C.CXCursor_ObjCInstanceMethodDecl
+	Cursor_ObjCInstanceMethodDecl = C.CXCursor_ObjCInstanceMethodDecl
 	/** \brief An Objective-C class method. */
-	Cursor_ObjCClassMethodDecl CursorKind = C.CXCursor_ObjCClassMethodDecl
+	Cursor_ObjCClassMethodDecl = C.CXCursor_ObjCClassMethodDecl
 	/** \brief An Objective-C \@implementation. */
-	Cursor_ObjCImplementationDecl CursorKind = C.CXCursor_ObjCImplementationDecl
+	Cursor_ObjCImplementationDecl = C.CXCursor_ObjCImplementationDecl
 	/** \brief An Objective-C \@implementation for a category. */
-	Cursor_ObjCCategoryImplDecl CursorKind = C.CXCursor_ObjCCategoryImplDecl
+	Cursor_ObjCCategoryImplDecl = C.CXCursor_ObjCCategoryImplDecl
 	/** \brief A typedef */
-	Cursor_TypedefDecl CursorKind = C.CXCursor_TypedefDecl
+	Cursor_TypedefDecl = C.CXCursor_TypedefDecl
 	/** \brief A C++ class method. */
-	Cursor_CXXMethod CursorKind = C.CXCursor_CXXMethod
+	Cursor_CXXMethod = C.CXCursor_CXXMethod
 	/** \brief A C++ namespace. */
-	Cursor_Namespace CursorKind = C.CXCursor_Namespace
+	Cursor_Namespace = C.CXCursor_Namespace
 	/** \brief A linkage specification, e.g. 'extern "C"'. */
-	Cursor_LinkageSpec CursorKind = C.CXCursor_LinkageSpec
+	Cursor_LinkageSpec = C.CXCursor_LinkageSpec
 	/** \brief A C++ constructor. */
-	Cursor_Constructor CursorKind = C.CXCursor_Constructor
+	Cursor_Constructor = C.CXCursor_Constructor
 	/** \brief A C++ destructor. */
-	Cursor_Destructor CursorKind = C.CXCursor_Destructor
+	Cursor_Destructor = C.CXCursor_Destructor
 	/** \brief A C++ conversion function. */
-	Cursor_ConversionFunction CursorKind = C.CXCursor_ConversionFunction
+	Cursor_ConversionFunction = C.CXCursor_ConversionFunction
 	/** \brief A C++ template type parameter. */
-	Cursor_TemplateTypeParameter CursorKind = C.CXCursor_TemplateTypeParameter
+	Cursor_TemplateTypeParameter = C.CXCursor_TemplateTypeParameter
 	/** \brief A C++ non-type template parameter. */
-	Cursor_NonTypeTemplateParameter CursorKind = C.CXCursor_NonTypeTemplateParameter
+	Cursor_NonTypeTemplateParameter = C.CXCursor_NonTypeTemplateParameter
 	/** \brief A C++ template template parameter. */
-	Cursor_TemplateTemplateParameter CursorKind = C.CXCursor_TemplateTemplateParameter
+	Cursor_TemplateTemplateParameter = C.CXCursor_TemplateTemplateParameter
 	/** \brief A C++ function template. */
-	Cursor_FunctionTemplate CursorKind = C.CXCursor_FunctionTemplate
+	Cursor_FunctionTemplate = C.CXCursor_FunctionTemplate
 	/** \brief A C++ class template. */
-	Cursor_ClassTemplate CursorKind = C.CXCursor_ClassTemplate
+	Cursor_ClassTemplate = C.CXCursor_ClassTemplate
 	/** \brief A C++ class template partial specialization. */
-	Cursor_ClassTemplatePartialSpecialization CursorKind = C.CXCursor_ClassTemplatePartialSpecialization
+	Cursor_ClassTemplatePartialSpecialization = C.CXCursor_ClassTemplatePartialSpecialization
 	/** \brief A C++ namespace alias declaration. */
-	Cursor_NamespaceAlias CursorKind = C.CXCursor_NamespaceAlias
+	Cursor_NamespaceAlias = C.CXCursor_NamespaceAlias
 	/** \brief A C++ using directive. */
-	Cursor_UsingDirective CursorKind = C.CXCursor_UsingDirective
+	Cursor_UsingDirective = C.CXCursor_UsingDirective
 	/** \brief A C++ using declaration. */
-	Cursor_UsingDeclaration CursorKind = C.CXCursor_UsingDeclaration
+	Cursor_UsingDeclaration = C.CXCursor_UsingDeclaration
 	/** \brief A C++ alias declaration */
-	Cursor_TypeAliasDecl CursorKind = C.CXCursor_TypeAliasDecl
+	Cursor_TypeAliasDecl = C.CXCursor_TypeAliasDecl
 	/** \brief An Objective-C \@synthesize definition. */
-	Cursor_ObjCSynthesizeDecl CursorKind = C.CXCursor_ObjCSynthesizeDecl
+	Cursor_ObjCSynthesizeDecl = C.CXCursor_ObjCSynthesizeDecl
 	/** \brief An Objective-C \@dynamic definition. */
-	Cursor_ObjCDynamicDecl CursorKind = C.CXCursor_ObjCDynamicDecl
+	Cursor_ObjCDynamicDecl = C.CXCursor_ObjCDynamicDecl
 	/** \brief An access specifier. */
-	Cursor_CXXAccessSpecifier CursorKind = C.CXCursor_CXXAccessSpecifier
+	Cursor_CXXAccessSpecifier = C.CXCursor_CXXAccessSpecifier
 	/** \brief An access specifier. */
-	Cursor_FirstDecl CursorKind = C.CXCursor_FirstDecl
+	Cursor_FirstDecl = C.CXCursor_FirstDecl
 	/** \brief An access specifier. */
-	Cursor_LastDecl CursorKind = C.CXCursor_LastDecl
+	Cursor_LastDecl = C.CXCursor_LastDecl
 	/** \brief An access specifier. */
-	Cursor_FirstRef CursorKind = C.CXCursor_FirstRef
+	Cursor_FirstRef = C.CXCursor_FirstRef
 	/** \brief An access specifier. */
-	Cursor_ObjCSuperClassRef CursorKind = C.CXCursor_ObjCSuperClassRef
+	Cursor_ObjCSuperClassRef = C.CXCursor_ObjCSuperClassRef
 	/** \brief An access specifier. */
-	Cursor_ObjCProtocolRef CursorKind = C.CXCursor_ObjCProtocolRef
+	Cursor_ObjCProtocolRef = C.CXCursor_ObjCProtocolRef
 	/** \brief An access specifier. */
-	Cursor_ObjCClassRef CursorKind = C.CXCursor_ObjCClassRef
+	Cursor_ObjCClassRef = C.CXCursor_ObjCClassRef
 	/**
 	 * \brief A reference to a type declaration.
 	 *
@@ -125,7 +125,7 @@ const (
 	 * while the type of the variable "size" is referenced. The cursor
 	 * referenced by the type of size is the typedef for size_type.
 	 */
-	Cursor_TypeRef CursorKind = C.CXCursor_TypeRef
+	Cursor_TypeRef = C.CXCursor_TypeRef
 	/**
 	 * \brief A reference to a type declaration.
 	 *
@@ -141,21 +141,21 @@ const (
 	 * while the type of the variable "size" is referenced. The cursor
 	 * referenced by the type of size is the typedef for size_type.
 	 */
-	Cursor_CXXBaseSpecifier CursorKind = C.CXCursor_CXXBaseSpecifier
+	Cursor_CXXBaseSpecifier = C.CXCursor_CXXBaseSpecifier
 	/**
 	 * \brief A reference to a class template, function template, template
 	 * template parameter, or class template partial specialization.
 	 */
-	Cursor_TemplateRef CursorKind = C.CXCursor_TemplateRef
+	Cursor_TemplateRef = C.CXCursor_TemplateRef
 	/**
 	 * \brief A reference to a namespace or namespace alias.
 	 */
-	Cursor_NamespaceRef CursorKind = C.CXCursor_NamespaceRef
+	Cursor_NamespaceRef = C.CXCursor_NamespaceRef
 	/**
 	 * \brief A reference to a member of a struct, union, or class that occurs in
 	 * some non-expression context, e.g., a designated initializer.
 	 */
-	Cursor_MemberRef CursorKind = C.CXCursor_MemberRef
+	Cursor_MemberRef = C.CXCursor_MemberRef
 	/**
 	 * \brief A reference to a labeled statement.
 	 *
@@ -171,7 +171,7 @@ const (
 	 *
 	 * A label reference cursor refers to a label statement.
 	 */
-	Cursor_LabelRef CursorKind = C.CXCursor_LabelRef
+	Cursor_LabelRef = C.CXCursor_LabelRef
 	/**
 	 * \brief A reference to a set of overloaded functions or function templates
 	 * that has not yet been resolved to a specific function or function template.
@@ -208,52 +208,52 @@ const (
 	 * \c clang_getOverloadedDecl() can be used to retrieve the definitions
 	 * referenced by this cursor.
 	 */
-	Cursor_OverloadedDeclRef CursorKind = C.CXCursor_OverloadedDeclRef
+	Cursor_OverloadedDeclRef = C.CXCursor_OverloadedDeclRef
 	/**
 	 * \brief A reference to a variable that occurs in some non-expression
 	 * context, e.g., a C++ lambda capture list.
 	 */
-	Cursor_VariableRef CursorKind = C.CXCursor_VariableRef
+	Cursor_VariableRef = C.CXCursor_VariableRef
 	/**
 	 * \brief A reference to a variable that occurs in some non-expression
 	 * context, e.g., a C++ lambda capture list.
 	 */
-	Cursor_LastRef CursorKind = C.CXCursor_LastRef
+	Cursor_LastRef = C.CXCursor_LastRef
 	/**
 	 * \brief A reference to a variable that occurs in some non-expression
 	 * context, e.g., a C++ lambda capture list.
 	 */
-	Cursor_FirstInvalid CursorKind = C.CXCursor_FirstInvalid
+	Cursor_FirstInvalid = C.CXCursor_FirstInvalid
 	/**
 	 * \brief A reference to a variable that occurs in some non-expression
 	 * context, e.g., a C++ lambda capture list.
 	 */
-	Cursor_InvalidFile CursorKind = C.CXCursor_InvalidFile
+	Cursor_InvalidFile = C.CXCursor_InvalidFile
 	/**
 	 * \brief A reference to a variable that occurs in some non-expression
 	 * context, e.g., a C++ lambda capture list.
 	 */
-	Cursor_NoDeclFound CursorKind = C.CXCursor_NoDeclFound
+	Cursor_NoDeclFound = C.CXCursor_NoDeclFound
 	/**
 	 * \brief A reference to a variable that occurs in some non-expression
 	 * context, e.g., a C++ lambda capture list.
 	 */
-	Cursor_NotImplemented CursorKind = C.CXCursor_NotImplemented
+	Cursor_NotImplemented = C.CXCursor_NotImplemented
 	/**
 	 * \brief A reference to a variable that occurs in some non-expression
 	 * context, e.g., a C++ lambda capture list.
 	 */
-	Cursor_InvalidCode CursorKind = C.CXCursor_InvalidCode
+	Cursor_InvalidCode = C.CXCursor_InvalidCode
 	/**
 	 * \brief A reference to a variable that occurs in some non-expression
 	 * context, e.g., a C++ lambda capture list.
 	 */
-	Cursor_LastInvalid CursorKind = C.CXCursor_LastInvalid
+	Cursor_LastInvalid = C.CXCursor_LastInvalid
 	/**
 	 * \brief A reference to a variable that occurs in some non-expression
 	 * context, e.g., a C++ lambda capture list.
 	 */
-	Cursor_FirstExpr CursorKind = C.CXCursor_FirstExpr
+	Cursor_FirstExpr = C.CXCursor_FirstExpr
 	/**
 	 * \brief An expression whose specific kind is not exposed via this
 	 * interface.
@@ -263,82 +263,82 @@ const (
 	 * spelling, children, etc. However, the specific kind of the
 	 * expression is not reported.
 	 */
-	Cursor_UnexposedExpr CursorKind = C.CXCursor_UnexposedExpr
+	Cursor_UnexposedExpr = C.CXCursor_UnexposedExpr
 	/**
 	 * \brief An expression that refers to some value declaration, such
 	 * as a function, varible, or enumerator.
 	 */
-	Cursor_DeclRefExpr CursorKind = C.CXCursor_DeclRefExpr
+	Cursor_DeclRefExpr = C.CXCursor_DeclRefExpr
 	/**
 	 * \brief An expression that refers to a member of a struct, union,
 	 * class, Objective-C class, etc.
 	 */
-	Cursor_MemberRefExpr CursorKind = C.CXCursor_MemberRefExpr
+	Cursor_MemberRefExpr = C.CXCursor_MemberRefExpr
 	/** \brief An expression that calls a function. */
-	Cursor_CallExpr CursorKind = C.CXCursor_CallExpr
+	Cursor_CallExpr = C.CXCursor_CallExpr
 	/** \brief An expression that sends a message to an Objective-C
 	  object or class. */
-	Cursor_ObjCMessageExpr CursorKind = C.CXCursor_ObjCMessageExpr
+	Cursor_ObjCMessageExpr = C.CXCursor_ObjCMessageExpr
 	/** \brief An expression that represents a block literal. */
-	Cursor_BlockExpr CursorKind = C.CXCursor_BlockExpr
+	Cursor_BlockExpr = C.CXCursor_BlockExpr
 	/** \brief An integer literal.
 	 */
-	Cursor_IntegerLiteral CursorKind = C.CXCursor_IntegerLiteral
+	Cursor_IntegerLiteral = C.CXCursor_IntegerLiteral
 	/** \brief A floating point number literal.
 	 */
-	Cursor_FloatingLiteral CursorKind = C.CXCursor_FloatingLiteral
+	Cursor_FloatingLiteral = C.CXCursor_FloatingLiteral
 	/** \brief An imaginary number literal.
 	 */
-	Cursor_ImaginaryLiteral CursorKind = C.CXCursor_ImaginaryLiteral
+	Cursor_ImaginaryLiteral = C.CXCursor_ImaginaryLiteral
 	/** \brief A string literal.
 	 */
-	Cursor_StringLiteral CursorKind = C.CXCursor_StringLiteral
+	Cursor_StringLiteral = C.CXCursor_StringLiteral
 	/** \brief A character literal.
 	 */
-	Cursor_CharacterLiteral CursorKind = C.CXCursor_CharacterLiteral
+	Cursor_CharacterLiteral = C.CXCursor_CharacterLiteral
 	/** \brief A parenthesized expression, e.g. "(1)".
 	 *
 	 * This AST node is only formed if full location information is requested.
 	 */
-	Cursor_ParenExpr CursorKind = C.CXCursor_ParenExpr
+	Cursor_ParenExpr = C.CXCursor_ParenExpr
 	/** \brief This represents the unary-expression's (except sizeof and
 	 * alignof).
 	 */
-	Cursor_UnaryOperator CursorKind = C.CXCursor_UnaryOperator
+	Cursor_UnaryOperator = C.CXCursor_UnaryOperator
 	/** \brief [C99 6.5.2.1] Array Subscripting.
 	 */
-	Cursor_ArraySubscriptExpr CursorKind = C.CXCursor_ArraySubscriptExpr
+	Cursor_ArraySubscriptExpr = C.CXCursor_ArraySubscriptExpr
 	/** \brief A builtin binary operation expression such as "x + y" or
 	 * "x <= y".
 	 */
-	Cursor_BinaryOperator CursorKind = C.CXCursor_BinaryOperator
+	Cursor_BinaryOperator = C.CXCursor_BinaryOperator
 	/** \brief Compound assignment such as "+=".
 	 */
-	Cursor_CompoundAssignOperator CursorKind = C.CXCursor_CompoundAssignOperator
+	Cursor_CompoundAssignOperator = C.CXCursor_CompoundAssignOperator
 	/** \brief The ?: ternary operator.
 	 */
-	Cursor_ConditionalOperator CursorKind = C.CXCursor_ConditionalOperator
+	Cursor_ConditionalOperator = C.CXCursor_ConditionalOperator
 	/** \brief An explicit cast in C (C99 6.5.4) or a C-style cast in C++
 	 * (C++ [expr.cast]), which uses the syntax (Type)expr.
 	 *
 	 * For example: (int)f.
 	 */
-	Cursor_CStyleCastExpr CursorKind = C.CXCursor_CStyleCastExpr
+	Cursor_CStyleCastExpr = C.CXCursor_CStyleCastExpr
 	/** \brief [C99 6.5.2.5]
 	 */
-	Cursor_CompoundLiteralExpr CursorKind = C.CXCursor_CompoundLiteralExpr
+	Cursor_CompoundLiteralExpr = C.CXCursor_CompoundLiteralExpr
 	/** \brief Describes an C or C++ initializer list.
 	 */
-	Cursor_InitListExpr CursorKind = C.CXCursor_InitListExpr
+	Cursor_InitListExpr = C.CXCursor_InitListExpr
 	/** \brief The GNU address of label extension, representing &&label.
 	 */
-	Cursor_AddrLabelExpr CursorKind = C.CXCursor_AddrLabelExpr
+	Cursor_AddrLabelExpr = C.CXCursor_AddrLabelExpr
 	/** \brief This is the GNU Statement Expression extension: ({int X=4; X;})
 	 */
-	Cursor_StmtExpr CursorKind = C.CXCursor_StmtExpr
+	Cursor_StmtExpr = C.CXCursor_StmtExpr
 	/** \brief Represents a C11 generic selection.
 	 */
-	Cursor_GenericSelectionExpr CursorKind = C.CXCursor_GenericSelectionExpr
+	Cursor_GenericSelectionExpr = C.CXCursor_GenericSelectionExpr
 	/** \brief Implements the GNU __null extension, which is a name for a null
 	 * pointer constant that has integral type (e.g., int or long) and is the same
 	 * size and alignment as a pointer.
@@ -347,19 +347,19 @@ const (
 	 * NULL as __null in C++ rather than using 0 (which is an integer that may not
 	 * match the size of a pointer).
 	 */
-	Cursor_GNUNullExpr CursorKind = C.CXCursor_GNUNullExpr
+	Cursor_GNUNullExpr = C.CXCursor_GNUNullExpr
 	/** \brief C++'s static_cast<> expression.
 	 */
-	Cursor_CXXStaticCastExpr CursorKind = C.CXCursor_CXXStaticCastExpr
+	Cursor_CXXStaticCastExpr = C.CXCursor_CXXStaticCastExpr
 	/** \brief C++'s dynamic_cast<> expression.
 	 */
-	Cursor_CXXDynamicCastExpr CursorKind = C.CXCursor_CXXDynamicCastExpr
+	Cursor_CXXDynamicCastExpr = C.CXCursor_CXXDynamicCastExpr
 	/** \brief C++'s reinterpret_cast<> expression.
 	 */
-	Cursor_CXXReinterpretCastExpr CursorKind = C.CXCursor_CXXReinterpretCastExpr
+	Cursor_CXXReinterpretCastExpr = C.CXCursor_CXXReinterpretCastExpr
 	/** \brief C++'s const_cast<> expression.
 	 */
-	Cursor_CXXConstCastExpr CursorKind = C.CXCursor_CXXConstCastExpr
+	Cursor_CXXConstCastExpr = C.CXCursor_CXXConstCastExpr
 	/** \brief Represents an explicit C++ type conversion that uses "functional"
 	 * notion (C++ [expr.type.conv]).
 	 *
@@ -368,48 +368,48 @@ const (
 	 *   x = int(0.5);
 	 * \endcode
 	 */
-	Cursor_CXXFunctionalCastExpr CursorKind = C.CXCursor_CXXFunctionalCastExpr
+	Cursor_CXXFunctionalCastExpr = C.CXCursor_CXXFunctionalCastExpr
 	/** \brief A C++ typeid expression (C++ [expr.typeid]).
 	 */
-	Cursor_CXXTypeidExpr CursorKind = C.CXCursor_CXXTypeidExpr
+	Cursor_CXXTypeidExpr = C.CXCursor_CXXTypeidExpr
 	/** \brief [C++ 2.13.5] C++ Boolean Literal.
 	 */
-	Cursor_CXXBoolLiteralExpr CursorKind = C.CXCursor_CXXBoolLiteralExpr
+	Cursor_CXXBoolLiteralExpr = C.CXCursor_CXXBoolLiteralExpr
 	/** \brief [C++0x 2.14.7] C++ Pointer Literal.
 	 */
-	Cursor_CXXNullPtrLiteralExpr CursorKind = C.CXCursor_CXXNullPtrLiteralExpr
+	Cursor_CXXNullPtrLiteralExpr = C.CXCursor_CXXNullPtrLiteralExpr
 	/** \brief Represents the "this" expression in C++
 	 */
-	Cursor_CXXThisExpr CursorKind = C.CXCursor_CXXThisExpr
+	Cursor_CXXThisExpr = C.CXCursor_CXXThisExpr
 	/** \brief [C++ 15] C++ Throw Expression.
 	 *
 	 * This handles 'throw' and 'throw' assignment-expression. When
 	 * assignment-expression isn't present, Op will be null.
 	 */
-	Cursor_CXXThrowExpr CursorKind = C.CXCursor_CXXThrowExpr
+	Cursor_CXXThrowExpr = C.CXCursor_CXXThrowExpr
 	/** \brief A new expression for memory allocation and constructor calls, e.g:
 	 * "new CXXNewExpr(foo)".
 	 */
-	Cursor_CXXNewExpr CursorKind = C.CXCursor_CXXNewExpr
+	Cursor_CXXNewExpr = C.CXCursor_CXXNewExpr
 	/** \brief A delete expression for memory deallocation and destructor calls,
 	 * e.g. "delete[] pArray".
 	 */
-	Cursor_CXXDeleteExpr CursorKind = C.CXCursor_CXXDeleteExpr
+	Cursor_CXXDeleteExpr = C.CXCursor_CXXDeleteExpr
 	/** \brief A unary expression.
 	 */
-	Cursor_UnaryExpr CursorKind = C.CXCursor_UnaryExpr
+	Cursor_UnaryExpr = C.CXCursor_UnaryExpr
 	/** \brief An Objective-C string literal i.e. @"foo".
 	 */
-	Cursor_ObjCStringLiteral CursorKind = C.CXCursor_ObjCStringLiteral
+	Cursor_ObjCStringLiteral = C.CXCursor_ObjCStringLiteral
 	/** \brief An Objective-C \@encode expression.
 	 */
-	Cursor_ObjCEncodeExpr CursorKind = C.CXCursor_ObjCEncodeExpr
+	Cursor_ObjCEncodeExpr = C.CXCursor_ObjCEncodeExpr
 	/** \brief An Objective-C \@selector expression.
 	 */
-	Cursor_ObjCSelectorExpr CursorKind = C.CXCursor_ObjCSelectorExpr
+	Cursor_ObjCSelectorExpr = C.CXCursor_ObjCSelectorExpr
 	/** \brief An Objective-C \@protocol expression.
 	 */
-	Cursor_ObjCProtocolExpr CursorKind = C.CXCursor_ObjCProtocolExpr
+	Cursor_ObjCProtocolExpr = C.CXCursor_ObjCProtocolExpr
 	/** \brief An Objective-C "bridged" cast expression, which casts between
 	 * Objective-C pointers and C pointers, transferring ownership in the process.
 	 *
@@ -417,7 +417,7 @@ const (
 	 *   NSString *str = (__bridge_transfer NSString *)CFCreateString();
 	 * \endcode
 	 */
-	Cursor_ObjCBridgedCastExpr CursorKind = C.CXCursor_ObjCBridgedCastExpr
+	Cursor_ObjCBridgedCastExpr = C.CXCursor_ObjCBridgedCastExpr
 	/** \brief Represents a C++0x pack expansion that produces a sequence of
 	 * expressions.
 	 *
@@ -431,7 +431,7 @@ const (
 	 * }
 	 * \endcode
 	 */
-	Cursor_PackExpansionExpr CursorKind = C.CXCursor_PackExpansionExpr
+	Cursor_PackExpansionExpr = C.CXCursor_PackExpansionExpr
 	/** \brief Represents an expression that computes the length of a parameter
 	 * pack.
 	 *
@@ -442,20 +442,20 @@ const (
 	 * };
 	 * \endcode
 	 */
-	Cursor_SizeOfPackExpr CursorKind = C.CXCursor_SizeOfPackExpr
-	Cursor_LambdaExpr     CursorKind = C.CXCursor_LambdaExpr
+	Cursor_SizeOfPackExpr = C.CXCursor_SizeOfPackExpr
+	Cursor_LambdaExpr     = C.CXCursor_LambdaExpr
 	/** \brief Objective-c Boolean Literal.
 	 */
-	Cursor_ObjCBoolLiteralExpr CursorKind = C.CXCursor_ObjCBoolLiteralExpr
+	Cursor_ObjCBoolLiteralExpr = C.CXCursor_ObjCBoolLiteralExpr
 	/** \brief Represents the "self" expression in a ObjC method.
 	 */
-	Cursor_ObjCSelfExpr CursorKind = C.CXCursor_ObjCSelfExpr
+	Cursor_ObjCSelfExpr = C.CXCursor_ObjCSelfExpr
 	/** \brief Represents the "self" expression in a ObjC method.
 	 */
-	Cursor_LastExpr CursorKind = C.CXCursor_LastExpr
+	Cursor_LastExpr = C.CXCursor_LastExpr
 	/** \brief Represents the "self" expression in a ObjC method.
 	 */
-	Cursor_FirstStmt CursorKind = C.CXCursor_FirstStmt
+	Cursor_FirstStmt = C.CXCursor_FirstStmt
 	/**
 	 * \brief A statement whose specific kind is not exposed via this
 	 * interface.
@@ -465,7 +465,7 @@ const (
 	 * children, etc. However, the specific kind of the statement is not
 	 * reported.
 	 */
-	Cursor_UnexposedStmt CursorKind = C.CXCursor_UnexposedStmt
+	Cursor_UnexposedStmt = C.CXCursor_UnexposedStmt
 	/** \brief A labelled statement in a function.
 	 *
 	 * This cursor kind is used to describe the "start_over:" label statement in
@@ -477,221 +477,221 @@ const (
 	 * \endcode
 	 *
 	 */
-	Cursor_LabelStmt CursorKind = C.CXCursor_LabelStmt
+	Cursor_LabelStmt = C.CXCursor_LabelStmt
 	/** \brief A group of statements like { stmt stmt }.
 	 *
 	 * This cursor kind is used to describe compound statements, e.g. function
 	 * bodies.
 	 */
-	Cursor_CompoundStmt CursorKind = C.CXCursor_CompoundStmt
+	Cursor_CompoundStmt = C.CXCursor_CompoundStmt
 	/** \brief A case statement.
 	 */
-	Cursor_CaseStmt CursorKind = C.CXCursor_CaseStmt
+	Cursor_CaseStmt = C.CXCursor_CaseStmt
 	/** \brief A default statement.
 	 */
-	Cursor_DefaultStmt CursorKind = C.CXCursor_DefaultStmt
+	Cursor_DefaultStmt = C.CXCursor_DefaultStmt
 	/** \brief An if statement
 	 */
-	Cursor_IfStmt CursorKind = C.CXCursor_IfStmt
+	Cursor_IfStmt = C.CXCursor_IfStmt
 	/** \brief A switch statement.
 	 */
-	Cursor_SwitchStmt CursorKind = C.CXCursor_SwitchStmt
+	Cursor_SwitchStmt = C.CXCursor_SwitchStmt
 	/** \brief A while statement.
 	 */
-	Cursor_WhileStmt CursorKind = C.CXCursor_WhileStmt
+	Cursor_WhileStmt = C.CXCursor_WhileStmt
 	/** \brief A do statement.
 	 */
-	Cursor_DoStmt CursorKind = C.CXCursor_DoStmt
+	Cursor_DoStmt = C.CXCursor_DoStmt
 	/** \brief A for statement.
 	 */
-	Cursor_ForStmt CursorKind = C.CXCursor_ForStmt
+	Cursor_ForStmt = C.CXCursor_ForStmt
 	/** \brief A goto statement.
 	 */
-	Cursor_GotoStmt CursorKind = C.CXCursor_GotoStmt
+	Cursor_GotoStmt = C.CXCursor_GotoStmt
 	/** \brief An indirect goto statement.
 	 */
-	Cursor_IndirectGotoStmt CursorKind = C.CXCursor_IndirectGotoStmt
+	Cursor_IndirectGotoStmt = C.CXCursor_IndirectGotoStmt
 	/** \brief A continue statement.
 	 */
-	Cursor_ContinueStmt CursorKind = C.CXCursor_ContinueStmt
+	Cursor_ContinueStmt = C.CXCursor_ContinueStmt
 	/** \brief A break statement.
 	 */
-	Cursor_BreakStmt CursorKind = C.CXCursor_BreakStmt
+	Cursor_BreakStmt = C.CXCursor_BreakStmt
 	/** \brief A return statement.
 	 */
-	Cursor_ReturnStmt CursorKind = C.CXCursor_ReturnStmt
+	Cursor_ReturnStmt = C.CXCursor_ReturnStmt
 	/** \brief A GCC inline assembly statement extension.
 	 */
-	Cursor_GCCAsmStmt CursorKind = C.CXCursor_GCCAsmStmt
+	Cursor_GCCAsmStmt = C.CXCursor_GCCAsmStmt
 	/** \brief A GCC inline assembly statement extension.
 	 */
-	Cursor_AsmStmt CursorKind = C.CXCursor_AsmStmt
+	Cursor_AsmStmt = C.CXCursor_AsmStmt
 	/** \brief Objective-C's overall \@try-\@catch-\@finally statement.
 	 */
-	Cursor_ObjCAtTryStmt CursorKind = C.CXCursor_ObjCAtTryStmt
+	Cursor_ObjCAtTryStmt = C.CXCursor_ObjCAtTryStmt
 	/** \brief Objective-C's \@catch statement.
 	 */
-	Cursor_ObjCAtCatchStmt CursorKind = C.CXCursor_ObjCAtCatchStmt
+	Cursor_ObjCAtCatchStmt = C.CXCursor_ObjCAtCatchStmt
 	/** \brief Objective-C's \@finally statement.
 	 */
-	Cursor_ObjCAtFinallyStmt CursorKind = C.CXCursor_ObjCAtFinallyStmt
+	Cursor_ObjCAtFinallyStmt = C.CXCursor_ObjCAtFinallyStmt
 	/** \brief Objective-C's \@throw statement.
 	 */
-	Cursor_ObjCAtThrowStmt CursorKind = C.CXCursor_ObjCAtThrowStmt
+	Cursor_ObjCAtThrowStmt = C.CXCursor_ObjCAtThrowStmt
 	/** \brief Objective-C's \@synchronized statement.
 	 */
-	Cursor_ObjCAtSynchronizedStmt CursorKind = C.CXCursor_ObjCAtSynchronizedStmt
+	Cursor_ObjCAtSynchronizedStmt = C.CXCursor_ObjCAtSynchronizedStmt
 	/** \brief Objective-C's autorelease pool statement.
 	 */
-	Cursor_ObjCAutoreleasePoolStmt CursorKind = C.CXCursor_ObjCAutoreleasePoolStmt
+	Cursor_ObjCAutoreleasePoolStmt = C.CXCursor_ObjCAutoreleasePoolStmt
 	/** \brief Objective-C's collection statement.
 	 */
-	Cursor_ObjCForCollectionStmt CursorKind = C.CXCursor_ObjCForCollectionStmt
+	Cursor_ObjCForCollectionStmt = C.CXCursor_ObjCForCollectionStmt
 	/** \brief C++'s catch statement.
 	 */
-	Cursor_CXXCatchStmt CursorKind = C.CXCursor_CXXCatchStmt
+	Cursor_CXXCatchStmt = C.CXCursor_CXXCatchStmt
 	/** \brief C++'s try statement.
 	 */
-	Cursor_CXXTryStmt CursorKind = C.CXCursor_CXXTryStmt
+	Cursor_CXXTryStmt = C.CXCursor_CXXTryStmt
 	/** \brief C++'s for (* : *) statement.
 	 */
-	Cursor_CXXForRangeStmt CursorKind = C.CXCursor_CXXForRangeStmt
+	Cursor_CXXForRangeStmt = C.CXCursor_CXXForRangeStmt
 	/** \brief Windows Structured Exception Handling's try statement.
 	 */
-	Cursor_SEHTryStmt CursorKind = C.CXCursor_SEHTryStmt
+	Cursor_SEHTryStmt = C.CXCursor_SEHTryStmt
 	/** \brief Windows Structured Exception Handling's except statement.
 	 */
-	Cursor_SEHExceptStmt CursorKind = C.CXCursor_SEHExceptStmt
+	Cursor_SEHExceptStmt = C.CXCursor_SEHExceptStmt
 	/** \brief Windows Structured Exception Handling's finally statement.
 	 */
-	Cursor_SEHFinallyStmt CursorKind = C.CXCursor_SEHFinallyStmt
+	Cursor_SEHFinallyStmt = C.CXCursor_SEHFinallyStmt
 	/** \brief A MS inline assembly statement extension.
 	 */
-	Cursor_MSAsmStmt CursorKind = C.CXCursor_MSAsmStmt
+	Cursor_MSAsmStmt = C.CXCursor_MSAsmStmt
 	/** \brief The null satement ";": C99 6.8.3p3.
 	 *
 	 * This cursor kind is used to describe the null statement.
 	 */
-	Cursor_NullStmt CursorKind = C.CXCursor_NullStmt
+	Cursor_NullStmt = C.CXCursor_NullStmt
 	/** \brief Adaptor class for mixing declarations with statements and
 	 * expressions.
 	 */
-	Cursor_DeclStmt CursorKind = C.CXCursor_DeclStmt
+	Cursor_DeclStmt = C.CXCursor_DeclStmt
 	/** \brief OpenMP parallel directive.
 	 */
-	Cursor_OMPParallelDirective CursorKind = C.CXCursor_OMPParallelDirective
+	Cursor_OMPParallelDirective = C.CXCursor_OMPParallelDirective
 	/** \brief OpenMP parallel directive.
 	 */
-	Cursor_LastStmt CursorKind = C.CXCursor_LastStmt
+	Cursor_LastStmt = C.CXCursor_LastStmt
 	/**
 	 * \brief Cursor that represents the translation unit itself.
 	 *
 	 * The translation unit cursor exists primarily to act as the root
 	 * cursor for traversing the contents of a translation unit.
 	 */
-	Cursor_TranslationUnit CursorKind = C.CXCursor_TranslationUnit
+	Cursor_TranslationUnit = C.CXCursor_TranslationUnit
 	/**
 	 * \brief Cursor that represents the translation unit itself.
 	 *
 	 * The translation unit cursor exists primarily to act as the root
 	 * cursor for traversing the contents of a translation unit.
 	 */
-	Cursor_FirstAttr CursorKind = C.CXCursor_FirstAttr
+	Cursor_FirstAttr = C.CXCursor_FirstAttr
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_UnexposedAttr CursorKind = C.CXCursor_UnexposedAttr
+	Cursor_UnexposedAttr = C.CXCursor_UnexposedAttr
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_IBActionAttr CursorKind = C.CXCursor_IBActionAttr
+	Cursor_IBActionAttr = C.CXCursor_IBActionAttr
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_IBOutletAttr CursorKind = C.CXCursor_IBOutletAttr
+	Cursor_IBOutletAttr = C.CXCursor_IBOutletAttr
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_IBOutletCollectionAttr CursorKind = C.CXCursor_IBOutletCollectionAttr
+	Cursor_IBOutletCollectionAttr = C.CXCursor_IBOutletCollectionAttr
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_CXXFinalAttr CursorKind = C.CXCursor_CXXFinalAttr
+	Cursor_CXXFinalAttr = C.CXCursor_CXXFinalAttr
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_CXXOverrideAttr CursorKind = C.CXCursor_CXXOverrideAttr
+	Cursor_CXXOverrideAttr = C.CXCursor_CXXOverrideAttr
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_AnnotateAttr CursorKind = C.CXCursor_AnnotateAttr
+	Cursor_AnnotateAttr = C.CXCursor_AnnotateAttr
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_AsmLabelAttr CursorKind = C.CXCursor_AsmLabelAttr
+	Cursor_AsmLabelAttr = C.CXCursor_AsmLabelAttr
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_PackedAttr CursorKind = C.CXCursor_PackedAttr
+	Cursor_PackedAttr = C.CXCursor_PackedAttr
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_LastAttr CursorKind = C.CXCursor_LastAttr
+	Cursor_LastAttr = C.CXCursor_LastAttr
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_PreprocessingDirective CursorKind = C.CXCursor_PreprocessingDirective
+	Cursor_PreprocessingDirective = C.CXCursor_PreprocessingDirective
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_MacroDefinition CursorKind = C.CXCursor_MacroDefinition
+	Cursor_MacroDefinition = C.CXCursor_MacroDefinition
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_MacroExpansion CursorKind = C.CXCursor_MacroExpansion
+	Cursor_MacroExpansion = C.CXCursor_MacroExpansion
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_MacroInstantiation CursorKind = C.CXCursor_MacroInstantiation
+	Cursor_MacroInstantiation = C.CXCursor_MacroInstantiation
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_InclusionDirective CursorKind = C.CXCursor_InclusionDirective
+	Cursor_InclusionDirective = C.CXCursor_InclusionDirective
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_FirstPreprocessing CursorKind = C.CXCursor_FirstPreprocessing
+	Cursor_FirstPreprocessing = C.CXCursor_FirstPreprocessing
 	/**
 	 * \brief An attribute whose specific kind is not exposed via this
 	 * interface.
 	 */
-	Cursor_LastPreprocessing CursorKind = C.CXCursor_LastPreprocessing
+	Cursor_LastPreprocessing = C.CXCursor_LastPreprocessing
 	/**
 	 * \brief A module import declaration.
 	 */
-	Cursor_ModuleImportDecl CursorKind = C.CXCursor_ModuleImportDecl
+	Cursor_ModuleImportDecl = C.CXCursor_ModuleImportDecl
 	/**
 	 * \brief A module import declaration.
 	 */
-	Cursor_FirstExtraDecl CursorKind = C.CXCursor_FirstExtraDecl
+	Cursor_FirstExtraDecl = C.CXCursor_FirstExtraDecl
 	/**
 	 * \brief A module import declaration.
 	 */
-	Cursor_LastExtraDecl CursorKind = C.CXCursor_LastExtraDecl
+	Cursor_LastExtraDecl = C.CXCursor_LastExtraDecl
 )

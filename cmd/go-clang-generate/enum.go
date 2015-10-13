@@ -71,7 +71,7 @@ type {{$.Name}} int
 
 const (
 {{range $i, $e := .Items}}	{{if $e.Comment}}{{$e.Comment}}
-	{{end}}{{$e.Name}} {{$.Name}} = C.{{$e.CName}}
+	{{end}}{{$e.Name}}{{if eq $i 0}} {{$.Name}}{{end}} = C.{{$e.CName}}
 {{end}}
 )
 `))

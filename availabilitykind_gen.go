@@ -19,14 +19,14 @@ const (
 	 * \brief The entity is available, but has been deprecated (and its use is
 	 * not recommended).
 	 */
-	Availability_Deprecated AvailabilityKind = C.CXAvailability_Deprecated
+	Availability_Deprecated = C.CXAvailability_Deprecated
 	/**
 	 * \brief The entity is not available; any use of it will be an error.
 	 */
-	Availability_NotAvailable AvailabilityKind = C.CXAvailability_NotAvailable
+	Availability_NotAvailable = C.CXAvailability_NotAvailable
 	/**
 	 * \brief The entity is available, but not accessible; any use of it will be
 	 * an error.
 	 */
-	Availability_NotAccessible AvailabilityKind = C.CXAvailability_NotAccessible
+	Availability_NotAccessible = C.CXAvailability_NotAccessible
 )

@@ -16,12 +16,12 @@ const (
 	 * \brief This is the linkage for variables, parameters, and so on that
 	 *  have automatic storage.  This covers normal (non-extern) local variables.
 	 */
-	Linkage_NoLinkage LinkageKind = C.CXLinkage_NoLinkage
+	Linkage_NoLinkage = C.CXLinkage_NoLinkage
 	/** \brief This is the linkage for static variables and static functions. */
-	Linkage_Internal LinkageKind = C.CXLinkage_Internal
+	Linkage_Internal = C.CXLinkage_Internal
 	/** \brief This is the linkage for entities with external linkage that live
 	 * in C++ anonymous namespaces.*/
-	Linkage_UniqueExternal LinkageKind = C.CXLinkage_UniqueExternal
+	Linkage_UniqueExternal = C.CXLinkage_UniqueExternal
 	/** \brief This is the linkage for entities with true, external linkage. */
-	Linkage_External LinkageKind = C.CXLinkage_External
+	Linkage_External = C.CXLinkage_External
 )
