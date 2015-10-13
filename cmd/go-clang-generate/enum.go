@@ -22,18 +22,10 @@ type enumerator struct {
 	Comment string
 }
 
-func trimClangPrefix(name string) string {
-	name = strings.TrimPrefix(name, "CX_CXX")
-	name = strings.TrimPrefix(name, "CXX")
-	name = strings.TrimPrefix(name, "CX")
-
-	return name
-}
-
 func handleEnumCursor(cursor clang.Cursor) enum {
 	e := enum{
 		CName:   cursor.Spelling(),
-		Comment: cursor.RawCommentText(),
+		Comment: cleanDoxygenComment(cursor.RawCommentText()),
 
 		Items: []enumerator{},
 	}
@@ -45,10 +37,11 @@ func handleEnumCursor(cursor clang.Cursor) enum {
 		case clang.CK_EnumConstantDecl:
 			ei := enumerator{
 				CName:   cursor.Spelling(),
-				Comment: cursor.RawCommentText(),
+				Comment: cleanDoxygenComment(cursor.RawCommentText()),
 			}
 
 			ei.Name = trimClangPrefix(ei.CName)
+			// TODO remove underlines to make the names more Go idiomatic e.g. "C.CXComment_InlineCommand" should be "CommentInlineCommand"
 
 			e.Items = append(e.Items, ei)
 		default:

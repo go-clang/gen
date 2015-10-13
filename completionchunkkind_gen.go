@@ -3,17 +3,11 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
-/**
- * \brief Describes a single piece of text within a code-completion string.
- *
- * Each "chunk" within a code-completion string (\c CXCompletionString) is
- * either a piece of text with a specific "kind" that describes how that text
- * should be interpreted by the client or is another completion string.
- */
+// Describes a single piece of text within a code-completion string. Each "chunk" within a code-completion string (\c CXCompletionString) is either a piece of text with a specific "kind" that describes how that text should be interpreted by the client or is another completion string.
 type CompletionChunkKind int
 
 const (
-	/**
+	/*
 	 * \brief A code-completion string that describes "optional" text that
 	 * could be a part of the template (but is not required).
 	 *
@@ -47,47 +41,15 @@ const (
 	 *     function "f" would have all of the parameters.
 	 */
 	CompletionChunk_Optional CompletionChunkKind = C.CXCompletionChunk_Optional
-	/**
-	 * \brief Text that a user would be expected to type to get this
-	 * code-completion result.
-	 *
-	 * There will be exactly one "typed text" chunk in a semantic string, which
-	 * will typically provide the spelling of a keyword or the name of a
-	 * declaration that could be used at the current code point. Clients are
-	 * expected to filter the code-completion results based on the text in this
-	 * chunk.
-	 */
+	// Text that a user would be expected to type to get this code-completion result. There will be exactly one "typed text" chunk in a semantic string, which will typically provide the spelling of a keyword or the name of a declaration that could be used at the current code point. Clients are expected to filter the code-completion results based on the text in this chunk.
 	CompletionChunk_TypedText = C.CXCompletionChunk_TypedText
-	/**
-	 * \brief Text that should be inserted as part of a code-completion result.
-	 *
-	 * A "text" chunk represents text that is part of the template to be
-	 * inserted into user code should this particular code-completion result
-	 * be selected.
-	 */
+	// Text that should be inserted as part of a code-completion result. A "text" chunk represents text that is part of the template to be inserted into user code should this particular code-completion result be selected.
 	CompletionChunk_Text = C.CXCompletionChunk_Text
-	/**
-	 * \brief Placeholder text that should be replaced by the user.
-	 *
-	 * A "placeholder" chunk marks a place where the user should insert text
-	 * into the code-completion template. For example, placeholders might mark
-	 * the function parameters for a function declaration, to indicate that the
-	 * user should provide arguments for each of those parameters. The actual
-	 * text in a placeholder is a suggestion for the text to display before
-	 * the user replaces the placeholder with real code.
-	 */
+	// Placeholder text that should be replaced by the user. A "placeholder" chunk marks a place where the user should insert text into the code-completion template. For example, placeholders might mark the function parameters for a function declaration, to indicate that the user should provide arguments for each of those parameters. The actual text in a placeholder is a suggestion for the text to display before the user replaces the placeholder with real code.
 	CompletionChunk_Placeholder = C.CXCompletionChunk_Placeholder
-	/**
-	 * \brief Informative text that should be displayed but never inserted as
-	 * part of the template.
-	 *
-	 * An "informative" chunk contains annotations that can be displayed to
-	 * help the user decide whether a particular code-completion result is the
-	 * right option, but which is not part of the actual template to be inserted
-	 * by code completion.
-	 */
+	// Informative text that should be displayed but never inserted as part of the template. An "informative" chunk contains annotations that can be displayed to help the user decide whether a particular code-completion result is the right option, but which is not part of the actual template to be inserted by code completion.
 	CompletionChunk_Informative = C.CXCompletionChunk_Informative
-	/**
+	/*
 	 * \brief Text that describes the current parameter when code-completion is
 	 * referring to function call, message send, or template specialization.
 	 *
@@ -107,71 +69,34 @@ const (
 	 * "current paremeter" chunk to "int y".
 	 */
 	CompletionChunk_CurrentParameter = C.CXCompletionChunk_CurrentParameter
-	/**
-	 * \brief A left parenthesis ('('), used to initiate a function call or
-	 * signal the beginning of a function parameter list.
-	 */
+	// A left parenthesis ('('), used to initiate a function call or signal the beginning of a function parameter list.
 	CompletionChunk_LeftParen = C.CXCompletionChunk_LeftParen
-	/**
-	 * \brief A right parenthesis (')'), used to finish a function call or
-	 * signal the end of a function parameter list.
-	 */
+	// A right parenthesis (')'), used to finish a function call or signal the end of a function parameter list.
 	CompletionChunk_RightParen = C.CXCompletionChunk_RightParen
-	/**
-	 * \brief A left bracket ('[').
-	 */
+	// A left bracket ('[').
 	CompletionChunk_LeftBracket = C.CXCompletionChunk_LeftBracket
-	/**
-	 * \brief A right bracket (']').
-	 */
+	// A right bracket (']').
 	CompletionChunk_RightBracket = C.CXCompletionChunk_RightBracket
-	/**
-	 * \brief A left brace ('{').
-	 */
+	// A left brace ('{').
 	CompletionChunk_LeftBrace = C.CXCompletionChunk_LeftBrace
-	/**
-	 * \brief A right brace ('}').
-	 */
+	// A right brace ('}').
 	CompletionChunk_RightBrace = C.CXCompletionChunk_RightBrace
-	/**
-	 * \brief A left angle bracket ('<').
-	 */
+	// A left angle bracket ('<').
 	CompletionChunk_LeftAngle = C.CXCompletionChunk_LeftAngle
-	/**
-	 * \brief A right angle bracket ('>').
-	 */
+	// A right angle bracket ('>').
 	CompletionChunk_RightAngle = C.CXCompletionChunk_RightAngle
-	/**
-	 * \brief A comma separator (',').
-	 */
+	// A comma separator (',').
 	CompletionChunk_Comma = C.CXCompletionChunk_Comma
-	/**
-	 * \brief Text that specifies the result type of a given result.
-	 *
-	 * This special kind of informative chunk is not meant to be inserted into
-	 * the text buffer. Rather, it is meant to illustrate the type that an
-	 * expression using the given completion string would have.
-	 */
+	// Text that specifies the result type of a given result. This special kind of informative chunk is not meant to be inserted into the text buffer. Rather, it is meant to illustrate the type that an expression using the given completion string would have.
 	CompletionChunk_ResultType = C.CXCompletionChunk_ResultType
-	/**
-	 * \brief A colon (':').
-	 */
+	// A colon (':').
 	CompletionChunk_Colon = C.CXCompletionChunk_Colon
-	/**
-	 * \brief A semicolon (';').
-	 */
+	// A semicolon (';').
 	CompletionChunk_SemiColon = C.CXCompletionChunk_SemiColon
-	/**
-	 * \brief An '=' sign.
-	 */
+	// An '=' sign.
 	CompletionChunk_Equal = C.CXCompletionChunk_Equal
-	/**
-	 * Horizontal space (' ').
-	 */
+	// Horizontal space (' ').
 	CompletionChunk_HorizontalSpace = C.CXCompletionChunk_HorizontalSpace
-	/**
-	 * Vertical space ('\n'), after which it is generally a good idea to
-	 * perform indentation.
-	 */
+	// Vertical space ('\n'), after which it is generally a good idea to perform indentation.
 	CompletionChunk_VerticalSpace = C.CXCompletionChunk_VerticalSpace
 )
