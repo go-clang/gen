@@ -1,4 +1,4 @@
-.PHONY: all clean install lint
+.PHONY: all clean generate install lint
 
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 export ROOT_DIR
@@ -7,6 +7,8 @@ all: install
 
 clean:
 	rm *_gen.go
+generate:
+	go run cmd/go-clang-generate/*
 install:
 	CGO_CFLAGS="-I`llvm-config --includedir`" CGO_LDFLAGS="-L`llvm-config --libdir`" go install ./...
 lint: install
