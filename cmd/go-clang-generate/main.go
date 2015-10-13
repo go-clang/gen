@@ -5,91 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
-	"syscall"
 
+	"github.com/sbinet/go-clang"
 	"github.com/termie/go-shutil"
 )
-
-func execToBuffer(cmd ...string) (out []byte, exitStatus int, err error) {
-	c := exec.Command(cmd[0], cmd[1:]...)
-
-	out, err = c.CombinedOutput()
-	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
-				return out, status.ExitStatus(), err
-			}
-		}
-
-		return out, 0, err
-	}
-
-	return out, 0, nil
-}
-
-func exitWithFatal(msg string, err error) {
-	if err == nil {
-		fmt.Printf("FATAL, %s\n", msg)
-	} else {
-		fmt.Printf("FATAL, %s: %s\n", msg, err)
-	}
-
-	os.Exit(1)
-}
-
-func stat(filepath string) (os.FileInfo, error) {
-	f, err := os.Open(filepath)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			panic(err)
-		}
-	}()
-
-	fi, err := f.Stat()
-	if err != nil {
-		return nil, err
-	}
-
-	return fi, nil
-}
-
-var (
-	errNotADirectory = errors.New("not a directory")
-	errNotAFile      = errors.New("not a file")
-)
-
-func dirExists(path string) error {
-	fi, err := stat(path)
-	if err != nil {
-		return err
-	}
-
-	if !fi.Mode().IsDir() {
-		return errNotADirectory
-	}
-
-	return nil
-}
-
-func fileExists(filepath string) error {
-	fi, err := stat(filepath)
-	if err != nil {
-		return err
-	}
-
-	if fi.Mode().IsDir() {
-		return errNotAFile
-	}
-
-	return nil
-}
 
 func main() {
 	rawLLVMVersion, _, err := execToBuffer("llvm-config", "--version")
@@ -129,8 +51,8 @@ func main() {
 	fmt.Printf("Will generate go-clang for LLVM version %d.%d in current directory\n", llvmVersion.Major, llvmVersion.Minor)
 
 	// Copy the Clang-C include directory into the current directory
-	_ = os.RemoveAll("clang-c/")
-	if err := shutil.CopyTree(clangCIncludeDir, "clang-c/", nil); err != nil {
+	_ = os.RemoveAll("./clang-c/")
+	if err := shutil.CopyTree(clangCIncludeDir, "./clang-c/", nil); err != nil {
 		exitWithFatal(fmt.Sprintf("Cannot copy Clang-C include directory %q into current directory", clangCIncludeDir), err)
 	}
 
@@ -147,5 +69,51 @@ func main() {
 				}
 			}
 		}
+	}
+
+	// Parse clang-c's Index.h to analyse everything we need to know
+	idx := clang.NewIndex(0, 1)
+	defer idx.Dispose()
+
+	tu := idx.Parse("./clang-c/Index.h", []string{}, nil, 0)
+	defer tu.Dispose()
+
+	if !tu.IsValid() {
+		exitWithFatal("Cannot parse Index.h", nil)
+	}
+
+	for _, diag := range tu.Diagnostics() {
+		switch diag.Severity() {
+		case clang.Diagnostic_Error:
+			exitWithFatal("Diagnostic error in Index.h", errors.New(diag.Spelling()))
+		case clang.Diagnostic_Fatal:
+			exitWithFatal("Diagnostic fatal in Index.h", errors.New(diag.Spelling()))
+		}
+	}
+
+	var enumKinds []enum
+
+	cursor := tu.ToCursor()
+	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
+		switch cursor.Kind() {
+		case clang.CK_EnumDecl:
+			name := cursor.Spelling()
+
+			if name != "" && strings.HasSuffix(name, "Kind") {
+				enumKinds = append(enumKinds, handleEnumCursor(cursor))
+			}
+		}
+
+		return clang.CVR_Recurse
+	})
+
+	for _, e := range enumKinds {
+		if err := generateEnum(e); err != nil {
+			exitWithFatal("Cannot generate enum", err)
+		}
+	}
+
+	if _, _, err = execToBuffer("gofmt", "-w", "./"); err != nil {
+		exitWithFatal("Gofmt failed", err)
 	}
 }
