@@ -30,8 +30,13 @@ func cleanDoxygenComment(comment string) string {
 	comment = reReplaceMultilines.ReplaceAllString(comment, " ")
 
 	comment = strings.Replace(comment, "  ", " ", -1)
+	comment = strings.TrimSpace(comment)
 
-	return "// " + strings.TrimSpace(comment)
+	if comment == "" {
+		return comment
+	}
+
+	return "// " + comment
 }
 
 func trimClangPrefix(name string) string {

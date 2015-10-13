@@ -3,7 +3,6 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
-//
 type RefQualifierKind int
 
 const (

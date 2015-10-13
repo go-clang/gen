@@ -328,8 +328,7 @@ const (
 	 * \endcode
 	 */
 	Cursor_SizeOfPackExpr = C.CXCursor_SizeOfPackExpr
-	//
-	Cursor_LambdaExpr = C.CXCursor_LambdaExpr
+	Cursor_LambdaExpr     = C.CXCursor_LambdaExpr
 	// Objective-c Boolean Literal.
 	Cursor_ObjCBoolLiteralExpr = C.CXCursor_ObjCBoolLiteralExpr
 	// Represents the "self" expression in a ObjC method.

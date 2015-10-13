@@ -7,12 +7,8 @@ import "C"
 type LanguageKind int
 
 const (
-	//
-	Language_Invalid LanguageKind = C.CXLanguage_Invalid
-	//
-	Language_C = C.CXLanguage_C
-	//
-	Language_ObjC = C.CXLanguage_ObjC
-	//
-	Language_CPlusPlus = C.CXLanguage_CPlusPlus
+	Language_Invalid   LanguageKind = C.CXLanguage_Invalid
+	Language_C                      = C.CXLanguage_C
+	Language_ObjC                   = C.CXLanguage_ObjC
+	Language_CPlusPlus              = C.CXLanguage_CPlusPlus
 )
