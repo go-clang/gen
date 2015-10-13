@@ -6,6 +6,7 @@ export ROOT_DIR
 all: install
 
 clean:
+	rm -r clang-c/
 	rm *_gen.go
 generate:
 	go run cmd/go-clang-generate/*
