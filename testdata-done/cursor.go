@@ -190,27 +190,6 @@ func (ck CursorKind) IsUnexposed() bool {
 	return false
 }
 
-/**
- * \brief Describe the linkage of the entity referred to by a cursor.
- */
-type LinkageKind uint32
-
-const (
-	/** \brief This value indicates that no linkage information is available
-	 * for a provided CXCursor. */
-	LK_NoLinkage LinkageKind = C.CXLinkage_NoLinkage
-
-	// This is the linkage for static variables and static functions.
-	LK_Internal = C.CXLinkage_Internal
-
-	// This is the linkage for entities with external linkage that live
-	// in C++ anonymous namespaces.
-	LK_UniqueExternal = C.CXLinkage_UniqueExternal
-
-	// This is the linkage for entities with true, external linkage
-	LK_External = C.CXLinkage_External
-)
-
 // Linkage returns the linkage of the entity referred to by a cursor
 func (c Cursor) Linkage() LinkageKind {
 	o := C.clang_getCursorLinkage(c.c)
@@ -299,16 +278,6 @@ func (c Cursor) PlatformAvailability(availability []PlatformAvailability) (alway
 
 	return
 }
-
-// LanguageKind describes the "language" of the entity referred to by a cursor.
-type LanguageKind uint32
-
-const (
-	LanguageInvalid   LanguageKind = C.CXLanguage_Invalid
-	LanguageC                      = C.CXLanguage_C
-	LanguageObjC                   = C.CXLanguage_ObjC
-	LanguageCPlusPlus              = C.CXLanguage_CPlusPlus
-)
 
 // Language returns the "language" of the entity referred to by a cursor.
 func (c Cursor) Language() LanguageKind {
