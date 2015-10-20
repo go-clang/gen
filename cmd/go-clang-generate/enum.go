@@ -76,5 +76,7 @@ func generateEnum(e enum) error {
 		return err
 	}
 
+	// TODO remove "_" from names for files here?
+
 	return ioutil.WriteFile(strings.ToLower(e.Name)+"_gen.go", b.Bytes(), 0600)
 }

@@ -477,41 +477,6 @@ CINDEX_LINKAGE CXSourceLocation clang_getRangeStart(CXSourceRange range);
 CINDEX_LINKAGE CXSourceLocation clang_getRangeEnd(CXSourceRange range);
 
 /**
- * \brief Describes the severity of a particular diagnostic.
- */
-enum CXDiagnosticSeverity {
-  /**
-   * \brief A diagnostic that has been suppressed, e.g., by a command-line
-   * option.
-   */
-  CXDiagnostic_Ignored = 0,
-
-  /**
-   * \brief This diagnostic is a note that should be attached to the
-   * previous (non-note) diagnostic.
-   */
-  CXDiagnostic_Note    = 1,
-
-  /**
-   * \brief This diagnostic indicates suspicious code that may not be
-   * wrong.
-   */
-  CXDiagnostic_Warning = 2,
-
-  /**
-   * \brief This diagnostic indicates that the code is ill-formed.
-   */
-  CXDiagnostic_Error   = 3,
-
-  /**
-   * \brief This diagnostic indicates that the code is ill-formed such
-   * that future parser recovery is unlikely to produce useful
-   * results.
-   */
-  CXDiagnostic_Fatal   = 4
-};
-
-/**
  * \brief A single diagnostic, containing the diagnostic's severity,
  * location, text, source ranges, and fix-it hints.
  */
@@ -538,36 +503,6 @@ CINDEX_LINKAGE unsigned clang_getNumDiagnosticsInSet(CXDiagnosticSet Diags);
  */
 CINDEX_LINKAGE CXDiagnostic clang_getDiagnosticInSet(CXDiagnosticSet Diags,
                                                      unsigned Index);
-
-
-/**
- * \brief Describes the kind of error that occurred (if any) in a call to
- * \c clang_loadDiagnostics.
- */
-enum CXLoadDiag_Error {
-  /**
-   * \brief Indicates that no error occurred.
-   */
-  CXLoadDiag_None = 0,
-
-  /**
-   * \brief Indicates that an unknown error occurred while attempting to
-   * deserialize diagnostics.
-   */
-  CXLoadDiag_Unknown = 1,
-
-  /**
-   * \brief Indicates that the file containing the serialized diagnostics
-   * could not be opened.
-   */
-  CXLoadDiag_CannotLoad = 2,
-
-  /**
-   * \brief Indicates that the serialized diagnostics file is invalid or
-   * corrupt.
-   */
-  CXLoadDiag_InvalidFile = 3
-};
 
 /**
  * \brief Deserialize a set of diagnostics from a Clang diagnostics bitcode
@@ -630,74 +565,6 @@ CINDEX_LINKAGE CXDiagnosticSet
  * \brief Destroy a diagnostic.
  */
 CINDEX_LINKAGE void clang_disposeDiagnostic(CXDiagnostic Diagnostic);
-
-/**
- * \brief Options to control the display of diagnostics.
- *
- * The values in this enum are meant to be combined to customize the
- * behavior of \c clang_formatDiagnostic().
- */
-enum CXDiagnosticDisplayOptions {
-  /**
-   * \brief Display the source-location information where the
-   * diagnostic was located.
-   *
-   * When set, diagnostics will be prefixed by the file, line, and
-   * (optionally) column to which the diagnostic refers. For example,
-   *
-   * \code
-   * test.c:28: warning: extra tokens at end of #endif directive
-   * \endcode
-   *
-   * This option corresponds to the clang flag \c -fshow-source-location.
-   */
-  CXDiagnostic_DisplaySourceLocation = 0x01,
-
-  /**
-   * \brief If displaying the source-location information of the
-   * diagnostic, also include the column number.
-   *
-   * This option corresponds to the clang flag \c -fshow-column.
-   */
-  CXDiagnostic_DisplayColumn = 0x02,
-
-  /**
-   * \brief If displaying the source-location information of the
-   * diagnostic, also include information about source ranges in a
-   * machine-parsable format.
-   *
-   * This option corresponds to the clang flag
-   * \c -fdiagnostics-print-source-range-info.
-   */
-  CXDiagnostic_DisplaySourceRanges = 0x04,
-
-  /**
-   * \brief Display the option name associated with this diagnostic, if any.
-   *
-   * The option name displayed (e.g., -Wconversion) will be placed in brackets
-   * after the diagnostic text. This option corresponds to the clang flag
-   * \c -fdiagnostics-show-option.
-   */
-  CXDiagnostic_DisplayOption = 0x08,
-
-  /**
-   * \brief Display the category number associated with this diagnostic, if any.
-   *
-   * The category number is displayed within brackets after the diagnostic text.
-   * This option corresponds to the clang flag
-   * \c -fdiagnostics-show-category=id.
-   */
-  CXDiagnostic_DisplayCategoryId = 0x10,
-
-  /**
-   * \brief Display the category name associated with this diagnostic, if any.
-   *
-   * The category name is displayed within brackets after the diagnostic text.
-   * This option corresponds to the clang flag
-   * \c -fdiagnostics-show-category=name.
-   */
-  CXDiagnostic_DisplayCategoryName = 0x20
-};
 
 /**
  * \brief Format the given diagnostic in a manner that is suitable for display.
@@ -910,105 +777,6 @@ CINDEX_LINKAGE CXTranslationUnit clang_createTranslationUnit(CXIndex,
                                              const char *ast_filename);
 
 /**
- * \brief Flags that control the creation of translation units.
- *
- * The enumerators in this enumeration type are meant to be bitwise
- * ORed together to specify which options should be used when
- * constructing the translation unit.
- */
-enum CXTranslationUnit_Flags {
-  /**
-   * \brief Used to indicate that no special translation-unit options are
-   * needed.
-   */
-  CXTranslationUnit_None = 0x0,
-
-  /**
-   * \brief Used to indicate that the parser should construct a "detailed"
-   * preprocessing record, including all macro definitions and instantiations.
-   *
-   * Constructing a detailed preprocessing record requires more memory
-   * and time to parse, since the information contained in the record
-   * is usually not retained. However, it can be useful for
-   * applications that require more detailed information about the
-   * behavior of the preprocessor.
-   */
-  CXTranslationUnit_DetailedPreprocessingRecord = 0x01,
-
-  /**
-   * \brief Used to indicate that the translation unit is incomplete.
-   *
-   * When a translation unit is considered "incomplete", semantic
-   * analysis that is typically performed at the end of the
-   * translation unit will be suppressed. For example, this suppresses
-   * the completion of tentative declarations in C and of
-   * instantiation of implicitly-instantiation function templates in
-   * C++. This option is typically used when parsing a header with the
-   * intent of producing a precompiled header.
-   */
-  CXTranslationUnit_Incomplete = 0x02,
-
-  /**
-   * \brief Used to indicate that the translation unit should be built with an
-   * implicit precompiled header for the preamble.
-   *
-   * An implicit precompiled header is used as an optimization when a
-   * particular translation unit is likely to be reparsed many times
-   * when the sources aren't changing that often. In this case, an
-   * implicit precompiled header will be built containing all of the
-   * initial includes at the top of the main file (what we refer to as
-   * the "preamble" of the file). In subsequent parses, if the
-   * preamble or the files in it have not changed, \c
-   * clang_reparseTranslationUnit() will re-use the implicit
-   * precompiled header to improve parsing performance.
-   */
-  CXTranslationUnit_PrecompiledPreamble = 0x04,
-
-  /**
-   * \brief Used to indicate that the translation unit should cache some
-   * code-completion results with each reparse of the source file.
-   *
-   * Caching of code-completion results is a performance optimization that
-   * introduces some overhead to reparsing but improves the performance of
-   * code-completion operations.
-   */
-  CXTranslationUnit_CacheCompletionResults = 0x08,
-
-  /**
-   * \brief Used to indicate that the translation unit will be serialized with
-   * \c clang_saveTranslationUnit.
-   *
-   * This option is typically used when parsing a header with the intent of
-   * producing a precompiled header.
-   */
-  CXTranslationUnit_ForSerialization = 0x10,
-
-  /**
-   * \brief DEPRECATED: Enabled chained precompiled preambles in C++.
-   *
-   * Note: this is a *temporary* option that is available only while
-   * we are testing C++ precompiled preamble support. It is deprecated.
-   */
-  CXTranslationUnit_CXXChainedPCH = 0x20,
-
-  /**
-   * \brief Used to indicate that function/method bodies should be skipped while
-   * parsing.
-   *
-   * This option can be used to search for declarations/definitions while
-   * ignoring the usages.
-   */
-  CXTranslationUnit_SkipFunctionBodies = 0x40,
-
-  /**
-   * \brief Used to indicate that brief documentation comments should be
-   * included into the set of code completions returned from this translation
-   * unit.
-   */
-  CXTranslationUnit_IncludeBriefCommentsInCodeCompletion = 0x80
-};
-
-/**
  * \brief Returns the set of flags that is suitable for parsing a translation
  * unit that is being edited.
  *
@@ -1073,20 +841,6 @@ CINDEX_LINKAGE CXTranslationUnit clang_parseTranslationUnit(CXIndex CIdx,
                                                             unsigned options);
 
 /**
- * \brief Flags that control how translation units are saved.
- *
- * The enumerators in this enumeration type are meant to be bitwise
- * ORed together to specify which options should be used when
- * saving the translation unit.
- */
-enum CXSaveTranslationUnit_Flags {
-  /**
-   * \brief Used to indicate that no special saving options are needed.
-   */
-  CXSaveTranslationUnit_None = 0x0
-};
-
-/**
  * \brief Returns the set of flags that is suitable for saving a translation
  * unit.
  *
@@ -1096,41 +850,6 @@ enum CXSaveTranslationUnit_Flags {
  * the most commonly-requested data.
  */
 CINDEX_LINKAGE unsigned clang_defaultSaveOptions(CXTranslationUnit TU);
-
-/**
- * \brief Describes the kind of error that occurred (if any) in a call to
- * \c clang_saveTranslationUnit().
- */
-enum CXSaveError {
-  /**
-   * \brief Indicates that no error occurred while saving a translation unit.
-   */
-  CXSaveError_None = 0,
-
-  /**
-   * \brief Indicates that an unknown error occurred while attempting to save
-   * the file.
-   *
-   * This error typically indicates that file I/O failed when attempting to
-   * write the file.
-   */
-  CXSaveError_Unknown = 1,
-
-  /**
-   * \brief Indicates that errors during translation prevented this attempt
-   * to save the translation unit.
-   *
-   * Errors that prevent the translation unit from being saved can be
-   * extracted using \c clang_getNumDiagnostics() and \c clang_getDiagnostic().
-   */
-  CXSaveError_TranslationErrors = 2,
-
-  /**
-   * \brief Indicates that the translation unit to be saved was somehow
-   * invalid (e.g., NULL).
-   */
-  CXSaveError_InvalidTU = 3
-};
 
 /**
  * \brief Saves a translation unit into a serialized representation of
@@ -1163,20 +882,6 @@ CINDEX_LINKAGE int clang_saveTranslationUnit(CXTranslationUnit TU,
  * \brief Destroy the specified CXTranslationUnit object.
  */
 CINDEX_LINKAGE void clang_disposeTranslationUnit(CXTranslationUnit);
-
-/**
- * \brief Flags that control the reparsing of translation units.
- *
- * The enumerators in this enumeration type are meant to be bitwise
- * ORed together to specify which options should be used when
- * reparsing the translation unit.
- */
-enum CXReparse_Flags {
-  /**
-   * \brief Used to indicate that no special reparsing options are needed.
-   */
-  CXReparse_None = 0x0
-};
 
 /**
  * \brief Returns the set of flags that is suitable for reparsing a translation
@@ -1710,28 +1415,6 @@ CINDEX_LINKAGE CXSourceLocation clang_getCursorLocation(CXCursor);
 CINDEX_LINKAGE CXSourceRange clang_getCursorExtent(CXCursor);
 
 /**
- * \brief Describes the calling convention of a function type
- */
-enum CXCallingConv {
-  CXCallingConv_Default = 0,
-  CXCallingConv_C = 1,
-  CXCallingConv_X86StdCall = 2,
-  CXCallingConv_X86FastCall = 3,
-  CXCallingConv_X86ThisCall = 4,
-  CXCallingConv_X86Pascal = 5,
-  CXCallingConv_AAPCS = 6,
-  CXCallingConv_AAPCS_VFP = 7,
-  CXCallingConv_PnaclCall = 8,
-  CXCallingConv_IntelOclBicc = 9,
-  CXCallingConv_X86_64Win64 = 10,
-  CXCallingConv_X86_64SysV = 11,
-
-  CXCallingConv_Invalid = 100,
-  CXCallingConv_Unexposed = 200
-};
-
-
-/**
  * \brief The type of an element in the abstract syntax tree.
  *
  */
@@ -1952,37 +1635,6 @@ CINDEX_LINKAGE CXType clang_getArrayElementType(CXType T);
 CINDEX_LINKAGE long long clang_getArraySize(CXType T);
 
 /**
- * \brief List the possible error codes for \c clang_Type_getSizeOf,
- *   \c clang_Type_getAlignOf, \c clang_Type_getOffsetOf and
- *   \c clang_Cursor_getOffsetOf.
- *
- * A value of this enumeration type can be returned if the target type is not
- * a valid argument to sizeof, alignof or offsetof.
- */
-enum CXTypeLayoutError {
-  /**
-   * \brief Type is of kind CXType_Invalid.
-   */
-  CXTypeLayoutError_Invalid = -1,
-  /**
-   * \brief The type is an incomplete Type.
-   */
-  CXTypeLayoutError_Incomplete = -2,
-  /**
-   * \brief The type is a dependent Type.
-   */
-  CXTypeLayoutError_Dependent = -3,
-  /**
-   * \brief The type is not a constant size type.
-   */
-  CXTypeLayoutError_NotConstantSize = -4,
-  /**
-   * \brief The Field name is not valid for this record.
-   */
-  CXTypeLayoutError_InvalidFieldName = -5
-};
-
-/**
  * \brief Return the alignment of a type in bytes as per C++[expr.alignof]
  *   standard.
  *
@@ -2050,17 +1702,6 @@ CINDEX_LINKAGE unsigned clang_Cursor_isBitField(CXCursor C);
 CINDEX_LINKAGE unsigned clang_isVirtualBase(CXCursor);
 
 /**
- * \brief Represents the C++ access control level to a base class for a
- * cursor with kind CX_CXXBaseSpecifier.
- */
-enum CX_CXXAccessSpecifier {
-  CX_CXXInvalidAccessSpecifier,
-  CX_CXXPublic,
-  CX_CXXProtected,
-  CX_CXXPrivate
-};
-
-/**
  * \brief Returns the access control level for the referenced object.
  *
  * If the cursor refers to a C++ declaration, its access control level within its
@@ -2104,30 +1745,6 @@ CINDEX_LINKAGE CXCursor clang_getOverloadedDecl(CXCursor cursor,
  *
  */
 CINDEX_LINKAGE CXType clang_getIBOutletCollectionType(CXCursor);
-
-/**
- * \brief Describes how the traversal of the children of a particular
- * cursor should proceed after visiting a particular child cursor.
- *
- * A value of this enumeration type should be returned by each
- * \c CXCursorVisitor to indicate how clang_visitChildren() proceed.
- */
-enum CXChildVisitResult {
-  /**
-   * \brief Terminates the cursor traversal.
-   */
-  CXChildVisit_Break,
-  /**
-   * \brief Continues the cursor traversal with the next sibling of
-   * the cursor just visited, without visiting its children.
-   */
-  CXChildVisit_Continue,
-  /**
-   * \brief Recursively traverse the children of this cursor, using
-   * the same visitor and client data.
-   */
-  CXChildVisit_Recurse
-};
 
 /**
  * \brief Visitor invoked for each cursor found by a traversal.
@@ -2526,53 +2143,6 @@ CINDEX_LINKAGE unsigned clang_Module_getNumTopLevelHeaders(CXTranslationUnit,
 CINDEX_LINKAGE
 CXFile clang_Module_getTopLevelHeader(CXTranslationUnit,
                                       CXModule Module, unsigned Index);
-
-/**
- * \brief The most appropriate rendering mode for an inline command, chosen on
- * command semantics in Doxygen.
- */
-enum CXCommentInlineCommandRenderKind {
-  /**
-   * \brief Command argument should be rendered in a normal font.
-   */
-  CXCommentInlineCommandRenderKind_Normal,
-
-  /**
-   * \brief Command argument should be rendered in a bold font.
-   */
-  CXCommentInlineCommandRenderKind_Bold,
-
-  /**
-   * \brief Command argument should be rendered in a monospaced font.
-   */
-  CXCommentInlineCommandRenderKind_Monospaced,
-
-  /**
-   * \brief Command argument should be rendered emphasized (typically italic
-   * font).
-   */
-  CXCommentInlineCommandRenderKind_Emphasized
-};
-
-/**
- * \brief Describes parameter passing direction for \\param or \\arg command.
- */
-enum CXCommentParamPassDirection {
-  /**
-   * \brief The parameter is an input parameter.
-   */
-  CXCommentParamPassDirection_In,
-
-  /**
-   * \brief The parameter is an output parameter.
-   */
-  CXCommentParamPassDirection_Out,
-
-  /**
-   * \brief The parameter is an input and output parameter.
-   */
-  CXCommentParamPassDirection_InOut
-};
 
 /**
  * \param Comment AST node of any kind.
@@ -3000,32 +2570,6 @@ CINDEX_LINKAGE CXSourceRange clang_getCursorReferenceNameRange(CXCursor C,
                                                 unsigned NameFlags,
                                                 unsigned PieceIndex);
 
-enum CXNameRefFlags {
-  /**
-   * \brief Include the nested-name-specifier, e.g. Foo:: in x.Foo::y, in the
-   * range.
-   */
-  CXNameRange_WantQualifier = 0x1,
-
-  /**
-   * \brief Include the explicit template arguments, e.g. \<int> in x.f<int>,
-   * in the range.
-   */
-  CXNameRange_WantTemplateArgs = 0x2,
-
-  /**
-   * \brief If the name is non-contiguous, return the full spanning range.
-   *
-   * Non-contiguous names occur in Objective-C when a selector with two or more
-   * parameters is used, or in C++ when using an operator:
-   * \code
-   * [object doSomething:here withValue:there]; // ObjC
-   * return some_vector[1]; // C++
-   * \endcode
-   */
-  CXNameRange_WantSinglePiece = 0x4
-};
-
 /**
  * \brief Describes a single preprocessing token.
  */
@@ -3330,164 +2874,6 @@ typedef struct {
 } CXCodeCompleteResults;
 
 /**
- * \brief Flags that can be passed to \c clang_codeCompleteAt() to
- * modify its behavior.
- *
- * The enumerators in this enumeration can be bitwise-OR'd together to
- * provide multiple options to \c clang_codeCompleteAt().
- */
-enum CXCodeComplete_Flags {
-  /**
-   * \brief Whether to include macros within the set of code
-   * completions returned.
-   */
-  CXCodeComplete_IncludeMacros = 0x01,
-
-  /**
-   * \brief Whether to include code patterns for language constructs
-   * within the set of code completions, e.g., for loops.
-   */
-  CXCodeComplete_IncludeCodePatterns = 0x02,
-
-  /**
-   * \brief Whether to include brief documentation within the set of code
-   * completions returned.
-   */
-  CXCodeComplete_IncludeBriefComments = 0x04
-};
-
-/**
- * \brief Bits that represent the context under which completion is occurring.
- *
- * The enumerators in this enumeration may be bitwise-OR'd together if multiple
- * contexts are occurring simultaneously.
- */
-enum CXCompletionContext {
-  /**
-   * \brief The context for completions is unexposed, as only Clang results
-   * should be included. (This is equivalent to having no context bits set.)
-   */
-  CXCompletionContext_Unexposed = 0,
-
-  /**
-   * \brief Completions for any possible type should be included in the results.
-   */
-  CXCompletionContext_AnyType = 1 << 0,
-
-  /**
-   * \brief Completions for any possible value (variables, function calls, etc.)
-   * should be included in the results.
-   */
-  CXCompletionContext_AnyValue = 1 << 1,
-  /**
-   * \brief Completions for values that resolve to an Objective-C object should
-   * be included in the results.
-   */
-  CXCompletionContext_ObjCObjectValue = 1 << 2,
-  /**
-   * \brief Completions for values that resolve to an Objective-C selector
-   * should be included in the results.
-   */
-  CXCompletionContext_ObjCSelectorValue = 1 << 3,
-  /**
-   * \brief Completions for values that resolve to a C++ class type should be
-   * included in the results.
-   */
-  CXCompletionContext_CXXClassTypeValue = 1 << 4,
-
-  /**
-   * \brief Completions for fields of the member being accessed using the dot
-   * operator should be included in the results.
-   */
-  CXCompletionContext_DotMemberAccess = 1 << 5,
-  /**
-   * \brief Completions for fields of the member being accessed using the arrow
-   * operator should be included in the results.
-   */
-  CXCompletionContext_ArrowMemberAccess = 1 << 6,
-  /**
-   * \brief Completions for properties of the Objective-C object being accessed
-   * using the dot operator should be included in the results.
-   */
-  CXCompletionContext_ObjCPropertyAccess = 1 << 7,
-
-  /**
-   * \brief Completions for enum tags should be included in the results.
-   */
-  CXCompletionContext_EnumTag = 1 << 8,
-  /**
-   * \brief Completions for union tags should be included in the results.
-   */
-  CXCompletionContext_UnionTag = 1 << 9,
-  /**
-   * \brief Completions for struct tags should be included in the results.
-   */
-  CXCompletionContext_StructTag = 1 << 10,
-
-  /**
-   * \brief Completions for C++ class names should be included in the results.
-   */
-  CXCompletionContext_ClassTag = 1 << 11,
-  /**
-   * \brief Completions for C++ namespaces and namespace aliases should be
-   * included in the results.
-   */
-  CXCompletionContext_Namespace = 1 << 12,
-  /**
-   * \brief Completions for C++ nested name specifiers should be included in
-   * the results.
-   */
-  CXCompletionContext_NestedNameSpecifier = 1 << 13,
-
-  /**
-   * \brief Completions for Objective-C interfaces (classes) should be included
-   * in the results.
-   */
-  CXCompletionContext_ObjCInterface = 1 << 14,
-  /**
-   * \brief Completions for Objective-C protocols should be included in
-   * the results.
-   */
-  CXCompletionContext_ObjCProtocol = 1 << 15,
-  /**
-   * \brief Completions for Objective-C categories should be included in
-   * the results.
-   */
-  CXCompletionContext_ObjCCategory = 1 << 16,
-  /**
-   * \brief Completions for Objective-C instance messages should be included
-   * in the results.
-   */
-  CXCompletionContext_ObjCInstanceMessage = 1 << 17,
-  /**
-   * \brief Completions for Objective-C class messages should be included in
-   * the results.
-   */
-  CXCompletionContext_ObjCClassMessage = 1 << 18,
-  /**
-   * \brief Completions for Objective-C selector names should be included in
-   * the results.
-   */
-  CXCompletionContext_ObjCSelectorName = 1 << 19,
-
-  /**
-   * \brief Completions for preprocessor macro names should be included in
-   * the results.
-   */
-  CXCompletionContext_MacroName = 1 << 20,
-
-  /**
-   * \brief Natural language completions should be included in the results.
-   */
-  CXCompletionContext_NaturalLanguage = 1 << 21,
-
-  /**
-   * \brief The current context is unknown, so set all contexts.
-   */
-  CXCompletionContext_Unknown = ((1 << 22) - 1)
-};
-
-/**
  * \brief Returns a default set of code-completion options that can be
  * passed to\c clang_codeCompleteAt().
  */
@@ -3758,11 +3144,6 @@ CINDEX_LINKAGE void clang_remap_getFilenames(CXRemapping, unsigned index,
  * \brief Dispose the remapping.
  */
 CINDEX_LINKAGE void clang_remap_dispose(CXRemapping);
-
-enum CXVisitorResult {
-  CXVisit_Break,
-  CXVisit_Continue
-};
 
 typedef struct {
   void *context;

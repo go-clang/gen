@@ -91,7 +91,7 @@ func main() {
 		}
 	}
 
-	var enumKinds []enum
+	var enums []enum
 
 	cursor := tu.ToCursor()
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
@@ -99,15 +99,17 @@ func main() {
 		case clang.CK_EnumDecl:
 			name := cursor.Spelling()
 
-			if name != "" && strings.HasSuffix(name, "Kind") {
-				enumKinds = append(enumKinds, handleEnumCursor(cursor))
+			if name != "" {
+				enums = append(enums, handleEnumCursor(cursor))
+			} else {
+				fmt.Println("Enum:", name)
 			}
 		}
 
 		return clang.CVR_Recurse
 	})
 
-	for _, e := range enumKinds {
+	for _, e := range enums {
 		if err := generateEnum(e); err != nil {
 			exitWithFatal("Cannot generate enum", err)
 		}

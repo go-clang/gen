@@ -633,19 +633,6 @@ func (c Cursor) IsVirtualBase() bool {
 }
 
 /**
- * \brief Represents the C++ access control level to a base class for a
- * cursor with kind CX_CXXBaseSpecifier.
- */
-type AccessSpecifier uint32
-
-const (
-	AS_Invalid   AccessSpecifier = C.CX_CXXInvalidAccessSpecifier
-	AS_Public                    = C.CX_CXXPublic
-	AS_Protected                 = C.CX_CXXProtected
-	AS_Private                   = C.CX_CXXPrivate
-)
-
-/**
  * \brief Returns the access control level for the C++ base specifier
  * represented by a cursor with kind CXCursor_CXXBaseSpecifier or
  * CXCursor_AccessSpecifier.
@@ -697,34 +684,6 @@ func (c Cursor) IBOutletCollectionType() Type {
 	o := C.clang_getIBOutletCollectionType(c.c)
 	return Type{o}
 }
-
-/**
- * \brief Describes how the traversal of the children of a particular
- * cursor should proceed after visiting a particular child cursor.
- *
- * A value of this enumeration type should be returned by each
- * \c CXCursorVisitor to indicate how clang_visitChildren() proceed.
- */
-type ChildVisitResult uint32
-
-const (
-	/**
-	 * \brief Terminates the cursor traversal.
-	 */
-	CVR_Break ChildVisitResult = C.CXChildVisit_Break
-
-	/**
-	 * \brief Continues the cursor traversal with the next sibling of
-	 * the cursor just visited, without visiting its children.
-	 */
-	CVR_Continue = C.CXChildVisit_Continue
-
-	/**
-	 * \brief Recursively traverse the children of this cursor, using
-	 * the same visitor and client data.
-	 */
-	CVR_Recurse = C.CXChildVisit_Recurse
-)
 
 /**
  * \brief Visitor invoked for each cursor found by a traversal.
@@ -1177,34 +1136,6 @@ func (c Cursor) ReferenceNameRange(flags NameRefFlags, pieceIdx uint) SourceRang
 func (c Cursor) CompletionString() CompletionString {
 	return CompletionString{C.clang_getCursorCompletionString(c.c)}
 }
-
-type NameRefFlags uint32
-
-const (
-	/**
-	 * \brief Include the nested-name-specifier, e.g. Foo:: in x.Foo::y, in the
-	 * range.
-	 */
-	NR_WantQualifier = C.CXNameRange_WantQualifier
-
-	/**
-	 * \brief Include the explicit template arguments, e.g. <int> in x.f<int>, in
-	 * the range.
-	 */
-	NR_WantTemplateArgs = C.CXNameRange_WantTemplateArgs
-
-	/**
-	 * \brief If the name is non-contiguous, return the full spanning range.
-	 *
-	 * Non-contiguous names occur in Objective-C when a selector with two or more
-	 * parameters is used, or in C++ when using an operator:
-	 * \code
-	 * [object doSomething:here withValue:there]; // ObjC
-	 * return some_vector[1]; // C++
-	 * \endcode
-	 */
-	NR_WantSinglePiece = C.CXNameRange_WantSinglePiece
-)
 
 // TODO
 //

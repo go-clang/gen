@@ -4,60 +4,6 @@ package clang
 import "C"
 
 /**
- * \brief Describes the severity of a particular diagnostic.
- */
-type DiagnosticSeverity int
-
-const (
-	/**
-	 * \brief A diagnostic that has been suppressed, e.g., by a command-line
-	 * option.
-	 */
-	Diagnostic_Ignored = C.CXDiagnostic_Ignored
-
-	/**
-	 * \brief This diagnostic is a note that should be attached to the
-	 * previous (non-note) diagnostic.
-	 */
-	Diagnostic_Note = C.CXDiagnostic_Note
-
-	/**
-	 * \brief This diagnostic indicates suspicious code that may not be
-	 * wrong.
-	 */
-	Diagnostic_Warning = C.CXDiagnostic_Warning
-
-	/**
-	 * \brief This diagnostic indicates that the code is ill-formed.
-	 */
-	Diagnostic_Error = C.CXDiagnostic_Error
-
-	/**
-	 * \brief This diagnostic indicates that the code is ill-formed such
-	 * that future parser recovery is unlikely to produce useful
-	 * results.
-	 */
-	Diagnostic_Fatal = C.CXDiagnostic_Fatal
-)
-
-func (ds DiagnosticSeverity) String() string {
-	switch ds {
-	case Diagnostic_Ignored:
-		return "Ignored"
-	case Diagnostic_Note:
-		return "Note"
-	case Diagnostic_Warning:
-		return "Warning"
-	case Diagnostic_Error:
-		return "Error"
-	case Diagnostic_Fatal:
-		return "Fatal"
-	default:
-		return "Invalid"
-	}
-}
-
-/**
  * \brief A single diagnostic, containing the diagnostic's severity,
  * location, text, source ranges, and fix-it hints.
  */
@@ -211,76 +157,6 @@ func (d Diagnostic) Format(options DiagnosticDisplayOptions) string {
 func (d Diagnostic) String() string {
 	return d.Format(DefaultDiagnosticDisplayOptions())
 }
-
-/**
- * \brief Options to control the display of diagnostics.
- *
- * The values in this enum are meant to be combined to customize the
- * behavior of \c clang_displayDiagnostic().
- */
-type DiagnosticDisplayOptions int
-
-const (
-	/**
-	 * \brief Display the source-location information where the
-	 * diagnostic was located.
-	 *
-	 * When set, diagnostics will be prefixed by the file, line, and
-	 * (optionally) column to which the diagnostic refers. For example,
-	 *
-	 * \code
-	 * test.c:28: warning: extra tokens at end of #endif directive
-	 * \endcode
-	 *
-	 * This option corresponds to the clang flag \c -fshow-source-location.
-	 */
-	Diagnostic_DisplaySourceLocation = C.CXDiagnostic_DisplaySourceLocation
-
-	/**
-	 * \brief If displaying the source-location information of the
-	 * diagnostic, also include the column number.
-	 *
-	 * This option corresponds to the clang flag \c -fshow-column.
-	 */
-	Diagnostic_DisplayColumn = C.CXDiagnostic_DisplayColumn
-
-	/**
-	 * \brief If displaying the source-location information of the
-	 * diagnostic, also include information about source ranges in a
-	 * machine-parsable format.
-	 *
-	 * This option corresponds to the clang flag
-	 * \c -fdiagnostics-print-source-range-info.
-	 */
-	Diagnostic_DisplaySourceRanges = C.CXDiagnostic_DisplaySourceRanges
-
-	/**
-	 * \brief Display the option name associated with this diagnostic, if any.
-	 *
-	 * The option name displayed (e.g., -Wconversion) will be placed in brackets
-	 * after the diagnostic text. This option corresponds to the clang flag
-	 * \c -fdiagnostics-show-option.
-	 */
-	Diagnostic_DisplayOption = C.CXDiagnostic_DisplayOption
-
-	/**
-	 * \brief Display the category number associated with this diagnostic, if any.
-	 *
-	 * The category number is displayed within brackets after the diagnostic text.
-	 * This option corresponds to the clang flag
-	 * \c -fdiagnostics-show-category=id.
-	 */
-	Diagnostic_DisplayCategoryId = C.CXDiagnostic_DisplayCategoryId
-
-	/**
-	 * \brief Display the category name associated with this diagnostic, if any.
-	 *
-	 * The category name is displayed within brackets after the diagnostic text.
-	 * This option corresponds to the clang flag
-	 * \c -fdiagnostics-show-category=name.
-	 */
-	Diagnostic_DisplayCategoryName = C.CXDiagnostic_DisplayCategoryName
-)
 
 /**
  * \brief Retrieve the set of display options most similar to the
