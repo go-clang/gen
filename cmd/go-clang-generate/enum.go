@@ -9,9 +9,10 @@ import (
 )
 
 type enum struct { // TODO make public
-	Name    string
-	CName   string
-	Comment string
+	Name           string
+	CName          string
+	CNameIsTypeDef bool
+	Comment        string
 
 	Items []enumerator
 }
@@ -22,10 +23,11 @@ type enumerator struct { // TODO make public
 	Comment string
 }
 
-func handleEnumCursor(cname string, cursor clang.Cursor) enum {
+func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) enum {
 	e := enum{
-		CName:   cname,
-		Comment: cleanDoxygenComment(cursor.RawCommentText()),
+		CName:          cname,
+		CNameIsTypeDef: cnameIsTypeDef,
+		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
 
 		Items: []enumerator{},
 	}

@@ -10,21 +10,23 @@ import (
 )
 
 type Struct struct {
-	Name    string
-	CName   string
-	Comment string
+	Name           string
+	CName          string
+	CNameIsTypeDef bool
+	Comment        string
 }
 
-func handleStructCursor(cname string, cursor clang.Cursor) Struct {
-	s := handleVoidStructCursor(cname, cursor)
+func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) Struct {
+	s := handleVoidStructCursor(cursor, cname, cnameIsTypeDef)
 
 	return s
 }
 
-func handleVoidStructCursor(cname string, cursor clang.Cursor) Struct {
+func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) Struct {
 	s := Struct{
-		CName:   cname,
-		Comment: cleanDoxygenComment(cursor.RawCommentText()),
+		CName:          cname,
+		CNameIsTypeDef: cnameIsTypeDef,
+		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
 	}
 
 	s.Name = trimClangPrefix(s.CName)
@@ -39,7 +41,7 @@ import "C"
 
 {{$.Comment}}
 type {{$.Name}} struct {
-	c C.{{$.CName}}
+	c C.{{if not $.CNameIsTypeDef}}struct_{{end}}{{$.CName}}
 }
 
 `))

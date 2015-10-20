@@ -105,28 +105,36 @@ func main() {
 			return clang.CVR_Continue
 		}
 
-		name := cursor.Spelling()
+		cname := cursor.Spelling()
+		cnameIsTypeDef := false
 
-		if parentName := parent.Spelling(); parent.Kind() == clang.CK_TypedefDecl && parentName != "" {
-			name = parentName
+		if parentCName := parent.Spelling(); parent.Kind() == clang.CK_TypedefDecl && parentCName != "" {
+			cname = parentCName
+			cnameIsTypeDef = true
 		}
 
 		switch cursor.Kind() {
 		case clang.CK_EnumDecl:
-			if name == "" {
+			if cname == "" {
 				break
 			}
 
-			enums = append(enums, handleEnumCursor(name, cursor))
+			enums = append(enums, handleEnumCursor(cursor, cname, cnameIsTypeDef))
 		case clang.CK_StructDecl:
-			if name == "" {
+			if cname == "" {
 				break
 			}
 
-			structs = append(structs, handleStructCursor(name, cursor))
+			switch cname {
+			// TODO ignore declarations like "typedef struct CXTranslationUnitImpl *CXTranslationUnit" for now
+			case "CXCursorSetImpl", "CXTranslationUnitImpl":
+				return clang.CVR_Recurse
+			}
+
+			structs = append(structs, handleStructCursor(cursor, cname, cnameIsTypeDef))
 		case clang.CK_TypedefDecl:
 			if cursor.TypedefDeclUnderlyingType().TypeSpelling() == "void *" {
-				structs = append(structs, handleVoidStructCursor(name, cursor))
+				structs = append(structs, handleVoidStructCursor(cursor, cname, true))
 			}
 		}
 
