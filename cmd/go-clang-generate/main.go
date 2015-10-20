@@ -106,9 +106,17 @@ func main() {
 		case clang.CK_EnumDecl:
 			name := cursor.Spelling()
 
-			if name != "" {
-				enums = append(enums, handleEnumCursor(cursor))
+			if name == "" {
+				if parent.Kind() == clang.CK_TypedefDecl {
+					name = parent.Spelling()
+				}
 			}
+
+			if name == "" {
+				break
+			}
+
+			enums = append(enums, handleEnumCursor(name, cursor))
 		}
 
 		return clang.CVR_Recurse

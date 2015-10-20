@@ -22,9 +22,9 @@ type enumerator struct {
 	Comment string
 }
 
-func handleEnumCursor(cursor clang.Cursor) enum {
+func handleEnumCursor(cname string, cursor clang.Cursor) enum {
 	e := enum{
-		CName:   cursor.Spelling(),
+		CName:   cname,
 		Comment: cleanDoxygenComment(cursor.RawCommentText()),
 
 		Items: []enumerator{},
