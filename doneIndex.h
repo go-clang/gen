@@ -116,40 +116,6 @@ CXIndex clang_createIndex(int excludeDeclarationsFromPCH,
  */
 void clang_disposeIndex(CXIndex index);
 
-typedef enum {
-  /**
-   * \brief Used to indicate that no special CXIndex options are needed.
-   */
-  CXGlobalOpt_None = 0x0,
-
-  /**
-   * \brief Used to indicate that threads that libclang creates for indexing
-   * purposes should use background priority.
-   *
-   * Affects #clang_indexSourceFile, #clang_indexTranslationUnit,
-   * #clang_parseTranslationUnit, #clang_saveTranslationUnit.
-   */
-  CXGlobalOpt_ThreadBackgroundPriorityForIndexing = 0x1,
-
-  /**
-   * \brief Used to indicate that threads that libclang creates for editing
-   * purposes should use background priority.
-   *
-   * Affects #clang_reparseTranslationUnit, #clang_codeCompleteAt,
-   * #clang_annotateTokens
-   */
-  CXGlobalOpt_ThreadBackgroundPriorityForEditing = 0x2,
-
-  /**
-   * \brief Used to indicate that all threads that libclang creates should use
-   * background priority.
-   */
-  CXGlobalOpt_ThreadBackgroundPriorityForAll =
-      CXGlobalOpt_ThreadBackgroundPriorityForIndexing |
-      CXGlobalOpt_ThreadBackgroundPriorityForEditing
-
-} CXGlobalOptFlags;
-
 /**
  * \brief Sets general options associated with a CXIndex.
  *
@@ -1998,47 +1964,14 @@ int clang_Cursor_isDynamicCall(CXCursor C);
 CXType clang_Cursor_getReceiverType(CXCursor C);
 
 /**
- * \brief Property attributes for a \c CXCursor_ObjCPropertyDecl.
- */
-typedef enum {
-  CXObjCPropertyAttr_noattr    = 0x00,
-  CXObjCPropertyAttr_readonly  = 0x01,
-  CXObjCPropertyAttr_getter    = 0x02,
-  CXObjCPropertyAttr_assign    = 0x04,
-  CXObjCPropertyAttr_readwrite = 0x08,
-  CXObjCPropertyAttr_retain    = 0x10,
-  CXObjCPropertyAttr_copy      = 0x20,
-  CXObjCPropertyAttr_nonatomic = 0x40,
-  CXObjCPropertyAttr_setter    = 0x80,
-  CXObjCPropertyAttr_atomic    = 0x100,
-  CXObjCPropertyAttr_weak      = 0x200,
-  CXObjCPropertyAttr_strong    = 0x400,
-  CXObjCPropertyAttr_unsafe_unretained = 0x800
-} CXObjCPropertyAttrKind;
-
-/**
  * \brief Given a cursor that represents a property declaration, return the
  * associated property attributes. The bits are formed from
  * \c CXObjCPropertyAttrKind.
  *
  * \param reserved Reserved for future use, pass 0.
  */
-unsigned clang_Cursor_getObjCPropertyAttributes(CXCursor C,
-                                                             unsigned reserved);
+unsigned clang_Cursor_getObjCPropertyAttributes(CXCursor C, unsigned reserved);
 
-/**
- * \brief 'Qualifiers' written next to the return and parameter types in
- * ObjC method declarations.
- */
-typedef enum {
-  CXObjCDeclQualifier_None = 0x0,
-  CXObjCDeclQualifier_In = 0x1,
-  CXObjCDeclQualifier_Inout = 0x2,
-  CXObjCDeclQualifier_Out = 0x4,
-  CXObjCDeclQualifier_Bycopy = 0x8,
-  CXObjCDeclQualifier_Byref = 0x10,
-  CXObjCDeclQualifier_Oneway = 0x20
-} CXObjCDeclQualifierKind;
 
 /**
  * \brief Given a cursor that represents an ObjC method or parameter
@@ -3259,72 +3192,6 @@ typedef struct {
 
 } CXIdxImportedASTFileInfo;
 
-typedef enum {
-  CXIdxEntity_Unexposed     = 0,
-  CXIdxEntity_Typedef       = 1,
-  CXIdxEntity_Function      = 2,
-  CXIdxEntity_Variable      = 3,
-  CXIdxEntity_Field         = 4,
-  CXIdxEntity_EnumConstant  = 5,
-
-  CXIdxEntity_ObjCClass     = 6,
-  CXIdxEntity_ObjCProtocol  = 7,
-  CXIdxEntity_ObjCCategory  = 8,
-
-  CXIdxEntity_ObjCInstanceMethod = 9,
-  CXIdxEntity_ObjCClassMethod    = 10,
-  CXIdxEntity_ObjCProperty  = 11,
-  CXIdxEntity_ObjCIvar      = 12,
-
-  CXIdxEntity_Enum          = 13,
-  CXIdxEntity_Struct        = 14,
-  CXIdxEntity_Union         = 15,
-
-  CXIdxEntity_CXXClass              = 16,
-  CXIdxEntity_CXXNamespace          = 17,
-  CXIdxEntity_CXXNamespaceAlias     = 18,
-  CXIdxEntity_CXXStaticVariable     = 19,
-  CXIdxEntity_CXXStaticMethod       = 20,
-  CXIdxEntity_CXXInstanceMethod     = 21,
-  CXIdxEntity_CXXConstructor        = 22,
-  CXIdxEntity_CXXDestructor         = 23,
-  CXIdxEntity_CXXConversionFunction = 24,
-  CXIdxEntity_CXXTypeAlias          = 25,
-  CXIdxEntity_CXXInterface          = 26
-
-} CXIdxEntityKind;
-
-typedef enum {
-  CXIdxEntityLang_None = 0,
-  CXIdxEntityLang_C    = 1,
-  CXIdxEntityLang_ObjC = 2,
-  CXIdxEntityLang_CXX  = 3
-} CXIdxEntityLanguage;
-
-/**
- * \brief Extra C++ template information for an entity. This can apply to:
- * CXIdxEntity_Function
- * CXIdxEntity_CXXClass
- * CXIdxEntity_CXXStaticMethod
- * CXIdxEntity_CXXInstanceMethod
- * CXIdxEntity_CXXConstructor
- * CXIdxEntity_CXXConversionFunction
- * CXIdxEntity_CXXTypeAlias
- */
-typedef enum {
-  CXIdxEntity_NonTemplate   = 0,
-  CXIdxEntity_Template      = 1,
-  CXIdxEntity_TemplatePartialSpecialization = 2,
-  CXIdxEntity_TemplateSpecialization = 3
-} CXIdxEntityCXXTemplateKind;
-
-typedef enum {
-  CXIdxAttr_Unexposed     = 0,
-  CXIdxAttr_IBAction      = 1,
-  CXIdxAttr_IBOutlet      = 2,
-  CXIdxAttr_IBOutletCollection = 3
-} CXIdxAttrKind;
-
 typedef struct {
   CXIdxAttrKind kind;
   CXCursor cursor;
@@ -3353,10 +3220,6 @@ typedef struct {
   CXIdxLoc classLoc;
 } CXIdxIBOutletCollectionAttrInfo;
 
-typedef enum {
-  CXIdxDeclFlag_Skipped = 0x1
-} CXIdxDeclInfoFlags;
-
 typedef struct {
   const CXIdxEntityInfo *entityInfo;
   CXCursor cursor;
@@ -3382,12 +3245,6 @@ typedef struct {
   unsigned flags;
 
 } CXIdxDeclInfo;
-
-typedef enum {
-  CXIdxObjCContainer_ForwardRef = 0,
-  CXIdxObjCContainer_Interface = 1,
-  CXIdxObjCContainer_Implementation = 2
-} CXIdxObjCContainerKind;
 
 typedef struct {
   const CXIdxDeclInfo *declInfo;
@@ -3436,21 +3293,6 @@ typedef struct {
   const CXIdxBaseClassInfo *const *bases;
   unsigned numBases;
 } CXIdxCXXClassDeclInfo;
-
-/**
- * \brief Data for IndexerCallbacks#indexEntityReference.
- */
-typedef enum {
-  /**
-   * \brief The entity is referenced directly in user's code.
-   */
-  CXIdxEntityRef_Direct = 1,
-  /**
-   * \brief An implicit reference, e.g. a reference of an ObjC method via the
-   * dot syntax.
-   */
-  CXIdxEntityRef_Implicit = 2
-} CXIdxEntityRefKind;
 
 /**
  * \brief Data for IndexerCallbacks#indexEntityReference.
@@ -3607,45 +3449,6 @@ CXIndexAction clang_IndexAction_create(CXIndex CIdx);
  * created within that index action have been destroyed.
  */
 void clang_IndexAction_dispose(CXIndexAction);
-
-typedef enum {
-  /**
-   * \brief Used to indicate that no special indexing options are needed.
-   */
-  CXIndexOpt_None = 0x0,
-
-  /**
-   * \brief Used to indicate that IndexerCallbacks#indexEntityReference should
-   * be invoked for only one reference of an entity per source file that does
-   * not also include a declaration/definition of the entity.
-   */
-  CXIndexOpt_SuppressRedundantRefs = 0x1,
-
-  /**
-   * \brief Function-local symbols should be indexed. If this is not set
-   * function-local symbols will be ignored.
-   */
-  CXIndexOpt_IndexFunctionLocalSymbols = 0x2,
-
-  /**
-   * \brief Implicit function/class template instantiations should be indexed.
-   * If this is not set, implicit instantiations will be ignored.
-   */
-  CXIndexOpt_IndexImplicitTemplateInstantiations = 0x4,
-
-  /**
-   * \brief Suppress all compiler warnings when parsing for indexing.
-   */
-  CXIndexOpt_SuppressWarnings = 0x8,
-
-  /**
-   * \brief Skip a function/method body that was already parsed during an
-   * indexing session assosiated with a \c CXIndexAction object.
-   * Bodies in system headers are always skipped.
-   */
-  CXIndexOpt_SkipParsedBodiesInSession = 0x10
-
-} CXIndexOptFlags;
 
 /**
  * \brief Index the given source file and the translation unit corresponding
