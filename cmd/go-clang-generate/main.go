@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/sbinet/go-clang"
 	// "github.com/termie/go-shutil"
@@ -167,6 +168,8 @@ func main() {
 	})
 
 	for _, f := range functions {
+		//fmt.Printf("%#v\n\n", f)
+
 		if len(f.Parameters) == 1 && f.ReturnType == "CXString" {
 			f.ReceiverType = trimClangPrefix(f.Parameters[0].Type)
 
@@ -190,6 +193,30 @@ func main() {
 				f.Receiver = s.Receiver
 
 				fRaw, err := generateFunctionStringGetter(f)
+				if err != nil {
+					panic(err)
+				}
+
+				s.Methods = append(s.Methods, fRaw)
+			}
+		} else if len(f.Parameters) == 1 && f.Name[0] == 'i' && f.Name[1] == 's' && unicode.IsUpper(rune(f.Name[2])) && f.ReturnType == "unsigned int" {
+			f.ReceiverType = trimClangPrefix(f.Parameters[0].Type)
+
+			f.Name = upperFirstCharacter(f.Name)
+
+			if e, ok := lookupEnum[f.ReceiverType]; ok {
+				f.Receiver = e.Receiver
+
+				fRaw, err := generateGenerateFunctionIs(f)
+				if err != nil {
+					panic(err)
+				}
+
+				e.Methods = append(e.Methods, fRaw)
+			} else if s, ok := lookupStruct[f.ReceiverType]; ok {
+				f.Receiver = s.Receiver
+
+				fRaw, err := generateGenerateFunctionIs(f)
 				if err != nil {
 					panic(err)
 				}

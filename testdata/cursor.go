@@ -595,15 +595,6 @@ func (c Cursor) IsBitField() bool {
 }
 
 /**
- * \brief Returns 1 if the base class specified by the cursor with kind
- *   CX_CXXBaseSpecifier is virtual.
- */
-func (c Cursor) IsVirtualBase() bool {
-	o := C.clang_isVirtualBase(c.c)
-	return o == C.uint(1)
-}
-
-/**
  * \brief Returns the access control level for the C++ base specifier
  * represented by a cursor with kind CXCursor_CXXBaseSpecifier or
  * CXCursor_AccessSpecifier.
@@ -801,18 +792,6 @@ func (c Cursor) Referenced() Cursor {
 func (c Cursor) DefinitionCursor() Cursor {
 	o := C.clang_getCursorDefinition(c.c)
 	return Cursor{o}
-}
-
-/**
- * \brief Determine whether the declaration pointed to by this cursor
- * is also a definition of that entity.
- */
-func (c Cursor) IsDefinition() bool {
-	o := C.clang_isCursorDefinition(c.c)
-	if o != C.uint(0) {
-		return true
-	}
-	return false
 }
 
 /**

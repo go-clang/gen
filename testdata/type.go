@@ -37,39 +37,6 @@ func (t Type) CanonicalType() Type {
 	return Type{o}
 }
 
-// IsConstQualified determines whether a Type has the "const" qualifier set,
-// without looking through typedefs that may have added "const" at a
-// different level.
-func (t Type) IsConstQualified() bool {
-	o := C.clang_isConstQualifiedType(t.c)
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
-// IsVolatileQualified determines whether a Type has the "volatile" qualifier
-// set, without looking through typedefs that may have added "volatile" at a
-// different level.
-func (t Type) IsVolatileQualified() bool {
-	o := C.clang_isVolatileQualifiedType(t.c)
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
-// IsRestrictQualified determines whether a Type has the "restrict" qualifier
-// set, without looking through typedefs that may have added "restrict" at a
-// different level.
-func (t Type) IsRestrictQualified() bool {
-	o := C.clang_isRestrictQualifiedType(t.c)
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
 // PointeeType (for pointer types), returns the type of the pointee.
 func (t Type) PointeeType() Type {
 	o := C.clang_getPointeeType(t.c)
@@ -88,18 +55,6 @@ func (t Type) Declaration() Cursor {
 func (t Type) ResultType() Type {
 	o := C.clang_getResultType(t.c)
 	return Type{o}
-}
-
-/**
- * \brief Return 1 if the CXType is a POD (plain old data) type, and 0
- *  otherwise.
- */
-func (t Type) IsPOD() bool {
-	o := C.clang_isPODType(t.c)
-	if o != C.uint(0) {
-		return true
-	}
-	return false
 }
 
 /**

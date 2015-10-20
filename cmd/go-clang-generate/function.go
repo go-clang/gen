@@ -54,16 +54,33 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 
 var templateGenerateFunctionStringGetter = template.Must(template.New("go-clang-generate-function-string-getter").Parse(`{{$.Comment}}
 func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() string {
-	cstr := cxstring{C.{{$.CName}}({{$.Receiver}}.c)}
-	defer cstr.Dispose()
+	o := cxstring{C.{{$.CName}}({{$.Receiver}}.c)}
+	defer o.Dispose()
 
-	return cstr.String()
+	return o.String()
 }
 `))
 
 func generateFunctionStringGetter(f *Function) (string, error) {
 	var b bytes.Buffer
 	if err := templateGenerateFunctionStringGetter.Execute(&b, f); err != nil {
+		return "", err
+	}
+
+	return b.String(), nil
+}
+
+var templateGenerateFunctionIs = template.Must(template.New("go-clang-generate-function-is").Parse(`{{$.Comment}}
+func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() bool {
+	o := C.{{$.CName}}({{$.Receiver}}.c)
+
+	return o != C.uint(0)
+}
+`))
+
+func generateGenerateFunctionIs(f *Function) (string, error) {
+	var b bytes.Buffer
+	if err := templateGenerateFunctionIs.Execute(&b, f); err != nil {
 		return "", err
 	}
 

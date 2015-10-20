@@ -1426,27 +1426,6 @@ unsigned clang_equalTypes(CXType A, CXType B);
 CXType clang_getCanonicalType(CXType T);
 
 /**
- * \brief Determine whether a CXType has the "const" qualifier set,
- * without looking through typedefs that may have added "const" at a
- * different level.
- */
-unsigned clang_isConstQualifiedType(CXType T);
-
-/**
- * \brief Determine whether a CXType has the "volatile" qualifier set,
- * without looking through typedefs that may have added "volatile" at
- * a different level.
- */
-unsigned clang_isVolatileQualifiedType(CXType T);
-
-/**
- * \brief Determine whether a CXType has the "restrict" qualifier set,
- * without looking through typedefs that may have added "restrict" at a
- * different level.
- */
-unsigned clang_isRestrictQualifiedType(CXType T);
-
-/**
  * \brief For pointer types, returns the type of the pointee.
  */
 CXType clang_getPointeeType(CXType T);
@@ -1492,22 +1471,11 @@ int clang_getNumArgTypes(CXType T);
 CXType clang_getArgType(CXType T, unsigned i);
 
 /**
- * \brief Return 1 if the CXType is a variadic function type, and 0 otherwise.
- */
-unsigned clang_isFunctionTypeVariadic(CXType T);
-
-/**
  * \brief Retrieve the result type associated with a given cursor.
  *
  * This only returns a valid type if the cursor refers to a function or method.
  */
 CXType clang_getCursorResultType(CXCursor C);
-
-/**
- * \brief Return 1 if the CXType is a POD (plain old data) type, and 0
- *  otherwise.
- */
-unsigned clang_isPODType(CXType T);
 
 /**
  * \brief Return the element type of an array, complex, or vector type.
@@ -1599,12 +1567,6 @@ enum CXRefQualifierKind clang_Type_getCXXRefQualifier(CXType T);
  *   bitfield.
  */
 unsigned clang_Cursor_isBitField(CXCursor C);
-
-/**
- * \brief Returns 1 if the base class specified by the cursor with kind
- *   CX_CXXBaseSpecifier is virtual.
- */
-unsigned clang_isVirtualBase(CXCursor);
 
 /**
  * \brief Returns the access control level for the referenced object.
@@ -1813,12 +1775,6 @@ CXCursor clang_getCursorReferenced(CXCursor);
  *  translation unit, returns a NULL cursor.
  */
 CXCursor clang_getCursorDefinition(CXCursor);
-
-/**
- * \brief Determine whether the declaration pointed to by this cursor
- * is also a definition of that entity.
- */
-unsigned clang_isCursorDefinition(CXCursor);
 
 /**
  * \brief Retrieve the canonical cursor corresponding to the given cursor.

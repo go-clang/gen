@@ -10,8 +10,8 @@ type File struct {
 
 // Retrieve the complete file and path name of the given file.
 func (f File) Name() string {
-	cstr := cxstring{C.clang_getFileName(f.c)}
-	defer cstr.Dispose()
+	o := cxstring{C.clang_getFileName(f.c)}
+	defer o.Dispose()
 
-	return cstr.String()
+	return o.String()
 }

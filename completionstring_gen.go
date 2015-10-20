@@ -10,8 +10,8 @@ type CompletionString struct {
 
 // Retrieve the brief documentation comment attached to the declaration that corresponds to the given completion string.
 func (cs CompletionString) CompletionBriefComment() string {
-	cstr := cxstring{C.clang_getCompletionBriefComment(cs.c)}
-	defer cstr.Dispose()
+	o := cxstring{C.clang_getCompletionBriefComment(cs.c)}
+	defer o.Dispose()
 
-	return cstr.String()
+	return o.String()
 }
