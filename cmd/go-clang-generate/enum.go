@@ -2,10 +2,11 @@ package main
 
 import (
 	"bytes"
-	"github.com/sbinet/go-clang"
 	"io/ioutil"
 	"strings"
 	"text/template"
+
+	"github.com/sbinet/go-clang"
 )
 
 type enum struct { // TODO make public

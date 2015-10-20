@@ -78,6 +78,7 @@ func main() {
 	clangIndexHeaderFilepath := "./clang-c/Index.h"
 	tu := idx.Parse(clangIndexHeaderFilepath, []string{
 		"-I", ".", // Include current folder
+		"-I", "/usr/local/lib/clang/3.4.2/include/", // Include clang headers TODO make this generic
 	}, nil, 0)
 	defer tu.Dispose()
 
@@ -120,6 +121,11 @@ func main() {
 			}
 
 			enums = append(enums, handleEnumCursor(cursor, cname, cnameIsTypeDef))
+		case clang.CK_FunctionDecl:
+			f := handleFunctionCursor(cursor)
+			if f != nil {
+
+			}
 		case clang.CK_StructDecl:
 			if cname == "" {
 				break
