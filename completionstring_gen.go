@@ -7,3 +7,11 @@ import "C"
 type CompletionString struct {
 	c C.CXCompletionString
 }
+
+// Retrieve the brief documentation comment attached to the declaration that corresponds to the given completion string.
+func (cs CompletionString) CompletionBriefComment() string {
+	cstr := cxstring{C.clang_getCompletionBriefComment(cs.c)}
+	defer cstr.Dispose()
+
+	return cstr.String()
+}

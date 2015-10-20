@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"strings"
+	"text/template"
 
 	"github.com/sbinet/go-clang"
 )
@@ -13,6 +15,9 @@ type Function struct {
 
 	Parameters []FunctionParameter
 	ReturnType string
+
+	Receiver     string
+	ReceiverType string
 }
 
 type FunctionParameter struct {
@@ -45,4 +50,22 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 	}
 
 	return &f
+}
+
+var templateGenerateFunctionStringGetter = template.Must(template.New("go-clang-generate-function-string-getter").Parse(`{{$.Comment}}
+func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() string {
+	cstr := cxstring{C.{{$.CName}}({{$.Receiver}}.c)}
+	defer cstr.Dispose()
+
+	return cstr.String()
+}
+`))
+
+func generateFunctionStringGetter(f *Function) (string, error) {
+	var b bytes.Buffer
+	if err := templateGenerateFunctionStringGetter.Execute(&b, f); err != nil {
+		return "", err
+	}
+
+	return b.String(), nil
 }

@@ -7,3 +7,51 @@ import "C"
 type Cursor struct {
 	c C.CXCursor
 }
+
+// Returns the Objective-C type encoding for the specified declaration.
+func (c Cursor) DeclObjCTypeEncoding() string {
+	cstr := cxstring{C.clang_getDeclObjCTypeEncoding(c.c)}
+	defer cstr.Dispose()
+
+	return cstr.String()
+}
+
+// Retrieve a Unified Symbol Resolution (USR) for the entity referenced by the given cursor. A Unified Symbol Resolution (USR) is a string that identifies a particular entity (function, class, variable, etc.) within a program. USRs can be compared across translation units to determine, e.g., when references in one translation refer to an entity defined in another translation unit.
+func (c Cursor) USR() string {
+	cstr := cxstring{C.clang_getCursorUSR(c.c)}
+	defer cstr.Dispose()
+
+	return cstr.String()
+}
+
+// Retrieve a name for the entity referenced by this cursor.
+func (c Cursor) Spelling() string {
+	cstr := cxstring{C.clang_getCursorSpelling(c.c)}
+	defer cstr.Dispose()
+
+	return cstr.String()
+}
+
+// Retrieve the display name for the entity referenced by this cursor. The display name contains extra information that helps identify the cursor, such as the parameters of a function or template or the arguments of a class template specialization.
+func (c Cursor) DisplayName() string {
+	cstr := cxstring{C.clang_getCursorDisplayName(c.c)}
+	defer cstr.Dispose()
+
+	return cstr.String()
+}
+
+// Given a cursor that represents a declaration, return the associated comment text, including comment markers.
+func (c Cursor) RawCommentText() string {
+	cstr := cxstring{C.clang_Cursor_getRawCommentText(c.c)}
+	defer cstr.Dispose()
+
+	return cstr.String()
+}
+
+// Given a cursor that represents a documentable entity (e.g., declaration), return the associated \ paragraph; otherwise return the first paragraph.
+func (c Cursor) BriefCommentText() string {
+	cstr := cxstring{C.clang_Cursor_getBriefCommentText(c.c)}
+	defer cstr.Dispose()
+
+	return cstr.String()
+}

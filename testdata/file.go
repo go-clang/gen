@@ -8,13 +8,6 @@ import (
 	"time"
 )
 
-// Name retrieves the complete file and path name of the given file.
-func (c File) Name() string {
-	cstr := cxstring{C.clang_getFileName(c.c)}
-	defer cstr.Dispose()
-	return cstr.String()
-}
-
 // ModTime retrieves the last modification time of the given file.
 func (c File) ModTime() time.Time {
 	// time_t is in seconds since epoch

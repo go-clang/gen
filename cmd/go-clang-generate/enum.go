@@ -9,36 +9,40 @@ import (
 	"github.com/sbinet/go-clang"
 )
 
-type enum struct { // TODO make public
+type Enum struct {
 	Name           string
 	CName          string
 	CNameIsTypeDef bool
+	Receiver       string
 	Comment        string
 
-	Items []enumerator
+	Items []Enumerator
+
+	Methods []string
 }
 
-type enumerator struct { // TODO make public
+type Enumerator struct {
 	Name    string
 	CName   string
 	Comment string
 }
 
-func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) enum {
-	e := enum{
+func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Enum {
+	e := Enum{
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
 		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
 
-		Items: []enumerator{},
+		Items: []Enumerator{},
 	}
 
 	e.Name = trimClangPrefix(e.CName)
+	e.Receiver = receiverName(e.Name)
 
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {
 		case clang.CK_EnumConstantDecl:
-			ei := enumerator{
+			ei := Enumerator{
 				CName:   cursor.Spelling(),
 				Comment: cleanDoxygenComment(cursor.RawCommentText()), // TODO We are always using the same comment if there is none, see "TypeKind"
 			}
@@ -54,7 +58,7 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) en
 		return clang.CVR_Continue
 	})
 
-	return e
+	return &e
 }
 
 var templateGenerateEnum = template.Must(template.New("go-clang-generate-enum").Parse(`package phoenix
@@ -70,9 +74,13 @@ const (
 	{{end}}{{$e.Name}}{{if eq $i 0}} {{$.Name}}{{end}} = C.{{$e.CName}}
 {{end}}
 )
+
+{{range $i, $m := .Methods}}
+{{$m}}
+{{end}}
 `))
 
-func generateEnum(e enum) error {
+func generateEnum(e *Enum) error {
 	var b bytes.Buffer
 	if err := templateGenerateEnum.Execute(&b, e); err != nil {
 		return err

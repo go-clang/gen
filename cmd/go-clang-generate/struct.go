@@ -13,16 +13,19 @@ type Struct struct {
 	Name           string
 	CName          string
 	CNameIsTypeDef bool
+	Receiver       string
 	Comment        string
+
+	Methods []string
 }
 
-func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) Struct {
+func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
 	s := handleVoidStructCursor(cursor, cname, cnameIsTypeDef)
 
 	return s
 }
 
-func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) Struct {
+func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
 	s := Struct{
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
@@ -30,8 +33,9 @@ func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bo
 	}
 
 	s.Name = trimClangPrefix(s.CName)
+	s.Receiver = receiverName(s.Name)
 
-	return s
+	return &s
 }
 
 var templateGenerateStruct = template.Must(template.New("go-clang-generate-struct").Parse(`package phoenix
@@ -44,9 +48,12 @@ type {{$.Name}} struct {
 	c C.{{if not $.CNameIsTypeDef}}struct_{{end}}{{$.CName}}
 }
 
+{{range $i, $m := .Methods}}
+{{$m}}
+{{end}}
 `))
 
-func generateStruct(s Struct) error {
+func generateStruct(s *Struct) error {
 	var b bytes.Buffer
 	if err := templateGenerateStruct.Execute(&b, s); err != nil {
 		return err

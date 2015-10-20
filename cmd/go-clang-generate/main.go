@@ -95,8 +95,12 @@ func main() {
 		}
 	}
 
-	var enums []enum
-	var structs []Struct
+	var enums []*Enum
+	var functions []*Function
+	var structs []*Struct
+
+	lookupEnum := map[string]*Enum{}
+	lookupStruct := map[string]*Struct{}
 
 	cursor := tu.ToCursor()
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
@@ -120,11 +124,16 @@ func main() {
 				break
 			}
 
-			enums = append(enums, handleEnumCursor(cursor, cname, cnameIsTypeDef))
+			e := handleEnumCursor(cursor, cname, cnameIsTypeDef)
+
+			lookupEnum[e.Name] = e
+			lookupEnum[e.CName] = e
+
+			enums = append(enums, e)
 		case clang.CK_FunctionDecl:
 			f := handleFunctionCursor(cursor)
 			if f != nil {
-
+				functions = append(functions, f)
 			}
 		case clang.CK_StructDecl:
 			if cname == "" {
@@ -137,15 +146,58 @@ func main() {
 				return clang.CVR_Recurse
 			}
 
-			structs = append(structs, handleStructCursor(cursor, cname, cnameIsTypeDef))
+			s := handleStructCursor(cursor, cname, cnameIsTypeDef)
+
+			lookupStruct[s.Name] = s
+			lookupStruct[s.CName] = s
+
+			structs = append(structs, s)
 		case clang.CK_TypedefDecl:
 			if cursor.TypedefDeclUnderlyingType().TypeSpelling() == "void *" {
-				structs = append(structs, handleVoidStructCursor(cursor, cname, true))
+				s := handleVoidStructCursor(cursor, cname, true)
+
+				lookupStruct[s.Name] = s
+				lookupStruct[s.CName] = s
+
+				structs = append(structs, s)
 			}
 		}
 
 		return clang.CVR_Recurse
 	})
+
+	for _, f := range functions {
+		if len(f.Parameters) == 1 && f.ReturnType == "CXString" {
+			f.ReceiverType = trimClangPrefix(f.Parameters[0].Type)
+
+			f.Name = strings.TrimPrefix(f.Name, f.ReceiverType+"_")
+
+			f.Name = strings.TrimPrefix(f.Name, "get")
+			f.Name = strings.TrimPrefix(f.Name, f.ReceiverType)
+
+			f.Name = upperFirstCharacter(f.Name)
+
+			if e, ok := lookupEnum[f.ReceiverType]; ok {
+				f.Receiver = e.Receiver
+
+				fRaw, err := generateFunctionStringGetter(f)
+				if err != nil {
+					panic(err)
+				}
+
+				e.Methods = append(e.Methods, fRaw)
+			} else if s, ok := lookupStruct[f.ReceiverType]; ok {
+				f.Receiver = s.Receiver
+
+				fRaw, err := generateFunctionStringGetter(f)
+				if err != nil {
+					panic(err)
+				}
+
+				s.Methods = append(s.Methods, fRaw)
+			}
+		}
+	}
 
 	for _, e := range enums {
 		if err := generateEnum(e); err != nil {
@@ -159,7 +211,7 @@ func main() {
 		}
 	}
 
-	if _, _, err = execToBuffer("gofmt", "-w", "./"); err != nil {
+	if _, _, err = execToBuffer("gofmt", "-w", "./"); err != nil { // TODO do this before saving the files using go/fmt
 		exitWithFatal("Gofmt failed", err)
 	}
 }

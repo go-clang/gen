@@ -43,26 +43,6 @@ func EqualCursors(c1, c2 Cursor) bool {
 	return false
 }
 
-// Spelling returns the name of the entity referenced by this cursor.
-func (c Cursor) Spelling() string {
-	cstr := cxstring{C.clang_getCursorSpelling(c.c)}
-	defer cstr.Dispose()
-	return cstr.String()
-}
-
-/**
- * \brief Retrieve the display name for the entity referenced by this cursor.
- *
- * The display name contains extra information that helps identify the cursor,
- * such as the parameters of a function or template or the arguments of a
- * class template specialization.
- */
-func (c Cursor) DisplayName() string {
-	cstr := cxstring{C.clang_getCursorDisplayName(c.c)}
-	defer cstr.Dispose()
-	return cstr.String()
-}
-
 // IsNull returns true if the underlying Cursor is null
 func (c Cursor) IsNull() bool {
 	o := C.clang_Cursor_isNull(c.c)
@@ -289,15 +269,6 @@ func (c Cursor) Language() LanguageKind {
 func (c Cursor) TranslationUnit() TranslationUnit {
 	o := C.clang_Cursor_getTranslationUnit(c.c)
 	return TranslationUnit{o}
-}
-
-// DeclObjCTypeEncoding returns the Objective-C type encoding for the
-// specified declaration.
-func (c Cursor) DeclObjCTypeEncoding() string {
-	o := C.clang_getDeclObjCTypeEncoding(c.c)
-	cstr := cxstring{o}
-	defer cstr.Dispose()
-	return cstr.String()
 }
 
 // CursorSet is a fast container representing a set of Cursors.
@@ -743,21 +714,6 @@ func GoClangCursorVisitor(cursor, parent C.CXCursor, cfct unsafe.Pointer) (statu
 	return o
 }
 
-/**
- * \brief Retrieve a Unified Symbol Resolution (USR) for the entity referenced
- * by the given cursor.
- *
- * A Unified Symbol Resolution (USR) is a string that identifies a particular
- * entity (function, class, variable, etc.) within a program. USRs can be
- * compared across translation units to determine, e.g., when references in
- * one translation refer to an entity defined in another translation unit.
- */
-func (c Cursor) USR() string {
-	cstr := cxstring{C.clang_getCursorUSR(c.c)}
-	defer cstr.Dispose()
-	return cstr.String()
-}
-
 //FIXME
 // /**
 //  * \brief Construct a USR for a specified Objective-C class.
@@ -960,27 +916,6 @@ func (c Cursor) IsVariadic() bool {
  */
 func (c Cursor) CommentRange() SourceRange {
 	return SourceRange{C.clang_Cursor_getCommentRange(c.c)}
-}
-
-/**
- * \brief Given a cursor that represents a declaration, return the associated
- * comment text, including comment markers.
- */
-func (c Cursor) RawCommentText() string {
-	cstr := cxstring{C.clang_Cursor_getRawCommentText(c.c)}
-	defer cstr.Dispose()
-	return cstr.String()
-}
-
-/**
- * \brief Given a cursor that represents a documentable entity (e.g.,
- * declaration), return the associated \\brief paragraph; otherwise return the
- * first paragraph.
- */
-func (c Cursor) BriefCommentText() string {
-	cstr := cxstring{C.clang_Cursor_getBriefCommentText(c.c)}
-	defer cstr.Dispose()
-	return cstr.String()
 }
 
 /**
