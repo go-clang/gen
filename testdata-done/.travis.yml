@@ -1,0 +1,29 @@
+language: go
+
+before_install:
+   - sudo add-apt-repository -y ppa:costamagnagianfranco/locutusofborg-ppa
+   - sudo apt-get update -qq
+   - sudo apt-get install libclang-dev -qq
+
+install: 
+  - mkdir -p $GOPATH/src/github.com/sbinet/go-clang
+  - mv * $GOPATH/src/github.com/sbinet/go-clang/.
+  - pushd $GOPATH/src/github.com/sbinet/go-clang
+  - go get -d -v ./...
+  - go build -v ./...
+
+script: 
+  - pushd $GOPATH/src/github.com/sbinet/go-clang
+  - go test ./...
+
+notifications:
+  email:
+    recipients:
+      - binet@cern.ch
+    on_success: change
+    on_failure: always
+
+# whitelist
+branches:
+  only:
+    - release/clang-3.0
