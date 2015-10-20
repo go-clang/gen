@@ -15,7 +15,13 @@ type Struct struct {
 	Comment string
 }
 
-func handleTypedefStructCursor(cname string, cursor clang.Cursor) Struct {
+func handleStructCursor(cname string, cursor clang.Cursor) Struct {
+	s := handleVoidStructCursor(cname, cursor)
+
+	return s
+}
+
+func handleVoidStructCursor(cname string, cursor clang.Cursor) Struct {
 	s := Struct{
 		CName:   cname,
 		Comment: cleanDoxygenComment(cursor.RawCommentText()),

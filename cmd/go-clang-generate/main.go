@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/sbinet/go-clang"
-	"github.com/termie/go-shutil"
+	// "github.com/termie/go-shutil"
 )
 
 func main() {
@@ -50,11 +50,11 @@ func main() {
 
 	fmt.Printf("Will generate go-clang for LLVM version %d.%d in current directory\n", llvmVersion.Major, llvmVersion.Minor)
 
-	// Copy the Clang-C include directory into the current directory
+	/*// Copy the Clang-C include directory into the current directory
 	_ = os.RemoveAll("./clang-c/")
 	if err := shutil.CopyTree(clangCIncludeDir, "./clang-c/", nil); err != nil {
 		exitWithFatal(fmt.Sprintf("Cannot copy Clang-C include directory %q into current directory", clangCIncludeDir), err)
-	}
+	}*/
 
 	// Remove all generated .go files
 	if files, err := ioutil.ReadDir("./"); err != nil {
@@ -105,26 +105,28 @@ func main() {
 			return clang.CVR_Continue
 		}
 
+		name := cursor.Spelling()
+
+		if parentName := parent.Spelling(); parent.Kind() == clang.CK_TypedefDecl && parentName != "" {
+			name = parentName
+		}
+
 		switch cursor.Kind() {
 		case clang.CK_EnumDecl:
-			name := cursor.Spelling()
-
-			if name == "" {
-				if parent.Kind() == clang.CK_TypedefDecl {
-					name = parent.Spelling()
-				}
-			}
-
 			if name == "" {
 				break
 			}
 
 			enums = append(enums, handleEnumCursor(name, cursor))
-		case clang.CK_TypedefDecl:
-			name := cursor.Spelling()
+		case clang.CK_StructDecl:
+			if name == "" {
+				break
+			}
 
+			structs = append(structs, handleStructCursor(name, cursor))
+		case clang.CK_TypedefDecl:
 			if cursor.TypedefDeclUnderlyingType().TypeSpelling() == "void *" {
-				structs = append(structs, handleTypedefStructCursor(name, cursor))
+				structs = append(structs, handleVoidStructCursor(name, cursor))
 			}
 		}
 
