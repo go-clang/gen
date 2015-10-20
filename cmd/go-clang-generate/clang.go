@@ -40,6 +40,7 @@ func cleanDoxygenComment(comment string) string {
 }
 
 func trimClangPrefix(name string) string {
+	// TODO objective C prefix
 	name = strings.TrimPrefix(name, "CX_CXX")
 	name = strings.TrimPrefix(name, "CXX")
 	name = strings.TrimPrefix(name, "CX")
