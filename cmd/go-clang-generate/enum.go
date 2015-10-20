@@ -8,7 +8,7 @@ import (
 	"text/template"
 )
 
-type enum struct {
+type enum struct { // TODO make public
 	Name    string
 	CName   string
 	Comment string
@@ -16,7 +16,7 @@ type enum struct {
 	Items []enumerator
 }
 
-type enumerator struct {
+type enumerator struct { // TODO make public
 	Name    string
 	CName   string
 	Comment string
@@ -70,7 +70,6 @@ const (
 `))
 
 func generateEnum(e enum) error {
-
 	var b bytes.Buffer
 	if err := templateGenerateEnum.Execute(&b, e); err != nil {
 		return err

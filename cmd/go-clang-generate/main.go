@@ -93,6 +93,7 @@ func main() {
 	}
 
 	var enums []enum
+	var structs []Struct
 
 	cursor := tu.ToCursor()
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
@@ -117,6 +118,12 @@ func main() {
 			}
 
 			enums = append(enums, handleEnumCursor(name, cursor))
+		case clang.CK_TypedefDecl:
+			name := cursor.Spelling()
+
+			if cursor.TypedefDeclUnderlyingType().TypeSpelling() == "void *" {
+				structs = append(structs, handleTypedefStructCursor(name, cursor))
+			}
 		}
 
 		return clang.CVR_Recurse
@@ -125,6 +132,12 @@ func main() {
 	for _, e := range enums {
 		if err := generateEnum(e); err != nil {
 			exitWithFatal("Cannot generate enum", err)
+		}
+	}
+
+	for _, s := range structs {
+		if err := generateStruct(s); err != nil {
+			exitWithFatal("Cannot generate struct", err)
 		}
 	}
 
