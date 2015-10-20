@@ -4,11 +4,6 @@ package clang
 // #include "go-clang.h"
 import "C"
 
-// Module describes a C++ Module
-type Module struct {
-	c C.CXModule
-}
-
 /**
  * \param Module a module object.
  *

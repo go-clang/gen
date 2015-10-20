@@ -76,7 +76,9 @@ func main() {
 	defer idx.Dispose()
 
 	clangIndexHeaderFilepath := "./clang-c/Index.h"
-	tu := idx.Parse(clangIndexHeaderFilepath, []string{}, nil, 0)
+	tu := idx.Parse(clangIndexHeaderFilepath, []string{
+		"-I", ".", // Include current folder
+	}, nil, 0)
 	defer tu.Dispose()
 
 	if !tu.IsValid() {

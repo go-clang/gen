@@ -1,20 +1,8 @@
 
 /**
- * \brief An "index" that consists of a set of translation units that would
- * typically be linked together into an executable or library.
- */
-typedef void *CXIndex;
-
-/**
  * \brief A single translation unit, which resides in an index.
  */
 typedef struct CXTranslationUnitImpl *CXTranslationUnit;
-
-/**
- * \brief Opaque pointer representing client data that will be passed through
- * to various callbacks and visitors.
- */
-typedef void *CXClientData;
 
 /**
  * \brief Provides the contents of a file that has not yet been saved to disk.
@@ -138,11 +126,6 @@ void clang_CXIndex_setGlobalOptions(CXIndex, unsigned options);
  * are associated with the given CXIndex object.
  */
 unsigned clang_CXIndex_getGlobalOptions(CXIndex);
-
-/**
- * \brief A particular source file that is part of a translation unit.
- */
-typedef void *CXFile;
 
 
 /**
@@ -441,17 +424,6 @@ CXSourceLocation clang_getRangeStart(CXSourceRange range);
  * source range.
  */
 CXSourceLocation clang_getRangeEnd(CXSourceRange range);
-
-/**
- * \brief A single diagnostic, containing the diagnostic's severity,
- * location, text, source ranges, and fix-it hints.
- */
-typedef void *CXDiagnostic;
-
-/**
- * \brief A group of CXDiagnostics.
- */
-typedef void *CXDiagnosticSet;
 
 /**
  * \brief Determine the number of diagnostics in a CXDiagnosticSet.
@@ -2019,8 +1991,6 @@ CXString clang_Cursor_getBriefCommentText(CXCursor C);
  */
 CXComment clang_Cursor_getParsedComment(CXCursor C);
 
-typedef void *CXModule;
-
 /**
  * \brief Given a CXCursor_ModuleImportDecl cursor, return the associated module.
  */
@@ -2584,21 +2554,6 @@ void clang_executeOnThread(void (*fn)(void*), void *user_data,
                                           unsigned stack_size);
 
 /**
- * \brief A semantic string that describes a code-completion result.
- *
- * A semantic string that describes the formatting of a code-completion
- * result as a single "template" of text that should be inserted into the
- * source buffer when a particular code-completion result is selected.
- * Each semantic string is made up of some number of "chunks", each of which
- * contains some text along with a description of what that text means, e.g.,
- * the name of the entity being referenced, whether the text chunk is part of
- * the template, or whether it is a "placeholder" that the user should replace
- * with actual code,of a specific kind. See \c CXCompletionChunkKind for a
- * description of the different kinds of chunks.
- */
-typedef void *CXCompletionString;
-
-/**
  * \brief A single result of code completion.
  */
 typedef struct {
@@ -2995,11 +2950,6 @@ void clang_getInclusions(CXTranslationUnit tu,
                                         CXClientData client_data);
 
 /**
- * \brief A remapping of original source files and their translated files.
- */
-typedef void *CXRemapping;
-
-/**
  * \brief Retrieve a remapping.
  *
  * \param path the path that contains metadata about remappings.
@@ -3112,28 +3062,6 @@ CXResult clang_findIncludesInFileWithBlock(CXTranslationUnit, CXFile,
 
 #  endif
 #endif
-
-/**
- * \brief The client's data object that is associated with a CXFile.
- */
-typedef void *CXIdxClientFile;
-
-/**
- * \brief The client's data object that is associated with a semantic entity.
- */
-typedef void *CXIdxClientEntity;
-
-/**
- * \brief The client's data object that is associated with a semantic container
- * of entities.
- */
-typedef void *CXIdxClientContainer;
-
-/**
- * \brief The client's data object that is associated with an AST file (PCH
- * or module).
- */
-typedef void *CXIdxClientASTFile;
 
 /**
  * \brief Source location passed to index callbacks.
@@ -3427,12 +3355,6 @@ clang_index_getClientEntity(const CXIdxEntityInfo *);
  */
 void
 clang_index_setClientEntity(const CXIdxEntityInfo *, CXIdxClientEntity);
-
-/**
- * \brief An indexing action/session, to be applied to one or multiple
- * translation units.
- */
-typedef void *CXIndexAction;
 
 /**
  * \brief An indexing action/session, to be applied to one or multiple

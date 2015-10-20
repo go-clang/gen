@@ -8,11 +8,6 @@ import (
 	"time"
 )
 
-// A particular source file that is part of a translation unit.
-type File struct {
-	c C.CXFile
-}
-
 // Name retrieves the complete file and path name of the given file.
 func (c File) Name() string {
 	cstr := cxstring{C.clang_getFileName(c.c)}

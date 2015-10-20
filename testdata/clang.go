@@ -8,12 +8,6 @@ import (
 	"unsafe"
 )
 
-// An "index" that consists of a set of translation units that would
-// typically be linked together into an executable or library
-type Index struct {
-	c C.CXIndex
-}
-
 // NewIndex provides a shared context for creating
 // translation units. It provides two options:
 //
