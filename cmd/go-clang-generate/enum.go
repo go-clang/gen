@@ -37,7 +37,7 @@ func handleEnumCursor(cursor clang.Cursor) enum {
 		case clang.CK_EnumConstantDecl:
 			ei := enumerator{
 				CName:   cursor.Spelling(),
-				Comment: cleanDoxygenComment(cursor.RawCommentText()),
+				Comment: cleanDoxygenComment(cursor.RawCommentText()), // TODO We are always using the same comment if there is none, see "TypeKind"
 			}
 
 			ei.Name = trimClangPrefix(ei.CName)

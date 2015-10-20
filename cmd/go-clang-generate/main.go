@@ -27,7 +27,7 @@ func main() {
 	var llvmVersion struct {
 		Major int
 		Minor int
-		Patch int
+		Patch int // TODO rename to Subminor
 	}
 
 	llvmVersion.Major, _ = strconv.Atoi(string(matchLLVMVersion[1]))
