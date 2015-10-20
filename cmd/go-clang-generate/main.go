@@ -75,7 +75,8 @@ func main() {
 	idx := clang.NewIndex(0, 1)
 	defer idx.Dispose()
 
-	tu := idx.Parse("./clang-c/Index.h", []string{}, nil, 0)
+	clangIndexHeaderFilepath := "./clang-c/Index.h"
+	tu := idx.Parse(clangIndexHeaderFilepath, []string{}, nil, 0)
 	defer tu.Dispose()
 
 	if !tu.IsValid() {
@@ -95,14 +96,18 @@ func main() {
 
 	cursor := tu.ToCursor()
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
+		// Only handle code of the current file
+		sourceFile, _, _, _ := cursor.Location().GetFileLocation()
+		if sourceFile.Name() != clangIndexHeaderFilepath {
+			return clang.CVR_Continue
+		}
+
 		switch cursor.Kind() {
 		case clang.CK_EnumDecl:
 			name := cursor.Spelling()
 
 			if name != "" {
 				enums = append(enums, handleEnumCursor(cursor))
-			} else {
-				fmt.Println("Enum:", name)
 			}
 		}
 
