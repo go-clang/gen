@@ -1,76 +1,3 @@
-/*===-- clang-c/Index.h - Indexing Public C Interface -------------*- C -*-===*\
-|*                                                                            *|
-|*                     The LLVM Compiler Infrastructure                       *|
-|*                                                                            *|
-|* This file is distributed under the University of Illinois Open Source      *|
-|* License. See LICENSE.TXT for details.                                      *|
-|*                                                                            *|
-|*===----------------------------------------------------------------------===*|
-|*                                                                            *|
-|* This header provides a public inferface to a Clang library for extracting  *|
-|* high-level symbol information from source files without exposing the full  *|
-|* Clang C++ API.                                                             *|
-|*                                                                            *|
-\*===----------------------------------------------------------------------===*/
-
-#ifndef CLANG_C_INDEX_H
-#define CLANG_C_INDEX_H
-
-#include <time.h>
-
-#include "clang-c/Platform.h"
-#include "clang-c/CXString.h"
-
-/**
- * \brief The version constants for the libclang API.
- * CINDEX_VERSION_MINOR should increase when there are API additions.
- * CINDEX_VERSION_MAJOR is intended for "major" source/ABI breaking changes.
- *
- * The policy about the libclang API was always to keep it source and ABI
- * compatible, thus CINDEX_VERSION_MAJOR is expected to remain stable.
- */
-#define CINDEX_VERSION_MAJOR 0
-#define CINDEX_VERSION_MINOR 20
-
-#define CINDEX_VERSION_ENCODE(major, minor) ( \
-      ((major) * 10000)                       \
-    + ((minor) *     1))
-
-#define CINDEX_VERSION CINDEX_VERSION_ENCODE( \
-    CINDEX_VERSION_MAJOR,                     \
-    CINDEX_VERSION_MINOR )
-
-#define CINDEX_VERSION_STRINGIZE_(major, minor)   \
-    #major"."#minor
-#define CINDEX_VERSION_STRINGIZE(major, minor)    \
-    CINDEX_VERSION_STRINGIZE_(major, minor)
-
-#define CINDEX_VERSION_STRING CINDEX_VERSION_STRINGIZE( \
-    CINDEX_VERSION_MAJOR,                               \
-    CINDEX_VERSION_MINOR)
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** \defgroup CINDEX libclang: C Interface to Clang
- *
- * The C Interface to Clang provides a relatively small API that exposes
- * facilities for parsing source code into an abstract syntax tree (AST),
- * loading already-parsed ASTs, traversing the AST, associating
- * physical source locations with elements within the AST, and other
- * facilities that support Clang-based development tools.
- *
- * This C interface to Clang will never provide all of the information
- * representation stored in Clang's C++ AST, nor should it: the intent is to
- * maintain an API that is relatively stable from one release to the next,
- * providing only the basic functionality needed to support development tools.
- *
- * To avoid namespace pollution, data types are prefixed with "CX" and
- * functions are prefixed with "clang_".
- *
- * @{
- */
 
 /**
  * \brief An "index" that consists of a set of translation units that would
@@ -247,12 +174,6 @@ CINDEX_LINKAGE void clang_CXIndex_setGlobalOptions(CXIndex, unsigned options);
 CINDEX_LINKAGE unsigned clang_CXIndex_getGlobalOptions(CXIndex);
 
 /**
- * \defgroup CINDEX_FILES File manipulation routines
- *
- * @{
- */
-
-/**
  * \brief A particular source file that is part of a translation unit.
  */
 typedef void *CXFile;
@@ -306,23 +227,6 @@ clang_isFileMultipleIncludeGuarded(CXTranslationUnit tu, CXFile file);
  */
 CINDEX_LINKAGE CXFile clang_getFile(CXTranslationUnit tu,
                                     const char *file_name);
-
-/**
- * @}
- */
-
-/**
- * \defgroup CINDEX_LOCATIONS Physical source locations
- *
- * Clang represents physical source locations in its abstract syntax tree in
- * great detail, with file, line, and column information for the majority of
- * the tokens parsed in the source code. These data types and functions are
- * used to represent source location information, either for a particular
- * point in the program or for a range of points in the program, and extract
- * specific location information from those data types.
- *
- * @{
- */
 
 /**
  * \brief Identifies a specific source location within a translation
@@ -571,16 +475,6 @@ CINDEX_LINKAGE CXSourceLocation clang_getRangeStart(CXSourceRange range);
  * source range.
  */
 CINDEX_LINKAGE CXSourceLocation clang_getRangeEnd(CXSourceRange range);
-
-/**
- * @}
- */
-
-/**
- * \defgroup CINDEX_DIAG Diagnostic reporting
- *
- * @{
- */
 
 /**
  * \brief Describes the severity of a particular diagnostic.
@@ -954,20 +848,6 @@ CINDEX_LINKAGE unsigned clang_getDiagnosticNumFixIts(CXDiagnostic Diagnostic);
 CINDEX_LINKAGE CXString clang_getDiagnosticFixIt(CXDiagnostic Diagnostic,
                                                  unsigned FixIt,
                                                CXSourceRange *ReplacementRange);
-
-/**
- * @}
- */
-
-/**
- * \defgroup CINDEX_TRANSLATION_UNIT Translation unit manipulation
- *
- * The routines in this group provide the ability to create and destroy
- * translation units from files, either by parsing the contents of the files or
- * by reading in a serialized representation of a translation unit.
- *
- * @{
- */
 
 /**
  * \brief Get the original translation unit source file name.
@@ -1425,12 +1305,6 @@ typedef struct {
 } CXComment;
 
 /**
- * \defgroup CINDEX_CURSOR_MANIP Cursor manipulations
- *
- * @{
- */
-
-/**
  * \brief Retrieve the NULL cursor, which represents no entity.
  */
 CINDEX_LINKAGE CXCursor clang_getNullCursor(void);
@@ -1794,21 +1668,6 @@ CINDEX_LINKAGE void clang_disposeOverriddenCursors(CXCursor *overridden);
 CINDEX_LINKAGE CXFile clang_getIncludedFile(CXCursor cursor);
 
 /**
- * @}
- */
-
-/**
- * \defgroup CINDEX_CURSOR_SOURCE Mapping between cursors and source code
- *
- * Cursors represent a location within the Abstract Syntax Tree (AST). These
- * routines help map between cursors and the physical locations where the
- * described entities occur in the source code. The mapping is provided in
- * both directions, so one can map from source code to the AST and back.
- *
- * @{
- */
-
-/**
  * \brief Map a source location to the cursor that describes the entity at that
  * location in the source code.
  *
@@ -1849,16 +1708,6 @@ CINDEX_LINKAGE CXSourceLocation clang_getCursorLocation(CXCursor);
  * entity was actually used).
  */
 CINDEX_LINKAGE CXSourceRange clang_getCursorExtent(CXCursor);
-
-/**
- * @}
- */
-
-/**
- * \defgroup CINDEX_TYPES Type information for CXCursors
- *
- * @{
- */
 
 /**
  * \brief Describes the calling convention of a function type
@@ -2248,16 +2097,6 @@ CINDEX_LINKAGE unsigned clang_getNumOverloadedDecls(CXCursor cursor);
 CINDEX_LINKAGE CXCursor clang_getOverloadedDecl(CXCursor cursor,
                                                 unsigned index);
 
-/**
- * @}
- */
-
-/**
- * \defgroup CINDEX_ATTRIBUTES Information for attributes
- *
- * @{
- */
-
 
 /**
  * \brief For cursors representing an iboutletcollection attribute,
@@ -2265,19 +2104,6 @@ CINDEX_LINKAGE CXCursor clang_getOverloadedDecl(CXCursor cursor,
  *
  */
 CINDEX_LINKAGE CXType clang_getIBOutletCollectionType(CXCursor);
-
-/**
- * @}
- */
-
-/**
- * \defgroup CINDEX_CURSOR_TRAVERSAL Traversing the AST with cursors
- *
- * These routines provide the ability to traverse the abstract syntax tree
- * using cursors.
- *
- * @{
- */
 
 /**
  * \brief Describes how the traversal of the children of a particular
@@ -2367,21 +2193,6 @@ unsigned clang_visitChildrenWithBlock(CXCursor parent,
                                       CXCursorVisitorBlock block);
 #  endif
 #endif
-
-/**
- * @}
- */
-
-/**
- * \defgroup CINDEX_CURSOR_XREF Cross-referencing in the AST
- *
- * These routines provide the ability to determine references within and
- * across translation units, by providing the names of the entities referenced
- * by cursors, follow reference cursors to the declarations they reference,
- * and associate declarations with their definitions.
- *
- * @{
- */
 
 /**
  * \brief Retrieve a Unified Symbol Resolution (USR) for the entity referenced
@@ -2660,18 +2471,6 @@ CINDEX_LINKAGE CXString clang_Cursor_getBriefCommentText(CXCursor C);
  */
 CINDEX_LINKAGE CXComment clang_Cursor_getParsedComment(CXCursor C);
 
-/**
- * @}
- */
-
-/**
- * \defgroup CINDEX_MODULE Module introspection
- *
- * The functions in this group provide access to information about modules.
- *
- * @{
- */
-
 typedef void *CXModule;
 
 /**
@@ -2727,19 +2526,6 @@ CINDEX_LINKAGE unsigned clang_Module_getNumTopLevelHeaders(CXTranslationUnit,
 CINDEX_LINKAGE
 CXFile clang_Module_getTopLevelHeader(CXTranslationUnit,
                                       CXModule Module, unsigned Index);
-
-/**
- * @}
- */
-
-/**
- * \defgroup CINDEX_COMMENT Comment AST introspection
- *
- * The routines in this group provide access to information in the
- * documentation comment ASTs.
- *
- * @{
- */
 
 /**
  * \brief The most appropriate rendering mode for an inline command, chosen on
@@ -3125,19 +2911,6 @@ CINDEX_LINKAGE CXString clang_FullComment_getAsHTML(CXComment Comment);
 CINDEX_LINKAGE CXString clang_FullComment_getAsXML(CXComment Comment);
 
 /**
- * @}
- */
-
-/**
- * \defgroup CINDEX_CPP C++ AST introspection
- *
- * The routines in this group provide access information in the ASTs specific
- * to C++ language features.
- *
- * @{
- */
-
-/**
  * \brief Determine if a C++ member function or member function template is
  * pure virtual.
  */
@@ -3254,20 +3027,6 @@ enum CXNameRefFlags {
 };
 
 /**
- * @}
- */
-
-/**
- * \defgroup CINDEX_LEX Token extraction and manipulation
- *
- * The routines in this group provide access to the tokens within a
- * translation unit, along with a semantic mapping of those tokens to
- * their corresponding cursors.
- *
- * @{
- */
-
-/**
  * \brief Describes a single preprocessing token.
  */
 typedef struct {
@@ -3359,19 +3118,6 @@ CINDEX_LINKAGE void clang_annotateTokens(CXTranslationUnit TU,
 CINDEX_LINKAGE void clang_disposeTokens(CXTranslationUnit TU,
                                         CXToken *Tokens, unsigned NumTokens);
 
-/**
- * @}
- */
-
-/**
- * \defgroup CINDEX_DEBUG Debugging facilities
- *
- * These routines are used for testing and debugging, only, and should not
- * be relied upon.
- *
- * @{
- */
-
 /* for debug/testing */
 CINDEX_LINKAGE CXString clang_getCursorKindSpelling(enum CXCursorKind Kind);
 CINDEX_LINKAGE void clang_getDefinitionSpellingAndExtent(CXCursor,
@@ -3384,22 +3130,6 @@ CINDEX_LINKAGE void clang_getDefinitionSpellingAndExtent(CXCursor,
 CINDEX_LINKAGE void clang_enableStackTraces(void);
 CINDEX_LINKAGE void clang_executeOnThread(void (*fn)(void*), void *user_data,
                                           unsigned stack_size);
-
-/**
- * @}
- */
-
-/**
- * \defgroup CINDEX_CODE_COMPLET Code completion
- *
- * Code completion involves taking an (incomplete) source file, along with
- * knowledge of where the user is actively editing that file, and suggesting
- * syntactically- and semantically-valid constructs that the user might want to
- * use at that particular point in the source code. These data structures and
- * routines provide support for code completion.
- *
- * @{
- */
 
 /**
  * \brief A semantic string that describes a code-completion result.
@@ -3939,17 +3669,6 @@ CINDEX_LINKAGE
 CXString clang_codeCompleteGetObjCSelector(CXCodeCompleteResults *Results);
 
 /**
- * @}
- */
-
-
-/**
- * \defgroup CINDEX_MISC Miscellaneous utility functions
- *
- * @{
- */
-
-/**
  * \brief Return a version string, suitable for showing to a user, but not
  *        intended to be parsed (the format is not guaranteed to be stable).
  */
@@ -3989,15 +3708,6 @@ typedef void (*CXInclusionVisitor)(CXFile included_file,
 CINDEX_LINKAGE void clang_getInclusions(CXTranslationUnit tu,
                                         CXInclusionVisitor visitor,
                                         CXClientData client_data);
-
-/**
- * @}
- */
-
-/** \defgroup CINDEX_REMAPPING Remapping functions
- *
- * @{
- */
 
 /**
  * \brief A remapping of original source files and their translated files.
@@ -4048,15 +3758,6 @@ CINDEX_LINKAGE void clang_remap_getFilenames(CXRemapping, unsigned index,
  * \brief Dispose the remapping.
  */
 CINDEX_LINKAGE void clang_remap_dispose(CXRemapping);
-
-/**
- * @}
- */
-
-/** \defgroup CINDEX_HIGH Higher level API functions
- *
- * @{
- */
 
 enum CXVisitorResult {
   CXVisit_Break,
@@ -4683,17 +4384,4 @@ CINDEX_LINKAGE void clang_indexLoc_getFileLocation(CXIdxLoc loc,
  */
 CINDEX_LINKAGE
 CXSourceLocation clang_indexLoc_getCXSourceLocation(CXIdxLoc loc);
-
-/**
- * @}
- */
-
-/**
- * @}
- */
-
-#ifdef __cplusplus
-}
-#endif
-#endif
 
