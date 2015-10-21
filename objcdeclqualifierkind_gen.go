@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // 'Qualifiers' written next to the return and parameter types in ObjC method declarations.
-type ObjCDeclQualifierKind int
+type ObjCDeclQualifierKind uint32
 
 const (
 	ObjCDeclQualifier_None   ObjCDeclQualifierKind = C.CXObjCDeclQualifier_None

@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Describes a single piece of text within a code-completion string. Each "chunk" within a code-completion string (\c CXCompletionString) is either a piece of text with a specific "kind" that describes how that text should be interpreted by the client or is another completion string.
-type CompletionChunkKind int
+type CompletionChunkKind uint32
 
 const (
 	/*

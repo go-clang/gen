@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Bits that represent the context under which completion is occurring. The enumerators in this enumeration may be bitwise-OR'd together if multiple contexts are occurring simultaneously.
-type CompletionContext int
+type CompletionContext uint32
 
 const (
 	// The context for completions is unexposed, as only Clang results should be included. (This is equivalent to having no context bits set.)

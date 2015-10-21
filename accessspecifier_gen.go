@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Represents the C++ access control level to a base class for a cursor with kind CX_CXXBaseSpecifier.
-type AccessSpecifier int
+type AccessSpecifier uint32
 
 const (
 	InvalidAccessSpecifier AccessSpecifier = C.CX_CXXInvalidAccessSpecifier

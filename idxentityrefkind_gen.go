@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Data for IndexerCallbacks#indexEntityReference.
-type IdxEntityRefKind int
+type IdxEntityRefKind uint32
 
 const (
 	// The entity is referenced directly in user's code.

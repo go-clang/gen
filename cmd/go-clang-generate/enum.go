@@ -10,11 +10,12 @@ import (
 )
 
 type Enum struct {
-	Name           string
-	CName          string
-	CNameIsTypeDef bool
-	Receiver       string
-	Comment        string
+	Name                  string
+	CName                 string
+	CNameIsTypeDef        bool
+	Receiver              string
+	ReceiverPrimitiveType string
+	Comment               string
 
 	Items []Enumerator
 
@@ -58,6 +59,12 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 		return clang.CVR_Continue
 	})
 
+	if strings.HasSuffix(e.Name, "Error") {
+		e.ReceiverPrimitiveType = "int32"
+	} else {
+		e.ReceiverPrimitiveType = "uint32"
+	}
+
 	return &e
 }
 
@@ -67,7 +74,7 @@ var templateGenerateEnum = template.Must(template.New("go-clang-generate-enum").
 import "C"
 
 {{$.Comment}}
-type {{$.Name}} int
+type {{$.Name}} {{$.ReceiverPrimitiveType}}
 
 const (
 {{range $i, $e := .Items}}	{{if $e.Comment}}{{$e.Comment}}

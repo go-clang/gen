@@ -16,8 +16,9 @@ type Function struct {
 	Parameters []FunctionParameter
 	ReturnType string
 
-	Receiver     string
-	ReceiverType string
+	Receiver              string
+	ReceiverType          string
+	ReceiverPrimitiveType string
 }
 
 type FunctionParameter struct {
@@ -54,7 +55,7 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 
 var templateGenerateFunctionStringGetter = template.Must(template.New("go-clang-generate-function-string-getter").Parse(`{{$.Comment}}
 func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() string {
-	o := cxstring{C.{{$.CName}}({{$.Receiver}}.c)}
+	o := cxstring{C.{{$.CName}}({{if ne $.ReceiverPrimitiveType ""}}{{$.ReceiverPrimitiveType}}({{$.Receiver}}){{else}}{{$.Receiver}}.c{{end}})}
 	defer o.Dispose()
 
 	return o.String()
@@ -72,7 +73,7 @@ func generateFunctionStringGetter(f *Function) (string, error) {
 
 var templateGenerateFunctionIs = template.Must(template.New("go-clang-generate-function-is").Parse(`{{$.Comment}}
 func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() bool {
-	o := C.{{$.CName}}({{$.Receiver}}.c)
+	o := C.{{$.CName}}({{if ne $.ReceiverPrimitiveType ""}}{{$.ReceiverPrimitiveType}}({{$.Receiver}}){{else}}{{$.Receiver}}.c{{end}})
 
 	return o != C.uint(0)
 }

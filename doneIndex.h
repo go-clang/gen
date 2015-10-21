@@ -961,60 +961,6 @@ unsigned clang_hashCursor(CXCursor);
 enum CXCursorKind clang_getCursorKind(CXCursor);
 
 /**
- * \brief Determine whether the given cursor kind represents a declaration.
- */
-unsigned clang_isDeclaration(enum CXCursorKind);
-
-/**
- * \brief Determine whether the given cursor kind represents a simple
- * reference.
- *
- * Note that other kinds of cursors (such as expressions) can also refer to
- * other cursors. Use clang_getCursorReferenced() to determine whether a
- * particular cursor refers to another entity.
- */
-unsigned clang_isReference(enum CXCursorKind);
-
-/**
- * \brief Determine whether the given cursor kind represents an expression.
- */
-unsigned clang_isExpression(enum CXCursorKind);
-
-/**
- * \brief Determine whether the given cursor kind represents a statement.
- */
-unsigned clang_isStatement(enum CXCursorKind);
-
-/**
- * \brief Determine whether the given cursor kind represents an attribute.
- */
-unsigned clang_isAttribute(enum CXCursorKind);
-
-/**
- * \brief Determine whether the given cursor kind represents an invalid
- * cursor.
- */
-unsigned clang_isInvalid(enum CXCursorKind);
-
-/**
- * \brief Determine whether the given cursor kind represents a translation
- * unit.
- */
-unsigned clang_isTranslationUnit(enum CXCursorKind);
-
-/***
- * \brief Determine whether the given cursor represents a preprocessing
- * element, such as a preprocessor directive or macro instantiation.
- */
-unsigned clang_isPreprocessing(enum CXCursorKind);
-
-/***
- * \brief Determine whether the given cursor represents a currently
- *  unexposed piece of the AST (e.g., CXCursor_UnexposedStmt).
- */
-unsigned clang_isUnexposed(enum CXCursorKind);
-
-/**
  * \brief Determine the linkage of the entity referred to by a given cursor.
  */
 enum CXLinkageKind clang_getCursorLinkage(CXCursor cursor);
@@ -1434,11 +1380,6 @@ CXType clang_getPointeeType(CXType T);
  * \brief Return the cursor for the declaration of the given type.
  */
 CXCursor clang_getTypeDeclaration(CXType T);
-
-/**
- * \brief Retrieve the spelling of a given CXTypeKind.
- */
-CXString clang_getTypeKindSpelling(enum CXTypeKind K);
 
 /**
  * \brief Retrieve the calling convention associated with a function type.
@@ -2301,7 +2242,6 @@ void clang_disposeTokens(CXTranslationUnit TU,
                                         CXToken *Tokens, unsigned NumTokens);
 
 /* for debug/testing */
-CXString clang_getCursorKindSpelling(enum CXCursorKind Kind);
 void clang_getDefinitionSpellingAndExtent(CXCursor,
                                           const char **startBuf,
                                           const char **endBuf,

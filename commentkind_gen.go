@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Describes the type of the comment AST node (\c CXComment). A comment node can be considered block content (e. g., paragraph), inline content (plain text) or neither (the root AST node).
-type CommentKind int
+type CommentKind uint32
 
 const (
 	// Null comment. No AST node is constructed at the requested location because there is no text or a syntax error.

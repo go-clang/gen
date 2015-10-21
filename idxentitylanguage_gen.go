@@ -3,7 +3,7 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
-type IdxEntityLanguage int
+type IdxEntityLanguage uint32
 
 const (
 	IdxEntityLang_None IdxEntityLanguage = C.CXIdxEntityLang_None

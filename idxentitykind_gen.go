@@ -3,7 +3,7 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
-type IdxEntityKind int
+type IdxEntityKind uint32
 
 const (
 	IdxEntity_Unexposed             IdxEntityKind = C.CXIdxEntity_Unexposed

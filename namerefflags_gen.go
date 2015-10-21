@@ -3,7 +3,7 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
-type NameRefFlags int
+type NameRefFlags uint32
 
 const (
 	// Include the nested-name-specifier, e.g. Foo:: in x.Foo::y, in the range.

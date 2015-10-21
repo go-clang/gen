@@ -101,6 +101,7 @@ func main() {
 	var structs []*Struct
 
 	lookupEnum := map[string]*Enum{}
+	lookupNonTypedefs := map[string]string{}
 	lookupStruct := map[string]*Struct{}
 
 	cursor := tu.ToCursor()
@@ -128,6 +129,7 @@ func main() {
 			e := handleEnumCursor(cursor, cname, cnameIsTypeDef)
 
 			lookupEnum[e.Name] = e
+			lookupNonTypedefs["enum "+e.CName] = e.Name
 			lookupEnum[e.CName] = e
 
 			enums = append(enums, e)
@@ -150,6 +152,7 @@ func main() {
 			s := handleStructCursor(cursor, cname, cnameIsTypeDef)
 
 			lookupStruct[s.Name] = s
+			lookupNonTypedefs["struct "+s.CName] = s.Name
 			lookupStruct[s.CName] = s
 
 			structs = append(structs, s)
@@ -158,6 +161,7 @@ func main() {
 				s := handleVoidStructCursor(cursor, cname, true)
 
 				lookupStruct[s.Name] = s
+				lookupNonTypedefs["struct "+s.CName] = s.Name
 				lookupStruct[s.CName] = s
 
 				structs = append(structs, s)
@@ -172,6 +176,9 @@ func main() {
 
 		if len(f.Parameters) == 1 && f.ReturnType == "CXString" {
 			f.ReceiverType = trimClangPrefix(f.Parameters[0].Type)
+			if n, ok := lookupNonTypedefs[f.ReceiverType]; ok {
+				f.ReceiverType = n
+			}
 
 			f.Name = strings.TrimPrefix(f.Name, f.ReceiverType+"_")
 
@@ -182,6 +189,7 @@ func main() {
 
 			if e, ok := lookupEnum[f.ReceiverType]; ok {
 				f.Receiver = e.Receiver
+				f.ReceiverPrimitiveType = e.ReceiverPrimitiveType
 
 				fRaw, err := generateFunctionStringGetter(f)
 				if err != nil {
@@ -201,11 +209,15 @@ func main() {
 			}
 		} else if len(f.Parameters) == 1 && f.Name[0] == 'i' && f.Name[1] == 's' && unicode.IsUpper(rune(f.Name[2])) && f.ReturnType == "unsigned int" {
 			f.ReceiverType = trimClangPrefix(f.Parameters[0].Type)
+			if n, ok := lookupNonTypedefs[f.ReceiverType]; ok {
+				f.ReceiverType = n
+			}
 
 			f.Name = upperFirstCharacter(f.Name)
 
 			if e, ok := lookupEnum[f.ReceiverType]; ok {
 				f.Receiver = e.Receiver
+				f.ReceiverPrimitiveType = e.ReceiverPrimitiveType
 
 				fRaw, err := generateGenerateFunctionIs(f)
 				if err != nil {

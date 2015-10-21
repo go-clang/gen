@@ -3,7 +3,7 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
-type IndexOptFlags int
+type IndexOptFlags uint32
 
 const (
 	// Used to indicate that no special indexing options are needed.

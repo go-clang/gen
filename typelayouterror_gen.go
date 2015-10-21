@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // List the possible error codes for \c clang_Type_getSizeOf, \c clang_Type_getAlignOf, \c clang_Type_getOffsetOf and \c clang_Cursor_getOffsetOf. A value of this enumeration type can be returned if the target type is not a valid argument to sizeof, alignof or offsetof.
-type TypeLayoutError int
+type TypeLayoutError int32
 
 const (
 	// Type is of kind CXType_Invalid.
