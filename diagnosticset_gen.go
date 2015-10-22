@@ -7,3 +7,8 @@ import "C"
 type DiagnosticSet struct {
 	c C.CXDiagnosticSet
 }
+
+// Release a CXDiagnosticSet and all of its contained diagnostics.
+func (ds DiagnosticSet) Dispose() {
+	C.clang_disposeDiagnosticSet(ds.c)
+}

@@ -8,6 +8,13 @@ type Comment struct {
 	c C.CXComment
 }
 
+// A \c CXComment_Paragraph node is considered whitespace if it contains only \c CXComment_Text nodes that are empty or whitespace. Other AST nodes (except \c CXComment_Paragraph and \c CXComment_Text) are never considered whitespace. \returns non-zero if \c Comment is whitespace.
+func (c Comment) IsWhitespace() bool {
+	o := C.clang_Comment_isWhitespace(c.c)
+
+	return o != C.uint(0)
+}
+
 // \param Comment a \c CXComment_Text AST node. \returns text contained in the AST node.
 func (c Comment) TextComment_getText() string {
 	o := cxstring{C.clang_TextComment_getText(c.c)}

@@ -16,6 +16,13 @@ func (t Type) Spelling() string {
 	return o.String()
 }
 
+// Determine whether two CXTypes represent the same type. \returns non-zero if the CXTypes represent the same type and zero otherwise.
+func EqualTypes(t1, t2 Type) bool {
+	o := C.clang_equalTypes(t1.c, t2.c)
+
+	return o != C.uint(0)
+}
+
 // Determine whether a CXType has the "const" qualifier set, without looking through typedefs that may have added "const" at a different level.
 func (t Type) IsConstQualifiedType() bool {
 	o := C.clang_isConstQualifiedType(t.c)

@@ -20,13 +20,6 @@ func (d Diagnostics) Dispose() {
 }
 
 /**
- * \brief Destroy a diagnostic.
- */
-func (d Diagnostic) Dispose() {
-	C.clang_disposeDiagnostic(d.c)
-}
-
-/**
  * \brief Determine the severity of the given diagnostic.
  */
 func (d Diagnostic) Severity() DiagnosticSeverity {

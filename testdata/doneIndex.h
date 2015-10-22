@@ -97,14 +97,6 @@ CXIndex clang_createIndex(int excludeDeclarationsFromPCH,
                                          int displayDiagnostics);
 
 /**
- * \brief Destroy the given index.
- *
- * The index must not be destroyed until all of the translation units created
- * within that index have been destroyed.
- */
-void clang_disposeIndex(CXIndex index);
-
-/**
  * \brief Sets general options associated with a CXIndex.
  *
  * For example:
@@ -201,17 +193,6 @@ typedef struct {
 CXSourceLocation clang_getNullLocation(void);
 
 /**
- * \brief Determine whether two source locations, which must refer into
- * the same translation unit, refer to exactly the same point in the source
- * code.
- *
- * \returns non-zero if the source locations refer to the same location, zero
- * if they refer to different locations.
- */
-unsigned clang_equalLocations(CXSourceLocation loc1,
-                                             CXSourceLocation loc2);
-
-/**
  * \brief Retrieves the source location associated with a given file/line/column
  * in a particular translation unit.
  */
@@ -249,14 +230,6 @@ CXSourceRange clang_getNullRange(void);
  */
 CXSourceRange clang_getRange(CXSourceLocation begin,
                                             CXSourceLocation end);
-
-/**
- * \brief Determine whether two ranges are equivalent.
- *
- * \returns non-zero if the ranges are the same, zero if they differ.
- */
-unsigned clang_equalRanges(CXSourceRange range1,
-                                          CXSourceRange range2);
 
 /**
  * \brief Returns non-zero if \p range is null.
@@ -454,11 +427,6 @@ CXDiagnosticSet clang_loadDiagnostics(const char *file,
                                                   CXString *errorString);
 
 /**
- * \brief Release a CXDiagnosticSet and all of its contained diagnostics.
- */
-void clang_disposeDiagnosticSet(CXDiagnosticSet Diags);
-
-/**
  * \brief Retrieve the child diagnostics of a CXDiagnostic.
  *
  * This CXDiagnosticSet does not need to be released by
@@ -492,11 +460,6 @@ CXDiagnostic clang_getDiagnostic(CXTranslationUnit Unit,
  */
 CXDiagnosticSet
   clang_getDiagnosticSetFromTU(CXTranslationUnit Unit);
-
-/**
- * \brief Destroy a diagnostic.
- */
-void clang_disposeDiagnostic(CXDiagnostic Diagnostic);
 
 /**
  * \brief Format the given diagnostic in a manner that is suitable for display.
@@ -941,11 +904,6 @@ CXCursor clang_getNullCursor(void);
 CXCursor clang_getTranslationUnitCursor(CXTranslationUnit);
 
 /**
- * \brief Determine whether two cursors are equivalent.
- */
-unsigned clang_equalCursors(CXCursor, CXCursor);
-
-/**
  * \brief Returns non-zero if \p cursor is null.
  */
 int clang_Cursor_isNull(CXCursor cursor);
@@ -1354,14 +1312,6 @@ int clang_Cursor_getNumArguments(CXCursor C);
 CXCursor clang_Cursor_getArgument(CXCursor C, unsigned i);
 
 /**
- * \brief Determine whether two CXTypes represent the same type.
- *
- * \returns non-zero if the CXTypes represent the same type and
- *          zero otherwise.
- */
-unsigned clang_equalTypes(CXType A, CXType B);
-
-/**
  * \brief Return the canonical type for a CXType.
  *
  * Clang's type system explicitly models typedefs and all the ways
@@ -1502,12 +1452,6 @@ long long clang_Type_getOffsetOf(CXType T, const char *S);
  * or non-C++ declarations, CXRefQualifier_None is returned.
  */
 enum CXRefQualifierKind clang_Type_getCXXRefQualifier(CXType T);
-
-/**
- * \brief Returns non-zero if the cursor specifies a Record member that is a
- *   bitfield.
- */
-unsigned clang_Cursor_isBitField(CXCursor C);
 
 /**
  * \brief Returns the access control level for the referenced object.
@@ -1794,18 +1738,6 @@ unsigned clang_Cursor_getObjCPropertyAttributes(CXCursor C, unsigned reserved);
 unsigned clang_Cursor_getObjCDeclQualifiers(CXCursor C);
 
 /**
- * \brief Given a cursor that represents an ObjC method or property declaration,
- * return non-zero if the declaration was affected by "@optional".
- * Returns zero if the cursor is not such a declaration or it is "@required".
- */
-unsigned clang_Cursor_isObjCOptional(CXCursor C);
-
-/**
- * \brief Returns non-zero if the given cursor is a variadic function or method.
- */
-unsigned clang_Cursor_isVariadic(CXCursor C);
-
-/**
  * \brief Given a cursor that represents a declaration, return the associated
  * comment's source range.  The range may include multiple consecutive comments
  * with whitespace in between.
@@ -1879,17 +1811,6 @@ unsigned clang_Comment_getNumChildren(CXComment Comment);
  * \returns the specified child of the AST node.
  */
 CXComment clang_Comment_getChild(CXComment Comment, unsigned ChildIdx);
-
-/**
- * \brief A \c CXComment_Paragraph node is considered whitespace if it contains
- * only \c CXComment_Text nodes that are empty or whitespace.
- *
- * Other AST nodes (except \c CXComment_Paragraph and \c CXComment_Text) are
- * never considered whitespace.
- *
- * \returns non-zero if \c Comment is whitespace.
- */
-unsigned clang_Comment_isWhitespace(CXComment Comment);
 
 /**
  * \returns non-zero if \c Comment is inline content and has a newline
@@ -3056,14 +2977,6 @@ clang_index_setClientEntity(const CXIdxEntityInfo *, CXIdxClientEntity);
  * \param CIdx The index object with which the index action will be associated.
  */
 CXIndexAction clang_IndexAction_create(CXIndex CIdx);
-
-/**
- * \brief Destroy the given index action.
- *
- * The index action must not be destroyed until all of the translation units
- * created within that index action have been destroyed.
- */
-void clang_IndexAction_dispose(CXIndexAction);
 
 /**
  * \brief Index the given source file and the translation unit corresponding

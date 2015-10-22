@@ -17,15 +17,6 @@ func (c Type) Kind() TypeKind {
 	return TypeKind(c.c.kind)
 }
 
-// EqualTypes determines whether two Types represent the same type.
-func EqualTypes(t1, t2 Type) bool {
-	o := C.clang_equalTypes(t1.c, t2.c)
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
 // CanonicalType returns the canonical type for a Type.
 //
 // Clang's type system explicitly models typedefs and all the ways

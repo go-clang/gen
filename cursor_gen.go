@@ -8,12 +8,26 @@ type Cursor struct {
 	c C.CXCursor
 }
 
+// Determine whether two cursors are equivalent.
+func EqualCursors(c1, c2 Cursor) bool {
+	o := C.clang_equalCursors(c1.c, c2.c)
+
+	return o != C.uint(0)
+}
+
 // Returns the Objective-C type encoding for the specified declaration.
 func (c Cursor) DeclObjCTypeEncoding() string {
 	o := cxstring{C.clang_getDeclObjCTypeEncoding(c.c)}
 	defer o.Dispose()
 
 	return o.String()
+}
+
+// Returns non-zero if the cursor specifies a Record member that is a bitfield.
+func (c Cursor) IsBitField() bool {
+	o := C.clang_Cursor_isBitField(c.c)
+
+	return o != C.uint(0)
 }
 
 // Returns 1 if the base class specified by the cursor with kind CX_CXXBaseSpecifier is virtual.
@@ -50,6 +64,20 @@ func (c Cursor) DisplayName() string {
 // Determine whether the declaration pointed to by this cursor is also a definition of that entity.
 func (c Cursor) IsCursorDefinition() bool {
 	o := C.clang_isCursorDefinition(c.c)
+
+	return o != C.uint(0)
+}
+
+// Given a cursor that represents an ObjC method or property declaration, return non-zero if the declaration was affected by "@optional". Returns zero if the cursor is not such a declaration or it is "@required".
+func (c Cursor) IsObjCOptional() bool {
+	o := C.clang_Cursor_isObjCOptional(c.c)
+
+	return o != C.uint(0)
+}
+
+// Returns non-zero if the given cursor is a variadic function or method.
+func (c Cursor) IsVariadic() bool {
+	o := C.clang_Cursor_isVariadic(c.c)
 
 	return o != C.uint(0)
 }
