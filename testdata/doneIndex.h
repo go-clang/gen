@@ -97,14 +97,6 @@ CXIndex clang_createIndex(int excludeDeclarationsFromPCH,
                                          int displayDiagnostics);
 
 /**
- * \brief Destroy the given index.
- *
- * The index must not be destroyed until all of the translation units created
- * within that index have been destroyed.
- */
-void clang_disposeIndex(CXIndex index);
-
-/**
  * \brief Sets general options associated with a CXIndex.
  *
  * For example:
@@ -454,11 +446,6 @@ CXDiagnosticSet clang_loadDiagnostics(const char *file,
                                                   CXString *errorString);
 
 /**
- * \brief Release a CXDiagnosticSet and all of its contained diagnostics.
- */
-void clang_disposeDiagnosticSet(CXDiagnosticSet Diags);
-
-/**
  * \brief Retrieve the child diagnostics of a CXDiagnostic.
  *
  * This CXDiagnosticSet does not need to be released by
@@ -492,11 +479,6 @@ CXDiagnostic clang_getDiagnostic(CXTranslationUnit Unit,
  */
 CXDiagnosticSet
   clang_getDiagnosticSetFromTU(CXTranslationUnit Unit);
-
-/**
- * \brief Destroy a diagnostic.
- */
-void clang_disposeDiagnostic(CXDiagnostic Diagnostic);
 
 /**
  * \brief Format the given diagnostic in a manner that is suitable for display.

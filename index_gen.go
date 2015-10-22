@@ -7,3 +7,8 @@ import "C"
 type Index struct {
 	c C.CXIndex
 }
+
+// Destroy the given index. The index must not be destroyed until all of the translation units created within that index have been destroyed.
+func (i Index) Dispose() {
+	C.clang_disposeIndex(i.c)
+}

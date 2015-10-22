@@ -171,14 +171,30 @@ func main() {
 		return clang.CVR_Recurse
 	})
 
+	addMethod := func(f *Function, method func(f *Function) string) {
+		if e, ok := lookupEnum[f.ReceiverType]; ok {
+			f.Receiver = e.Receiver
+			f.ReceiverPrimitiveType = e.ReceiverPrimitiveType
+
+			e.Methods = append(e.Methods, method(f))
+		} else if s, ok := lookupStruct[f.ReceiverType]; ok {
+			f.Receiver = s.Receiver
+
+			s.Methods = append(s.Methods, method(f))
+		}
+	}
+
 	for _, f := range functions {
-		//fmt.Printf("%#v\n\n", f)
+		var rt string
+		if len(f.Parameters) > 0 {
+			rt = trimClangPrefix(f.Parameters[0].Type)
+			if n, ok := lookupNonTypedefs[rt]; ok {
+				rt = n
+			}
+		}
 
 		if len(f.Parameters) == 1 && f.ReturnType == "CXString" {
-			f.ReceiverType = trimClangPrefix(f.Parameters[0].Type)
-			if n, ok := lookupNonTypedefs[f.ReceiverType]; ok {
-				f.ReceiverType = n
-			}
+			f.ReceiverType = rt
 
 			f.Name = strings.TrimPrefix(f.Name, f.ReceiverType+"_")
 
@@ -187,54 +203,19 @@ func main() {
 
 			f.Name = upperFirstCharacter(f.Name)
 
-			if e, ok := lookupEnum[f.ReceiverType]; ok {
-				f.Receiver = e.Receiver
-				f.ReceiverPrimitiveType = e.ReceiverPrimitiveType
-
-				fRaw, err := generateFunctionStringGetter(f)
-				if err != nil {
-					panic(err)
-				}
-
-				e.Methods = append(e.Methods, fRaw)
-			} else if s, ok := lookupStruct[f.ReceiverType]; ok {
-				f.Receiver = s.Receiver
-
-				fRaw, err := generateFunctionStringGetter(f)
-				if err != nil {
-					panic(err)
-				}
-
-				s.Methods = append(s.Methods, fRaw)
-			}
+			addMethod(f, generateFunctionStringGetter)
 		} else if len(f.Parameters) == 1 && f.Name[0] == 'i' && f.Name[1] == 's' && unicode.IsUpper(rune(f.Name[2])) && f.ReturnType == "unsigned int" {
-			f.ReceiverType = trimClangPrefix(f.Parameters[0].Type)
-			if n, ok := lookupNonTypedefs[f.ReceiverType]; ok {
-				f.ReceiverType = n
-			}
+			f.ReceiverType = rt
 
 			f.Name = upperFirstCharacter(f.Name)
 
-			if e, ok := lookupEnum[f.ReceiverType]; ok {
-				f.Receiver = e.Receiver
-				f.ReceiverPrimitiveType = e.ReceiverPrimitiveType
+			addMethod(f, generateGenerateFunctionIs)
+		} else if len(f.Parameters) == 1 && strings.HasPrefix(f.Name, "dispose") && f.Name[len("dispose"):] == rt {
+			f.ReceiverType = rt
 
-				fRaw, err := generateGenerateFunctionIs(f)
-				if err != nil {
-					panic(err)
-				}
+			f.Name = "Dispose"
 
-				e.Methods = append(e.Methods, fRaw)
-			} else if s, ok := lookupStruct[f.ReceiverType]; ok {
-				f.Receiver = s.Receiver
-
-				fRaw, err := generateGenerateFunctionIs(f)
-				if err != nil {
-					panic(err)
-				}
-
-				s.Methods = append(s.Methods, fRaw)
-			}
+			addMethod(f, generateFunctionVoidMethod)
 		}
 	}
 

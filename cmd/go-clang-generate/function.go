@@ -62,13 +62,13 @@ func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() string {
 }
 `))
 
-func generateFunctionStringGetter(f *Function) (string, error) {
+func generateFunctionStringGetter(f *Function) string {
 	var b bytes.Buffer
 	if err := templateGenerateFunctionStringGetter.Execute(&b, f); err != nil {
-		return "", err
+		panic(err)
 	}
 
-	return b.String(), nil
+	return b.String()
 }
 
 var templateGenerateFunctionIs = template.Must(template.New("go-clang-generate-function-is").Parse(`{{$.Comment}}
@@ -79,11 +79,26 @@ func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() bool {
 }
 `))
 
-func generateGenerateFunctionIs(f *Function) (string, error) {
+func generateGenerateFunctionIs(f *Function) string {
 	var b bytes.Buffer
 	if err := templateGenerateFunctionIs.Execute(&b, f); err != nil {
-		return "", err
+		panic(err)
 	}
 
-	return b.String(), nil
+	return b.String()
+}
+
+var templateGenerateFunctionVoidMethod = template.Must(template.New("go-clang-generate-function-void-method").Parse(`{{$.Comment}}
+func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() {
+	C.{{$.CName}}({{if ne $.ReceiverPrimitiveType ""}}{{$.ReceiverPrimitiveType}}({{$.Receiver}}){{else}}{{$.Receiver}}.c{{end}})
+}
+`))
+
+func generateFunctionVoidMethod(f *Function) string {
+	var b bytes.Buffer
+	if err := templateGenerateFunctionVoidMethod.Execute(&b, f); err != nil {
+		panic(err)
+	}
+
+	return b.String()
 }

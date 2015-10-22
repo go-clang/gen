@@ -49,14 +49,6 @@ func NewIndex(excludeDeclarationsFromPCH, displayDiagnostics int) Index {
 	return Index{idx}
 }
 
-// Dispose destroys the given index.
-//
-// The index must not be destroyed until all of the translation units created
-// within that index have been destroyed.
-func (idx Index) Dispose() {
-	C.clang_disposeIndex(idx.c)
-}
-
 /**
  * \brief Create a translation unit from an AST file (-emit-ast).
  */

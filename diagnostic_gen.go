@@ -8,6 +8,11 @@ type Diagnostic struct {
 	c C.CXDiagnostic
 }
 
+// Destroy a diagnostic.
+func (d Diagnostic) Dispose() {
+	C.clang_disposeDiagnostic(d.c)
+}
+
 // Retrieve the text of the given diagnostic.
 func (d Diagnostic) Spelling() string {
 	o := cxstring{C.clang_getDiagnosticSpelling(d.c)}
