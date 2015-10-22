@@ -171,17 +171,52 @@ func main() {
 		return clang.CVR_Recurse
 	})
 
-	addMethod := func(f *Function, method func(f *Function) string) {
+	addMethod := func(f *Function, method func(f *Function) string) bool {
 		if e, ok := lookupEnum[f.ReceiverType]; ok {
 			f.Receiver = e.Receiver
 			f.ReceiverPrimitiveType = e.ReceiverPrimitiveType
 
 			e.Methods = append(e.Methods, method(f))
+
+			return true
 		} else if s, ok := lookupStruct[f.ReceiverType]; ok {
 			f.Receiver = s.Receiver
 
 			s.Methods = append(s.Methods, method(f))
+
+			return true
 		}
+
+		return false
+	}
+
+	addBasicMethods := func(f *Function, rt string) bool {
+		if len(f.Parameters) == 1 && f.ReturnType == "CXString" {
+			f.ReceiverType = rt
+
+			f.Name = strings.TrimPrefix(f.Name, f.ReceiverType+"_")
+
+			f.Name = strings.TrimPrefix(f.Name, "get")
+			f.Name = strings.TrimPrefix(f.Name, f.ReceiverType)
+
+			f.Name = upperFirstCharacter(f.Name)
+
+			return addMethod(f, generateFunctionStringGetter)
+		} else if len(f.Parameters) == 1 && f.Name[0] == 'i' && f.Name[1] == 's' && unicode.IsUpper(rune(f.Name[2])) && f.ReturnType == "unsigned int" {
+			f.ReceiverType = rt
+
+			f.Name = upperFirstCharacter(f.Name)
+
+			return addMethod(f, generateGenerateFunctionIs)
+		} else if len(f.Parameters) == 1 && strings.HasPrefix(f.Name, "dispose") && f.Name[len("dispose"):] == rt {
+			f.ReceiverType = rt
+
+			f.Name = "Dispose"
+
+			return addMethod(f, generateFunctionVoidMethod)
+		}
+
+		return false
 	}
 
 	for _, f := range functions {
@@ -193,29 +228,16 @@ func main() {
 			}
 		}
 
-		if len(f.Parameters) == 1 && f.ReturnType == "CXString" {
-			f.ReceiverType = rt
+		added := addBasicMethods(f, rt)
 
-			f.Name = strings.TrimPrefix(f.Name, f.ReceiverType+"_")
+		if !added {
+			if s := strings.SplitN(f.Name, "_", 2); len(s) == 2 {
+				f.Name = s[1]
 
-			f.Name = strings.TrimPrefix(f.Name, "get")
-			f.Name = strings.TrimPrefix(f.Name, f.ReceiverType)
-
-			f.Name = upperFirstCharacter(f.Name)
-
-			addMethod(f, generateFunctionStringGetter)
-		} else if len(f.Parameters) == 1 && f.Name[0] == 'i' && f.Name[1] == 's' && unicode.IsUpper(rune(f.Name[2])) && f.ReturnType == "unsigned int" {
-			f.ReceiverType = rt
-
-			f.Name = upperFirstCharacter(f.Name)
-
-			addMethod(f, generateGenerateFunctionIs)
-		} else if len(f.Parameters) == 1 && strings.HasPrefix(f.Name, "dispose") && f.Name[len("dispose"):] == rt {
-			f.ReceiverType = rt
-
-			f.Name = "Dispose"
-
-			addMethod(f, generateFunctionVoidMethod)
+				if s[0] == rt {
+					added = addBasicMethods(f, rt)
+				}
+			}
 		}
 	}
 

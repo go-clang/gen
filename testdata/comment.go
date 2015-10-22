@@ -42,23 +42,6 @@ func (c Comment) Child(idx int) Comment {
 }
 
 /**
- * \brief A \c CXComment_Paragraph node is considered whitespace if it contains
- * only \c CXComment_Text nodes that are empty or whitespace.
- *
- * Other AST nodes (except \c CXComment_Paragraph and \c CXComment_Text) are
- * never considered whitespace.
- *
- * \returns non-zero if \c Comment is whitespace.
- */
-func (c Comment) IsWhitespace() bool {
-	o := C.clang_Comment_isWhitespace(c.c)
-	if o != 0 {
-		return true
-	}
-	return false
-}
-
-/**
  * \returns non-zero if \c Comment is inline content and has a newline
  * immediately following it in the comment text.  Newlines between paragraphs
  * do not count.

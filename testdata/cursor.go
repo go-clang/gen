@@ -477,18 +477,6 @@ func (c Cursor) ResultType() Type {
 }
 
 /**
- * \brief Returns non-zero if the cursor specifies a Record member that is a
- *   bitfield.
- */
-func (c Cursor) IsBitField() bool {
-	o := C.clang_Cursor_isBitField(c.c)
-	if o != 0 {
-		return true
-	}
-	return false
-}
-
-/**
  * \brief Returns the access control level for the C++ base specifier
  * represented by a cursor with kind CXCursor_CXXBaseSpecifier or
  * CXCursor_AccessSpecifier.
@@ -754,33 +742,6 @@ func (c Cursor) ReceiverType() Type {
 //  */
 // CINDEX_LINKAGE unsigned clang_Cursor_getObjCPropertyAttributes(CXCursor C,
 //                                                              unsigned reserved);
-
-// TODO: objective-c support
-// /**
-//  * \brief Given a cursor that represents an ObjC method or parameter
-//  * declaration, return the associated ObjC qualifiers for the return type or the
-//  * parameter respectively. The bits are formed from CXObjCDeclQualifierKind.
-//  */
-// CINDEX_LINKAGE unsigned clang_Cursor_getObjCDeclQualifiers(CXCursor C);
-
-// TODO: objective-c support
-// /**
-//  * \brief Given a cursor that represents an ObjC method or property declaration,
-//  * return non-zero if the declaration was affected by "@optional".
-//  * Returns zero if the cursor is not such a declaration or it is "@required".
-//  */
-// CINDEX_LINKAGE unsigned clang_Cursor_isObjCOptional(CXCursor C);
-
-/**
- * \brief Returns non-zero if the given cursor is a variadic function or method.
- */
-func (c Cursor) IsVariadic() bool {
-	o := C.clang_Cursor_isVariadic(c.c)
-	if o != 0 {
-		return true
-	}
-	return false
-}
 
 /**
  * \brief Given a cursor that represents a declaration, return the associated

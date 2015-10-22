@@ -1486,12 +1486,6 @@ long long clang_Type_getOffsetOf(CXType T, const char *S);
 enum CXRefQualifierKind clang_Type_getCXXRefQualifier(CXType T);
 
 /**
- * \brief Returns non-zero if the cursor specifies a Record member that is a
- *   bitfield.
- */
-unsigned clang_Cursor_isBitField(CXCursor C);
-
-/**
  * \brief Returns the access control level for the referenced object.
  *
  * If the cursor refers to a C++ declaration, its access control level within its
@@ -1776,18 +1770,6 @@ unsigned clang_Cursor_getObjCPropertyAttributes(CXCursor C, unsigned reserved);
 unsigned clang_Cursor_getObjCDeclQualifiers(CXCursor C);
 
 /**
- * \brief Given a cursor that represents an ObjC method or property declaration,
- * return non-zero if the declaration was affected by "@optional".
- * Returns zero if the cursor is not such a declaration or it is "@required".
- */
-unsigned clang_Cursor_isObjCOptional(CXCursor C);
-
-/**
- * \brief Returns non-zero if the given cursor is a variadic function or method.
- */
-unsigned clang_Cursor_isVariadic(CXCursor C);
-
-/**
  * \brief Given a cursor that represents a declaration, return the associated
  * comment's source range.  The range may include multiple consecutive comments
  * with whitespace in between.
@@ -1861,17 +1843,6 @@ unsigned clang_Comment_getNumChildren(CXComment Comment);
  * \returns the specified child of the AST node.
  */
 CXComment clang_Comment_getChild(CXComment Comment, unsigned ChildIdx);
-
-/**
- * \brief A \c CXComment_Paragraph node is considered whitespace if it contains
- * only \c CXComment_Text nodes that are empty or whitespace.
- *
- * Other AST nodes (except \c CXComment_Paragraph and \c CXComment_Text) are
- * never considered whitespace.
- *
- * \returns non-zero if \c Comment is whitespace.
- */
-unsigned clang_Comment_isWhitespace(CXComment Comment);
 
 /**
  * \returns non-zero if \c Comment is inline content and has a newline
