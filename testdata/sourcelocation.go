@@ -18,19 +18,6 @@ func NewNullLocation() SourceLocation {
 	return SourceLocation{C.clang_getNullLocation()}
 }
 
-// EqualLocations determines whether two source locations, which must refer into
-// the same translation unit, refer to exactly the same point in the source
-// code.
-// Returns non-zero if the source locations refer to the same location, zero
-// if they refer to different locations.
-func EqualLocations(loc1, loc2 SourceLocation) bool {
-	o := C.clang_equalLocations(loc1.c, loc2.c)
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
 /**
  * \brief Returns non-zero if the given source location is in a system header.
  */

@@ -102,3 +102,20 @@ func generateFunctionVoidMethod(f *Function) string {
 
 	return b.String()
 }
+
+var templateGenerateFunctionEqual = template.Must(template.New("go-clang-generate-function-equal").Parse(`{{$.Comment}}
+func {{$.Name}}({{$.Receiver}}1, {{$.Receiver}}2 {{$.ReceiverType}}) bool {
+	o := C.{{$.CName}}({{$.Receiver}}1.c, {{$.Receiver}}2.c)
+
+	return o != C.uint(0)
+}
+`))
+
+func generateFunctionEqual(f *Function) string {
+	var b bytes.Buffer
+	if err := templateGenerateFunctionEqual.Execute(&b, f); err != nil {
+		panic(err)
+	}
+
+	return b.String()
+}

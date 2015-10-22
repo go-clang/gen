@@ -210,6 +210,8 @@ func main() {
 			fname = "Dispose"
 
 			return addMethod(f, fname, rt, generateFunctionVoidMethod)
+		} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && f.ReturnType == "unsigned int" && f.Parameters[0].Type == f.Parameters[1].Type {
+			return addMethod(f, fname, rt, generateFunctionEqual)
 		}
 
 		return false

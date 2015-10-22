@@ -8,6 +8,13 @@ type Cursor struct {
 	c C.CXCursor
 }
 
+// Determine whether two cursors are equivalent.
+func EqualCursors(c1, c2 Cursor) bool {
+	o := C.clang_equalCursors(c1.c, c2.c)
+
+	return o != C.uint(0)
+}
+
 // Returns the Objective-C type encoding for the specified declaration.
 func (c Cursor) DeclObjCTypeEncoding() string {
 	o := cxstring{C.clang_getDeclObjCTypeEncoding(c.c)}

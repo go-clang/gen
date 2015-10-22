@@ -193,17 +193,6 @@ typedef struct {
 CXSourceLocation clang_getNullLocation(void);
 
 /**
- * \brief Determine whether two source locations, which must refer into
- * the same translation unit, refer to exactly the same point in the source
- * code.
- *
- * \returns non-zero if the source locations refer to the same location, zero
- * if they refer to different locations.
- */
-unsigned clang_equalLocations(CXSourceLocation loc1,
-                                             CXSourceLocation loc2);
-
-/**
  * \brief Retrieves the source location associated with a given file/line/column
  * in a particular translation unit.
  */
@@ -241,14 +230,6 @@ CXSourceRange clang_getNullRange(void);
  */
 CXSourceRange clang_getRange(CXSourceLocation begin,
                                             CXSourceLocation end);
-
-/**
- * \brief Determine whether two ranges are equivalent.
- *
- * \returns non-zero if the ranges are the same, zero if they differ.
- */
-unsigned clang_equalRanges(CXSourceRange range1,
-                                          CXSourceRange range2);
 
 /**
  * \brief Returns non-zero if \p range is null.
@@ -923,11 +904,6 @@ CXCursor clang_getNullCursor(void);
 CXCursor clang_getTranslationUnitCursor(CXTranslationUnit);
 
 /**
- * \brief Determine whether two cursors are equivalent.
- */
-unsigned clang_equalCursors(CXCursor, CXCursor);
-
-/**
  * \brief Returns non-zero if \p cursor is null.
  */
 int clang_Cursor_isNull(CXCursor cursor);
@@ -1334,14 +1310,6 @@ int clang_Cursor_getNumArguments(CXCursor C);
  * invalid cursor is returned.
  */
 CXCursor clang_Cursor_getArgument(CXCursor C, unsigned i);
-
-/**
- * \brief Determine whether two CXTypes represent the same type.
- *
- * \returns non-zero if the CXTypes represent the same type and
- *          zero otherwise.
- */
-unsigned clang_equalTypes(CXType A, CXType B);
 
 /**
  * \brief Return the canonical type for a CXType.

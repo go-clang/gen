@@ -24,15 +24,6 @@ func NewRange(beg, end SourceLocation) SourceRange {
 	return SourceRange{o}
 }
 
-// EqualRanges determines whether two ranges are equivalent.
-func EqualRanges(r1, r2 SourceRange) bool {
-	o := C.clang_equalRanges(r1.c, r2.c)
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
 // IsNull checks if the underlying source range is null.
 func (r SourceRange) IsNull() bool {
 	o := C.clang_Range_isNull(r.c)
