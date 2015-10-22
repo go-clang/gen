@@ -33,7 +33,7 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 		Comment: cleanDoxygenComment(cursor.RawCommentText()),
 
 		Parameters: []FunctionParameter{},
-		ReturnType: cursor.ResultType().TypeSpelling(),
+		ReturnType: trimClangPrefix(cursor.ResultType().TypeSpelling()),
 	}
 
 	f.Name = strings.TrimPrefix(f.CName, "clang_")

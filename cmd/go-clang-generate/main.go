@@ -197,7 +197,7 @@ func main() {
 	}
 
 	addBasicMethods := func(f *Function, fname string, rt string) bool {
-		if len(f.Parameters) == 1 && f.ReturnType == "CXString" {
+		if len(f.Parameters) == 1 && f.ReturnType == "String" {
 			fname = strings.TrimPrefix(fname, rt+"_")
 
 			fname = strings.TrimPrefix(fname, "get")
