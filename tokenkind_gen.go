@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Describes a kind of token.
-type TokenKind int
+type TokenKind uint32
 
 const (
 	// A token that contains some kind of punctuation.

@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Describe the "language" of the entity referred to by a cursor.
-type LanguageKind int
+type LanguageKind uint32
 
 const (
 	Language_Invalid   LanguageKind = C.CXLanguage_Invalid

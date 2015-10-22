@@ -7,3 +7,19 @@ import "C"
 type Diagnostic struct {
 	c C.CXDiagnostic
 }
+
+// Retrieve the text of the given diagnostic.
+func (d Diagnostic) Spelling() string {
+	o := cxstring{C.clang_getDiagnosticSpelling(d.c)}
+	defer o.Dispose()
+
+	return o.String()
+}
+
+// Retrieve the diagnostic category text for a given diagnostic. \returns The text of the given diagnostic category.
+func (d Diagnostic) CategoryText() string {
+	o := cxstring{C.clang_getDiagnosticCategoryText(d.c)}
+	defer o.Dispose()
+
+	return o.String()
+}

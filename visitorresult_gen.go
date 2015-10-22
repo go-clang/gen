@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // \defgroup CINDEX_HIGH Higher level API functions @{
-type VisitorResult int
+type VisitorResult uint32
 
 const (
 	Visit_Break    VisitorResult = C.CXVisit_Break

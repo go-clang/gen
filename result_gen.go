@@ -3,7 +3,7 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
-type Result int
+type Result uint32
 
 const (
 	// Function returned successfully.

@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Options to control the display of diagnostics. The values in this enum are meant to be combined to customize the behavior of \c clang_formatDiagnostic().
-type DiagnosticDisplayOptions int
+type DiagnosticDisplayOptions uint32
 
 const (
 	/*

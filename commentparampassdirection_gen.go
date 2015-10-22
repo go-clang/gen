@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Describes parameter passing direction for \\param or \\arg command.
-type CommentParamPassDirection int
+type CommentParamPassDirection uint32
 
 const (
 	// The parameter is an input parameter.

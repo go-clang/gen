@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Describes the availability of a particular entity, which indicates whether the use of this entity will result in a warning or error due to it being deprecated or unavailable.
-type AvailabilityKind int
+type AvailabilityKind uint32
 
 const (
 	// The entity is available.

@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Flags that control the creation of translation units. The enumerators in this enumeration type are meant to be bitwise ORed together to specify which options should be used when constructing the translation unit.
-type TranslationUnit_Flags int
+type TranslationUnit_Flags uint32
 
 const (
 	// Used to indicate that no special translation-unit options are needed.

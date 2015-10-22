@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Describes the kind of error that occurred (if any) in a call to \c clang_loadDiagnostics.
-type LoadDiag_Error int
+type LoadDiag_Error int32
 
 const (
 	// Indicates that no error occurred.

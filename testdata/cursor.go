@@ -43,26 +43,6 @@ func EqualCursors(c1, c2 Cursor) bool {
 	return false
 }
 
-// Spelling returns the name of the entity referenced by this cursor.
-func (c Cursor) Spelling() string {
-	cstr := cxstring{C.clang_getCursorSpelling(c.c)}
-	defer cstr.Dispose()
-	return cstr.String()
-}
-
-/**
- * \brief Retrieve the display name for the entity referenced by this cursor.
- *
- * The display name contains extra information that helps identify the cursor,
- * such as the parameters of a function or template or the arguments of a
- * class template specialization.
- */
-func (c Cursor) DisplayName() string {
-	cstr := cxstring{C.clang_getCursorDisplayName(c.c)}
-	defer cstr.Dispose()
-	return cstr.String()
-}
-
 // IsNull returns true if the underlying Cursor is null
 func (c Cursor) IsNull() bool {
 	o := C.clang_Cursor_isNull(c.c)
@@ -82,112 +62,6 @@ func (c Cursor) Hash() uint {
 func (c Cursor) Kind() CursorKind {
 	o := C.clang_getCursorKind(c.c)
 	return CursorKind(o)
-}
-
-// IsDeclaration determines whether the cursor kind represents a declaration
-func (ck CursorKind) IsDeclaration() bool {
-	o := C.clang_isDeclaration(uint32(ck))
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
-/**
- * IsReference determines whether the given cursor kind represents a simple
- * reference.
- *
- * Note that other kinds of cursors (such as expressions) can also refer to
- * other cursors. Use clang_getCursorReferenced() to determine whether a
- * particular cursor refers to another entity.
- */
-func (ck CursorKind) IsReference() bool {
-	o := C.clang_isReference(uint32(ck))
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
-/**
- * \brief Determine whether the given cursor kind represents an expression.
- */
-func (ck CursorKind) IsExpression() bool {
-	o := C.clang_isExpression(uint32(ck))
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
-/**
- * \brief Determine whether the given cursor kind represents a statement.
- */
-func (ck CursorKind) IsStatement() bool {
-	o := C.clang_isStatement(uint32(ck))
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
-/**
- * \brief Determine whether the given cursor kind represents an attribute.
- */
-func (ck CursorKind) IsAttribute() bool {
-	o := C.clang_isAttribute(uint32(ck))
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
-/**
- * \brief Determine whether the given cursor kind represents an invalid
- * cursor.
- */
-func (ck CursorKind) IsInvalid() bool {
-	o := C.clang_isInvalid(uint32(ck))
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
-/**
- * \brief Determine whether the given cursor kind represents a translation
- * unit.
- */
-func (ck CursorKind) IsTranslationUnit() bool {
-	o := C.clang_isTranslationUnit(uint32(ck))
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
-/***
- * \brief Determine whether the given cursor represents a preprocessing
- * element, such as a preprocessor directive or macro instantiation.
- */
-func (ck CursorKind) IsPreprocessing() bool {
-	o := C.clang_isPreprocessing(uint32(ck))
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
-/***
- * \brief Determine whether the given cursor represents a currently
- *  unexposed piece of the AST (e.g., CXCursor_UnexposedStmt).
- */
-func (ck CursorKind) IsUnexposed() bool {
-	o := C.clang_isUnexposed(uint32(ck))
-	if o != C.uint(0) {
-		return true
-	}
-	return false
 }
 
 // Linkage returns the linkage of the entity referred to by a cursor
@@ -289,15 +163,6 @@ func (c Cursor) Language() LanguageKind {
 func (c Cursor) TranslationUnit() TranslationUnit {
 	o := C.clang_Cursor_getTranslationUnit(c.c)
 	return TranslationUnit{o}
-}
-
-// DeclObjCTypeEncoding returns the Objective-C type encoding for the
-// specified declaration.
-func (c Cursor) DeclObjCTypeEncoding() string {
-	o := C.clang_getDeclObjCTypeEncoding(c.c)
-	cstr := cxstring{o}
-	defer cstr.Dispose()
-	return cstr.String()
 }
 
 // CursorSet is a fast container representing a set of Cursors.
@@ -624,15 +489,6 @@ func (c Cursor) IsBitField() bool {
 }
 
 /**
- * \brief Returns 1 if the base class specified by the cursor with kind
- *   CX_CXXBaseSpecifier is virtual.
- */
-func (c Cursor) IsVirtualBase() bool {
-	o := C.clang_isVirtualBase(c.c)
-	return o == C.uint(1)
-}
-
-/**
  * \brief Returns the access control level for the C++ base specifier
  * represented by a cursor with kind CXCursor_CXXBaseSpecifier or
  * CXCursor_AccessSpecifier.
@@ -743,21 +599,6 @@ func GoClangCursorVisitor(cursor, parent C.CXCursor, cfct unsafe.Pointer) (statu
 	return o
 }
 
-/**
- * \brief Retrieve a Unified Symbol Resolution (USR) for the entity referenced
- * by the given cursor.
- *
- * A Unified Symbol Resolution (USR) is a string that identifies a particular
- * entity (function, class, variable, etc.) within a program. USRs can be
- * compared across translation units to determine, e.g., when references in
- * one translation refer to an entity defined in another translation unit.
- */
-func (c Cursor) USR() string {
-	cstr := cxstring{C.clang_getCursorUSR(c.c)}
-	defer cstr.Dispose()
-	return cstr.String()
-}
-
 //FIXME
 // /**
 //  * \brief Construct a USR for a specified Objective-C class.
@@ -845,18 +686,6 @@ func (c Cursor) Referenced() Cursor {
 func (c Cursor) DefinitionCursor() Cursor {
 	o := C.clang_getCursorDefinition(c.c)
 	return Cursor{o}
-}
-
-/**
- * \brief Determine whether the declaration pointed to by this cursor
- * is also a definition of that entity.
- */
-func (c Cursor) IsDefinition() bool {
-	o := C.clang_isCursorDefinition(c.c)
-	if o != C.uint(0) {
-		return true
-	}
-	return false
 }
 
 /**
@@ -960,27 +789,6 @@ func (c Cursor) IsVariadic() bool {
  */
 func (c Cursor) CommentRange() SourceRange {
 	return SourceRange{C.clang_Cursor_getCommentRange(c.c)}
-}
-
-/**
- * \brief Given a cursor that represents a declaration, return the associated
- * comment text, including comment markers.
- */
-func (c Cursor) RawCommentText() string {
-	cstr := cxstring{C.clang_Cursor_getRawCommentText(c.c)}
-	defer cstr.Dispose()
-	return cstr.String()
-}
-
-/**
- * \brief Given a cursor that represents a documentable entity (e.g.,
- * declaration), return the associated \\brief paragraph; otherwise return the
- * first paragraph.
- */
-func (c Cursor) BriefCommentText() string {
-	cstr := cxstring{C.clang_Cursor_getBriefCommentText(c.c)}
-	defer cstr.Dispose()
-	return cstr.String()
 }
 
 /**

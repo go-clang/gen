@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // The most appropriate rendering mode for an inline command, chosen on command semantics in Doxygen.
-type CommentInlineCommandRenderKind int
+type CommentInlineCommandRenderKind uint32
 
 const (
 	// Command argument should be rendered in a normal font.

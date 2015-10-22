@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Categorizes how memory is being used by a translation unit.
-type TUResourceUsageKind int
+type TUResourceUsageKind uint32
 
 const (
 	TUResourceUsage_AST                                TUResourceUsageKind = C.CXTUResourceUsage_AST

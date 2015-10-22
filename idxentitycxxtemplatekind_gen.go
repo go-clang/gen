@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Extra C++ template information for an entity. This can apply to: CXIdxEntity_Function CXIdxEntity_CXXClass CXIdxEntity_CXXStaticMethod CXIdxEntity_CXXInstanceMethod CXIdxEntity_CXXConstructor CXIdxEntity_CXXConversionFunction CXIdxEntity_CXXTypeAlias
-type IdxEntityCXXTemplateKind int
+type IdxEntityCXXTemplateKind uint32
 
 const (
 	IdxEntity_NonTemplate                   IdxEntityCXXTemplateKind = C.CXIdxEntity_NonTemplate

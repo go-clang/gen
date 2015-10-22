@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Property attributes for a \c CXCursor_ObjCPropertyDecl.
-type ObjCPropertyAttrKind int
+type ObjCPropertyAttrKind uint32
 
 const (
 	ObjCPropertyAttr_noattr            ObjCPropertyAttrKind = C.CXObjCPropertyAttr_noattr

@@ -3,7 +3,7 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
-type GlobalOptFlags int
+type GlobalOptFlags uint32
 
 const (
 	// Used to indicate that no special CXIndex options are needed.

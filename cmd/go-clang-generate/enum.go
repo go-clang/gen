@@ -2,40 +2,48 @@ package main
 
 import (
 	"bytes"
-	"github.com/sbinet/go-clang"
 	"io/ioutil"
 	"strings"
 	"text/template"
+
+	"github.com/sbinet/go-clang"
 )
 
-type enum struct { // TODO make public
+type Enum struct {
+	Name                  string
+	CName                 string
+	CNameIsTypeDef        bool
+	Receiver              string
+	ReceiverPrimitiveType string
+	Comment               string
+
+	Items []Enumerator
+
+	Methods []string
+}
+
+type Enumerator struct {
 	Name    string
 	CName   string
 	Comment string
-
-	Items []enumerator
 }
 
-type enumerator struct { // TODO make public
-	Name    string
-	CName   string
-	Comment string
-}
+func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Enum {
+	e := Enum{
+		CName:          cname,
+		CNameIsTypeDef: cnameIsTypeDef,
+		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
 
-func handleEnumCursor(cname string, cursor clang.Cursor) enum {
-	e := enum{
-		CName:   cname,
-		Comment: cleanDoxygenComment(cursor.RawCommentText()),
-
-		Items: []enumerator{},
+		Items: []Enumerator{},
 	}
 
 	e.Name = trimClangPrefix(e.CName)
+	e.Receiver = receiverName(e.Name)
 
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {
 		case clang.CK_EnumConstantDecl:
-			ei := enumerator{
+			ei := Enumerator{
 				CName:   cursor.Spelling(),
 				Comment: cleanDoxygenComment(cursor.RawCommentText()), // TODO We are always using the same comment if there is none, see "TypeKind"
 			}
@@ -51,7 +59,13 @@ func handleEnumCursor(cname string, cursor clang.Cursor) enum {
 		return clang.CVR_Continue
 	})
 
-	return e
+	if strings.HasSuffix(e.Name, "Error") {
+		e.ReceiverPrimitiveType = "int32"
+	} else {
+		e.ReceiverPrimitiveType = "uint32"
+	}
+
+	return &e
 }
 
 var templateGenerateEnum = template.Must(template.New("go-clang-generate-enum").Parse(`package phoenix
@@ -60,16 +74,20 @@ var templateGenerateEnum = template.Must(template.New("go-clang-generate-enum").
 import "C"
 
 {{$.Comment}}
-type {{$.Name}} int
+type {{$.Name}} {{$.ReceiverPrimitiveType}}
 
 const (
 {{range $i, $e := .Items}}	{{if $e.Comment}}{{$e.Comment}}
 	{{end}}{{$e.Name}}{{if eq $i 0}} {{$.Name}}{{end}} = C.{{$e.CName}}
 {{end}}
 )
+
+{{range $i, $m := .Methods}}
+{{$m}}
+{{end}}
 `))
 
-func generateEnum(e enum) error {
+func generateEnum(e *Enum) error {
 	var b bytes.Buffer
 	if err := templateGenerateEnum.Execute(&b, e); err != nil {
 		return err

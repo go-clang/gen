@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Describes the severity of a particular diagnostic.
-type DiagnosticSeverity int
+type DiagnosticSeverity uint32
 
 const (
 	// A diagnostic that has been suppressed, e.g., by a command-line option.

@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Describe the linkage of the entity referred to by a cursor.
-type LinkageKind int
+type LinkageKind uint32
 
 const (
 	// This value indicates that no linkage information is available for a provided CXCursor.

@@ -3,7 +3,7 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
-type RefQualifierKind int
+type RefQualifierKind uint32
 
 const (
 	// No ref-qualifier was provided.

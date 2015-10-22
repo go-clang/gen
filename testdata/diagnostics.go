@@ -44,15 +44,6 @@ func (d Diagnostic) Location() SourceLocation {
 }
 
 /**
- * \brief Retrieve the text of the given diagnostic.
- */
-func (d Diagnostic) Spelling() string {
-	cx := cxstring{C.clang_getDiagnosticSpelling(d.c)}
-	defer cx.Dispose()
-	return cx.String()
-}
-
-/**
  * \brief Retrieve the name of the command-line option that enabled this
  * diagnostic.
  *

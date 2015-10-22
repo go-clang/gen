@@ -127,12 +127,6 @@ void clang_CXIndex_setGlobalOptions(CXIndex, unsigned options);
  */
 unsigned clang_CXIndex_getGlobalOptions(CXIndex);
 
-
-/**
- * \brief Retrieve the complete file and path name of the given file.
- */
-CXString clang_getFileName(CXFile SFile);
-
 /**
  * \brief Retrieve the last modification time of the given file.
  */
@@ -546,11 +540,6 @@ clang_getDiagnosticSeverity(CXDiagnostic);
 CXSourceLocation clang_getDiagnosticLocation(CXDiagnostic);
 
 /**
- * \brief Retrieve the text of the given diagnostic.
- */
-CXString clang_getDiagnosticSpelling(CXDiagnostic);
-
-/**
  * \brief Retrieve the name of the command-line option that enabled this
  * diagnostic.
  *
@@ -588,13 +577,6 @@ unsigned clang_getDiagnosticCategory(CXDiagnostic);
  * \returns The name of the given diagnostic category.
  */
 CXString clang_getDiagnosticCategoryName(unsigned Category);
-
-/**
- * \brief Retrieve the diagnostic category text for a given diagnostic.
- *
- * \returns The text of the given diagnostic category.
- */
-CXString clang_getDiagnosticCategoryText(CXDiagnostic);
 
 /**
  * \brief Determine the number of source ranges associated with the given
@@ -979,60 +961,6 @@ unsigned clang_hashCursor(CXCursor);
 enum CXCursorKind clang_getCursorKind(CXCursor);
 
 /**
- * \brief Determine whether the given cursor kind represents a declaration.
- */
-unsigned clang_isDeclaration(enum CXCursorKind);
-
-/**
- * \brief Determine whether the given cursor kind represents a simple
- * reference.
- *
- * Note that other kinds of cursors (such as expressions) can also refer to
- * other cursors. Use clang_getCursorReferenced() to determine whether a
- * particular cursor refers to another entity.
- */
-unsigned clang_isReference(enum CXCursorKind);
-
-/**
- * \brief Determine whether the given cursor kind represents an expression.
- */
-unsigned clang_isExpression(enum CXCursorKind);
-
-/**
- * \brief Determine whether the given cursor kind represents a statement.
- */
-unsigned clang_isStatement(enum CXCursorKind);
-
-/**
- * \brief Determine whether the given cursor kind represents an attribute.
- */
-unsigned clang_isAttribute(enum CXCursorKind);
-
-/**
- * \brief Determine whether the given cursor kind represents an invalid
- * cursor.
- */
-unsigned clang_isInvalid(enum CXCursorKind);
-
-/**
- * \brief Determine whether the given cursor kind represents a translation
- * unit.
- */
-unsigned clang_isTranslationUnit(enum CXCursorKind);
-
-/***
- * \brief Determine whether the given cursor represents a preprocessing
- * element, such as a preprocessor directive or macro instantiation.
- */
-unsigned clang_isPreprocessing(enum CXCursorKind);
-
-/***
- * \brief Determine whether the given cursor represents a currently
- *  unexposed piece of the AST (e.g., CXCursor_UnexposedStmt).
- */
-unsigned clang_isUnexposed(enum CXCursorKind);
-
-/**
  * \brief Determine the linkage of the entity referred to by a given cursor.
  */
 enum CXLinkageKind clang_getCursorLinkage(CXCursor cursor);
@@ -1365,14 +1293,6 @@ typedef struct {
 CXType clang_getCursorType(CXCursor C);
 
 /**
- * \brief Pretty-print the underlying type using the rules of the
- * language of the translation unit from which it came.
- *
- * If the type is invalid, an empty string is returned.
- */
-CXString clang_getTypeSpelling(CXType CT);
-
-/**
  * \brief Retrieve the underlying type of a typedef declaration.
  *
  * If the cursor does not reference a typedef declaration, an invalid type is
@@ -1452,27 +1372,6 @@ unsigned clang_equalTypes(CXType A, CXType B);
 CXType clang_getCanonicalType(CXType T);
 
 /**
- * \brief Determine whether a CXType has the "const" qualifier set,
- * without looking through typedefs that may have added "const" at a
- * different level.
- */
-unsigned clang_isConstQualifiedType(CXType T);
-
-/**
- * \brief Determine whether a CXType has the "volatile" qualifier set,
- * without looking through typedefs that may have added "volatile" at
- * a different level.
- */
-unsigned clang_isVolatileQualifiedType(CXType T);
-
-/**
- * \brief Determine whether a CXType has the "restrict" qualifier set,
- * without looking through typedefs that may have added "restrict" at a
- * different level.
- */
-unsigned clang_isRestrictQualifiedType(CXType T);
-
-/**
  * \brief For pointer types, returns the type of the pointee.
  */
 CXType clang_getPointeeType(CXType T);
@@ -1481,16 +1380,6 @@ CXType clang_getPointeeType(CXType T);
  * \brief Return the cursor for the declaration of the given type.
  */
 CXCursor clang_getTypeDeclaration(CXType T);
-
-/**
- * Returns the Objective-C type encoding for the specified declaration.
- */
-CXString clang_getDeclObjCTypeEncoding(CXCursor C);
-
-/**
- * \brief Retrieve the spelling of a given CXTypeKind.
- */
-CXString clang_getTypeKindSpelling(enum CXTypeKind K);
 
 /**
  * \brief Retrieve the calling convention associated with a function type.
@@ -1523,22 +1412,11 @@ int clang_getNumArgTypes(CXType T);
 CXType clang_getArgType(CXType T, unsigned i);
 
 /**
- * \brief Return 1 if the CXType is a variadic function type, and 0 otherwise.
- */
-unsigned clang_isFunctionTypeVariadic(CXType T);
-
-/**
  * \brief Retrieve the result type associated with a given cursor.
  *
  * This only returns a valid type if the cursor refers to a function or method.
  */
 CXType clang_getCursorResultType(CXCursor C);
-
-/**
- * \brief Return 1 if the CXType is a POD (plain old data) type, and 0
- *  otherwise.
- */
-unsigned clang_isPODType(CXType T);
 
 /**
  * \brief Return the element type of an array, complex, or vector type.
@@ -1630,12 +1508,6 @@ enum CXRefQualifierKind clang_Type_getCXXRefQualifier(CXType T);
  *   bitfield.
  */
 unsigned clang_Cursor_isBitField(CXCursor C);
-
-/**
- * \brief Returns 1 if the base class specified by the cursor with kind
- *   CX_CXXBaseSpecifier is virtual.
- */
-unsigned clang_isVirtualBase(CXCursor);
 
 /**
  * \brief Returns the access control level for the referenced object.
@@ -1748,17 +1620,6 @@ unsigned clang_visitChildrenWithBlock(CXCursor parent,
 #endif
 
 /**
- * \brief Retrieve a Unified Symbol Resolution (USR) for the entity referenced
- * by the given cursor.
- *
- * A Unified Symbol Resolution (USR) is a string that identifies a particular
- * entity (function, class, variable, etc.) within a program. USRs can be
- * compared across translation units to determine, e.g., when references in
- * one translation refer to an entity defined in another translation unit.
- */
-CXString clang_getCursorUSR(CXCursor);
-
-/**
  * \brief Construct a USR for a specified Objective-C class.
  */
 CXString clang_constructUSR_ObjCClass(const char *class_name);
@@ -1800,11 +1661,6 @@ CXString clang_constructUSR_ObjCProperty(const char *property,
                                                         CXString classUSR);
 
 /**
- * \brief Retrieve a name for the entity referenced by this cursor.
- */
-CXString clang_getCursorSpelling(CXCursor);
-
-/**
  * \brief Retrieve a range for a piece that forms the cursors spelling name.
  * Most of the times there is only one range for the complete spelling but for
  * objc methods and objc message expressions, there are multiple pieces for each
@@ -1818,15 +1674,6 @@ CXString clang_getCursorSpelling(CXCursor);
 CXSourceRange clang_Cursor_getSpellingNameRange(CXCursor,
                                                           unsigned pieceIndex,
                                                           unsigned options);
-
-/**
- * \brief Retrieve the display name for the entity referenced by this cursor.
- *
- * The display name contains extra information that helps identify the cursor,
- * such as the parameters of a function or template or the arguments of a
- * class template specialization.
- */
-CXString clang_getCursorDisplayName(CXCursor);
 
 /** \brief For a cursor that is a reference, retrieve a cursor representing the
  * entity that it references.
@@ -1869,12 +1716,6 @@ CXCursor clang_getCursorReferenced(CXCursor);
  *  translation unit, returns a NULL cursor.
  */
 CXCursor clang_getCursorDefinition(CXCursor);
-
-/**
- * \brief Determine whether the declaration pointed to by this cursor
- * is also a definition of that entity.
- */
-unsigned clang_isCursorDefinition(CXCursor);
 
 /**
  * \brief Retrieve the canonical cursor corresponding to the given cursor.
@@ -1972,19 +1813,6 @@ unsigned clang_Cursor_isVariadic(CXCursor C);
 CXSourceRange clang_Cursor_getCommentRange(CXCursor C);
 
 /**
- * \brief Given a cursor that represents a declaration, return the associated
- * comment text, including comment markers.
- */
-CXString clang_Cursor_getRawCommentText(CXCursor C);
-
-/**
- * \brief Given a cursor that represents a documentable entity (e.g.,
- * declaration), return the associated \\brief paragraph; otherwise return the
- * first paragraph.
- */
-CXString clang_Cursor_getBriefCommentText(CXCursor C);
-
-/**
  * \brief Given a cursor that represents a documentable entity (e.g.,
  * declaration), return the associated parsed comment as a
  * \c CXComment_FullComment AST node.
@@ -2010,21 +1838,6 @@ CXFile clang_Module_getASTFile(CXModule Module);
  * e.g. for 'std.vector' it will return the 'std' module.
  */
 CXModule clang_Module_getParent(CXModule Module);
-
-/**
- * \param Module a module object.
- *
- * \returns the name of the module, e.g. for the 'std.vector' sub-module it
- * will return "vector".
- */
-CXString clang_Module_getName(CXModule Module);
-
-/**
- * \param Module a module object.
- *
- * \returns the full name of the module, e.g. "std.vector".
- */
-CXString clang_Module_getFullName(CXModule Module);
 
 /**
  * \param Module a module object.
@@ -2086,20 +1899,6 @@ unsigned clang_Comment_isWhitespace(CXComment Comment);
 unsigned clang_InlineContentComment_hasTrailingNewline(CXComment Comment);
 
 /**
- * \param Comment a \c CXComment_Text AST node.
- *
- * \returns text contained in the AST node.
- */
-CXString clang_TextComment_getText(CXComment Comment);
-
-/**
- * \param Comment a \c CXComment_InlineCommand AST node.
- *
- * \returns name of the inline command.
- */
-CXString clang_InlineCommandComment_getCommandName(CXComment Comment);
-
-/**
  * \param Comment a \c CXComment_InlineCommand AST node.
  *
  * \returns the most appropriate rendering mode, chosen on command
@@ -2124,14 +1923,6 @@ unsigned clang_InlineCommandComment_getNumArgs(CXComment Comment);
  */
 CXString clang_InlineCommandComment_getArgText(CXComment Comment,
                                                unsigned ArgIdx);
-
-/**
- * \param Comment a \c CXComment_HTMLStartTag or \c CXComment_HTMLEndTag AST
- * node.
- *
- * \returns HTML tag name.
- */
-CXString clang_HTMLTagComment_getTagName(CXComment Comment);
 
 /**
  * \param Comment a \c CXComment_HTMLStartTag AST node.
@@ -2168,13 +1959,6 @@ CXString clang_HTMLStartTag_getAttrValue(CXComment Comment, unsigned AttrIdx);
 /**
  * \param Comment a \c CXComment_BlockCommand AST node.
  *
- * \returns name of the block command.
- */
-CXString clang_BlockCommandComment_getCommandName(CXComment Comment);
-
-/**
- * \param Comment a \c CXComment_BlockCommand AST node.
- *
  * \returns number of word-like arguments.
  */
 unsigned clang_BlockCommandComment_getNumArgs(CXComment Comment);
@@ -2196,13 +1980,6 @@ CXString clang_BlockCommandComment_getArgText(CXComment Comment,
  * \returns paragraph argument of the block command.
  */
 CXComment clang_BlockCommandComment_getParagraph(CXComment Comment);
-
-/**
- * \param Comment a \c CXComment_ParamCommand AST node.
- *
- * \returns parameter name.
- */
-CXString clang_ParamCommandComment_getParamName(CXComment Comment);
 
 /**
  * \param Comment a \c CXComment_ParamCommand AST node.
@@ -2235,13 +2012,6 @@ unsigned clang_ParamCommandComment_isDirectionExplicit(CXComment Comment);
  */
 enum CXCommentParamPassDirection clang_ParamCommandComment_getDirection(
                                                             CXComment Comment);
-
-/**
- * \param Comment a \c CXComment_TParamCommand AST node.
- *
- * \returns template parameter name.
- */
-CXString clang_TParamCommandComment_getParamName(CXComment Comment);
 
 /**
  * \param Comment a \c CXComment_TParamCommand AST node.
@@ -2288,75 +2058,6 @@ unsigned clang_TParamCommandComment_getDepth(CXComment Comment);
  * at depth 1 T's index is 0.
  */
 unsigned clang_TParamCommandComment_getIndex(CXComment Comment, unsigned Depth);
-
-/**
- * \param Comment a \c CXComment_VerbatimBlockLine AST node.
- *
- * \returns text contained in the AST node.
- */
-CXString clang_VerbatimBlockLineComment_getText(CXComment Comment);
-
-/**
- * \param Comment a \c CXComment_VerbatimLine AST node.
- *
- * \returns text contained in the AST node.
- */
-CXString clang_VerbatimLineComment_getText(CXComment Comment);
-
-/**
- * \brief Convert an HTML tag AST node to string.
- *
- * \param Comment a \c CXComment_HTMLStartTag or \c CXComment_HTMLEndTag AST
- * node.
- *
- * \returns string containing an HTML tag.
- */
-CXString clang_HTMLTagComment_getAsString(CXComment Comment);
-
-/**
- * \brief Convert a given full parsed comment to an HTML fragment.
- *
- * Specific details of HTML layout are subject to change.  Don't try to parse
- * this HTML back into an AST, use other APIs instead.
- *
- * Currently the following CSS classes are used:
- * \li "para-brief" for \\brief paragraph and equivalent commands;
- * \li "para-returns" for \\returns paragraph and equivalent commands;
- * \li "word-returns" for the "Returns" word in \\returns paragraph.
- *
- * Function argument documentation is rendered as a \<dl\> list with arguments
- * sorted in function prototype order.  CSS classes used:
- * \li "param-name-index-NUMBER" for parameter name (\<dt\>);
- * \li "param-descr-index-NUMBER" for parameter description (\<dd\>);
- * \li "param-name-index-invalid" and "param-descr-index-invalid" are used if
- * parameter index is invalid.
- *
- * Template parameter documentation is rendered as a \<dl\> list with
- * parameters sorted in template parameter list order.  CSS classes used:
- * \li "tparam-name-index-NUMBER" for parameter name (\<dt\>);
- * \li "tparam-descr-index-NUMBER" for parameter description (\<dd\>);
- * \li "tparam-name-index-other" and "tparam-descr-index-other" are used for
- * names inside template template parameters;
- * \li "tparam-name-index-invalid" and "tparam-descr-index-invalid" are used if
- * parameter position is invalid.
- *
- * \param Comment a \c CXComment_FullComment AST node.
- *
- * \returns string containing an HTML fragment.
- */
-CXString clang_FullComment_getAsHTML(CXComment Comment);
-
-/**
- * \brief Convert a given full parsed comment to an XML document.
- *
- * A Relax NG schema for the XML can be found in comment-xml-schema.rng file
- * inside clang source tree.
- *
- * \param Comment a \c CXComment_FullComment AST node.
- *
- * \returns string containing an XML document.
- */
-CXString clang_FullComment_getAsXML(CXComment Comment);
 
 /**
  * \brief Determine if a C++ member function or member function template is
@@ -2541,7 +2242,6 @@ void clang_disposeTokens(CXTranslationUnit TU,
                                         CXToken *Tokens, unsigned NumTokens);
 
 /* for debug/testing */
-CXString clang_getCursorKindSpelling(enum CXCursorKind Kind);
 void clang_getDefinitionSpellingAndExtent(CXCursor,
                                           const char **startBuf,
                                           const char **endBuf,
@@ -2696,13 +2396,6 @@ clang_getCompletionAnnotation(CXCompletionString completion_string,
 CXString
 clang_getCompletionParent(CXCompletionString completion_string,
                           enum CXCursorKind *kind);
-
-/**
- * \brief Retrieve the brief documentation comment attached to the declaration
- * that corresponds to the given completion string.
- */
-CXString
-clang_getCompletionBriefComment(CXCompletionString completion_string);
 
 /**
  * \brief Retrieve a completion string for an arbitrary declaration or macro

@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Describes the kind of entity that a cursor refers to.
-type CursorKind int
+type CursorKind uint32
 
 const (
 	// A declaration whose specific kind is not exposed via this interface. Unexposed declarations have the same operations as any other kind of declaration; one can extract their location information, spelling, find their definitions, etc. However, the specific kind of the declaration is not reported.
@@ -462,3 +462,74 @@ const (
 	// A module import declaration.
 	Cursor_LastExtraDecl = C.CXCursor_LastExtraDecl
 )
+
+// Determine whether the given cursor kind represents a declaration.
+func (ck CursorKind) IsDeclaration() bool {
+	o := C.clang_isDeclaration(uint32(ck))
+
+	return o != C.uint(0)
+}
+
+// Determine whether the given cursor kind represents a simple reference. Note that other kinds of cursors (such as expressions) can also refer to other cursors. Use clang_getCursorReferenced() to determine whether a particular cursor refers to another entity.
+func (ck CursorKind) IsReference() bool {
+	o := C.clang_isReference(uint32(ck))
+
+	return o != C.uint(0)
+}
+
+// Determine whether the given cursor kind represents an expression.
+func (ck CursorKind) IsExpression() bool {
+	o := C.clang_isExpression(uint32(ck))
+
+	return o != C.uint(0)
+}
+
+// Determine whether the given cursor kind represents a statement.
+func (ck CursorKind) IsStatement() bool {
+	o := C.clang_isStatement(uint32(ck))
+
+	return o != C.uint(0)
+}
+
+// Determine whether the given cursor kind represents an attribute.
+func (ck CursorKind) IsAttribute() bool {
+	o := C.clang_isAttribute(uint32(ck))
+
+	return o != C.uint(0)
+}
+
+// Determine whether the given cursor kind represents an invalid cursor.
+func (ck CursorKind) IsInvalid() bool {
+	o := C.clang_isInvalid(uint32(ck))
+
+	return o != C.uint(0)
+}
+
+// Determine whether the given cursor kind represents a translation unit.
+func (ck CursorKind) IsTranslationUnit() bool {
+	o := C.clang_isTranslationUnit(uint32(ck))
+
+	return o != C.uint(0)
+}
+
+// * Determine whether the given cursor represents a preprocessing element, such as a preprocessor directive or macro instantiation.
+func (ck CursorKind) IsPreprocessing() bool {
+	o := C.clang_isPreprocessing(uint32(ck))
+
+	return o != C.uint(0)
+}
+
+// * Determine whether the given cursor represents a currently unexposed piece of the AST (e.g., CXCursor_UnexposedStmt).
+func (ck CursorKind) IsUnexposed() bool {
+	o := C.clang_isUnexposed(uint32(ck))
+
+	return o != C.uint(0)
+}
+
+// \defgroup CINDEX_DEBUG Debugging facilities These routines are used for testing and debugging, only, and should not be relied upon. @{
+func (ck CursorKind) Spelling() string {
+	o := cxstring{C.clang_getCursorKindSpelling(uint32(ck))}
+	defer o.Dispose()
+
+	return o.String()
+}

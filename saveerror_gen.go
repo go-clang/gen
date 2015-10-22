@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Describes the kind of error that occurred (if any) in a call to \c clang_saveTranslationUnit().
-type SaveError int
+type SaveError int32
 
 const (
 	// Indicates that no error occurred while saving a translation unit.

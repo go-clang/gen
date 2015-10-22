@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Describes the kind of type
-type TypeKind int
+type TypeKind uint32
 
 const (
 	// Reprents an invalid type (e.g., where no type is available).
@@ -108,3 +108,11 @@ const (
 	// A type whose specific kind is not exposed via this interface.
 	Type_MemberPointer = C.CXType_MemberPointer
 )
+
+// Retrieve the spelling of a given CXTypeKind.
+func (tk TypeKind) Spelling() string {
+	o := cxstring{C.clang_getTypeKindSpelling(uint32(tk))}
+	defer o.Dispose()
+
+	return o.String()
+}

@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/sbinet/go-clang"
 	// "github.com/termie/go-shutil"
@@ -78,6 +79,7 @@ func main() {
 	clangIndexHeaderFilepath := "./clang-c/Index.h"
 	tu := idx.Parse(clangIndexHeaderFilepath, []string{
 		"-I", ".", // Include current folder
+		"-I", "/usr/local/lib/clang/3.4.2/include/", // Include clang headers TODO make this generic
 	}, nil, 0)
 	defer tu.Dispose()
 
@@ -94,8 +96,13 @@ func main() {
 		}
 	}
 
-	var enums []enum
-	var structs []Struct
+	var enums []*Enum
+	var functions []*Function
+	var structs []*Struct
+
+	lookupEnum := map[string]*Enum{}
+	lookupNonTypedefs := map[string]string{}
+	lookupStruct := map[string]*Struct{}
 
 	cursor := tu.ToCursor()
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
@@ -105,33 +112,131 @@ func main() {
 			return clang.CVR_Continue
 		}
 
-		name := cursor.Spelling()
+		cname := cursor.Spelling()
+		cnameIsTypeDef := false
 
-		if parentName := parent.Spelling(); parent.Kind() == clang.CK_TypedefDecl && parentName != "" {
-			name = parentName
+		if parentCName := parent.Spelling(); parent.Kind() == clang.CK_TypedefDecl && parentCName != "" {
+			cname = parentCName
+			cnameIsTypeDef = true
 		}
 
 		switch cursor.Kind() {
 		case clang.CK_EnumDecl:
-			if name == "" {
+			if cname == "" {
 				break
 			}
 
-			enums = append(enums, handleEnumCursor(name, cursor))
+			e := handleEnumCursor(cursor, cname, cnameIsTypeDef)
+
+			lookupEnum[e.Name] = e
+			lookupNonTypedefs["enum "+e.CName] = e.Name
+			lookupEnum[e.CName] = e
+
+			enums = append(enums, e)
+		case clang.CK_FunctionDecl:
+			f := handleFunctionCursor(cursor)
+			if f != nil {
+				functions = append(functions, f)
+			}
 		case clang.CK_StructDecl:
-			if name == "" {
+			if cname == "" {
 				break
 			}
 
-			structs = append(structs, handleStructCursor(name, cursor))
+			switch cname {
+			// TODO ignore declarations like "typedef struct CXTranslationUnitImpl *CXTranslationUnit" for now
+			case "CXCursorSetImpl", "CXTranslationUnitImpl":
+				return clang.CVR_Recurse
+			}
+
+			s := handleStructCursor(cursor, cname, cnameIsTypeDef)
+
+			lookupStruct[s.Name] = s
+			lookupNonTypedefs["struct "+s.CName] = s.Name
+			lookupStruct[s.CName] = s
+
+			structs = append(structs, s)
 		case clang.CK_TypedefDecl:
 			if cursor.TypedefDeclUnderlyingType().TypeSpelling() == "void *" {
-				structs = append(structs, handleVoidStructCursor(name, cursor))
+				s := handleVoidStructCursor(cursor, cname, true)
+
+				lookupStruct[s.Name] = s
+				lookupNonTypedefs["struct "+s.CName] = s.Name
+				lookupStruct[s.CName] = s
+
+				structs = append(structs, s)
 			}
 		}
 
 		return clang.CVR_Recurse
 	})
+
+	for _, f := range functions {
+		//fmt.Printf("%#v\n\n", f)
+
+		if len(f.Parameters) == 1 && f.ReturnType == "CXString" {
+			f.ReceiverType = trimClangPrefix(f.Parameters[0].Type)
+			if n, ok := lookupNonTypedefs[f.ReceiverType]; ok {
+				f.ReceiverType = n
+			}
+
+			f.Name = strings.TrimPrefix(f.Name, f.ReceiverType+"_")
+
+			f.Name = strings.TrimPrefix(f.Name, "get")
+			f.Name = strings.TrimPrefix(f.Name, f.ReceiverType)
+
+			f.Name = upperFirstCharacter(f.Name)
+
+			if e, ok := lookupEnum[f.ReceiverType]; ok {
+				f.Receiver = e.Receiver
+				f.ReceiverPrimitiveType = e.ReceiverPrimitiveType
+
+				fRaw, err := generateFunctionStringGetter(f)
+				if err != nil {
+					panic(err)
+				}
+
+				e.Methods = append(e.Methods, fRaw)
+			} else if s, ok := lookupStruct[f.ReceiverType]; ok {
+				f.Receiver = s.Receiver
+
+				fRaw, err := generateFunctionStringGetter(f)
+				if err != nil {
+					panic(err)
+				}
+
+				s.Methods = append(s.Methods, fRaw)
+			}
+		} else if len(f.Parameters) == 1 && f.Name[0] == 'i' && f.Name[1] == 's' && unicode.IsUpper(rune(f.Name[2])) && f.ReturnType == "unsigned int" {
+			f.ReceiverType = trimClangPrefix(f.Parameters[0].Type)
+			if n, ok := lookupNonTypedefs[f.ReceiverType]; ok {
+				f.ReceiverType = n
+			}
+
+			f.Name = upperFirstCharacter(f.Name)
+
+			if e, ok := lookupEnum[f.ReceiverType]; ok {
+				f.Receiver = e.Receiver
+				f.ReceiverPrimitiveType = e.ReceiverPrimitiveType
+
+				fRaw, err := generateGenerateFunctionIs(f)
+				if err != nil {
+					panic(err)
+				}
+
+				e.Methods = append(e.Methods, fRaw)
+			} else if s, ok := lookupStruct[f.ReceiverType]; ok {
+				f.Receiver = s.Receiver
+
+				fRaw, err := generateGenerateFunctionIs(f)
+				if err != nil {
+					panic(err)
+				}
+
+				s.Methods = append(s.Methods, fRaw)
+			}
+		}
+	}
 
 	for _, e := range enums {
 		if err := generateEnum(e); err != nil {
@@ -145,7 +250,7 @@ func main() {
 		}
 	}
 
-	if _, _, err = execToBuffer("gofmt", "-w", "./"); err != nil {
+	if _, _, err = execToBuffer("gofmt", "-w", "./"); err != nil { // TODO do this before saving the files using go/fmt
 		exitWithFatal("Gofmt failed", err)
 	}
 }

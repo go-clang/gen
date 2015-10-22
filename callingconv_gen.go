@@ -4,7 +4,7 @@ package phoenix
 import "C"
 
 // Describes the calling convention of a function type
-type CallingConv int
+type CallingConv uint32
 
 const (
 	CallingConv_Default      CallingConv = C.CXCallingConv_Default
