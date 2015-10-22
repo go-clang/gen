@@ -206,7 +206,7 @@ func main() {
 			return addMethod(f, fname, rt, generateFunctionStringGetter)
 		} else if len(f.Parameters) == 1 && fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2])) && f.ReturnType == "unsigned int" {
 			return addMethod(f, fname, rt, generateGenerateFunctionIs)
-		} else if len(f.Parameters) == 1 && strings.HasPrefix(fname, "dispose") && fname[len("dispose"):] == rt {
+		} else if len(f.Parameters) == 1 && strings.HasPrefix(fname, "dispose") && f.ReturnType == "void" && (fname == "dispose" || fname[len("dispose"):] == rt) {
 			fname = "Dispose"
 
 			return addMethod(f, fname, rt, generateFunctionVoidMethod)

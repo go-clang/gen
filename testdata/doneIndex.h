@@ -3011,14 +3011,6 @@ clang_index_setClientEntity(const CXIdxEntityInfo *, CXIdxClientEntity);
 CXIndexAction clang_IndexAction_create(CXIndex CIdx);
 
 /**
- * \brief Destroy the given index action.
- *
- * The index action must not be destroyed until all of the translation units
- * created within that index action have been destroyed.
- */
-void clang_IndexAction_dispose(CXIndexAction);
-
-/**
  * \brief Index the given source file and the translation unit corresponding
  * to that file via callbacks implemented through #IndexerCallbacks.
  *
