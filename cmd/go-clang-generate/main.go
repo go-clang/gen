@@ -171,15 +171,21 @@ func main() {
 		return clang.CVR_Recurse
 	})
 
-	addMethod := func(f *Function, method func(f *Function) string) bool {
-		if e, ok := lookupEnum[f.ReceiverType]; ok {
+	addMethod := func(f *Function, fname string, rt string, method func(f *Function) string) bool {
+		fname = upperFirstCharacter(fname)
+
+		if e, ok := lookupEnum[rt]; ok {
+			f.Name = fname
 			f.Receiver = e.Receiver
+			f.ReceiverType = rt
 			f.ReceiverPrimitiveType = e.ReceiverPrimitiveType
 
 			e.Methods = append(e.Methods, method(f))
 
 			return true
-		} else if s, ok := lookupStruct[f.ReceiverType]; ok {
+		} else if s, ok := lookupStruct[rt]; ok {
+			f.Name = fname
+			f.ReceiverType = rt
 			f.Receiver = s.Receiver
 
 			s.Methods = append(s.Methods, method(f))
@@ -190,36 +196,27 @@ func main() {
 		return false
 	}
 
-	addBasicMethods := func(f *Function, rt string) bool {
+	addBasicMethods := func(f *Function, fname string, rt string) bool {
 		if len(f.Parameters) == 1 && f.ReturnType == "CXString" {
-			f.ReceiverType = rt
+			fname = strings.TrimPrefix(fname, rt+"_")
 
-			f.Name = strings.TrimPrefix(f.Name, f.ReceiverType+"_")
+			fname = strings.TrimPrefix(fname, "get")
+			fname = strings.TrimPrefix(fname, rt)
 
-			f.Name = strings.TrimPrefix(f.Name, "get")
-			f.Name = strings.TrimPrefix(f.Name, f.ReceiverType)
+			return addMethod(f, fname, rt, generateFunctionStringGetter)
+		} else if len(f.Parameters) == 1 && fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2])) && f.ReturnType == "unsigned int" {
+			return addMethod(f, fname, rt, generateGenerateFunctionIs)
+		} else if len(f.Parameters) == 1 && strings.HasPrefix(fname, "dispose") && fname[len("dispose"):] == rt {
+			fname = "Dispose"
 
-			f.Name = upperFirstCharacter(f.Name)
-
-			return addMethod(f, generateFunctionStringGetter)
-		} else if len(f.Parameters) == 1 && f.Name[0] == 'i' && f.Name[1] == 's' && unicode.IsUpper(rune(f.Name[2])) && f.ReturnType == "unsigned int" {
-			f.ReceiverType = rt
-
-			f.Name = upperFirstCharacter(f.Name)
-
-			return addMethod(f, generateGenerateFunctionIs)
-		} else if len(f.Parameters) == 1 && strings.HasPrefix(f.Name, "dispose") && f.Name[len("dispose"):] == rt {
-			f.ReceiverType = rt
-
-			f.Name = "Dispose"
-
-			return addMethod(f, generateFunctionVoidMethod)
+			return addMethod(f, fname, rt, generateFunctionVoidMethod)
 		}
 
 		return false
 	}
 
 	for _, f := range functions {
+		fname := f.Name
 		var rt string
 		if len(f.Parameters) > 0 {
 			rt = trimClangPrefix(f.Parameters[0].Type)
@@ -228,16 +225,18 @@ func main() {
 			}
 		}
 
-		added := addBasicMethods(f, rt)
+		added := addBasicMethods(f, fname, rt)
 
 		if !added {
 			if s := strings.SplitN(f.Name, "_", 2); len(s) == 2 {
-				f.Name = s[1]
-
 				if s[0] == rt {
-					added = addBasicMethods(f, rt)
+					added = addBasicMethods(f, s[1], s[0])
 				}
 			}
+		}
+
+		if !added {
+			fmt.Println("Unused:", f.Name)
 		}
 	}
 
