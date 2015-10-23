@@ -34,23 +34,23 @@ type FuncDef struct {
 var returnPrimitive = "return %s(%s)"
 var returnComplex = "return %s{%s}"
 
-var templateGenerateReturnSlice = template.Must(template.New("go-clang-generate-slice").Parse(`
-	{{$.Comment}}
-	func ({{$.Name}} {{$.GType}}) {{$.FuncName}}() {{$.ReturnType}} {
- 		s := {{$.ReturnType}}{}
- 		length := C.sizeof(%s[0]) / C.sizeof(%s[0][0])
-		for is:=0;is < length; is++ {
-     		s = append(s, %s{%s[is]})
-		}
-		return s
+var templateGenerateReturnSlice = template.Must(template.New("go-clang-generate-slice").Parse(`{{$.Comment}}
+func ({{$.Name}} {{$.GType}}) {{$.FuncName}}() {{$.ReturnType}} {
+	s := {{$.ReturnType}}{}
+	length := C.sizeof(%s[0]) / C.sizeof(%s[0][0])
+
+	for is := 0; is < length; is++ {
+		s = append(s, %s{%s[is]})
 	}
+
+	return s
+}
 `))
 
-var templateGenerateGetter = template.Must(template.New("go-clang-generate-getter").Parse(`
-	{{$.Comment}}
-	func ({{$.Name}} {{$.GType}}) {{$.FuncName}}() {{$.ReturnType}} {
-		{{$.ReturnString}}
-	}
+var templateGenerateGetter = template.Must(template.New("go-clang-generate-getter").Parse(`{{$.Comment}}
+func ({{$.Name}} {{$.GType}}) {{$.FuncName}}() {{$.ReturnType}} {
+	{{$.ReturnString}}
+}
 `))
 
 func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
