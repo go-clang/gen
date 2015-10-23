@@ -55,75 +55,78 @@ var templateGenerateGetter = template.Must(template.New("go-clang-generate-gette
 
 func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
 	s := handleVoidStructCursor(cursor, cname, cnameIsTypeDef)
-	gType := trimClangPrefix(cname)
 
-	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
+	if true == false {
+		gType := trimClangPrefix(cname)
 
-		switch cursor.Kind() {
-		case clang.CK_FieldDecl:
-			conv := getTypeConversion(cursor.Type())
+		cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 
-			if conv.FunctionPointer {
-				return clang.CVR_Continue
+			switch cursor.Kind() {
+			case clang.CK_FieldDecl:
+				conv := getTypeConversion(cursor.Type())
+
+				if conv.FunctionPointer {
+					return clang.CVR_Continue
+				}
+
+				receiver := strings.ToLower(string(gType[0]))
+
+				f := FuncDef{
+					Comment:    cleanDoxygenComment(cursor.RawCommentText()),
+					Name:       receiver,
+					GType:      gType,
+					FuncName:   upperFirstCharacter(cursor.DisplayName()),
+					ReturnType: conv.GType,
+				}
+
+				callToC := receiver + ".c." + cursor.DisplayName()
+
+				var method string
+
+				if conv.Pointer == 2 {
+					elemType := "&" + f.ReturnType
+					f.ReturnType = "[]*" + f.ReturnType
+
+					var b bytes.Buffer
+					if err := templateGenerateReturnSlice.Execute(&b, f); err != nil {
+						fmt.Println(err.Error())
+					}
+
+					method = fmt.Sprintf(b.String(), callToC, callToC, elemType, callToC)
+				} else if conv.Pointer < 2 {
+					if conv.Pointer == 1 {
+						f.ReturnType = "*" + f.ReturnType
+					}
+
+					if f.ReturnType == "*void" {
+						f.ReturnType = GoPointer
+						s.ImportUnsafe = true
+					}
+
+					if conv.IsArray {
+						f.ReturnType = "[]" + f.ReturnType
+					}
+
+					if conv.Primitive {
+						f.ReturnString = fmt.Sprintf(returnPrimitive, strings.Replace(f.ReturnType, "*", "&", -1), callToC)
+					} else {
+						f.ReturnString = fmt.Sprintf(returnComplex, strings.Replace(f.ReturnType, "*", "&", -1), callToC)
+					}
+
+					var b bytes.Buffer
+					if err := templateGenerateGetter.Execute(&b, f); err != nil {
+						fmt.Println(err.Error())
+					}
+
+					method = b.String()
+				} // fuck you, three levels of pointers or more
+
+				s.Methods = append(s.Methods, method)
 			}
 
-			receiver := strings.ToLower(string(gType[0]))
-
-			f := FuncDef{
-				Comment:    cleanDoxygenComment(cursor.RawCommentText()),
-				Name:       receiver,
-				GType:      gType,
-				FuncName:   upperFirstCharacter(cursor.DisplayName()),
-				ReturnType: conv.GType,
-			}
-
-			callToC := receiver + ".c." + cursor.DisplayName()
-
-			var method string
-
-			if conv.Pointer == 2 {
-				elemType := "&" + f.ReturnType
-				f.ReturnType = "[]*" + f.ReturnType
-
-				var b bytes.Buffer
-				if err := templateGenerateReturnSlice.Execute(&b, f); err != nil {
-					fmt.Println(err.Error())
-				}
-
-				method = fmt.Sprintf(b.String(), callToC, callToC, elemType, callToC)
-			} else if conv.Pointer < 2 {
-				if conv.Pointer == 1 {
-					f.ReturnType = "*" + f.ReturnType
-				}
-
-				if f.ReturnType == "*void" {
-					f.ReturnType = GoPointer
-					s.ImportUnsafe = true
-				}
-
-				if conv.IsArray {
-					f.ReturnType = "[]" + f.ReturnType
-				}
-
-				if conv.Primitive {
-					f.ReturnString = fmt.Sprintf(returnPrimitive, strings.Replace(f.ReturnType, "*", "&", -1), callToC)
-				} else {
-					f.ReturnString = fmt.Sprintf(returnComplex, strings.Replace(f.ReturnType, "*", "&", -1), callToC)
-				}
-
-				var b bytes.Buffer
-				if err := templateGenerateGetter.Execute(&b, f); err != nil {
-					fmt.Println(err.Error())
-				}
-
-				method = b.String()
-			} // fuck you, three levels of pointers or more
-
-			s.Methods = append(s.Methods, method)
-		}
-
-		return clang.CVR_Continue
-	})
+			return clang.CVR_Continue
+		})
+	}
 
 	return s
 }
