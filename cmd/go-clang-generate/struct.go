@@ -119,7 +119,9 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 					}
 
 					method = b.String()
-				} // fuck you, three levels of pointers or more
+				} else {
+					panic("Three pointers")
+				}
 
 				s.Methods = append(s.Methods, method)
 			}
