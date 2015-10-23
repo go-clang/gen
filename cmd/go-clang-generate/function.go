@@ -13,8 +13,9 @@ type Function struct {
 	CName   string
 	Comment string
 
-	Parameters []FunctionParameter
-	ReturnType string
+	Parameters          []FunctionParameter
+	ReturnType          string
+	ReturnPrimitiveType string
 
 	Receiver              string
 	ReceiverType          string
@@ -53,6 +54,21 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 	return &f
 }
 
+var templateGenerateFunctionGetter = template.Must(template.New("go-clang-generate-function-getter").Parse(`{{$.Comment}}
+func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() {{$.ReturnType}} {
+	return {{$.ReturnType}}{{if $.ReturnPrimitiveType}}({{else}}{{"{"}}{{end}}C.{{$.CName}}({{if ne $.ReceiverPrimitiveType ""}}{{$.ReceiverPrimitiveType}}({{$.Receiver}}{{else}}{{$.Receiver}}.c{{end}}){{if $.ReturnPrimitiveType}}){{else}}{{"}"}}{{end}}
+}
+`))
+
+func generateFunctionGetter(f *Function) string {
+	var b bytes.Buffer
+	if err := templateGenerateFunctionGetter.Execute(&b, f); err != nil {
+		panic(err)
+	}
+
+	return b.String()
+}
+
 var templateGenerateFunctionStringGetter = template.Must(template.New("go-clang-generate-function-string-getter").Parse(`{{$.Comment}}
 func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() string {
 	o := cxstring{C.{{$.CName}}({{if ne $.ReceiverPrimitiveType ""}}{{$.ReceiverPrimitiveType}}({{$.Receiver}}){{else}}{{$.Receiver}}.c{{end}})}
@@ -79,7 +95,7 @@ func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() bool {
 }
 `))
 
-func generateGenerateFunctionIs(f *Function) string {
+func generateFunctionIs(f *Function) string {
 	var b bytes.Buffer
 	if err := templateGenerateFunctionIs.Execute(&b, f); err != nil {
 		panic(err)

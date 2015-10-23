@@ -8,6 +8,16 @@ type Module struct {
 	c C.CXModule
 }
 
+// \param Module a module object. \returns the module file where the provided module object came from.
+func (m Module) ASTFile() File {
+	return File{C.clang_Module_getASTFile(m.c)}
+}
+
+// \param Module a module object. \returns the parent of a sub-module or NULL if the given module is top-level, e.g. for 'std.vector' it will return the 'std' module.
+func (m Module) Parent() Module {
+	return Module{C.clang_Module_getParent(m.c)}
+}
+
 // \param Module a module object. \returns the name of the module, e.g. for the 'std.vector' sub-module it will return "vector".
 func (m Module) Name() string {
 	o := cxstring{C.clang_Module_getName(m.c)}

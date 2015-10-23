@@ -381,18 +381,6 @@ void clang_getFileLocation(CXSourceLocation location,
                                           unsigned *offset);
 
 /**
- * \brief Retrieve a source location representing the first character within a
- * source range.
- */
-CXSourceLocation clang_getRangeStart(CXSourceRange range);
-
-/**
- * \brief Retrieve a source location representing the last character within a
- * source range.
- */
-CXSourceLocation clang_getRangeEnd(CXSourceRange range);
-
-/**
  * \brief Determine the number of diagnostics in a CXDiagnosticSet.
  */
 unsigned clang_getNumDiagnosticsInSet(CXDiagnosticSet Diags);
@@ -425,14 +413,6 @@ CXDiagnostic clang_getDiagnosticInSet(CXDiagnosticSet Diags,
 CXDiagnosticSet clang_loadDiagnostics(const char *file,
                                                   enum CXLoadDiag_Error *error,
                                                   CXString *errorString);
-
-/**
- * \brief Retrieve the child diagnostics of a CXDiagnostic.
- *
- * This CXDiagnosticSet does not need to be released by
- * clang_disposeDiagnosticSet.
- */
-CXDiagnosticSet clang_getChildDiagnostics(CXDiagnostic D);
 
 /**
  * \brief Determine the number of diagnostics produced for the given
@@ -487,20 +467,6 @@ CXString clang_formatDiagnostic(CXDiagnostic Diagnostic,
  * clang_formatDiagnostic().
  */
 unsigned clang_defaultDiagnosticDisplayOptions(void);
-
-/**
- * \brief Determine the severity of the given diagnostic.
- */
-enum CXDiagnosticSeverity
-clang_getDiagnosticSeverity(CXDiagnostic);
-
-/**
- * \brief Retrieve the source location of the given diagnostic.
- *
- * This location is where Clang would print the caret ('^') when
- * displaying the diagnostic on the command line.
- */
-CXSourceLocation clang_getDiagnosticLocation(CXDiagnostic);
 
 /**
  * \brief Retrieve the name of the command-line option that enabled this
@@ -914,27 +880,6 @@ int clang_Cursor_isNull(CXCursor cursor);
 unsigned clang_hashCursor(CXCursor);
 
 /**
- * \brief Retrieve the kind of the given cursor.
- */
-enum CXCursorKind clang_getCursorKind(CXCursor);
-
-/**
- * \brief Determine the linkage of the entity referred to by a given cursor.
- */
-enum CXLinkageKind clang_getCursorLinkage(CXCursor cursor);
-
-/**
- * \brief Determine the availability of the entity that this cursor refers to,
- * taking the current target platform into account.
- *
- * \param cursor The cursor to query.
- *
- * \returns The availability of the cursor.
- */
-enum CXAvailabilityKind
-clang_getCursorAvailability(CXCursor cursor);
-
-/**
  * Describes the availability of a given entity on a particular platform, e.g.,
  * a particular class might only be available on Mac OS 10.7 or newer.
  */
@@ -1023,11 +968,6 @@ void
 clang_disposeCXPlatformAvailability(CXPlatformAvailability *availability);
 
 /**
- * \brief Determine the "language" of the entity referred to by a given cursor.
- */
-enum CXLanguageKind clang_getCursorLanguage(CXCursor cursor);
-
-/**
  * \brief Returns the translation unit that a cursor originated from.
  */
 CXTranslationUnit clang_Cursor_getTranslationUnit(CXCursor);
@@ -1063,77 +1003,6 @@ unsigned clang_CXCursorSet_contains(CXCursorSet cset,
 */
 unsigned clang_CXCursorSet_insert(CXCursorSet cset,
                                                  CXCursor cursor);
-
-/**
- * \brief Determine the semantic parent of the given cursor.
- *
- * The semantic parent of a cursor is the cursor that semantically contains
- * the given \p cursor. For many declarations, the lexical and semantic parents
- * are equivalent (the lexical parent is returned by
- * \c clang_getCursorLexicalParent()). They diverge when declarations or
- * definitions are provided out-of-line. For example:
- *
- * \code
- * class C {
- *  void f();
- * };
- *
- * void C::f() { }
- * \endcode
- *
- * In the out-of-line definition of \c C::f, the semantic parent is the
- * the class \c C, of which this function is a member. The lexical parent is
- * the place where the declaration actually occurs in the source code; in this
- * case, the definition occurs in the translation unit. In general, the
- * lexical parent for a given entity can change without affecting the semantics
- * of the program, and the lexical parent of different declarations of the
- * same entity may be different. Changing the semantic parent of a declaration,
- * on the other hand, can have a major impact on semantics, and redeclarations
- * of a particular entity should all have the same semantic context.
- *
- * In the example above, both declarations of \c C::f have \c C as their
- * semantic context, while the lexical context of the first \c C::f is \c C
- * and the lexical context of the second \c C::f is the translation unit.
- *
- * For global declarations, the semantic parent is the translation unit.
- */
-CXCursor clang_getCursorSemanticParent(CXCursor cursor);
-
-/**
- * \brief Determine the lexical parent of the given cursor.
- *
- * The lexical parent of a cursor is the cursor in which the given \p cursor
- * was actually written. For many declarations, the lexical and semantic parents
- * are equivalent (the semantic parent is returned by
- * \c clang_getCursorSemanticParent()). They diverge when declarations or
- * definitions are provided out-of-line. For example:
- *
- * \code
- * class C {
- *  void f();
- * };
- *
- * void C::f() { }
- * \endcode
- *
- * In the out-of-line definition of \c C::f, the semantic parent is the
- * the class \c C, of which this function is a member. The lexical parent is
- * the place where the declaration actually occurs in the source code; in this
- * case, the definition occurs in the translation unit. In general, the
- * lexical parent for a given entity can change without affecting the semantics
- * of the program, and the lexical parent of different declarations of the
- * same entity may be different. Changing the semantic parent of a declaration,
- * on the other hand, can have a major impact on semantics, and redeclarations
- * of a particular entity should all have the same semantic context.
- *
- * In the example above, both declarations of \c C::f have \c C as their
- * semantic context, while the lexical context of the first \c C::f is \c C
- * and the lexical context of the second \c C::f is the translation unit.
- *
- * For declarations written in the global scope, the lexical parent is
- * the translation unit.
- */
-CXCursor clang_getCursorLexicalParent(CXCursor cursor);
 
 /**
  * \brief Determine the set of methods that are overridden by the given
@@ -1189,12 +1058,6 @@ void clang_getOverriddenCursors(CXCursor cursor,
 void clang_disposeOverriddenCursors(CXCursor *overridden);
 
 /**
- * \brief Retrieve the file that is included by the given inclusion directive
- * cursor.
- */
-CXFile clang_getIncludedFile(CXCursor cursor);
-
-/**
  * \brief Map a source location to the cursor that describes the entity at that
  * location in the source code.
  *
@@ -1212,31 +1075,6 @@ CXFile clang_getIncludedFile(CXCursor cursor);
 CXCursor clang_getCursor(CXTranslationUnit, CXSourceLocation);
 
 /**
- * \brief Retrieve the physical location of the source constructor referenced
- * by the given cursor.
- *
- * The location of a declaration is typically the location of the name of that
- * declaration, where the name of that declaration would occur if it is
- * unnamed, or some keyword that introduces that particular declaration.
- * The location of a reference is where that reference occurs within the
- * source code.
- */
-CXSourceLocation clang_getCursorLocation(CXCursor);
-
-/**
- * \brief Retrieve the physical extent of the source construct referenced by
- * the given cursor.
- *
- * The extent of a cursor starts with the file/line/column pointing at the
- * first character within the source construct that the cursor refers to and
- * ends with the last character withinin that source construct. For a
- * declaration, the extent covers the declaration itself. For a reference,
- * the extent covers the location of the reference (e.g., where the referenced
- * entity was actually used).
- */
-CXSourceRange clang_getCursorExtent(CXCursor);
-
-/**
  * \brief The type of an element in the abstract syntax tree.
  *
  */
@@ -1244,27 +1082,6 @@ typedef struct {
   enum CXTypeKind kind;
   void *data[2];
 } CXType;
-
-/**
- * \brief Retrieve the type of a CXCursor (if any).
- */
-CXType clang_getCursorType(CXCursor C);
-
-/**
- * \brief Retrieve the underlying type of a typedef declaration.
- *
- * If the cursor does not reference a typedef declaration, an invalid type is
- * returned.
- */
-CXType clang_getTypedefDeclUnderlyingType(CXCursor C);
-
-/**
- * \brief Retrieve the integer type of an enum declaration.
- *
- * If the cursor does not reference an enum declaration, an invalid type is
- * returned.
- */
-CXType clang_getEnumDeclIntegerType(CXCursor C);
 
 /**
  * \brief Retrieve the integer value of an enum constant declaration as a signed
@@ -1312,40 +1129,6 @@ int clang_Cursor_getNumArguments(CXCursor C);
 CXCursor clang_Cursor_getArgument(CXCursor C, unsigned i);
 
 /**
- * \brief Return the canonical type for a CXType.
- *
- * Clang's type system explicitly models typedefs and all the ways
- * a specific type can be represented.  The canonical type is the underlying
- * type with all the "sugar" removed.  For example, if 'T' is a typedef
- * for 'int', the canonical type for 'T' would be 'int'.
- */
-CXType clang_getCanonicalType(CXType T);
-
-/**
- * \brief For pointer types, returns the type of the pointee.
- */
-CXType clang_getPointeeType(CXType T);
-
-/**
- * \brief Return the cursor for the declaration of the given type.
- */
-CXCursor clang_getTypeDeclaration(CXType T);
-
-/**
- * \brief Retrieve the calling convention associated with a function type.
- *
- * If a non-function type is passed in, CXCallingConv_Invalid is returned.
- */
-enum CXCallingConv clang_getFunctionTypeCallingConv(CXType T);
-
-/**
- * \brief Retrieve the result type associated with a function type.
- *
- * If a non-function type is passed in, an invalid type is returned.
- */
-CXType clang_getResultType(CXType T);
-
-/**
  * \brief Retrieve the number of non-variadic arguments associated with a
  * function type.
  *
@@ -1362,34 +1145,12 @@ int clang_getNumArgTypes(CXType T);
 CXType clang_getArgType(CXType T, unsigned i);
 
 /**
- * \brief Retrieve the result type associated with a given cursor.
- *
- * This only returns a valid type if the cursor refers to a function or method.
- */
-CXType clang_getCursorResultType(CXCursor C);
-
-/**
- * \brief Return the element type of an array, complex, or vector type.
- *
- * If a type is passed in that is not an array, complex, or vector type,
- * an invalid type is returned.
- */
-CXType clang_getElementType(CXType T);
-
-/**
  * \brief Return the number of elements of an array or vector type.
  *
  * If a type is passed in that is not an array or vector type,
  * -1 is returned.
  */
 long long clang_getNumElements(CXType T);
-
-/**
- * \brief Return the element type of an array type.
- *
- * If a non-array type is passed in, an invalid type is returned.
- */
-CXType clang_getArrayElementType(CXType T);
 
 /**
  * \brief Return the array size of a constant array.
@@ -1411,13 +1172,6 @@ long long clang_getArraySize(CXType T);
  *   CXTypeLayoutError_NotConstantSize is returned.
  */
 long long clang_Type_getAlignOf(CXType T);
-
-/**
- * \brief Return the class type of an member pointer type.
- *
- * If a non-member-pointer type is passed in, an invalid type is returned.
- */
-CXType clang_Type_getClassType(CXType T);
 
 /**
  * \brief Return the size of a type in bytes as per C++[expr.sizeof] standard.
@@ -1446,23 +1200,6 @@ long long clang_Type_getSizeOf(CXType T);
 long long clang_Type_getOffsetOf(CXType T, const char *S);
 
 /**
- * \brief Retrieve the ref-qualifier kind of a function or method.
- *
- * The ref-qualifier is returned for C++ functions or methods. For other types
- * or non-C++ declarations, CXRefQualifier_None is returned.
- */
-enum CXRefQualifierKind clang_Type_getCXXRefQualifier(CXType T);
-
-/**
- * \brief Returns the access control level for the referenced object.
- *
- * If the cursor refers to a C++ declaration, its access control level within its
- * parent scope is returned. Otherwise, if the cursor refers to a base specifier or
- * access specifier, the specifier itself is returned.
- */
-enum CX_CXXAccessSpecifier clang_getCXXAccessSpecifier(CXCursor);
-
-/**
  * \brief Determine the number of overloaded declarations referenced by a
  * \c CXCursor_OverloadedDeclRef cursor.
  *
@@ -1487,16 +1224,7 @@ unsigned clang_getNumOverloadedDecls(CXCursor cursor);
  * associated set of overloaded declarations, or if the index is out of bounds,
  * returns \c clang_getNullCursor();
  */
-CXCursor clang_getOverloadedDecl(CXCursor cursor,
-                                                unsigned index);
-
-
-/**
- * \brief For cursors representing an iboutletcollection attribute,
- *  this function returns the collection element type.
- *
- */
-CXType clang_getIBOutletCollectionType(CXCursor);
+CXCursor clang_getOverloadedDecl(CXCursor cursor, unsigned index);
 
 /**
  * \brief Visitor invoked for each cursor found by a traversal.
@@ -1619,74 +1347,6 @@ CXSourceRange clang_Cursor_getSpellingNameRange(CXCursor,
                                                           unsigned pieceIndex,
                                                           unsigned options);
 
-/** \brief For a cursor that is a reference, retrieve a cursor representing the
- * entity that it references.
- *
- * Reference cursors refer to other entities in the AST. For example, an
- * Objective-C superclass reference cursor refers to an Objective-C class.
- * This function produces the cursor for the Objective-C class from the
- * cursor for the superclass reference. If the input cursor is a declaration or
- * definition, it returns that declaration or definition unchanged.
- * Otherwise, returns the NULL cursor.
- */
-CXCursor clang_getCursorReferenced(CXCursor);
-
-/**
- *  \brief For a cursor that is either a reference to or a declaration
- *  of some entity, retrieve a cursor that describes the definition of
- *  that entity.
- *
- *  Some entities can be declared multiple times within a translation
- *  unit, but only one of those declarations can also be a
- *  definition. For example, given:
- *
- *  \code
- *  int f(int, int);
- *  int g(int x, int y) { return f(x, y); }
- *  int f(int a, int b) { return a + b; }
- *  int f(int, int);
- *  \endcode
- *
- *  there are three declarations of the function "f", but only the
- *  second one is a definition. The clang_getCursorDefinition()
- *  function will take any cursor pointing to a declaration of "f"
- *  (the first or fourth lines of the example) or a cursor referenced
- *  that uses "f" (the call to "f' inside "g") and will return a
- *  declaration cursor pointing to the definition (the second "f"
- *  declaration).
- *
- *  If given a cursor for which there is no corresponding definition,
- *  e.g., because there is no definition of that entity within this
- *  translation unit, returns a NULL cursor.
- */
-CXCursor clang_getCursorDefinition(CXCursor);
-
-/**
- * \brief Retrieve the canonical cursor corresponding to the given cursor.
- *
- * In the C family of languages, many kinds of entities can be declared several
- * times within a single translation unit. For example, a structure type can
- * be forward-declared (possibly multiple times) and later defined:
- *
- * \code
- * struct X;
- * struct X;
- * struct X {
- *   int member;
- * };
- * \endcode
- *
- * The declarations and the definition of \c X are represented by three
- * different cursors, all of which are declarations of the same underlying
- * entity. One of these cursor is considered the "canonical" cursor, which
- * is effectively the representative for the underlying entity. One can
- * determine if two cursors are declarations of the same underlying entity by
- * comparing their canonical cursors.
- *
- * \returns The canonical cursor for the entity referred to by the given cursor.
- */
-CXCursor clang_getCanonicalCursor(CXCursor);
-
 
 /**
  * \brief If the cursor points to a selector identifier in a objc method or
@@ -1715,12 +1375,6 @@ int clang_Cursor_getObjCSelectorIndex(CXCursor);
 int clang_Cursor_isDynamicCall(CXCursor C);
 
 /**
- * \brief Given a cursor pointing to an ObjC message, returns the CXType of the
- * receiver.
- */
-CXType clang_Cursor_getReceiverType(CXCursor C);
-
-/**
  * \brief Given a cursor that represents a property declaration, return the
  * associated property attributes. The bits are formed from
  * \c CXObjCPropertyAttrKind.
@@ -1736,40 +1390,6 @@ unsigned clang_Cursor_getObjCPropertyAttributes(CXCursor C, unsigned reserved);
  * parameter respectively. The bits are formed from CXObjCDeclQualifierKind.
  */
 unsigned clang_Cursor_getObjCDeclQualifiers(CXCursor C);
-
-/**
- * \brief Given a cursor that represents a declaration, return the associated
- * comment's source range.  The range may include multiple consecutive comments
- * with whitespace in between.
- */
-CXSourceRange clang_Cursor_getCommentRange(CXCursor C);
-
-/**
- * \brief Given a cursor that represents a documentable entity (e.g.,
- * declaration), return the associated parsed comment as a
- * \c CXComment_FullComment AST node.
- */
-CXComment clang_Cursor_getParsedComment(CXCursor C);
-
-/**
- * \brief Given a CXCursor_ModuleImportDecl cursor, return the associated module.
- */
-CXModule clang_Cursor_getModule(CXCursor C);
-
-/**
- * \param Module a module object.
- *
- * \returns the module file where the provided module object came from.
- */
-CXFile clang_Module_getASTFile(CXModule Module);
-
-/**
- * \param Module a module object.
- *
- * \returns the parent of a sub-module or NULL if the given module is top-level,
- * e.g. for 'std.vector' it will return the 'std' module.
- */
-CXModule clang_Module_getParent(CXModule Module);
 
 /**
  * \param Module a module object.
@@ -1788,13 +1408,6 @@ unsigned clang_Module_getNumTopLevelHeaders(CXTranslationUnit,
  */
 CXFile clang_Module_getTopLevelHeader(CXTranslationUnit,
                                       CXModule Module, unsigned Index);
-
-/**
- * \param Comment AST node of any kind.
- *
- * \returns the type of the AST node.
- */
-enum CXCommentKind clang_Comment_getKind(CXComment Comment);
 
 /**
  * \param Comment AST node of any kind.
@@ -1818,15 +1431,6 @@ CXComment clang_Comment_getChild(CXComment Comment, unsigned ChildIdx);
  * do not count.
  */
 unsigned clang_InlineContentComment_hasTrailingNewline(CXComment Comment);
-
-/**
- * \param Comment a \c CXComment_InlineCommand AST node.
- *
- * \returns the most appropriate rendering mode, chosen on command
- * semantics in Doxygen.
- */
-enum CXCommentInlineCommandRenderKind
-clang_InlineCommandComment_getRenderKind(CXComment Comment);
 
 /**
  * \param Comment a \c CXComment_InlineCommand AST node.
@@ -1895,14 +1499,6 @@ CXString clang_BlockCommandComment_getArgText(CXComment Comment,
                                               unsigned ArgIdx);
 
 /**
- * \param Comment a \c CXComment_BlockCommand or
- * \c CXComment_VerbatimBlockCommand AST node.
- *
- * \returns paragraph argument of the block command.
- */
-CXComment clang_BlockCommandComment_getParagraph(CXComment Comment);
-
-/**
  * \param Comment a \c CXComment_ParamCommand AST node.
  *
  * \returns non-zero if the parameter that this AST node represents was found
@@ -1925,14 +1521,6 @@ unsigned clang_ParamCommandComment_getParamIndex(CXComment Comment);
  * the comment.
  */
 unsigned clang_ParamCommandComment_isDirectionExplicit(CXComment Comment);
-
-/**
- * \param Comment a \c CXComment_ParamCommand AST node.
- *
- * \returns parameter passing direction.
- */
-enum CXCommentParamPassDirection clang_ParamCommandComment_getDirection(
-                                                            CXComment Comment);
 
 /**
  * \param Comment a \c CXComment_TParamCommand AST node.
@@ -2000,55 +1588,6 @@ unsigned clang_CXXMethod_isStatic(CXCursor C);
 unsigned clang_CXXMethod_isVirtual(CXCursor C);
 
 /**
- * \brief Given a cursor that represents a template, determine
- * the cursor kind of the specializations would be generated by instantiating
- * the template.
- *
- * This routine can be used to determine what flavor of function template,
- * class template, or class template partial specialization is stored in the
- * cursor. For example, it can describe whether a class template cursor is
- * declared with "struct", "class" or "union".
- *
- * \param C The cursor to query. This cursor should represent a template
- * declaration.
- *
- * \returns The cursor kind of the specializations that would be generated
- * by instantiating the template \p C. If \p C is not a template, returns
- * \c CXCursor_NoDeclFound.
- */
-enum CXCursorKind clang_getTemplateCursorKind(CXCursor C);
-
-/**
- * \brief Given a cursor that may represent a specialization or instantiation
- * of a template, retrieve the cursor that represents the template that it
- * specializes or from which it was instantiated.
- *
- * This routine determines the template involved both for explicit
- * specializations of templates and for implicit instantiations of the template,
- * both of which are referred to as "specializations". For a class template
- * specialization (e.g., \c std::vector<bool>), this routine will return
- * either the primary template (\c std::vector) or, if the specialization was
- * instantiated from a class template partial specialization, the class template
- * partial specialization. For a class template partial specialization and a
- * function template specialization (including instantiations), this
- * this routine will return the specialized template.
- *
- * For members of a class template (e.g., member functions, member classes, or
- * static data members), returns the specialized or instantiated member.
- * Although not strictly "templates" in the C++ language, members of class
- * templates have the same notions of specializations and instantiations that
- * templates do, so this routine treats them similarly.
- *
- * \param C A cursor that may be a specialization of a template or a member
- * of a template.
- *
- * \returns If the given cursor is a specialization or instantiation of a
- * template or a member thereof, the template or member that it specializes or
- * from which it was instantiated. Otherwise, returns a NULL cursor.
- */
-CXCursor clang_getSpecializedCursorTemplate(CXCursor C);
-
-/**
  * \brief Given a cursor that references something else, return the source range
  * covering that reference.
  *
@@ -2077,11 +1616,6 @@ typedef struct {
   unsigned int_data[4];
   void *ptr_data;
 } CXToken;
-
-/**
- * \brief Determine the kind of the given token.
- */
-CXTokenKind clang_getTokenKind(CXToken);
 
 /**
  * \brief Determine the spelling of the given token.
@@ -2261,17 +1795,6 @@ unsigned
 clang_getCompletionPriority(CXCompletionString completion_string);
 
 /**
- * \brief Determine the availability of the entity that this code-completion
- * string refers to.
- *
- * \param completion_string The completion string to query.
- *
- * \returns The availability of the completion string.
- */
-enum CXAvailabilityKind
-clang_getCompletionAvailability(CXCompletionString completion_string);
-
-/**
  * \brief Retrieve the number of annotations associated with the given
  * completion string.
  *
@@ -2317,18 +1840,6 @@ clang_getCompletionAnnotation(CXCompletionString completion_string,
 CXString
 clang_getCompletionParent(CXCompletionString completion_string,
                           enum CXCursorKind *kind);
-
-/**
- * \brief Retrieve a completion string for an arbitrary declaration or macro
- * definition cursor.
- *
- * \param cursor The cursor to query.
- *
- * \returns A non-context-sensitive completion string for declaration and macro
- * definition cursors, or NULL for other kinds of cursors.
- */
-CXCompletionString
-clang_getCursorCompletionString(CXCursor cursor);
 
 /**
  * \brief Contains the results of code-completion.
@@ -2971,14 +2482,6 @@ void
 clang_index_setClientEntity(const CXIdxEntityInfo *, CXIdxClientEntity);
 
 /**
- * \brief An indexing action/session, to be applied to one or multiple
- * translation units.
- *
- * \param CIdx The index object with which the index action will be associated.
- */
-CXIndexAction clang_IndexAction_create(CXIndex CIdx);
-
-/**
  * \brief Index the given source file and the translation unit corresponding
  * to that file via callbacks implemented through #IndexerCallbacks.
  *
@@ -3052,9 +2555,4 @@ void clang_indexLoc_getFileLocation(CXIdxLoc loc,
                                                    unsigned *line,
                                                    unsigned *column,
                                                    unsigned *offset);
-
-/**
- * \brief Retrieve the CXSourceLocation represented by the given CXIdxLoc.
- */
-CXSourceLocation clang_indexLoc_getCXSourceLocation(CXIdxLoc loc);
 

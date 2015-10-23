@@ -20,23 +20,6 @@ func (d Diagnostics) Dispose() {
 }
 
 /**
- * \brief Determine the severity of the given diagnostic.
- */
-func (d Diagnostic) Severity() DiagnosticSeverity {
-	return DiagnosticSeverity(C.clang_getDiagnosticSeverity(d.c))
-}
-
-/**
- * \brief Retrieve the source location of the given diagnostic.
- *
- * This location is where Clang would print the caret ('^') when
- * displaying the diagnostic on the command line.
- */
-func (d Diagnostic) Location() SourceLocation {
-	return SourceLocation{C.clang_getDiagnosticLocation(d.c)}
-}
-
-/**
  * \brief Retrieve the name of the command-line option that enabled this
  * diagnostic.
  *

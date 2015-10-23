@@ -8,6 +8,11 @@ type CompletionString struct {
 	c C.CXCompletionString
 }
 
+// Determine the availability of the entity that this code-completion string refers to. \param completion_string The completion string to query. \returns The availability of the completion string.
+func (cs CompletionString) CompletionAvailability() AvailabilityKind {
+	return AvailabilityKind(C.clang_getCompletionAvailability(cs.c))
+}
+
 // Retrieve the brief documentation comment attached to the declaration that corresponds to the given completion string.
 func (cs CompletionString) CompletionBriefComment() string {
 	o := cxstring{C.clang_getCompletionBriefComment(cs.c)}

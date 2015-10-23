@@ -14,3 +14,13 @@ func EqualRanges(sr1, sr2 SourceRange) bool {
 
 	return o != C.uint(0)
 }
+
+// Retrieve a source location representing the first character within a source range.
+func (sr SourceRange) RangeStart() SourceLocation {
+	return SourceLocation{C.clang_getRangeStart(sr.c)}
+}
+
+// Retrieve a source location representing the last character within a source range.
+func (sr SourceRange) RangeEnd() SourceLocation {
+	return SourceLocation{C.clang_getRangeEnd(sr.c)}
+}

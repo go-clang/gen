@@ -104,6 +104,16 @@ func main() {
 	lookupNonTypedefs := map[string]string{}
 	lookupStruct := map[string]*Struct{}
 
+	isEnumOrStruct := func(name string) bool {
+		if _, ok := lookupEnum[name]; ok {
+			return true
+		} else if _, ok := lookupStruct[name]; ok {
+			return true
+		}
+
+		return false
+	}
+
 	cursor := tu.ToCursor()
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		// Only handle code of the current file
@@ -171,6 +181,15 @@ func main() {
 		return clang.CVR_Recurse
 	})
 
+	trimCommonFName := func(fname string, rt string) string {
+		fname = strings.TrimPrefix(fname, rt+"_")
+
+		fname = strings.TrimPrefix(fname, "get")
+		fname = strings.TrimPrefix(fname, rt)
+
+		return fname
+	}
+
 	addMethod := func(f *Function, fname string, rt string, method func(f *Function) string) bool {
 		fname = upperFirstCharacter(fname)
 
@@ -198,14 +217,15 @@ func main() {
 
 	addBasicMethods := func(f *Function, fname string, rt string) bool {
 		if len(f.Parameters) == 1 && f.ReturnType == "String" {
-			fname = strings.TrimPrefix(fname, rt+"_")
-
-			fname = strings.TrimPrefix(fname, "get")
-			fname = strings.TrimPrefix(fname, rt)
+			fname = trimCommonFName(fname, rt)
 
 			return addMethod(f, fname, rt, generateFunctionStringGetter)
+		} else if len(f.Parameters) == 1 && isEnumOrStruct(f.ReturnType) && isEnumOrStruct(f.Parameters[0].Type) {
+			fname = trimCommonFName(fname, rt)
+
+			return addMethod(f, fname, rt, generateFunctionGetter)
 		} else if len(f.Parameters) == 1 && fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2])) && f.ReturnType == "unsigned int" {
-			return addMethod(f, fname, rt, generateGenerateFunctionIs)
+			return addMethod(f, fname, rt, generateFunctionIs)
 		} else if len(f.Parameters) == 1 && strings.HasPrefix(fname, "dispose") && f.ReturnType == "void" && (fname == "dispose" || fname[len("dispose"):] == rt) {
 			fname = "Dispose"
 
@@ -225,6 +245,14 @@ func main() {
 			if n, ok := lookupNonTypedefs[rt]; ok {
 				rt = n
 			}
+		}
+
+		if n, ok := lookupNonTypedefs[f.ReturnType]; ok {
+			f.ReturnType = n
+		}
+		if e, ok := lookupEnum[f.ReturnType]; ok {
+			f.ReturnPrimitiveType = e.ReceiverPrimitiveType
+		} else if _, ok := lookupStruct[f.ReturnType]; ok {
 		}
 
 		added := addBasicMethods(f, fname, rt)

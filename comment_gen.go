@@ -8,6 +8,11 @@ type Comment struct {
 	c C.CXComment
 }
 
+// \param Comment AST node of any kind. \returns the type of the AST node.
+func (c Comment) Kind() CommentKind {
+	return CommentKind(C.clang_Comment_getKind(c.c))
+}
+
 // A \c CXComment_Paragraph node is considered whitespace if it contains only \c CXComment_Text nodes that are empty or whitespace. Other AST nodes (except \c CXComment_Paragraph and \c CXComment_Text) are never considered whitespace. \returns non-zero if \c Comment is whitespace.
 func (c Comment) IsWhitespace() bool {
 	o := C.clang_Comment_isWhitespace(c.c)
@@ -31,6 +36,11 @@ func (c Comment) InlineCommandComment_getCommandName() string {
 	return o.String()
 }
 
+// \param Comment a \c CXComment_InlineCommand AST node. \returns the most appropriate rendering mode, chosen on command semantics in Doxygen.
+func (c Comment) InlineCommandComment_getRenderKind() CommentInlineCommandRenderKind {
+	return CommentInlineCommandRenderKind(C.clang_InlineCommandComment_getRenderKind(c.c))
+}
+
 // \param Comment a \c CXComment_HTMLStartTag or \c CXComment_HTMLEndTag AST node. \returns HTML tag name.
 func (c Comment) HTMLTagComment_getTagName() string {
 	o := cxstring{C.clang_HTMLTagComment_getTagName(c.c)}
@@ -47,12 +57,22 @@ func (c Comment) BlockCommandComment_getCommandName() string {
 	return o.String()
 }
 
+// \param Comment a \c CXComment_BlockCommand or \c CXComment_VerbatimBlockCommand AST node. \returns paragraph argument of the block command.
+func (c Comment) BlockCommandComment_getParagraph() Comment {
+	return Comment{C.clang_BlockCommandComment_getParagraph(c.c)}
+}
+
 // \param Comment a \c CXComment_ParamCommand AST node. \returns parameter name.
 func (c Comment) ParamCommandComment_getParamName() string {
 	o := cxstring{C.clang_ParamCommandComment_getParamName(c.c)}
 	defer o.Dispose()
 
 	return o.String()
+}
+
+// \param Comment a \c CXComment_ParamCommand AST node. \returns parameter passing direction.
+func (c Comment) ParamCommandComment_getDirection() CommentParamPassDirection {
+	return CommentParamPassDirection(C.clang_ParamCommandComment_getDirection(c.c))
 }
 
 // \param Comment a \c CXComment_TParamCommand AST node. \returns template parameter name.

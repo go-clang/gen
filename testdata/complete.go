@@ -26,18 +26,6 @@ func (cs CompletionString) Priority() int {
 }
 
 /**
- * \brief Determine the availability of the entity that this code-completion
- * string refers to.
- *
- * \param completion_string The completion string to query.
- *
- * \returns The availability of the completion string.
- */
-func (cs CompletionString) Availability() AvailabilityKind {
-	return AvailabilityKind(C.clang_getCompletionAvailability(cs.c))
-}
-
-/**
  * \brief Retrieve the number of annotations associated with the given
  * completion string.
  *
