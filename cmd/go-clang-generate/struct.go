@@ -245,7 +245,8 @@ func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bo
 var templateGenerateStruct = template.Must(template.New("go-clang-generate-struct").Parse(`package phoenix
 // #include "go-clang.h"
 import "C"
-%s
+{{if $.ImportUnsafe}}
+import "unsafe"{{end}}
 
 {{$.Comment}}
 type {{$.Name}} struct {
@@ -258,18 +259,12 @@ type {{$.Name}} struct {
 
 func generateStruct(s *Struct) error {
 	var b bytes.Buffer
+
 	if err := templateGenerateStruct.Execute(&b, s); err != nil {
 		return err
 	}
 
-	file := b.String()
-
-	if s.ImportUnsafe {
-		file = fmt.Sprintf(file, "import \"unsafe\"")
-	} else {
-		file = fmt.Sprintf(file, "")
-	}
 	// TODO remove "_" from names for files here?
 
-	return ioutil.WriteFile(strings.ToLower(s.Name)+"_gen.go", []byte(file), 0600)
+	return ioutil.WriteFile(strings.ToLower(s.Name)+"_gen.go", b.Bytes(), 0600)
 }
