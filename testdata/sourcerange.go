@@ -32,21 +32,3 @@ func (r SourceRange) IsNull() bool {
 	}
 	return false
 }
-
-/**
- * \brief Retrieve a source location representing the first character within a
- * source range.
- */
-func (s SourceRange) Start() SourceLocation {
-	o := C.clang_getRangeStart(s.c)
-	return SourceLocation{o}
-}
-
-/**
- * \brief Retrieve a source location representing the last character within a
- * source range.
- */
-func (s SourceRange) End() SourceLocation {
-	o := C.clang_getRangeEnd(s.c)
-	return SourceLocation{o}
-}

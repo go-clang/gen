@@ -17,47 +17,6 @@ func (c Type) Kind() TypeKind {
 	return TypeKind(c.c.kind)
 }
 
-// CanonicalType returns the canonical type for a Type.
-//
-// Clang's type system explicitly models typedefs and all the ways
-// a specific type can be represented.  The canonical type is the underlying
-// type with all the "sugar" removed.  For example, if 'T' is a typedef
-// for 'int', the canonical type for 'T' would be 'int'.
-func (t Type) CanonicalType() Type {
-	o := C.clang_getCanonicalType(t.c)
-	return Type{o}
-}
-
-// PointeeType (for pointer types), returns the type of the pointee.
-func (t Type) PointeeType() Type {
-	o := C.clang_getPointeeType(t.c)
-	return Type{o}
-}
-
-// Declaration returns the cursor for the declaration of the given type.
-func (t Type) Declaration() Cursor {
-	o := C.clang_getTypeDeclaration(t.c)
-	return Cursor{o}
-}
-
-/**
- * \brief Retrieve the result type associated with a function type.
- */
-func (t Type) ResultType() Type {
-	o := C.clang_getResultType(t.c)
-	return Type{o}
-}
-
-/**
- * \brief Return the element type of an array type.
- *
- * If a non-array type is passed in, an invalid type is returned.
- */
-func (t Type) ArrayElementType() Type {
-	o := C.clang_getArrayElementType(t.c)
-	return Type{o}
-}
-
 /**
  * \brief Return the the array size of a constant array.
  *
@@ -86,15 +45,6 @@ func (t Type) AlignOf() (int, error) {
 		return int(o), TypeLayoutError(o)
 	}
 	return int(o), nil
-}
-
-/**
- * \brief Return the class type of an member pointer type.
- *
- * If a non-member-pointer type is passed in, an invalid type is returned.
- */
-func (t Type) ClassType() Type {
-	return Type{C.clang_Type_getClassType(t.c)}
 }
 
 /**
@@ -136,15 +86,3 @@ func (t Type) OffsetOf(s string) (int, error) {
 	}
 	return int(o), nil
 }
-
-/**
- * \brief Retrieve the ref-qualifier kind of a function or method.
- *
- * The ref-qualifier is returned for C++ functions or methods. For other types
- * or non-C++ declarations, CXRefQualifier_None is returned.
- */
-func (t Type) CXXRefQualifier() RefQualifierKind {
-	return RefQualifierKind(C.clang_Type_getCXXRefQualifier(t.c))
-}
-
-// EOF

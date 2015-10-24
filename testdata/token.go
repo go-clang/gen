@@ -5,12 +5,6 @@ type Token struct {
 	c C.CXToken
 }
 
-// Kind determines the kind of this token
-func (t Token) Kind() TokenKind {
-	o := C.clang_getTokenKind(t.c)
-	return TokenKind(o)
-}
-
 /**
  * \brief Determine the spelling of the given token.
  *

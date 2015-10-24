@@ -15,15 +15,6 @@ type Comment struct {
 /**
  * \param Comment AST node of any kind.
  *
- * \returns the type of the AST node.
- */
-func (c Comment) Kind() CommentKind {
-	return CommentKind(C.clang_Comment_getKind(c.c))
-}
-
-/**
- * \param Comment AST node of any kind.
- *
  * \returns number of children of the AST node.
  */
 func (c Comment) NumChildren() int {
