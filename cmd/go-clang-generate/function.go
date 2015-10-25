@@ -165,7 +165,7 @@ type FunctionSliceReturn struct {
 }
 
 var templateGenerateReturnSlice = template.Must(template.New("go-clang-generate-slice").Parse(`{{$.Comment}}
-func ({{$.Name}} {{$.ReceiverType}}) {{$.Name}}() []{{$.ElementType}} {
+func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() []{{$.ElementType}} {
 	s := []{{$.ElementType}}{}
 	length := C.sizeof({{$.Receiver}}.c.{{$.Member}}[0]) / C.sizeof({{$.Receiver}}.c.{{$.Member}}[0][0])
 
@@ -185,4 +185,39 @@ func generateFunctionSliceReturn(f *FunctionSliceReturn) string {
 
 	return b.String()
 
+}
+
+func generateFunction(name, cname, comment, member string, conv Conversion) *Function {
+	receiverType := trimClangPrefix(cname)
+	receiverName := receiverName(string(receiverType[0]))
+	functionName := upperFirstCharacter(name)
+
+	rType := ""
+	rTypePrimitive := ""
+
+	if conv.IsPrimitive {
+		rTypePrimitive = conv.GoType
+	} else {
+		rType = conv.GoType
+	}
+
+	f := &Function{
+		Name:    functionName,
+		CName:   cname,
+		Comment: comment,
+
+		Parameters: []FunctionParameter{},
+
+		ReturnType:          rType,
+		ReturnPrimitiveType: rTypePrimitive,
+		IsReturnTypePointer: conv.PointerLevel > 0,
+		IsReturnTypeArray:   conv.IsArray,
+
+		Receiver:     receiverName,
+		ReceiverType: receiverType,
+
+		Member: member,
+	}
+
+	return f
 }

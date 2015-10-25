@@ -1,7 +1,7 @@
 package main
 
 import (
-	"strings"
+	"errors"
 
 	"github.com/sbinet/go-clang"
 )
@@ -24,14 +24,16 @@ const (
 
 type Conversion struct {
 	GoType            string
+	CType             string
 	PointerLevel      int
 	IsPrimitive       bool
 	IsArray           bool
 	IsFunctionPointer bool
 }
 
-func getTypeConversion(cType clang.Type) Conversion {
+func getTypeConversion(cType clang.Type) (Conversion, error) {
 	conv := Conversion{
+		CType:             cType.TypeSpelling(),
 		PointerLevel:      0,
 		IsPrimitive:       true,
 		IsArray:           false,
@@ -64,7 +66,10 @@ func getTypeConversion(cType clang.Type) Conversion {
 	case clang.TK_Void:
 		conv.GoType = "void"
 	case clang.TK_ConstantArray:
-		subConv := getTypeConversion(cType.ArrayElementType())
+		subConv, err := getTypeConversion(cType.ArrayElementType())
+		if err != nil {
+			return Conversion{}, err
+		}
 
 		conv.GoType = subConv.GoType
 		conv.PointerLevel += subConv.PointerLevel
@@ -88,9 +93,16 @@ func getTypeConversion(cType clang.Type) Conversion {
 			conv.IsFunctionPointer = true
 		}
 
-		subConv := getTypeConversion(cType.PointeeType().Declaration().Type()) // ComplexTypes
-		if subConv.GoType == "" {                                              // datatypes
-			subConv = getTypeConversion(cType.PointeeType())
+		subConv, err := getTypeConversion(cType.PointeeType().Declaration().Type()) // ComplexTypes
+		if err != nil {
+			return Conversion{}, err
+		}
+
+		if subConv.GoType == "" { // datatypes
+			subConv, err = getTypeConversion(cType.PointeeType())
+			if err != nil {
+				return Conversion{}, err
+			}
 		} else {
 			conv.IsPrimitive = false
 		}
@@ -100,15 +112,13 @@ func getTypeConversion(cType clang.Type) Conversion {
 
 	case clang.TK_Unexposed: // there is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013
 
-		enumStr := cType.CanonicalType().TypeSpelling()
-		if strings.Contains(enumStr, "enum") {
-			enumStr = trimClangPrefix(cType.CanonicalType().Declaration().DisplayName())
+		if cType.CanonicalType().Kind() == clang.TK_Enum {
+			conv.GoType = trimClangPrefix(cType.CanonicalType().Declaration().DisplayName())
 		} else {
-			enumStr = ""
+			return Conversion{}, errors.New("unknown type")
 		}
 
-		conv.GoType = enumStr
 	}
 
-	return conv
+	return conv, nil
 }

@@ -28,7 +28,10 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 
 		switch cursor.Kind() {
 		case clang.CK_FieldDecl:
-			conv := getTypeConversion(cursor.Type())
+			conv, err := getTypeConversion(cursor.Type()) // TODO error handling
+			if err != nil {
+				return clang.CVR_Continue
+			}
 
 			if conv.IsFunctionPointer {
 				return clang.CVR_Continue
@@ -62,6 +65,7 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 				f := generateFunction(cursor.DisplayName(), cname, comment, cursor.DisplayName(), conv)
 
 				method = generateFunctionStructMemberGetter(f)
+
 			} else {
 				panic("Three pointers")
 			}
@@ -73,41 +77,6 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 	})
 
 	return s
-}
-
-func generateFunction(name, cname, comment, member string, conv Conversion) *Function {
-	receiverType := trimClangPrefix(cname)
-	receiverName := strings.ToLower(string(receiverType[0]))
-	functionName := upperFirstCharacter(name)
-
-	rType := ""
-	rTypePrimitive := ""
-
-	if conv.IsPrimitive {
-		rTypePrimitive = conv.GoType
-	} else {
-		rType = conv.GoType
-	}
-
-	f := &Function{
-		Name:    functionName,
-		CName:   cname,
-		Comment: comment,
-
-		Parameters: []FunctionParameter{},
-
-		ReturnType:          rType,
-		ReturnPrimitiveType: rTypePrimitive,
-		IsReturnTypePointer: conv.PointerLevel > 0,
-		IsReturnTypeArray:   conv.IsArray,
-
-		Receiver:     receiverName,
-		ReceiverType: receiverType,
-
-		Member: member,
-	}
-
-	return f
 }
 
 func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
