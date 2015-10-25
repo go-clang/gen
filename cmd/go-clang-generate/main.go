@@ -181,31 +181,30 @@ func main() {
 		return clang.CVR_Recurse
 	})
 
-	trimCommonFName := func(fname string, rt string) string {
-		fname = strings.TrimPrefix(fname, rt+"_")
+	trimCommonFName := func(fname string, rt Receiver) string {
+		fname = strings.TrimPrefix(fname, rt.Name+"_")
 
 		fname = strings.TrimPrefix(fname, "get")
-		fname = strings.TrimPrefix(fname, rt)
+		fname = strings.TrimPrefix(fname, rt.Name)
 
 		return fname
 	}
 
-	addMethod := func(f *Function, fname string, rt string, method func(f *Function) string) bool {
+	addMethod := func(f *Function, fname string, rt Receiver, method func(f *Function) string) bool {
 		fname = upperFirstCharacter(fname)
 
-		if e, ok := lookupEnum[rt]; ok {
+		if e, ok := lookupEnum[rt.Name]; ok {
 			f.Name = fname
 			f.Receiver = e.Receiver
-			f.ReceiverType = rt
-			f.ReceiverPrimitiveType = e.ReceiverPrimitiveType
+			f.Receiver.Type = rt.Name
 
 			e.Methods = append(e.Methods, method(f))
 
 			return true
-		} else if s, ok := lookupStruct[rt]; ok {
+		} else if s, ok := lookupStruct[rt.Name]; ok {
 			f.Name = fname
-			f.ReceiverType = rt
 			f.Receiver = s.Receiver
+			f.Receiver.Type = rt.Name
 
 			s.Methods = append(s.Methods, method(f))
 
@@ -215,7 +214,7 @@ func main() {
 		return false
 	}
 
-	addBasicMethods := func(f *Function, fname string, rt string) bool {
+	addBasicMethods := func(f *Function, fname string, rt Receiver) bool {
 		if len(f.Parameters) == 1 && f.ReturnType == "String" {
 			fname = trimCommonFName(fname, rt)
 
@@ -226,7 +225,7 @@ func main() {
 			return addMethod(f, fname, rt, generateFunctionGetter)
 		} else if len(f.Parameters) == 1 && fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2])) && f.ReturnType == "unsigned int" {
 			return addMethod(f, fname, rt, generateFunctionIs)
-		} else if len(f.Parameters) == 1 && strings.HasPrefix(fname, "dispose") && f.ReturnType == "void" && (fname == "dispose" || fname[len("dispose"):] == rt) {
+		} else if len(f.Parameters) == 1 && strings.HasPrefix(fname, "dispose") && f.ReturnType == "void" && (fname == "dispose" || fname[len("dispose"):] == rt.Name) {
 			fname = "Dispose"
 
 			return addMethod(f, fname, rt, generateFunctionVoidMethod)
@@ -239,11 +238,12 @@ func main() {
 
 	for _, f := range functions {
 		fname := f.Name
-		var rt string
+		var rt Receiver
 		if len(f.Parameters) > 0 {
-			rt = trimClangPrefix(f.Parameters[0].Type)
-			if n, ok := lookupNonTypedefs[rt]; ok {
-				rt = n
+			rt.CName = f.Parameters[0].Type
+			rt.Name = trimClangPrefix(rt.CName)
+			if n, ok := lookupNonTypedefs[rt.Name]; ok {
+				rt.Name = n
 			}
 		}
 
@@ -251,7 +251,7 @@ func main() {
 			f.ReturnType = n
 		}
 		if e, ok := lookupEnum[f.ReturnType]; ok {
-			f.ReturnPrimitiveType = e.ReceiverPrimitiveType
+			f.ReturnPrimitiveType = e.Receiver.PrimitiveType
 		} else if _, ok := lookupStruct[f.ReturnType]; ok {
 		}
 
@@ -259,8 +259,11 @@ func main() {
 
 		if !added {
 			if s := strings.SplitN(f.Name, "_", 2); len(s) == 2 {
-				if s[0] == rt {
-					added = addBasicMethods(f, s[1], s[0])
+				if s[0] == rt.Name {
+					rtc := rt
+					rtc.Name = s[0]
+
+					added = addBasicMethods(f, s[1], rtc)
 				}
 			}
 		}
