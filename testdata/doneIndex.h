@@ -822,8 +822,6 @@ typedef struct CXTUResourceUsage {
   */
 CXTUResourceUsage clang_getCXTUResourceUsage(CXTranslationUnit TU);
 
-void clang_disposeCXTUResourceUsage(CXTUResourceUsage usage);
-
 /**
  * \brief A cursor representing some element in the abstract syntax tree for
  * a translation unit.

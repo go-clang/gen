@@ -182,10 +182,17 @@ func main() {
 	})
 
 	trimCommonFName := func(fname string, rt Receiver) string {
-		fname = strings.TrimPrefix(fname, rt.Name+"_")
+		fname = strings.TrimPrefix(fname, "get")
+
+		if fn := strings.TrimPrefix(fname, rt.Name+"_"); len(fn) != len(fname) {
+			fname = fn
+		} else if fn := strings.TrimPrefix(fname, rt.Name); len(fn) != len(fname) {
+			fname = fn
+		} else if fn := strings.TrimSuffix(fname, rt.CName); len(fn) != len(fname) {
+			fname = fn
+		}
 
 		fname = strings.TrimPrefix(fname, "get")
-		fname = strings.TrimPrefix(fname, rt.Name)
 
 		return fname
 	}
@@ -225,7 +232,7 @@ func main() {
 			return addMethod(f, fname, rt, generateFunctionGetter)
 		} else if len(f.Parameters) == 1 && fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2])) && f.ReturnType == "unsigned int" {
 			return addMethod(f, fname, rt, generateFunctionIs)
-		} else if len(f.Parameters) == 1 && strings.HasPrefix(fname, "dispose") && f.ReturnType == "void" && (fname == "dispose" || fname[len("dispose"):] == rt.Name) {
+		} else if len(f.Parameters) == 1 && strings.HasPrefix(fname, "dispose") && f.ReturnType == "void" {
 			fname = "Dispose"
 
 			return addMethod(f, fname, rt, generateFunctionVoidMethod)
