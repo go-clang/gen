@@ -153,12 +153,6 @@ func main() {
 				break
 			}
 
-			switch cname {
-			// TODO ignore declarations like "typedef struct CXTranslationUnitImpl *CXTranslationUnit" for now
-			case "CXCursorSetImpl", "CXTranslationUnitImpl":
-				return clang.CVR_Recurse
-			}
-
 			s := handleStructCursor(cursor, cname, cnameIsTypeDef)
 
 			lookupStruct[s.Name] = s
@@ -167,7 +161,30 @@ func main() {
 
 			structs = append(structs, s)
 		case clang.CK_TypedefDecl:
-			if cursor.TypedefDeclUnderlyingType().TypeSpelling() == "void *" {
+			underlyingType := cursor.TypedefDeclUnderlyingType().TypeSpelling()
+			underlyingStructType := strings.TrimSuffix(strings.TrimPrefix(underlyingType, "struct "), " *")
+
+			if s, ok := lookupStruct[underlyingStructType]; ok && !s.CNameIsTypeDef && strings.HasPrefix(underlyingType, "struct "+s.CName) {
+				// Sometimes the typedef is not a parent of the struct but a sibling TODO find out if this is a bug?
+
+				sn := handleVoidStructCursor(cursor, cname, true)
+
+				lookupStruct[sn.Name] = sn
+				lookupNonTypedefs["struct "+sn.CName] = sn.Name
+				lookupStruct[sn.CName] = sn
+
+				// Update the lookups for the old struct
+				lookupStruct[s.Name] = sn
+				lookupStruct[s.CName] = sn
+
+				for i, si := range structs {
+					if si == s {
+						structs[i] = sn
+
+						break
+					}
+				}
+			} else if underlyingType == "void *" {
 				s := handleVoidStructCursor(cursor, cname, true)
 
 				lookupStruct[s.Name] = s

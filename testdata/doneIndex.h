@@ -1,10 +1,5 @@
 
 /**
- * \brief A single translation unit, which resides in an index.
- */
-typedef struct CXTranslationUnitImpl *CXTranslationUnit;
-
-/**
  * \brief Provides the contents of a file that has not yet been saved to disk.
  *
  * Each CXUnsavedFile instance provides the name of a file on the
@@ -433,15 +428,6 @@ CXDiagnostic clang_getDiagnostic(CXTranslationUnit Unit,
                                                 unsigned Index);
 
 /**
- * \brief Retrieve the complete set of diagnostics associated with a
- *        translation unit.
- *
- * \param Unit the translation unit to query.
- */
-CXDiagnosticSet
-  clang_getDiagnosticSetFromTU(CXTranslationUnit Unit);
-
-/**
  * \brief Format the given diagnostic in a manner that is suitable for display.
  *
  * This routine will format the given diagnostic to a string, rendering
@@ -727,11 +713,6 @@ int clang_saveTranslationUnit(CXTranslationUnit TU,
                                              unsigned options);
 
 /**
- * \brief Destroy the specified CXTranslationUnit object.
- */
-void clang_disposeTranslationUnit(CXTranslationUnit);
-
-/**
  * \brief Returns the set of flags that is suitable for reparsing a translation
  * unit.
  *
@@ -817,12 +798,6 @@ typedef struct CXTUResourceUsage {
 } CXTUResourceUsage;
 
 /**
-  * \brief Return the memory usage of a translation unit.  This object
-  *  should be released with clang_disposeCXTUResourceUsage().
-  */
-CXTUResourceUsage clang_getCXTUResourceUsage(CXTranslationUnit TU);
-
-/**
  * \brief A cursor representing some element in the abstract syntax tree for
  * a translation unit.
  *
@@ -858,14 +833,6 @@ typedef struct {
  * \brief Retrieve the NULL cursor, which represents no entity.
  */
 CXCursor clang_getNullCursor(void);
-
-/**
- * \brief Retrieve the cursor that represents the given translation unit.
- *
- * The translation unit cursor can be used to start traversing the
- * various declarations within the given translation unit.
- */
-CXCursor clang_getTranslationUnitCursor(CXTranslationUnit);
 
 /**
  * \brief Returns non-zero if \p cursor is null.
@@ -966,25 +933,9 @@ void
 clang_disposeCXPlatformAvailability(CXPlatformAvailability *availability);
 
 /**
- * \brief Returns the translation unit that a cursor originated from.
- */
-CXTranslationUnit clang_Cursor_getTranslationUnit(CXCursor);
-
-
-/**
- * \brief A fast container representing a set of CXCursors.
- */
-typedef struct CXCursorSetImpl *CXCursorSet;
-
-/**
  * \brief Creates an empty CXCursorSet.
  */
 CXCursorSet clang_createCXCursorSet(void);
-
-/**
- * \brief Disposes a CXCursorSet and releases its associated memory.
- */
-void clang_disposeCXCursorSet(CXCursorSet cset);
 
 /**
  * \brief Queries a CXCursorSet to see if it contains a specific CXCursor.

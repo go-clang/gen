@@ -126,12 +126,6 @@ func (c Cursor) PlatformAvailability(availability []PlatformAvailability) (alway
 	return
 }
 
-// TranslationUnit returns the translation unit that a cursor originated from
-func (c Cursor) TranslationUnit() TranslationUnit {
-	o := C.clang_Cursor_getTranslationUnit(c.c)
-	return TranslationUnit{o}
-}
-
 // CursorSet is a fast container representing a set of Cursors.
 type CursorSet struct {
 	c C.CXCursorSet
@@ -140,11 +134,6 @@ type CursorSet struct {
 // NewCursorSet creates an empty CursorSet
 func NewCursorSet() CursorSet {
 	return CursorSet{C.clang_createCXCursorSet()}
-}
-
-// Dispose releases the memory associated with a CursorSet
-func (c CursorSet) Dispose() {
-	C.clang_disposeCXCursorSet(c.c)
 }
 
 // Contains queries a CursorSet to see if it contains a specific Cursor

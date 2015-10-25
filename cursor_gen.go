@@ -35,6 +35,11 @@ func (c Cursor) Language() LanguageKind {
 	return LanguageKind(C.clang_getCursorLanguage(c.c))
 }
 
+// Returns the translation unit that a cursor originated from.
+func (c Cursor) TranslationUnit() TranslationUnit {
+	return TranslationUnit{C.clang_Cursor_getTranslationUnit(c.c)}
+}
+
 /*
  * \brief Determine the semantic parent of the given cursor.
  *
