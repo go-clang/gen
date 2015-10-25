@@ -214,11 +214,11 @@ func main() {
 		return fname
 	}
 
-	addMethod := func(f *Function, fname string, rt Receiver, method func(f *Function) string) bool {
+	addMethod := func(f *Function, fname string, fnamePrefix string, rt Receiver, method func(f *Function) string) bool {
 		fname = upperFirstCharacter(fname)
 
 		if e, ok := lookupEnum[rt.Name]; ok {
-			f.Name = fname
+			f.Name = fnamePrefix + fname
 			f.Receiver = e.Receiver
 			f.Receiver.Type = rt.Name
 
@@ -226,7 +226,7 @@ func main() {
 
 			return true
 		} else if s, ok := lookupStruct[rt.Name]; ok {
-			f.Name = fname
+			f.Name = fnamePrefix + fname
 			f.Receiver = s.Receiver
 			f.Receiver.Type = rt.Name
 
@@ -238,25 +238,25 @@ func main() {
 		return false
 	}
 
-	addBasicMethods := func(f *Function, fname string, rt Receiver) bool {
+	addBasicMethods := func(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 		if len(f.Parameters) == 1 && f.ReturnType == "String" {
 			fname = trimCommonFName(fname, rt)
 
-			return addMethod(f, fname, rt, generateFunctionStringGetter)
+			return addMethod(f, fname, fnamePrefix, rt, generateFunctionStringGetter)
 		} else if len(f.Parameters) == 1 && isEnumOrStruct(f.ReturnType) && isEnumOrStruct(f.Parameters[0].Type) {
 			fname = trimCommonFName(fname, rt)
 
-			return addMethod(f, fname, rt, generateFunctionGetter)
+			return addMethod(f, fname, fnamePrefix, rt, generateFunctionGetter)
 		} else if len(f.Parameters) == 1 &&
 			((fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3])))) &&
 			(f.ReturnType == "unsigned int" || f.ReturnType == "int") {
-			return addMethod(f, fname, rt, generateFunctionIs)
+			return addMethod(f, fname, fnamePrefix, rt, generateFunctionIs)
 		} else if len(f.Parameters) == 1 && strings.HasPrefix(fname, "dispose") && f.ReturnType == "void" {
 			fname = "Dispose"
 
-			return addMethod(f, fname, rt, generateFunctionVoidMethod)
+			return addMethod(f, fname, fnamePrefix, rt, generateFunctionVoidMethod)
 		} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && f.ReturnType == "unsigned int" && f.Parameters[0].Type == f.Parameters[1].Type {
-			return addMethod(f, fname, rt, generateFunctionEqual)
+			return addMethod(f, fname, fnamePrefix, rt, generateFunctionEqual)
 		}
 
 		return false
@@ -281,7 +281,7 @@ func main() {
 		} else if _, ok := lookupStruct[f.ReturnType]; ok {
 		}
 
-		added := addBasicMethods(f, fname, rt)
+		added := addBasicMethods(f, fname, "", rt)
 
 		if !added {
 			if s := strings.SplitN(f.Name, "_", 2); len(s) == 2 {
@@ -289,7 +289,7 @@ func main() {
 					rtc := rt
 					rtc.Name = s[0]
 
-					added = addBasicMethods(f, s[1], rtc)
+					added = addBasicMethods(f, s[1], "", rtc)
 				}
 			}
 		}
