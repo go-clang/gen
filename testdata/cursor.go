@@ -34,15 +34,6 @@ func NewNullCursor() Cursor {
 	return Cursor{C.clang_getNullCursor()}
 }
 
-// IsNull returns true if the underlying Cursor is null
-func (c Cursor) IsNull() bool {
-	o := C.clang_Cursor_isNull(c.c)
-	if o != C.int(0) {
-		return true
-	}
-	return false
-}
-
 // Hash computes a hash value for the cursor
 func (c Cursor) Hash() uint {
 	o := C.clang_hashCursor(c.c)
@@ -370,25 +361,6 @@ func GoClangCursorVisitor(cursor, parent C.CXCursor, cfct unsafe.Pointer) (statu
 	fct := *(*CursorVisitor)(cfct)
 	o := fct(Cursor{cursor}, Cursor{parent})
 	return o
-}
-
-/**
- * \brief Given a cursor pointing to a C++ method call or an ObjC message,
- * returns non-zero if the method/message is "dynamic", meaning:
- *
- * For a C++ method: the call is virtual.
- * For an ObjC message: the receiver is an object instance, not 'super' or a
- * specific class.
- *
- * If the method/message is "static" or the cursor does not point to a
- * method/message, it will return zero.
- */
-func (c Cursor) IsDynamicCall() bool {
-	o := C.clang_Cursor_isDynamicCall(c.c)
-	if o != 0 {
-		return true
-	}
-	return false
 }
 
 /**

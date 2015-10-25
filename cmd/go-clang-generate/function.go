@@ -93,7 +93,7 @@ var templateGenerateFunctionIs = template.Must(template.New("go-clang-generate-f
 func ({{$.Receiver.Name}} {{$.Receiver.Type}}) {{$.Name}}() bool {
 	o := C.{{$.CName}}({{if ne $.Receiver.PrimitiveType ""}}{{$.Receiver.PrimitiveType}}({{$.Receiver.Name}}){{else}}{{$.Receiver.Name}}.c{{end}})
 
-	return o != C.uint(0)
+	return o != C.{{if eq $.ReturnType "int"}}int{{else}}uint{{end}}(0)
 }
 `))
 

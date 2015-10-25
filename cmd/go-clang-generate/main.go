@@ -247,7 +247,9 @@ func main() {
 			fname = trimCommonFName(fname, rt)
 
 			return addMethod(f, fname, rt, generateFunctionGetter)
-		} else if len(f.Parameters) == 1 && fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2])) && f.ReturnType == "unsigned int" {
+		} else if len(f.Parameters) == 1 &&
+			((fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3])))) &&
+			(f.ReturnType == "unsigned int" || f.ReturnType == "int") {
 			return addMethod(f, fname, rt, generateFunctionIs)
 		} else if len(f.Parameters) == 1 && strings.HasPrefix(fname, "dispose") && f.ReturnType == "void" {
 			fname = "Dispose"
