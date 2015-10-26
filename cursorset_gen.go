@@ -9,7 +9,7 @@ type CursorSet struct {
 }
 
 // Creates an empty CXCursorSet.
-func NewCXCursorSet() CursorSet {
+func NewCursorSet() CursorSet {
 	return CursorSet{C.clang_createCXCursorSet()}
 }
 

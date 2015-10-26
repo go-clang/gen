@@ -104,6 +104,6 @@ func (t Type) ClassType() Type {
 }
 
 // Retrieve the ref-qualifier kind of a function or method. The ref-qualifier is returned for C++ functions or methods. For other types or non-C++ declarations, CXRefQualifier_None is returned.
-func (t Type) CXXRefQualifier() RefQualifierKind {
+func (t Type) RefQualifier() RefQualifierKind {
 	return RefQualifierKind(C.clang_Type_getCXXRefQualifier(t.c))
 }

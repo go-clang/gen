@@ -42,7 +42,7 @@ func (tu TranslationUnit) DefaultReparseOptions() uint16 {
 }
 
 // Return the memory usage of a translation unit. This object should be released with clang_disposeCXTUResourceUsage().
-func (tu TranslationUnit) CXTUResourceUsage() TUResourceUsage {
+func (tu TranslationUnit) TUResourceUsage() TUResourceUsage {
 	return TUResourceUsage{C.clang_getCXTUResourceUsage(tu.c)}
 }
 

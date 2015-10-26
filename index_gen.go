@@ -14,7 +14,7 @@ func (i Index) Dispose() {
 }
 
 // Gets the general options associated with a CXIndex. \returns A bitmask of options, a bitwise OR of CXGlobalOpt_XXX flags that are associated with the given CXIndex object.
-func (i Index) CXIndex_getGlobalOptions() uint16 {
+func (i Index) GlobalOptions() uint16 {
 	return uint16(C.clang_CXIndex_getGlobalOptions(i.c))
 }
 

@@ -202,6 +202,8 @@ func main() {
 		fname = strings.TrimPrefix(fname, "create")
 		fname = strings.TrimPrefix(fname, "get")
 
+		fname = trimClangPrefix(fname)
+
 		if fn := strings.TrimPrefix(fname, rt.Name+"_"); len(fn) != len(fname) {
 			fname = fn
 		} else if fn := strings.TrimPrefix(fname, rt.Name); len(fn) != len(fname) {
@@ -212,6 +214,13 @@ func main() {
 
 		fname = strings.TrimPrefix(fname, "create")
 		fname = strings.TrimPrefix(fname, "get")
+
+		fname = trimClangPrefix(fname)
+
+		// If the function name is empty at this point, it is a constructor
+		if fname == "" {
+			fname = rt.Name
+		}
 
 		return fname
 	}
