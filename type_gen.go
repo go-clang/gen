@@ -93,14 +93,34 @@ func (t Type) ElementType() Type {
 	return Type{C.clang_getElementType(t.c)}
 }
 
+// Return the number of elements of an array or vector type. If a type is passed in that is not an array or vector type, -1 is returned.
+func (t Type) NumElements() int64 {
+	return int64(C.clang_getNumElements(t.c))
+}
+
 // Return the element type of an array type. If a non-array type is passed in, an invalid type is returned.
 func (t Type) ArrayElementType() Type {
 	return Type{C.clang_getArrayElementType(t.c)}
 }
 
+// Return the array size of a constant array. If a non-array type is passed in, -1 is returned.
+func (t Type) ArraySize() int64 {
+	return int64(C.clang_getArraySize(t.c))
+}
+
+// Return the alignment of a type in bytes as per C++[expr.alignof] standard. If the type declaration is invalid, CXTypeLayoutError_Invalid is returned. If the type declaration is an incomplete type, CXTypeLayoutError_Incomplete is returned. If the type declaration is a dependent type, CXTypeLayoutError_Dependent is returned. If the type declaration is not a constant size type, CXTypeLayoutError_NotConstantSize is returned.
+func (t Type) AlignOf() int64 {
+	return int64(C.clang_Type_getAlignOf(t.c))
+}
+
 // Return the class type of an member pointer type. If a non-member-pointer type is passed in, an invalid type is returned.
 func (t Type) ClassType() Type {
 	return Type{C.clang_Type_getClassType(t.c)}
+}
+
+// Return the size of a type in bytes as per C++[expr.sizeof] standard. If the type declaration is invalid, CXTypeLayoutError_Invalid is returned. If the type declaration is an incomplete type, CXTypeLayoutError_Incomplete is returned. If the type declaration is a dependent type, CXTypeLayoutError_Dependent is returned.
+func (t Type) SizeOf() int64 {
+	return int64(C.clang_Type_getSizeOf(t.c))
 }
 
 // Retrieve the ref-qualifier kind of a function or method. The ref-qualifier is returned for C++ functions or methods. For other types or non-C++ declarations, CXRefQualifier_None is returned.

@@ -200,18 +200,6 @@ func (c OverriddenCursors) At(i int) Cursor {
 }
 
 /**
- * \brief Retrieve the integer value of an enum constant declaration as a signed
- *  long long.
- *
- * If the cursor does not reference an enum constant declaration, LLONG_MIN is returned.
- * Since this is also potentially a valid constant value, the kind of the cursor
- * must be verified before calling this function.
- */
-func (c Cursor) EnumConstantDeclValue() int64 {
-	return int64(C.clang_getEnumConstantDeclValue(c.c))
-}
-
-/**
  * \brief Retrieve the argument cursor of a function or method.
  *
  * If a cursor that is not a function or method is passed in or the index

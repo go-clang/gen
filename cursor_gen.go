@@ -162,6 +162,11 @@ func (c Cursor) EnumDeclIntegerType() Type {
 	return Type{C.clang_getEnumDeclIntegerType(c.c)}
 }
 
+// Retrieve the integer value of an enum constant declaration as a signed long long. If the cursor does not reference an enum constant declaration, LLONG_MIN is returned. Since this is also potentially a valid constant value, the kind of the cursor must be verified before calling this function.
+func (c Cursor) EnumConstantDeclValue() int64 {
+	return int64(C.clang_getEnumConstantDeclValue(c.c))
+}
+
 // Retrieve the integer value of an enum constant declaration as an unsigned long long. If the cursor does not reference an enum constant declaration, ULLONG_MAX is returned. Since this is also potentially a valid constant value, the kind of the cursor must be verified before calling this function.
 func (c Cursor) EnumConstantDeclUnsignedValue() uint64 {
 	return uint64(C.clang_getEnumConstantDeclUnsignedValue(c.c))

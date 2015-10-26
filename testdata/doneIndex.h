@@ -921,16 +921,6 @@ typedef struct {
 } CXType;
 
 /**
- * \brief Retrieve the integer value of an enum constant declaration as a signed
- *  long long.
- *
- * If the cursor does not reference an enum constant declaration, LLONG_MIN is returned.
- * Since this is also potentially a valid constant value, the kind of the cursor
- * must be verified before calling this function.
- */
-long long clang_getEnumConstantDeclValue(CXCursor C);
-
-/**
  * \brief Retrieve the argument cursor of a function or method.
  *
  * The argument cursor can be determined for calls as well as for declarations
@@ -946,46 +936,6 @@ CXCursor clang_Cursor_getArgument(CXCursor C, unsigned i);
  * parameters, an invalid type is returned.
  */
 CXType clang_getArgType(CXType T, unsigned i);
-
-/**
- * \brief Return the number of elements of an array or vector type.
- *
- * If a type is passed in that is not an array or vector type,
- * -1 is returned.
- */
-long long clang_getNumElements(CXType T);
-
-/**
- * \brief Return the array size of a constant array.
- *
- * If a non-array type is passed in, -1 is returned.
- */
-long long clang_getArraySize(CXType T);
-
-/**
- * \brief Return the alignment of a type in bytes as per C++[expr.alignof]
- *   standard.
- *
- * If the type declaration is invalid, CXTypeLayoutError_Invalid is returned.
- * If the type declaration is an incomplete type, CXTypeLayoutError_Incomplete
- *   is returned.
- * If the type declaration is a dependent type, CXTypeLayoutError_Dependent is
- *   returned.
- * If the type declaration is not a constant size type,
- *   CXTypeLayoutError_NotConstantSize is returned.
- */
-long long clang_Type_getAlignOf(CXType T);
-
-/**
- * \brief Return the size of a type in bytes as per C++[expr.sizeof] standard.
- *
- * If the type declaration is invalid, CXTypeLayoutError_Invalid is returned.
- * If the type declaration is an incomplete type, CXTypeLayoutError_Incomplete
- *   is returned.
- * If the type declaration is a dependent type, CXTypeLayoutError_Dependent is
- *   returned.
- */
-long long clang_Type_getSizeOf(CXType T);
 
 /**
  * \brief Return the offset of a field named S in a record of type T in bits
