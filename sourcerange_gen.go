@@ -8,6 +8,11 @@ type SourceRange struct {
 	c C.CXSourceRange
 }
 
+// Retrieve a NULL (invalid) source range.
+func NewNullRange() SourceRange {
+	return SourceRange{C.clang_getNullRange()}
+}
+
 // Determine whether two ranges are equivalent. \returns non-zero if the ranges are the same, zero if they differ.
 func EqualRanges(sr1, sr2 SourceRange) bool {
 	o := C.clang_equalRanges(sr1.c, sr2.c)

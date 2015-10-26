@@ -199,6 +199,7 @@ func main() {
 	})
 
 	trimCommonFName := func(fname string, rt Receiver) string {
+		fname = strings.TrimPrefix(fname, "create")
 		fname = strings.TrimPrefix(fname, "get")
 
 		if fn := strings.TrimPrefix(fname, rt.Name+"_"); len(fn) != len(fname) {
@@ -209,6 +210,7 @@ func main() {
 			fname = fn
 		}
 
+		fname = strings.TrimPrefix(fname, "create")
 		fname = strings.TrimPrefix(fname, "get")
 
 		return fname
@@ -239,7 +241,17 @@ func main() {
 	}
 
 	addBasicMethods := func(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
-		if len(f.Parameters) == 1 && f.ReturnType == "String" {
+		if len(f.Parameters) == 0 && isEnumOrStruct(f.ReturnType) {
+			rtc := rt
+			rtc.Name = f.ReturnType
+
+			fname = trimCommonFName(fname, rtc)
+			if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
+				fname = "New" + fname
+			}
+
+			return addMethod(f, fname, fnamePrefix, rtc, generateFunctionVoidReturningMethod)
+		} else if len(f.Parameters) == 1 && f.ReturnType == "String" {
 			fname = trimCommonFName(fname, rt)
 
 			return addMethod(f, fname, fnamePrefix, rt, generateFunctionStringGetter)

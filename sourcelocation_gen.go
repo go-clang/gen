@@ -8,6 +8,11 @@ type SourceLocation struct {
 	c C.CXSourceLocation
 }
 
+// Retrieve a NULL (invalid) source location.
+func NewNullLocation() SourceLocation {
+	return SourceLocation{C.clang_getNullLocation()}
+}
+
 // Determine whether two source locations, which must refer into the same translation unit, refer to exactly the same point in the source code. \returns non-zero if the source locations refer to the same location, zero if they refer to different locations.
 func EqualLocations(sl1, sl2 SourceLocation) bool {
 	o := C.clang_equalLocations(sl1.c, sl2.c)

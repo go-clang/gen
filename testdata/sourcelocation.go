@@ -13,11 +13,6 @@ type SourceLocation struct {
 	c C.CXSourceLocation
 }
 
-// NewNullLocation creates a NULL (invalid) source location.
-func NewNullLocation() SourceLocation {
-	return SourceLocation{C.clang_getNullLocation()}
-}
-
 // ExpansionLocation returns the file, line, column, and offset represented by
 // the given source location.
 //

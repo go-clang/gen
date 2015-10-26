@@ -175,11 +175,6 @@ typedef struct {
 } CXSourceRange;
 
 /**
- * \brief Retrieve a NULL (invalid) source location.
- */
-CXSourceLocation clang_getNullLocation(void);
-
-/**
  * \brief Retrieves the source location associated with a given file/line/column
  * in a particular translation unit.
  */
@@ -194,11 +189,6 @@ CXSourceLocation clang_getLocation(CXTranslationUnit tu,
 CXSourceLocation clang_getLocationForOffset(CXTranslationUnit tu,
                                                            CXFile file,
                                                            unsigned offset);
-
-/**
- * \brief Retrieve a NULL (invalid) source range.
- */
-CXSourceRange clang_getNullRange(void);
 
 /**
  * \brief Retrieve a source range given the beginning and ending source
@@ -748,11 +738,6 @@ typedef struct {
 } CXComment;
 
 /**
- * \brief Retrieve the NULL cursor, which represents no entity.
- */
-CXCursor clang_getNullCursor(void);
-
-/**
  * Describes the availability of a given entity on a particular platform, e.g.,
  * a particular class might only be available on Mac OS 10.7 or newer.
  */
@@ -839,11 +824,6 @@ clang_getCursorPlatformAvailability(CXCursor cursor,
  */
 void
 clang_disposeCXPlatformAvailability(CXPlatformAvailability *availability);
-
-/**
- * \brief Creates an empty CXCursorSet.
- */
-CXCursorSet clang_createCXCursorSet(void);
 
 /**
  * \brief Queries a CXCursorSet to see if it contains a specific CXCursor.

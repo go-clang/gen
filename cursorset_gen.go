@@ -8,6 +8,11 @@ type CursorSet struct {
 	c C.CXCursorSet
 }
 
+// Creates an empty CXCursorSet.
+func NewCXCursorSet() CursorSet {
+	return CursorSet{C.clang_createCXCursorSet()}
+}
+
 // Disposes a CXCursorSet and releases its associated memory.
 func (cs CursorSet) Dispose() {
 	C.clang_disposeCXCursorSet(cs.c)

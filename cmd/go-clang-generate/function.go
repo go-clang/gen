@@ -136,6 +136,21 @@ func generateFunctionVoidMethod(f *Function) string {
 	return b.String()
 }
 
+var templateGenerateFunctionVoidReturningMethod = template.Must(template.New("go-clang-generate-function-void-returning-method").Parse(`{{$.Comment}}
+func {{$.Name}}() {{$.ReturnType}} {
+	return {{$.ReturnType}}{{"{"}}C.{{$.CName}}(){{"}"}}
+}
+`))
+
+func generateFunctionVoidReturningMethod(f *Function) string {
+	var b bytes.Buffer
+	if err := templateGenerateFunctionVoidReturningMethod.Execute(&b, f); err != nil {
+		panic(err)
+	}
+
+	return b.String()
+}
+
 var templateGenerateFunctionEqual = template.Must(template.New("go-clang-generate-function-equal").Parse(`{{$.Comment}}
 func {{$.Name}}({{$.Receiver.Name}}1, {{$.Receiver.Name}}2 {{$.Receiver.Type}}) bool {
 	o := C.{{$.CName}}({{$.Receiver.Name}}1.c, {{$.Receiver.Name}}2.c)

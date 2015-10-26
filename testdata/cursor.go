@@ -29,11 +29,6 @@ type Cursor struct {
 	c C.CXCursor
 }
 
-// Retrieve the NULL cursor, which represents no entity.
-func NewNullCursor() Cursor {
-	return Cursor{C.clang_getNullCursor()}
-}
-
 /**
  * \brief Determine the availability of the entity that this cursor refers to
  * on any platforms for which availability information is known.
@@ -114,11 +109,6 @@ func (c Cursor) PlatformAvailability(availability []PlatformAvailability) (alway
 // CursorSet is a fast container representing a set of Cursors.
 type CursorSet struct {
 	c C.CXCursorSet
-}
-
-// NewCursorSet creates an empty CursorSet
-func NewCursorSet() CursorSet {
-	return CursorSet{C.clang_createCXCursorSet()}
 }
 
 // Contains queries a CursorSet to see if it contains a specific Cursor
