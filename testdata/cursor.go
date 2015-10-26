@@ -222,18 +222,6 @@ func (c Cursor) EnumConstantDeclValue() int64 {
 }
 
 /**
- * \brief Retrieve the integer value of an enum constant declaration as an unsigned
- *  long long.
- *
- * If the cursor does not reference an enum constant declaration, ULLONG_MAX is returned.
- * Since this is also potentially a valid constant value, the kind of the cursor
- * must be verified before calling this function.
- */
-func (c Cursor) EnumConstantDeclUnsignedValue() uint64 {
-	return uint64(C.clang_getEnumConstantDeclUnsignedValue(c.c))
-}
-
-/**
  * \brief Retrieve the argument cursor of a function or method.
  *
  * If a cursor that is not a function or method is passed in or the index

@@ -951,16 +951,6 @@ typedef struct {
 long long clang_getEnumConstantDeclValue(CXCursor C);
 
 /**
- * \brief Retrieve the integer value of an enum constant declaration as an unsigned
- *  long long.
- *
- * If the cursor does not reference an enum constant declaration, ULLONG_MAX is returned.
- * Since this is also potentially a valid constant value, the kind of the cursor
- * must be verified before calling this function.
- */
-unsigned long long clang_getEnumConstantDeclUnsignedValue(CXCursor C);
-
-/**
  * \brief Retrieve the argument cursor of a function or method.
  *
  * The argument cursor can be determined for calls as well as for declarations

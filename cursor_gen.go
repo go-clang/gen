@@ -157,6 +157,11 @@ func (c Cursor) EnumDeclIntegerType() Type {
 	return Type{C.clang_getEnumDeclIntegerType(c.c)}
 }
 
+// Retrieve the integer value of an enum constant declaration as an unsigned long long. If the cursor does not reference an enum constant declaration, ULLONG_MAX is returned. Since this is also potentially a valid constant value, the kind of the cursor must be verified before calling this function.
+func (c Cursor) EnumConstantDeclUnsignedValue() uint64 {
+	return uint64(C.clang_getEnumConstantDeclUnsignedValue(c.c))
+}
+
 // Retrieve the bit width of a bit field declaration as an integer. If a cursor that is not a bit field declaration is passed in, -1 is returned.
 func (c Cursor) FieldDeclBitWidth() uint16 {
 	return uint16(C.clang_getFieldDeclBitWidth(c.c))
