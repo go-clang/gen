@@ -16,10 +16,14 @@ type Function struct {
 	Parameters          []FunctionParameter
 	ReturnType          string
 	ReturnPrimitiveType string
+	IsReturnTypePointer bool
+	IsReturnTypeEnumLit bool
 
 	Receiver              string
 	ReceiverType          string
 	ReceiverPrimitiveType string
+
+	Member string
 }
 
 type FunctionParameter struct {
@@ -134,4 +138,88 @@ func generateFunctionEqual(f *Function) string {
 	}
 
 	return b.String()
+}
+
+var templateGenerateStructMemberGetter = template.Must(template.New("go-clang-generate-function-getter").Parse(`{{$.Comment}}
+func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() {{if $.IsReturnTypePointer}}*{{end}}{{if $.ReturnPrimitiveType}}{{$.ReturnPrimitiveType}}{{else}}{{$.ReturnType}}{{end}} {
+	return {{if $.IsReturnTypePointer}}&{{end}}{{if $.ReturnPrimitiveType}}{{$.ReturnPrimitiveType}}{{else}}{{$.ReturnType}}{{end}}{{if $.ReturnPrimitiveType}}({{if $.IsReturnTypePointer}}*{{end}}{{$.Receiver}}.c.{{$.Member}}){{else}}{{"{"}}{{if $.IsReturnTypePointer}}*{{end}}{{$.Receiver}}.c.{{$.Member}}{{"}"}}{{end}}
+}
+`))
+
+func generateFunctionStructMemberGetter(f *Function) string {
+	var b bytes.Buffer
+	if err := templateGenerateStructMemberGetter.Execute(&b, f); err != nil {
+		panic(err)
+	}
+
+	return b.String()
+}
+
+type FunctionSliceReturn struct {
+	Function
+
+	ElementType     string
+	IsPrimitive     bool
+	ArrayDimensions int
+}
+
+var templateGenerateReturnSlice = template.Must(template.New("go-clang-generate-slice").Parse(`{{$.Comment}}
+func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() []{{if eq $.ArrayDimensions 2 }}*{{end}}{{$.ElementType}} {
+	sc := []{{$.ElementType}}{}
+	{{if eq $.ArrayDimensions 2 }}
+	length := int(C.sizeof({{$.Receiver}}.c.{{$.Member}}[0])) / int(sizeof({{$.Receiver}}.c.{{$.Member}}[0][0]))
+	{{else}}
+	length := int(sizeof({{$.Receiver}}.c.{{$.Member}}))
+	{{end}}
+	for is := 0; is < length; is++ {
+		sc = append(sc, {{if eq $.ArrayDimensions 2}}&{{$.ElementType}}{{else}}{{$.ElementType}}{{end}}{{if $.IsPrimitive}}({{$.Receiver}}.c.{{$.Member}}[is])){{else}}{"{"}{{$.Receiver}}.c.{{$.Member}}[is]){{"}"}}{{end}}
+	}
+
+	return sc
+}
+`))
+
+func generateFunctionSliceReturn(f *FunctionSliceReturn) string {
+	var b bytes.Buffer
+	if err := templateGenerateReturnSlice.Execute(&b, f); err != nil {
+		panic(err)
+	}
+
+	return b.String()
+
+}
+
+func generateFunction(name, cname, comment, member string, conv Conversion) *Function {
+	receiverType := trimClangPrefix(cname)
+	receiverName := receiverName(string(receiverType[0]))
+	functionName := upperFirstCharacter(name)
+
+	rType := ""
+	rTypePrimitive := ""
+
+	if conv.IsPrimitive {
+		rTypePrimitive = conv.GoType
+	} else {
+		rType = conv.GoType
+	}
+
+	f := &Function{
+		Name:    functionName,
+		CName:   cname,
+		Comment: comment,
+
+		Parameters: []FunctionParameter{},
+
+		ReturnType:          rType,
+		ReturnPrimitiveType: rTypePrimitive,
+		IsReturnTypePointer: conv.PointerLevel > 0,
+		IsReturnTypeEnumLit: conv.IsEnumLiteral,
+
+		Receiver:     receiverName,
+		ReceiverType: receiverType,
+
+		Member: member,
+	}
+
+	return f
 }

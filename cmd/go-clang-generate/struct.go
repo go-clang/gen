@@ -21,107 +21,57 @@ type Struct struct {
 	Methods []string
 }
 
-type FuncDef struct {
-	Comment    string
-	Name       string
-	GType      string
-	FuncName   string
-	ReturnType string
-
-	ReturnString string
-}
-
-var returnPrimitive = "return %s(%s)"
-var returnComplex = "return %s{%s}"
-
-var templateGenerateReturnSlice = template.Must(template.New("go-clang-generate-slice").Parse(`{{$.Comment}}
-func ({{$.Name}} {{$.GType}}) {{$.FuncName}}() {{$.ReturnType}} {
-	s := {{$.ReturnType}}{}
-	length := C.sizeof(%s[0]) / C.sizeof(%s[0][0])
-
-	for is := 0; is < length; is++ {
-		s = append(s, %s{%s[is]})
-	}
-
-	return s
-}
-`))
-
-var templateGenerateGetter = template.Must(template.New("go-clang-generate-getter").Parse(`{{$.Comment}}
-func ({{$.Name}} {{$.GType}}) {{$.FuncName}}() {{$.ReturnType}} {
-	{{$.ReturnString}}
-}
-`))
-
 func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
 	s := handleVoidStructCursor(cursor, cname, cnameIsTypeDef)
 
-	if true == false {
-		gType := trimClangPrefix(cname)
-
+	if false == true {
 		cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 
 			switch cursor.Kind() {
 			case clang.CK_FieldDecl:
-				conv := getTypeConversion(cursor.Type())
-
-				if conv.FunctionPointer {
+				conv, err := getTypeConversion(cursor.Type()) // TODO error handling
+				if err != nil {
 					return clang.CVR_Continue
 				}
 
-				receiver := strings.ToLower(string(gType[0]))
-
-				f := FuncDef{
-					Comment:    cleanDoxygenComment(cursor.RawCommentText()),
-					Name:       receiver,
-					GType:      gType,
-					FuncName:   upperFirstCharacter(cursor.DisplayName()),
-					ReturnType: conv.GType,
+				if conv.IsFunctionPointer {
+					return clang.CVR_Continue
 				}
 
-				callToC := receiver + ".c." + cursor.DisplayName()
+				fmt.Println(cursor.Type().TypeSpelling())
+
+				comment := cleanDoxygenComment(cursor.RawCommentText())
+
+				if conv.PointerLevel >= 1 && conv.GoType == "void" {
+					conv.GoType = GoPointer
+					conv.PointerLevel--
+					s.ImportUnsafe = true
+				}
 
 				var method string
 
-				if conv.Pointer == 2 {
-					elemType := "&" + f.ReturnType
-					f.ReturnType = "[]*" + f.ReturnType
+				if conv.PointerLevel == 2 || conv.IsArray {
+					f := &FunctionSliceReturn{
+						Function: *generateFunction(cursor.DisplayName(), cname, comment, cursor.DisplayName(), conv),
 
-					var b bytes.Buffer
-					if err := templateGenerateReturnSlice.Execute(&b, f); err != nil {
-						fmt.Println(err.Error())
+						ElementType:     conv.GoType,
+						IsPrimitive:     conv.IsPrimitive,
+						ArrayDimensions: conv.PointerLevel,
 					}
 
-					method = fmt.Sprintf(b.String(), callToC, callToC, elemType, callToC)
-				} else if conv.Pointer < 2 {
-					if conv.Pointer == 1 {
-						f.ReturnType = "*" + f.ReturnType
-					}
+					method = generateFunctionSliceReturn(f)
 
-					if f.ReturnType == "*void" {
-						f.ReturnType = GoPointer
-						s.ImportUnsafe = true
-					}
+				} else if conv.PointerLevel < 2 {
 
-					if conv.IsArray {
-						f.ReturnType = "[]" + f.ReturnType
-					}
+					f := generateFunction(cursor.DisplayName(), cname, comment, cursor.DisplayName(), conv)
 
-					if conv.Primitive {
-						f.ReturnString = fmt.Sprintf(returnPrimitive, strings.Replace(f.ReturnType, "*", "&", -1), callToC)
-					} else {
-						f.ReturnString = fmt.Sprintf(returnComplex, strings.Replace(f.ReturnType, "*", "&", -1), callToC)
-					}
+					method = generateFunctionStructMemberGetter(f)
 
-					var b bytes.Buffer
-					if err := templateGenerateGetter.Execute(&b, f); err != nil {
-						fmt.Println(err.Error())
-					}
-
-					method = b.String()
 				} else {
 					panic("Three pointers")
 				}
+
+				fmt.Println(method)
 
 				s.Methods = append(s.Methods, method)
 			}
@@ -129,106 +79,7 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 			return clang.CVR_Continue
 		})
 	}
-
 	return s
-}
-
-const (
-	GoInt8      = "int8"
-	GoUInt8     = "uint8"
-	GoInt16     = "int16"
-	GoUInt16    = "uint16"
-	GoInt32     = "int32"
-	GoUInt32    = "uint32"
-	GoInt64     = "int64"
-	GoUInt64    = "uint64"
-	GoFloat32   = "float32"
-	GoFloat64   = "float64"
-	GoBool      = "bool"
-	GoInterface = "interface"
-	GoPointer   = "unsafe.Pointer"
-)
-
-type Conversion struct {
-	GType           string
-	Pointer         int
-	Primitive       bool
-	IsArray         bool
-	FunctionPointer bool
-}
-
-func getTypeConversion(cType clang.Type) Conversion {
-	conv := Conversion{
-		Pointer:   0,
-		Primitive: true,
-		IsArray:   false,
-	}
-
-	switch cType.Kind() {
-	case clang.TK_Char_S:
-		conv.GType = string(GoInt8)
-	case clang.TK_Char_U:
-		conv.GType = GoUInt8
-	case clang.TK_Int, clang.TK_Short:
-		conv.GType = GoInt16
-	case clang.TK_UInt, clang.TK_UShort:
-		conv.GType = GoUInt16
-	case clang.TK_Long:
-		conv.GType = GoInt32
-	case clang.TK_ULong:
-		conv.GType = GoUInt32
-	case clang.TK_LongLong:
-		conv.GType = GoInt64
-	case clang.TK_ULongLong:
-		conv.GType = GoUInt64
-	case clang.TK_Float:
-		conv.GType = GoFloat32
-	case clang.TK_Double:
-		conv.GType = GoFloat64
-	case clang.TK_Bool:
-		conv.GType = GoBool
-	case clang.TK_Void:
-		conv.GType = "void"
-	case clang.TK_ConstantArray:
-		subConv := getTypeConversion(cType.ArrayElementType())
-		conv.GType = subConv.GType
-		conv.Pointer += subConv.Pointer
-		conv.IsArray = true
-	case clang.TK_Typedef:
-		typeStr := cType.TypeSpelling()
-		if typeStr == "CXString" {
-			typeStr = "cxstring"
-		} else {
-			typeStr = trimClangPrefix(cType.TypeSpelling())
-		}
-		conv.GType = typeStr
-		conv.Primitive = false
-	case clang.TK_Pointer:
-		conv.Pointer++
-
-		if cType.PointeeType().CanonicalType().Kind() == clang.TK_FunctionProto {
-			conv.FunctionPointer = true
-		}
-
-		subConv := getTypeConversion(cType.PointeeType().Declaration().Type()) // ComplexTypes
-		if subConv.GType == "" {                                               // datatypes
-			subConv = getTypeConversion(cType.PointeeType())
-		} else {
-			conv.Primitive = false
-		}
-		conv.GType = subConv.GType
-		conv.Pointer += subConv.Pointer
-	case clang.TK_Unexposed: // there is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013
-		enumStr := cType.CanonicalType().TypeSpelling()
-		if strings.Contains(enumStr, "enum") {
-			enumStr = trimClangPrefix(cType.CanonicalType().Declaration().DisplayName())
-		} else {
-			enumStr = ""
-		}
-		conv.GType = enumStr
-	}
-
-	return conv
 }
 
 func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
@@ -245,7 +96,8 @@ func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bo
 }
 
 var templateGenerateStruct = template.Must(template.New("go-clang-generate-struct").Parse(`package phoenix
-// #include "go-clang.h"
+
+//#include "go-clang.h"
 import "C"
 {{if $.ImportUnsafe}}
 import "unsafe"{{end}}
