@@ -69,6 +69,11 @@ func (t Type) ResultType() Type {
 	return Type{C.clang_getResultType(t.c)}
 }
 
+// Retrieve the number of non-variadic arguments associated with a function type. If a non-function type is passed in, -1 is returned.
+func (t Type) NumArgTypes() uint16 {
+	return uint16(C.clang_getNumArgTypes(t.c))
+}
+
 // Return 1 if the CXType is a variadic function type, and 0 otherwise.
 func (t Type) IsFunctionTypeVariadic() bool {
 	o := C.clang_isFunctionTypeVariadic(t.c)

@@ -13,6 +13,11 @@ func (c Comment) Kind() CommentKind {
 	return CommentKind(C.clang_Comment_getKind(c.c))
 }
 
+// \param Comment AST node of any kind. \returns number of children of the AST node.
+func (c Comment) NumChildren() uint16 {
+	return uint16(C.clang_Comment_getNumChildren(c.c))
+}
+
 // A \c CXComment_Paragraph node is considered whitespace if it contains only \c CXComment_Text nodes that are empty or whitespace. Other AST nodes (except \c CXComment_Paragraph and \c CXComment_Text) are never considered whitespace. \returns non-zero if \c Comment is whitespace.
 func (c Comment) IsWhitespace() bool {
 	o := C.clang_Comment_isWhitespace(c.c)
@@ -48,6 +53,11 @@ func (c Comment) InlineCommandComment_getRenderKind() CommentInlineCommandRender
 	return CommentInlineCommandRenderKind(C.clang_InlineCommandComment_getRenderKind(c.c))
 }
 
+// \param Comment a \c CXComment_InlineCommand AST node. \returns number of command arguments.
+func (c Comment) InlineCommandComment_getNumArgs() uint16 {
+	return uint16(C.clang_InlineCommandComment_getNumArgs(c.c))
+}
+
 // \param Comment a \c CXComment_HTMLStartTag or \c CXComment_HTMLEndTag AST node. \returns HTML tag name.
 func (c Comment) HTMLTagComment_getTagName() string {
 	o := cxstring{C.clang_HTMLTagComment_getTagName(c.c)}
@@ -63,12 +73,22 @@ func (c Comment) HTMLStartTagComment_IsSelfClosing() bool {
 	return o != C.uint(0)
 }
 
+// \param Comment a \c CXComment_HTMLStartTag AST node. \returns number of attributes (name-value pairs) attached to the start tag.
+func (c Comment) HTMLStartTag_getNumAttrs() uint16 {
+	return uint16(C.clang_HTMLStartTag_getNumAttrs(c.c))
+}
+
 // \param Comment a \c CXComment_BlockCommand AST node. \returns name of the block command.
 func (c Comment) BlockCommandComment_getCommandName() string {
 	o := cxstring{C.clang_BlockCommandComment_getCommandName(c.c)}
 	defer o.Dispose()
 
 	return o.String()
+}
+
+// \param Comment a \c CXComment_BlockCommand AST node. \returns number of word-like arguments.
+func (c Comment) BlockCommandComment_getNumArgs() uint16 {
+	return uint16(C.clang_BlockCommandComment_getNumArgs(c.c))
 }
 
 // \param Comment a \c CXComment_BlockCommand or \c CXComment_VerbatimBlockCommand AST node. \returns paragraph argument of the block command.
@@ -89,6 +109,11 @@ func (c Comment) ParamCommandComment_IsParamIndexValid() bool {
 	o := C.clang_ParamCommandComment_isParamIndexValid(c.c)
 
 	return o != C.uint(0)
+}
+
+// \param Comment a \c CXComment_ParamCommand AST node. \returns zero-based parameter index in function prototype.
+func (c Comment) ParamCommandComment_getParamIndex() uint16 {
+	return uint16(C.clang_ParamCommandComment_getParamIndex(c.c))
 }
 
 // \param Comment a \c CXComment_ParamCommand AST node. \returns non-zero if parameter passing direction was specified explicitly in the comment.
@@ -116,6 +141,11 @@ func (c Comment) TParamCommandComment_IsParamPositionValid() bool {
 	o := C.clang_TParamCommandComment_isParamPositionValid(c.c)
 
 	return o != C.uint(0)
+}
+
+// \param Comment a \c CXComment_TParamCommand AST node. \returns zero-based nesting depth of this parameter in the template parameter list. For example, \verbatim template<typename C, template<typename T> class TT> void test(TT<int> aaa); \endverbatim for C and TT nesting depth is 0, for T nesting depth is 1.
+func (c Comment) TParamCommandComment_getDepth() uint16 {
+	return uint16(C.clang_TParamCommandComment_getDepth(c.c))
 }
 
 // \param Comment a \c CXComment_VerbatimBlockLine AST node. \returns text contained in the AST node.

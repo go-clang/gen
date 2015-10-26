@@ -107,14 +107,6 @@ CXIndex clang_createIndex(int excludeDeclarationsFromPCH,
 void clang_CXIndex_setGlobalOptions(CXIndex, unsigned options);
 
 /**
- * \brief Gets the general options associated with a CXIndex.
- *
- * \returns A bitmask of options, a bitwise OR of CXGlobalOpt_XXX flags that
- * are associated with the given CXIndex object.
- */
-unsigned clang_CXIndex_getGlobalOptions(CXIndex);
-
-/**
  * \brief Retrieve the last modification time of the given file.
  */
 time_t clang_getFileTime(CXFile SFile);
@@ -360,11 +352,6 @@ void clang_getFileLocation(CXSourceLocation location,
                                           unsigned *offset);
 
 /**
- * \brief Determine the number of diagnostics in a CXDiagnosticSet.
- */
-unsigned clang_getNumDiagnosticsInSet(CXDiagnosticSet Diags);
-
-/**
  * \brief Retrieve a diagnostic associated with the given CXDiagnosticSet.
  *
  * \param Diags the CXDiagnosticSet to query.
@@ -392,12 +379,6 @@ CXDiagnostic clang_getDiagnosticInSet(CXDiagnosticSet Diags,
 CXDiagnosticSet clang_loadDiagnostics(const char *file,
                                                   enum CXLoadDiag_Error *error,
                                                   CXString *errorString);
-
-/**
- * \brief Determine the number of diagnostics produced for the given
- * translation unit.
- */
-unsigned clang_getNumDiagnostics(CXTranslationUnit Unit);
 
 /**
  * \brief Retrieve a diagnostic associated with the given translation unit.
@@ -454,18 +435,6 @@ CXString clang_getDiagnosticOption(CXDiagnostic Diag,
                                                   CXString *Disable);
 
 /**
- * \brief Retrieve the category number for this diagnostic.
- *
- * Diagnostics can be categorized into groups along with other, related
- * diagnostics (e.g., diagnostics under the same warning flag). This routine
- * retrieves the category number for the given diagnostic.
- *
- * \returns The number of the category that contains this diagnostic, or zero
- * if this diagnostic is uncategorized.
- */
-unsigned clang_getDiagnosticCategory(CXDiagnostic);
-
-/**
  * \brief Retrieve the name of a particular diagnostic category.  This
  *  is now deprecated.  Use clang_getDiagnosticCategoryText()
  *  instead.
@@ -476,12 +445,6 @@ unsigned clang_getDiagnosticCategory(CXDiagnostic);
  * \returns The name of the given diagnostic category.
  */
 CXString clang_getDiagnosticCategoryName(unsigned Category);
-
-/**
- * \brief Determine the number of source ranges associated with the given
- * diagnostic.
- */
-unsigned clang_getDiagnosticNumRanges(CXDiagnostic);
 
 /**
  * \brief Retrieve a source range associated with the diagnostic.
@@ -498,12 +461,6 @@ unsigned clang_getDiagnosticNumRanges(CXDiagnostic);
  */
 CXSourceRange clang_getDiagnosticRange(CXDiagnostic Diagnostic,
                                                       unsigned Range);
-
-/**
- * \brief Determine the number of fix-it hints associated with the
- * given diagnostic.
- */
-unsigned clang_getDiagnosticNumFixIts(CXDiagnostic Diagnostic);
 
 /**
  * \brief Retrieve the replacement information for a given fix-it.
@@ -659,17 +616,6 @@ CXTranslationUnit clang_parseTranslationUnit(CXIndex CIdx,
                                                             unsigned options);
 
 /**
- * \brief Returns the set of flags that is suitable for saving a translation
- * unit.
- *
- * The set of flags returned provide options for
- * \c clang_saveTranslationUnit() by default. The returned flag
- * set contains an unspecified set of options that save translation units with
- * the most commonly-requested data.
- */
-unsigned clang_defaultSaveOptions(CXTranslationUnit TU);
-
-/**
  * \brief Saves a translation unit into a serialized representation of
  * that translation unit on disk.
  *
@@ -695,18 +641,6 @@ unsigned clang_defaultSaveOptions(CXTranslationUnit TU);
 int clang_saveTranslationUnit(CXTranslationUnit TU,
                                              const char *FileName,
                                              unsigned options);
-
-/**
- * \brief Returns the set of flags that is suitable for reparsing a translation
- * unit.
- *
- * The set of flags returned provide options for
- * \c clang_reparseTranslationUnit() by default. The returned flag
- * set contains an unspecified set of optimizations geared toward common uses
- * of reparsing. The set of optimizations enabled may change from one version
- * to the next.
- */
-unsigned clang_defaultReparseOptions(CXTranslationUnit TU);
 
 /**
  * \brief Reparse the source files that produced this translation unit.
@@ -817,11 +751,6 @@ typedef struct {
  * \brief Retrieve the NULL cursor, which represents no entity.
  */
 CXCursor clang_getNullCursor(void);
-
-/**
- * \brief Compute a hash value for the given cursor.
- */
-unsigned clang_hashCursor(CXCursor);
 
 /**
  * Describes the availability of a given entity on a particular platform, e.g.,
@@ -1032,22 +961,6 @@ long long clang_getEnumConstantDeclValue(CXCursor C);
 unsigned long long clang_getEnumConstantDeclUnsignedValue(CXCursor C);
 
 /**
- * \brief Retrieve the bit width of a bit field declaration as an integer.
- *
- * If a cursor that is not a bit field declaration is passed in, -1 is returned.
- */
-int clang_getFieldDeclBitWidth(CXCursor C);
-
-/**
- * \brief Retrieve the number of non-variadic arguments associated with a given
- * cursor.
- *
- * The number of arguments can be determined for calls as well as for
- * declarations of functions or methods. For other cursors -1 is returned.
- */
-int clang_Cursor_getNumArguments(CXCursor C);
-
-/**
  * \brief Retrieve the argument cursor of a function or method.
  *
  * The argument cursor can be determined for calls as well as for declarations
@@ -1055,14 +968,6 @@ int clang_Cursor_getNumArguments(CXCursor C);
  * invalid cursor is returned.
  */
 CXCursor clang_Cursor_getArgument(CXCursor C, unsigned i);
-
-/**
- * \brief Retrieve the number of non-variadic arguments associated with a
- * function type.
- *
- * If a non-function type is passed in, -1 is returned.
- */
-int clang_getNumArgTypes(CXType T);
 
 /**
  * \brief Retrieve the type of an argument of a function type.
@@ -1126,17 +1031,6 @@ long long clang_Type_getSizeOf(CXType T);
  *   CXTypeLayoutError_InvalidFieldName is returned.
  */
 long long clang_Type_getOffsetOf(CXType T, const char *S);
-
-/**
- * \brief Determine the number of overloaded declarations referenced by a
- * \c CXCursor_OverloadedDeclRef cursor.
- *
- * \param cursor The cursor whose overloaded declarations are being queried.
- *
- * \returns The number of overloaded declarations referenced by \c cursor. If it
- * is not a \c CXCursor_OverloadedDeclRef cursor, returns 0.
- */
-unsigned clang_getNumOverloadedDecls(CXCursor cursor);
 
 /**
  * \brief Retrieve a cursor for one of the overloaded declarations referenced
@@ -1275,20 +1169,6 @@ CXSourceRange clang_Cursor_getSpellingNameRange(CXCursor,
                                                           unsigned pieceIndex,
                                                           unsigned options);
 
-
-/**
- * \brief If the cursor points to a selector identifier in a objc method or
- * message expression, this returns the selector index.
- *
- * After getting a cursor with #clang_getCursor, this can be called to
- * determine if the location points to a selector identifier.
- *
- * \returns The selector index if the cursor is an objc method or message
- * expression and the cursor is pointing to a selector identifier, or -1
- * otherwise.
- */
-int clang_Cursor_getObjCSelectorIndex(CXCursor);
-
 /**
  * \brief Given a cursor that represents a property declaration, return the
  * associated property attributes. The bits are formed from
@@ -1297,14 +1177,6 @@ int clang_Cursor_getObjCSelectorIndex(CXCursor);
  * \param reserved Reserved for future use, pass 0.
  */
 unsigned clang_Cursor_getObjCPropertyAttributes(CXCursor C, unsigned reserved);
-
-
-/**
- * \brief Given a cursor that represents an ObjC method or parameter
- * declaration, return the associated ObjC qualifiers for the return type or the
- * parameter respectively. The bits are formed from CXObjCDeclQualifierKind.
- */
-unsigned clang_Cursor_getObjCDeclQualifiers(CXCursor C);
 
 /**
  * \param Module a module object.
@@ -1327,25 +1199,11 @@ CXFile clang_Module_getTopLevelHeader(CXTranslationUnit,
 /**
  * \param Comment AST node of any kind.
  *
- * \returns number of children of the AST node.
- */
-unsigned clang_Comment_getNumChildren(CXComment Comment);
-
-/**
- * \param Comment AST node of any kind.
- *
  * \param ChildIdx child index (zero-based).
  *
  * \returns the specified child of the AST node.
  */
 CXComment clang_Comment_getChild(CXComment Comment, unsigned ChildIdx);
-
-/**
- * \param Comment a \c CXComment_InlineCommand AST node.
- *
- * \returns number of command arguments.
- */
-unsigned clang_InlineCommandComment_getNumArgs(CXComment Comment);
 
 /**
  * \param Comment a \c CXComment_InlineCommand AST node.
@@ -1356,13 +1214,6 @@ unsigned clang_InlineCommandComment_getNumArgs(CXComment Comment);
  */
 CXString clang_InlineCommandComment_getArgText(CXComment Comment,
                                                unsigned ArgIdx);
-
-/**
- * \param Comment a \c CXComment_HTMLStartTag AST node.
- *
- * \returns number of attributes (name-value pairs) attached to the start tag.
- */
-unsigned clang_HTMLStartTag_getNumAttrs(CXComment Comment);
 
 /**
  * \param Comment a \c CXComment_HTMLStartTag AST node.
@@ -1385,41 +1236,12 @@ CXString clang_HTMLStartTag_getAttrValue(CXComment Comment, unsigned AttrIdx);
 /**
  * \param Comment a \c CXComment_BlockCommand AST node.
  *
- * \returns number of word-like arguments.
- */
-unsigned clang_BlockCommandComment_getNumArgs(CXComment Comment);
-
-/**
- * \param Comment a \c CXComment_BlockCommand AST node.
- *
  * \param ArgIdx argument index (zero-based).
  *
  * \returns text of the specified word-like argument.
  */
 CXString clang_BlockCommandComment_getArgText(CXComment Comment,
                                               unsigned ArgIdx);
-
-/**
- * \param Comment a \c CXComment_ParamCommand AST node.
- *
- * \returns zero-based parameter index in function prototype.
- */
-unsigned clang_ParamCommandComment_getParamIndex(CXComment Comment);
-
-/**
- * \param Comment a \c CXComment_TParamCommand AST node.
- *
- * \returns zero-based nesting depth of this parameter in the template parameter list.
- *
- * For example,
- * \verbatim
- *     template<typename C, template<typename T> class TT>
- *     void test(TT<int> aaa);
- * \endverbatim
- * for C and TT nesting depth is 0,
- * for T nesting depth is 1.
- */
-unsigned clang_TParamCommandComment_getDepth(CXComment Comment);
 
 /**
  * \param Comment a \c CXComment_TParamCommand AST node.
@@ -1626,39 +1448,6 @@ clang_getCompletionChunkText(CXCompletionString completion_string,
 CXCompletionString
 clang_getCompletionChunkCompletionString(CXCompletionString completion_string,
                                          unsigned chunk_number);
-
-/**
- * \brief Retrieve the number of chunks in the given code-completion string.
- */
-unsigned
-clang_getNumCompletionChunks(CXCompletionString completion_string);
-
-/**
- * \brief Determine the priority of this code completion.
- *
- * The priority of a code completion indicates how likely it is that this
- * particular completion is the completion that the user will select. The
- * priority is selected by various internal heuristics.
- *
- * \param completion_string The completion string to query.
- *
- * \returns The priority of this completion string. Smaller values indicate
- * higher-priority (more likely) completions.
- */
-unsigned
-clang_getCompletionPriority(CXCompletionString completion_string);
-
-/**
- * \brief Retrieve the number of annotations associated with the given
- * completion string.
- *
- * \param completion_string the completion string to query.
- *
- * \returns the number of annotations associated with the given completion
- * string.
- */
-unsigned
-clang_getCompletionNumAnnotations(CXCompletionString completion_string);
 
 /**
  * \brief Retrieve the annotation associated with the given completion string.
@@ -1950,11 +1739,6 @@ CXRemapping clang_getRemappings(const char *path);
  */
 CXRemapping clang_getRemappingsFromFileList(const char **filePaths,
                                             unsigned numFiles);
-
-/**
- * \brief Determine the number of remappings.
- */
-unsigned clang_remap_getNumFiles(CXRemapping);
 
 /**
  * \brief Get the original and the associated filename from the remapping.

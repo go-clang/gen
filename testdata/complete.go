@@ -10,35 +10,6 @@ import (
 )
 
 /**
- * \brief Determine the priority of this code completion.
- *
- * The priority of a code completion indicates how likely it is that this
- * particular completion is the completion that the user will select. The
- * priority is selected by various internal heuristics.
- *
- * \param completion_string The completion string to query.
- *
- * \returns The priority of this completion string. Smaller values indicate
- * higher-priority (more likely) completions.
- */
-func (cs CompletionString) Priority() int {
-	return int(C.clang_getCompletionPriority(cs.c))
-}
-
-/**
- * \brief Retrieve the number of annotations associated with the given
- * completion string.
- *
- * \param completion_string the completion string to query.
- *
- * \returns the number of annotations associated with the given completion
- * string.
- */
-func (cs CompletionString) NumAnnotations() int {
-	return int(C.clang_getCompletionNumAnnotations(cs.c))
-}
-
-/**
  * \brief Retrieve the annotation associated with the given completion string.
  *
  * \param completion_string the completion string to query.

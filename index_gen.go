@@ -13,6 +13,11 @@ func (i Index) Dispose() {
 	C.clang_disposeIndex(i.c)
 }
 
+// Gets the general options associated with a CXIndex. \returns A bitmask of options, a bitwise OR of CXGlobalOpt_XXX flags that are associated with the given CXIndex object.
+func (i Index) CXIndex_getGlobalOptions() uint16 {
+	return uint16(C.clang_CXIndex_getGlobalOptions(i.c))
+}
+
 // An indexing action/session, to be applied to one or multiple translation units. \param CIdx The index object with which the index action will be associated.
 func (i Index) Action_create() IndexAction {
 	return IndexAction{C.clang_IndexAction_create(i.c)}

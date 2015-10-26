@@ -15,15 +15,6 @@ type Comment struct {
 /**
  * \param Comment AST node of any kind.
  *
- * \returns number of children of the AST node.
- */
-func (c Comment) NumChildren() int {
-	return int(C.clang_Comment_getNumChildren(c.c))
-}
-
-/**
- * \param Comment AST node of any kind.
- *
  * \param ChildIdx child index (zero-based).
  *
  * \returns the specified child of the AST node.

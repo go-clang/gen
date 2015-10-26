@@ -58,13 +58,28 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 
 var templateGenerateFunctionGetter = template.Must(template.New("go-clang-generate-function-getter").Parse(`{{$.Comment}}
 func ({{$.Receiver.Name}} {{$.Receiver.Type}}) {{$.Name}}() {{$.ReturnType}} {
-	return {{$.ReturnType}}{{if $.ReturnPrimitiveType}}({{else}}{{"{"}}{{end}}C.{{$.CName}}({{if ne $.Receiver.PrimitiveType ""}}{{$.Receiver.PrimitiveType}}({{$.Receiver.Name}}{{else}}{{$.Receiver.Name}}.c{{end}}){{if $.ReturnPrimitiveType}}){{else}}{{"}"}}{{end}}
+	return {{$.ReturnType}}{{if $.ReturnPrimitiveType}}({{else}}{{"{"}}{{end}}C.{{$.CName}}({{if ne $.Receiver.PrimitiveType ""}}{{$.Receiver.PrimitiveType}}({{$.Receiver.Name}}){{else}}{{$.Receiver.Name}}.c{{end}}){{if $.ReturnPrimitiveType}}){{else}}{{"}"}}{{end}}
 }
 `))
 
 func generateFunctionGetter(f *Function) string {
 	var b bytes.Buffer
 	if err := templateGenerateFunctionGetter.Execute(&b, f); err != nil {
+		panic(err)
+	}
+
+	return b.String()
+}
+
+var templateGenerateFunctionGetterPrimitive = template.Must(template.New("go-clang-generate-function-getter-primitive").Parse(`{{$.Comment}}
+func ({{$.Receiver.Name}} {{$.Receiver.Type}}) {{$.Name}}() {{$.ReturnType}} {
+	return {{$.ReturnType}}(C.{{$.CName}}({{if ne $.Receiver.PrimitiveType ""}}{{$.Receiver.PrimitiveType}}({{$.Receiver.Name}}){{else}}{{$.Receiver.Name}}.c{{end}}))
+}
+`))
+
+func generateFunctionGetterPrimitive(f *Function) string {
+	var b bytes.Buffer
+	if err := templateGenerateFunctionGetterPrimitive.Execute(&b, f); err != nil {
 		panic(err)
 	}
 

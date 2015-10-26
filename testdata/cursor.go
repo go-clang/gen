@@ -34,12 +34,6 @@ func NewNullCursor() Cursor {
 	return Cursor{C.clang_getNullCursor()}
 }
 
-// Hash computes a hash value for the cursor
-func (c Cursor) Hash() uint {
-	o := C.clang_hashCursor(c.c)
-	return uint(o)
-}
-
 /**
  * \brief Determine the availability of the entity that this cursor refers to
  * on any platforms for which availability information is known.
@@ -240,27 +234,6 @@ func (c Cursor) EnumConstantDeclUnsignedValue() uint64 {
 }
 
 /**
- * \brief Retrieve the bit width of a bit field declaration as an integer.
- *
- * If a cursor that is not a bit field declaration is passed in, -1 is returned.
- */
-func (c Cursor) FieldDeclBitWidth() int {
-	return int(C.clang_getFieldDeclBitWidth(c.c))
-}
-
-/**
- * \brief Retrieve the number of non-variadic arguments associated with a given
- * cursor.
- *
- * If a cursor that is not a function or method is passed in, -1 is returned.
- */
-// CINDEX_LINKAGE int clang_Cursor_getNumArguments(CXCursor C);
-func (c Cursor) NumArguments() int {
-	n := C.clang_Cursor_getNumArguments(c.c)
-	return int(n)
-}
-
-/**
  * \brief Retrieve the argument cursor of a function or method.
  *
  * If a cursor that is not a function or method is passed in or the index
@@ -270,20 +243,6 @@ func (c Cursor) NumArguments() int {
 func (c Cursor) Argument(i uint) Cursor {
 	o := C.clang_Cursor_getArgument(c.c, C.uint(i))
 	return Cursor{o}
-}
-
-/**
- * \brief Determine the number of overloaded declarations referenced by a
- * \c CXCursor_OverloadedDeclRef cursor.
- *
- * \param cursor The cursor whose overloaded declarations are being queried.
- *
- * \returns The number of overloaded declarations referenced by \c cursor. If it
- * is not a \c CXCursor_OverloadedDeclRef cursor, returns 0.
- */
-func (c Cursor) NumOverloadedDecls() int {
-	o := C.clang_getNumOverloadedDecls(c.c)
-	return int(o)
 }
 
 /**
