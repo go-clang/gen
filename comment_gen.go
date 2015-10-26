@@ -20,6 +20,13 @@ func (c Comment) IsWhitespace() bool {
 	return o != C.uint(0)
 }
 
+// \returns non-zero if \c Comment is inline content and has a newline immediately following it in the comment text. Newlines between paragraphs do not count.
+func (c Comment) InlineContentComment_HasTrailingNewline() bool {
+	o := C.clang_InlineContentComment_hasTrailingNewline(c.c)
+
+	return o != C.uint(0)
+}
+
 // \param Comment a \c CXComment_Text AST node. \returns text contained in the AST node.
 func (c Comment) TextComment_getText() string {
 	o := cxstring{C.clang_TextComment_getText(c.c)}
@@ -49,6 +56,13 @@ func (c Comment) HTMLTagComment_getTagName() string {
 	return o.String()
 }
 
+// \param Comment a \c CXComment_HTMLStartTag AST node. \returns non-zero if tag is self-closing (for example, &lt;br /&gt;).
+func (c Comment) HTMLStartTagComment_IsSelfClosing() bool {
+	o := C.clang_HTMLStartTagComment_isSelfClosing(c.c)
+
+	return o != C.uint(0)
+}
+
 // \param Comment a \c CXComment_BlockCommand AST node. \returns name of the block command.
 func (c Comment) BlockCommandComment_getCommandName() string {
 	o := cxstring{C.clang_BlockCommandComment_getCommandName(c.c)}
@@ -70,6 +84,20 @@ func (c Comment) ParamCommandComment_getParamName() string {
 	return o.String()
 }
 
+// \param Comment a \c CXComment_ParamCommand AST node. \returns non-zero if the parameter that this AST node represents was found in the function prototype and \c clang_ParamCommandComment_getParamIndex function will return a meaningful value.
+func (c Comment) ParamCommandComment_IsParamIndexValid() bool {
+	o := C.clang_ParamCommandComment_isParamIndexValid(c.c)
+
+	return o != C.uint(0)
+}
+
+// \param Comment a \c CXComment_ParamCommand AST node. \returns non-zero if parameter passing direction was specified explicitly in the comment.
+func (c Comment) ParamCommandComment_IsDirectionExplicit() bool {
+	o := C.clang_ParamCommandComment_isDirectionExplicit(c.c)
+
+	return o != C.uint(0)
+}
+
 // \param Comment a \c CXComment_ParamCommand AST node. \returns parameter passing direction.
 func (c Comment) ParamCommandComment_getDirection() CommentParamPassDirection {
 	return CommentParamPassDirection(C.clang_ParamCommandComment_getDirection(c.c))
@@ -81,6 +109,13 @@ func (c Comment) TParamCommandComment_getParamName() string {
 	defer o.Dispose()
 
 	return o.String()
+}
+
+// \param Comment a \c CXComment_TParamCommand AST node. \returns non-zero if the parameter that this AST node represents was found in the template parameter list and \c clang_TParamCommandComment_getDepth and \c clang_TParamCommandComment_getIndex functions will return a meaningful value.
+func (c Comment) TParamCommandComment_IsParamPositionValid() bool {
+	o := C.clang_TParamCommandComment_isParamPositionValid(c.c)
+
+	return o != C.uint(0)
 }
 
 // \param Comment a \c CXComment_VerbatimBlockLine AST node. \returns text contained in the AST node.

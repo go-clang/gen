@@ -31,16 +31,3 @@ func (c Comment) NumChildren() int {
 func (c Comment) Child(idx int) Comment {
 	return Comment{C.clang_Comment_getChild(c.c, C.unsigned(idx))}
 }
-
-/**
- * \returns non-zero if \c Comment is inline content and has a newline
- * immediately following it in the comment text.  Newlines between paragraphs
- * do not count.
- */
-func (c Comment) HasTrailingNewline() bool {
-	o := C.clang_InlineContentComment_hasTrailingNewline(c.c)
-	if 0 != o {
-		return true
-	}
-	return false
-}

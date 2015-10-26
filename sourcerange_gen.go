@@ -15,6 +15,13 @@ func EqualRanges(sr1, sr2 SourceRange) bool {
 	return o != C.uint(0)
 }
 
+// Returns non-zero if \p range is null.
+func (sr SourceRange) Range_IsNull() bool {
+	o := C.clang_Range_isNull(sr.c)
+
+	return o != C.int(0)
+}
+
 // Retrieve a source location representing the first character within a source range.
 func (sr SourceRange) RangeStart() SourceLocation {
 	return SourceLocation{C.clang_getRangeStart(sr.c)}

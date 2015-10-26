@@ -14,3 +14,17 @@ func EqualLocations(sl1, sl2 SourceLocation) bool {
 
 	return o != C.uint(0)
 }
+
+// Returns non-zero if the given source location is in a system header.
+func (sl SourceLocation) Location_IsInSystemHeader() bool {
+	o := C.clang_Location_isInSystemHeader(sl.c)
+
+	return o != C.int(0)
+}
+
+// Returns non-zero if the given source location is in the main file of the corresponding translation unit.
+func (sl SourceLocation) Location_IsFromMainFile() bool {
+	o := C.clang_Location_isFromMainFile(sl.c)
+
+	return o != C.int(0)
+}

@@ -373,43 +373,6 @@ func GoClangCursorVisitor(cursor, parent C.CXCursor, cfct unsafe.Pointer) (statu
  */
 
 /**
- * \brief Determine if a C++ member function or member function template is
- * pure virtual.
- */
-func (c Cursor) CXXMethod_IsPureVirtual() bool {
-	o := C.clang_CXXMethod_isPureVirtual(c.c)
-	if o != 0 {
-		return true
-	}
-	return false
-}
-
-/**
- * \brief Determine if a C++ member function or member function template is
- * declared 'static'.
- */
-func (c Cursor) CXXMethod_IsStatic() bool {
-	o := C.clang_CXXMethod_isStatic(c.c)
-	if o != 0 {
-		return true
-	}
-	return false
-}
-
-/**
- * \brief Determine if a C++ member function or member function template is
- * explicitly declared 'virtual' or if it overrides a virtual method from
- * one of the base classes.
- */
-func (c Cursor) CXXMethod_IsVirtual() bool {
-	o := C.clang_CXXMethod_isVirtual(c.c)
-	if o != 0 {
-		return true
-	}
-	return false
-}
-
-/**
  * \brief Given a cursor that references something else, return the source range
  * covering that reference.
  *

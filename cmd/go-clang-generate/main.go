@@ -284,12 +284,14 @@ func main() {
 		added := addBasicMethods(f, fname, "", rt)
 
 		if !added {
-			if s := strings.SplitN(f.Name, "_", 2); len(s) == 2 {
+			if s := strings.Split(f.Name, "_"); len(s) == 2 {
 				if s[0] == rt.Name {
 					rtc := rt
 					rtc.Name = s[0]
 
 					added = addBasicMethods(f, s[1], "", rtc)
+				} else {
+					added = addBasicMethods(f, strings.Join(s[1:], ""), s[0]+"_", rt)
 				}
 			}
 		}

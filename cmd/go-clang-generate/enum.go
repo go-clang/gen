@@ -38,6 +38,11 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 
 	e.Name = trimClangPrefix(e.CName)
 	e.Receiver.Name = receiverName(e.Name)
+	if cnameIsTypeDef {
+		e.Receiver.CName = e.CName
+	} else {
+		e.Receiver.CName = "enum_" + e.CName // TODO remove this hack somehow "enum_" is Go's way of using enums and struts without typedef it is not the real CName. We need this for example for the Go->C type conversion in clang_index_isEntityObjCContainerKind.
+	}
 
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {

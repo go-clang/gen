@@ -204,17 +204,6 @@ CXSourceLocation clang_getLocationForOffset(CXTranslationUnit tu,
                                                            unsigned offset);
 
 /**
- * \brief Returns non-zero if the given source location is in a system header.
- */
-int clang_Location_isInSystemHeader(CXSourceLocation location);
-
-/**
- * \brief Returns non-zero if the given source location is in the main file of
- * the corresponding translation unit.
- */
-int clang_Location_isFromMainFile(CXSourceLocation location);
-
-/**
  * \brief Retrieve a NULL (invalid) source range.
  */
 CXSourceRange clang_getNullRange(void);
@@ -225,11 +214,6 @@ CXSourceRange clang_getNullRange(void);
  */
 CXSourceRange clang_getRange(CXSourceLocation begin,
                                             CXSourceLocation end);
-
-/**
- * \brief Returns non-zero if \p range is null.
- */
-int clang_Range_isNull(CXSourceRange range);
 
 /**
  * \brief Retrieve the file, line, column, and offset represented by
@@ -1357,13 +1341,6 @@ unsigned clang_Comment_getNumChildren(CXComment Comment);
 CXComment clang_Comment_getChild(CXComment Comment, unsigned ChildIdx);
 
 /**
- * \returns non-zero if \c Comment is inline content and has a newline
- * immediately following it in the comment text.  Newlines between paragraphs
- * do not count.
- */
-unsigned clang_InlineContentComment_hasTrailingNewline(CXComment Comment);
-
-/**
  * \param Comment a \c CXComment_InlineCommand AST node.
  *
  * \returns number of command arguments.
@@ -1379,13 +1356,6 @@ unsigned clang_InlineCommandComment_getNumArgs(CXComment Comment);
  */
 CXString clang_InlineCommandComment_getArgText(CXComment Comment,
                                                unsigned ArgIdx);
-
-/**
- * \param Comment a \c CXComment_HTMLStartTag AST node.
- *
- * \returns non-zero if tag is self-closing (for example, &lt;br /&gt;).
- */
-unsigned clang_HTMLStartTagComment_isSelfClosing(CXComment Comment);
 
 /**
  * \param Comment a \c CXComment_HTMLStartTag AST node.
@@ -1432,37 +1402,9 @@ CXString clang_BlockCommandComment_getArgText(CXComment Comment,
 /**
  * \param Comment a \c CXComment_ParamCommand AST node.
  *
- * \returns non-zero if the parameter that this AST node represents was found
- * in the function prototype and \c clang_ParamCommandComment_getParamIndex
- * function will return a meaningful value.
- */
-unsigned clang_ParamCommandComment_isParamIndexValid(CXComment Comment);
-
-/**
- * \param Comment a \c CXComment_ParamCommand AST node.
- *
  * \returns zero-based parameter index in function prototype.
  */
 unsigned clang_ParamCommandComment_getParamIndex(CXComment Comment);
-
-/**
- * \param Comment a \c CXComment_ParamCommand AST node.
- *
- * \returns non-zero if parameter passing direction was specified explicitly in
- * the comment.
- */
-unsigned clang_ParamCommandComment_isDirectionExplicit(CXComment Comment);
-
-/**
- * \param Comment a \c CXComment_TParamCommand AST node.
- *
- * \returns non-zero if the parameter that this AST node represents was found
- * in the template parameter list and
- * \c clang_TParamCommandComment_getDepth and
- * \c clang_TParamCommandComment_getIndex functions will return a meaningful
- * value.
- */
-unsigned clang_TParamCommandComment_isParamPositionValid(CXComment Comment);
 
 /**
  * \param Comment a \c CXComment_TParamCommand AST node.
@@ -1498,25 +1440,6 @@ unsigned clang_TParamCommandComment_getDepth(CXComment Comment);
  * at depth 1 T's index is 0.
  */
 unsigned clang_TParamCommandComment_getIndex(CXComment Comment, unsigned Depth);
-
-/**
- * \brief Determine if a C++ member function or member function template is
- * pure virtual.
- */
-unsigned clang_CXXMethod_isPureVirtual(CXCursor C);
-
-/**
- * \brief Determine if a C++ member function or member function template is
- * declared 'static'.
- */
-unsigned clang_CXXMethod_isStatic(CXCursor C);
-
-/**
- * \brief Determine if a C++ member function or member function template is
- * explicitly declared 'virtual' or if it overrides a virtual method from
- * one of the base classes.
- */
-unsigned clang_CXXMethod_isVirtual(CXCursor C);
 
 /**
  * \brief Given a cursor that references something else, return the source range
@@ -2044,11 +1967,6 @@ unsigned clang_remap_getNumFiles(CXRemapping);
 void clang_remap_getFilenames(CXRemapping, unsigned index,
                                      CXString *original, CXString *transformed);
 
-/**
- * \brief Dispose the remapping.
- */
-void clang_remap_dispose(CXRemapping);
-
 typedef struct {
   void *context;
   enum CXVisitorResult (*visit)(void *context, CXCursor, CXSourceRange);
@@ -2364,7 +2282,6 @@ typedef struct {
 
 } IndexerCallbacks;
 
-int clang_index_isEntityObjCContainerKind(CXIdxEntityKind);
 const CXIdxObjCContainerDeclInfo *
 clang_index_getObjCContainerDeclInfo(const CXIdxDeclInfo *);
 
