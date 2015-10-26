@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"strings"
 	"text/template"
@@ -16,7 +17,6 @@ type Struct struct {
 	Receiver       string
 	Comment        string
 	ImportUnsafe   bool
-	ImportStdLib   bool
 
 	Methods []string
 }
@@ -24,58 +24,61 @@ type Struct struct {
 func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
 	s := handleVoidStructCursor(cursor, cname, cnameIsTypeDef)
 
-	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
+	if false == true {
+		cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 
-		switch cursor.Kind() {
-		case clang.CK_FieldDecl:
-			conv, err := getTypeConversion(cursor.Type()) // TODO error handling
-			if err != nil {
-				return clang.CVR_Continue
-			}
-
-			if conv.IsFunctionPointer {
-				return clang.CVR_Continue
-			}
-
-			comment := cleanDoxygenComment(cursor.RawCommentText())
-
-			var method string
-
-			if conv.PointerLevel == 2 {
-
-				f := &FunctionSliceReturn{
-					Function: *generateFunction(cursor.DisplayName(), cname, comment, cursor.DisplayName(), conv),
-
-					ElementType:          "*" + conv.GoType,
-					IsElementTypePointer: true,
-					PointeeType:          conv.GoType,
-					IsPrimitive:          conv.IsPrimitive,
+			switch cursor.Kind() {
+			case clang.CK_FieldDecl:
+				conv, err := getTypeConversion(cursor.Type()) // TODO error handling
+				if err != nil {
+					return clang.CVR_Continue
 				}
 
-				method = generateFunctionSliceReturn(f)
-				s.ImportStdLib = true
+				if conv.IsFunctionPointer {
+					return clang.CVR_Continue
+				}
 
-			} else if conv.PointerLevel < 2 {
-				if conv.PointerLevel == 1 && conv.GoType == "void" {
+				fmt.Println(cursor.Type().TypeSpelling())
+
+				comment := cleanDoxygenComment(cursor.RawCommentText())
+
+				if conv.PointerLevel >= 1 && conv.GoType == "void" {
 					conv.GoType = GoPointer
-					conv.PointerLevel = 0
+					conv.PointerLevel--
 					s.ImportUnsafe = true
 				}
 
-				f := generateFunction(cursor.DisplayName(), cname, comment, cursor.DisplayName(), conv)
+				var method string
 
-				method = generateFunctionStructMemberGetter(f)
+				if conv.PointerLevel == 2 || conv.IsArray {
+					f := &FunctionSliceReturn{
+						Function: *generateFunction(cursor.DisplayName(), cname, comment, cursor.DisplayName(), conv),
 
-			} else {
-				panic("Three pointers")
+						ElementType:     conv.GoType,
+						IsPrimitive:     conv.IsPrimitive,
+						ArrayDimensions: conv.PointerLevel,
+					}
+
+					method = generateFunctionSliceReturn(f)
+
+				} else if conv.PointerLevel < 2 {
+
+					f := generateFunction(cursor.DisplayName(), cname, comment, cursor.DisplayName(), conv)
+
+					method = generateFunctionStructMemberGetter(f)
+
+				} else {
+					panic("Three pointers")
+				}
+
+				fmt.Println(method)
+
+				s.Methods = append(s.Methods, method)
 			}
 
-			s.Methods = append(s.Methods, method)
-		}
-
-		return clang.CVR_Continue
-	})
-
+			return clang.CVR_Continue
+		})
+	}
 	return s
 }
 
@@ -93,9 +96,8 @@ func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bo
 }
 
 var templateGenerateStruct = template.Must(template.New("go-clang-generate-struct").Parse(`package phoenix
-{{if $.ImportStdLib}}
-// #include <stdlib.h>{{end}}
-// #include "go-clang.h"
+
+//#include "go-clang.h"
 import "C"
 {{if $.ImportUnsafe}}
 import "unsafe"{{end}}

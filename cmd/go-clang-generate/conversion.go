@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/sbinet/go-clang"
 )
@@ -28,6 +29,7 @@ type Conversion struct {
 	PointerLevel      int
 	IsPrimitive       bool
 	IsArray           bool
+	IsEnumLiteral     bool
 	IsFunctionPointer bool
 }
 
@@ -86,6 +88,11 @@ func getTypeConversion(cType clang.Type) (Conversion, error) {
 		conv.GoType = typeStr
 		conv.IsPrimitive = false
 
+		if cType.CanonicalType().Kind() == clang.TK_Enum {
+			conv.IsEnumLiteral = true
+			conv.IsPrimitive = true
+		}
+
 	case clang.TK_Pointer:
 		conv.PointerLevel++
 
@@ -114,6 +121,9 @@ func getTypeConversion(cType clang.Type) (Conversion, error) {
 
 		if cType.CanonicalType().Kind() == clang.TK_Enum {
 			conv.GoType = trimClangPrefix(cType.CanonicalType().Declaration().DisplayName())
+			fmt.Println("blub" + conv.GoType)
+			conv.IsEnumLiteral = true
+			conv.IsPrimitive = true
 		} else {
 			return Conversion{}, errors.New("unknown type")
 		}

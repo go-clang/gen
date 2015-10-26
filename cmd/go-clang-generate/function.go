@@ -17,7 +17,7 @@ type Function struct {
 	ReturnType          string
 	ReturnPrimitiveType string
 	IsReturnTypePointer bool
-	IsReturnTypeArray   bool
+	IsReturnTypeEnumLit bool
 
 	Receiver              string
 	ReceiverType          string
@@ -141,8 +141,8 @@ func generateFunctionEqual(f *Function) string {
 }
 
 var templateGenerateStructMemberGetter = template.Must(template.New("go-clang-generate-function-getter").Parse(`{{$.Comment}}
-func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() {{if $.IsReturnTypePointer}}*{{end}}{{if $.IsReturnTypeArray}}[]{{end}}{{if $.ReturnPrimitiveType}}{{$.ReturnPrimitiveType}}{{else}}{{$.ReturnType}}{{end}} {
-	return {{if $.IsReturnTypePointer}}&{{end}}{{if $.IsReturnTypeArray}}[]{{end}}{{if $.ReturnPrimitiveType}}{{$.ReturnPrimitiveType}}{{else}}{{$.ReturnType}}{{end}}{{if $.ReturnPrimitiveType}}({{$.Receiver}}.c.{{$.Member}}){{else}}{{"{"}}{{$.Receiver}}.c.{{$.Member}}{{"}"}}{{end}}
+func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() {{if $.IsReturnTypePointer}}*{{end}}{{if $.ReturnPrimitiveType}}{{$.ReturnPrimitiveType}}{{else}}{{$.ReturnType}}{{end}} {
+	return {{if $.IsReturnTypePointer}}&{{end}}{{if $.ReturnPrimitiveType}}{{$.ReturnPrimitiveType}}{{else}}{{$.ReturnType}}{{end}}{{if $.ReturnPrimitiveType}}({{if $.IsReturnTypePointer}}*{{end}}{{$.Receiver}}.c.{{$.Member}}){{else}}{{"{"}}{{if $.IsReturnTypePointer}}*{{end}}{{$.Receiver}}.c.{{$.Member}}{{"}"}}{{end}}
 }
 `))
 
@@ -158,22 +158,24 @@ func generateFunctionStructMemberGetter(f *Function) string {
 type FunctionSliceReturn struct {
 	Function
 
-	ElementType          string
-	IsElementTypePointer bool
-	PointeeType          string
-	IsPrimitive          bool
+	ElementType     string
+	IsPrimitive     bool
+	ArrayDimensions int
 }
 
 var templateGenerateReturnSlice = template.Must(template.New("go-clang-generate-slice").Parse(`{{$.Comment}}
-func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() []{{$.ElementType}} {
-	s := []{{$.ElementType}}{}
-	length := C.sizeof({{$.Receiver}}.c.{{$.Member}}[0]) / C.sizeof({{$.Receiver}}.c.{{$.Member}}[0][0])
-
+func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() []{{if eq $.ArrayDimensions 2 }}*{{end}}{{$.ElementType}} {
+	sc := []{{$.ElementType}}{}
+	{{if eq $.ArrayDimensions 2 }}
+	length := int(C.sizeof({{$.Receiver}}.c.{{$.Member}}[0])) / int(sizeof({{$.Receiver}}.c.{{$.Member}}[0][0]))
+	{{else}}
+	length := int(sizeof({{$.Receiver}}.c.{{$.Member}}))
+	{{end}}
 	for is := 0; is < length; is++ {
-		s = append(s, {{if $.IsElementTypePointer}}&{{$.PointeeType}}{{else}}{{$.ElementType}}{{end}}{{if $.IsPrimitive}}({{$.Receiver}}.c.{{$.Member}}[is])){{else}}{"{"}{{$.Receiver}}.c.{{$.Member}}[is]){{"}"}}{{end}}
+		sc = append(sc, {{if eq $.ArrayDimensions 2}}&{{$.ElementType}}{{else}}{{$.ElementType}}{{end}}{{if $.IsPrimitive}}({{$.Receiver}}.c.{{$.Member}}[is])){{else}}{"{"}{{$.Receiver}}.c.{{$.Member}}[is]){{"}"}}{{end}}
 	}
 
-	return s
+	return sc
 }
 `))
 
@@ -211,7 +213,7 @@ func generateFunction(name, cname, comment, member string, conv Conversion) *Fun
 		ReturnType:          rType,
 		ReturnPrimitiveType: rTypePrimitive,
 		IsReturnTypePointer: conv.PointerLevel > 0,
-		IsReturnTypeArray:   conv.IsArray,
+		IsReturnTypeEnumLit: conv.IsEnumLiteral,
 
 		Receiver:     receiverName,
 		ReceiverType: receiverType,
