@@ -203,20 +203,6 @@ func (tu TranslationUnit) Diagnostics() (ret Diagnostics) {
 	return
 }
 
-// Location returns the source location associated with a given file/line/column
-// in a particular translation unit.
-func (tu TranslationUnit) Location(f File, line, column uint) SourceLocation {
-	loc := C.clang_getLocation(tu.c, f.c, C.uint(line), C.uint(column))
-	return SourceLocation{loc}
-}
-
-// LocationForOffset returns the source location associated with a given
-// character offset in a particular translation unit.
-func (tu TranslationUnit) LocationForOffset(f File, offset uint) SourceLocation {
-	loc := C.clang_getLocationForOffset(tu.c, f.c, C.uint(offset))
-	return SourceLocation{loc}
-}
-
 /**
  * \param Module a module object.
  *

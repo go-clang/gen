@@ -95,19 +95,6 @@ func (cc CompletionChunk) Text() string {
 }
 
 /**
- * \brief Determine the kind of a particular chunk within a completion string.
- *
- * \param completion_string the completion string to query.
- *
- * \param chunk_number the 0-based index of the chunk in the completion string.
- *
- * \returns the kind of the chunk at the index \c chunk_number.
- */
-func (cs CompletionChunk) Kind() CompletionChunkKind {
-	return CompletionChunkKind(C.clang_getCompletionChunkKind(cs.cs, cs.number))
-}
-
-/**
  * \brief A single result of code completion.
  */
 type CompletionResult struct {

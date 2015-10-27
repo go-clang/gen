@@ -175,22 +175,6 @@ typedef struct {
 } CXSourceRange;
 
 /**
- * \brief Retrieves the source location associated with a given file/line/column
- * in a particular translation unit.
- */
-CXSourceLocation clang_getLocation(CXTranslationUnit tu,
-                                                  CXFile file,
-                                                  unsigned line,
-                                                  unsigned column);
-/**
- * \brief Retrieves the source location associated with a given character offset
- * in a particular translation unit.
- */
-CXSourceLocation clang_getLocationForOffset(CXTranslationUnit tu,
-                                                           CXFile file,
-                                                           unsigned offset);
-
-/**
  * \brief Retrieve the file, line, column, and offset represented by
  * the given source location.
  *
@@ -428,22 +412,6 @@ CXString clang_getDiagnosticOption(CXDiagnostic Diag,
  * \returns The name of the given diagnostic category.
  */
 CXString clang_getDiagnosticCategoryName(unsigned Category);
-
-/**
- * \brief Retrieve a source range associated with the diagnostic.
- *
- * A diagnostic's source ranges highlight important elements in the source
- * code. On the command line, Clang displays source ranges by
- * underlining them with '~' characters.
- *
- * \param Diagnostic the diagnostic whose range is being extracted.
- *
- * \param Range the zero-based index specifying which range to
- *
- * \returns the requested source range.
- */
-CXSourceRange clang_getDiagnosticRange(CXDiagnostic Diagnostic,
-                                                      unsigned Range);
 
 /**
  * \brief Retrieve the replacement information for a given fix-it.
@@ -897,23 +865,6 @@ typedef struct {
 } CXType;
 
 /**
- * \brief Retrieve the argument cursor of a function or method.
- *
- * The argument cursor can be determined for calls as well as for declarations
- * of functions or methods. For other cursors and for invalid indices, an
- * invalid cursor is returned.
- */
-CXCursor clang_Cursor_getArgument(CXCursor C, unsigned i);
-
-/**
- * \brief Retrieve the type of an argument of a function type.
- *
- * If a non-function type is passed in or the function does not have enough
- * parameters, an invalid type is returned.
- */
-CXType clang_getArgType(CXType T, unsigned i);
-
-/**
  * \brief Return the offset of a field named S in a record of type T in bits
  *   as it would be returned by __offsetof__ as per C++11[18.2p4]
  *
@@ -927,22 +878,6 @@ CXType clang_getArgType(CXType T, unsigned i);
  *   CXTypeLayoutError_InvalidFieldName is returned.
  */
 long long clang_Type_getOffsetOf(CXType T, const char *S);
-
-/**
- * \brief Retrieve a cursor for one of the overloaded declarations referenced
- * by a \c CXCursor_OverloadedDeclRef cursor.
- *
- * \param cursor The cursor whose overloaded declarations are being queried.
- *
- * \param index The zero-based index into the set of overloaded declarations in
- * the cursor.
- *
- * \returns A cursor representing the declaration referenced by the given
- * \c cursor at the specified \c index. If the cursor does not have an
- * associated set of overloaded declarations, or if the index is out of bounds,
- * returns \c clang_getNullCursor();
- */
-CXCursor clang_getOverloadedDecl(CXCursor cursor, unsigned index);
 
 /**
  * \brief Visitor invoked for each cursor found by a traversal.
@@ -1051,21 +986,6 @@ CXString clang_constructUSR_ObjCProperty(const char *property,
                                                         CXString classUSR);
 
 /**
- * \brief Retrieve a range for a piece that forms the cursors spelling name.
- * Most of the times there is only one range for the complete spelling but for
- * objc methods and objc message expressions, there are multiple pieces for each
- * selector identifier.
- *
- * \param pieceIndex the index of the spelling name piece. If this is greater
- * than the actual number of pieces, it will return a NULL (invalid) range.
- *
- * \param options Reserved.
- */
-CXSourceRange clang_Cursor_getSpellingNameRange(CXCursor,
-                                                          unsigned pieceIndex,
-                                                          unsigned options);
-
-/**
  * \brief Given a cursor that represents a property declaration, return the
  * associated property attributes. The bits are formed from
  * \c CXObjCPropertyAttrKind.
@@ -1091,15 +1011,6 @@ unsigned clang_Module_getNumTopLevelHeaders(CXTranslationUnit,
  */
 CXFile clang_Module_getTopLevelHeader(CXTranslationUnit,
                                       CXModule Module, unsigned Index);
-
-/**
- * \param Comment AST node of any kind.
- *
- * \param ChildIdx child index (zero-based).
- *
- * \returns the specified child of the AST node.
- */
-CXComment clang_Comment_getChild(CXComment Comment, unsigned ChildIdx);
 
 /**
  * \param Comment a \c CXComment_InlineCommand AST node.
@@ -1158,28 +1069,6 @@ CXString clang_BlockCommandComment_getArgText(CXComment Comment,
  * at depth 1 T's index is 0.
  */
 unsigned clang_TParamCommandComment_getIndex(CXComment Comment, unsigned Depth);
-
-/**
- * \brief Given a cursor that references something else, return the source range
- * covering that reference.
- *
- * \param C A cursor pointing to a member reference, a declaration reference, or
- * an operator call.
- * \param NameFlags A bitset with three independent flags:
- * CXNameRange_WantQualifier, CXNameRange_WantTemplateArgs, and
- * CXNameRange_WantSinglePiece.
- * \param PieceIndex For contiguous names or when passing the flag
- * CXNameRange_WantSinglePiece, only one piece with index 0 is
- * available. When the CXNameRange_WantSinglePiece flag is not passed for a
- * non-contiguous names, this index can be used to retrieve the individual
- * pieces of the name. See also CXNameRange_WantSinglePiece.
- *
- * \returns The piece of the name pointed to by the given cursor. If there is no
- * name, or if the PieceIndex is out-of-range, a null-cursor will be returned.
- */
-CXSourceRange clang_getCursorReferenceNameRange(CXCursor C,
-                                                unsigned NameFlags,
-                                                unsigned PieceIndex);
 
 /**
  * \brief Describes a single preprocessing token.
@@ -1293,19 +1182,6 @@ typedef struct {
 } CXCompletionResult;
 
 /**
- * \brief Determine the kind of a particular chunk within a completion string.
- *
- * \param completion_string the completion string to query.
- *
- * \param chunk_number the 0-based index of the chunk in the completion string.
- *
- * \returns the kind of the chunk at the index \c chunk_number.
- */
-enum CXCompletionChunkKind
-clang_getCompletionChunkKind(CXCompletionString completion_string,
-                             unsigned chunk_number);
-
-/**
  * \brief Retrieve the text associated with a particular chunk within a
  * completion string.
  *
@@ -1318,21 +1194,6 @@ clang_getCompletionChunkKind(CXCompletionString completion_string,
 CXString
 clang_getCompletionChunkText(CXCompletionString completion_string,
                              unsigned chunk_number);
-
-/**
- * \brief Retrieve the completion string associated with a particular chunk
- * within a completion string.
- *
- * \param completion_string the completion string to query.
- *
- * \param chunk_number the 0-based index of the chunk in the completion string.
- *
- * \returns the completion string associated with the chunk at index
- * \c chunk_number.
- */
-CXCompletionString
-clang_getCompletionChunkCompletionString(CXCompletionString completion_string,
-                                         unsigned chunk_number);
 
 /**
  * \brief Retrieve the annotation associated with the given completion string.

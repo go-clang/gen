@@ -74,6 +74,11 @@ func (t Type) NumArgTypes() uint16 {
 	return uint16(C.clang_getNumArgTypes(t.c))
 }
 
+// Retrieve the type of an argument of a function type. If a non-function type is passed in or the function does not have enough parameters, an invalid type is returned.
+func (t Type) ArgType(i uint16) Type {
+	return Type{C.clang_getArgType(t.c, C.uint(i))}
+}
+
 // Return 1 if the CXType is a variadic function type, and 0 otherwise.
 func (t Type) IsFunctionTypeVariadic() bool {
 	o := C.clang_isFunctionTypeVariadic(t.c)

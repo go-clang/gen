@@ -54,6 +54,11 @@ func (d Diagnostic) NumRanges() uint16 {
 	return uint16(C.clang_getDiagnosticNumRanges(d.c))
 }
 
+// Retrieve a source range associated with the diagnostic. A diagnostic's source ranges highlight important elements in the source code. On the command line, Clang displays source ranges by underlining them with '~' characters. \param Diagnostic the diagnostic whose range is being extracted. \param Range the zero-based index specifying which range to \returns the requested source range.
+func (d Diagnostic) Range(Range uint16) SourceRange {
+	return SourceRange{C.clang_getDiagnosticRange(d.c, C.uint(Range))}
+}
+
 // Determine the number of fix-it hints associated with the given diagnostic.
 func (d Diagnostic) NumFixIts() uint16 {
 	return uint16(C.clang_getDiagnosticNumFixIts(d.c))

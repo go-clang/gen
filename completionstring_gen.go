@@ -8,6 +8,16 @@ type CompletionString struct {
 	c C.CXCompletionString
 }
 
+// Determine the kind of a particular chunk within a completion string. \param completion_string the completion string to query. \param chunk_number the 0-based index of the chunk in the completion string. \returns the kind of the chunk at the index \c chunk_number.
+func (cs CompletionString) CompletionChunkKind(chunk_number uint16) CompletionChunkKind {
+	return CompletionChunkKind(C.clang_getCompletionChunkKind(cs.c, C.uint(chunk_number)))
+}
+
+// Retrieve the completion string associated with a particular chunk within a completion string. \param completion_string the completion string to query. \param chunk_number the 0-based index of the chunk in the completion string. \returns the completion string associated with the chunk at index \c chunk_number.
+func (cs CompletionString) CompletionChunkCompletionString(chunk_number uint16) CompletionString {
+	return CompletionString{C.clang_getCompletionChunkCompletionString(cs.c, C.uint(chunk_number))}
+}
+
 // Retrieve the number of chunks in the given code-completion string.
 func (cs CompletionString) NumCompletionChunks() uint16 {
 	return uint16(C.clang_getNumCompletionChunks(cs.c))

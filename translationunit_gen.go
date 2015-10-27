@@ -8,6 +8,16 @@ type TranslationUnit struct {
 	c C.CXTranslationUnit
 }
 
+// Retrieves the source location associated with a given file/line/column in a particular translation unit.
+func (tu TranslationUnit) Location(file File, line uint16, column uint16) SourceLocation {
+	return SourceLocation{C.clang_getLocation(tu.c, file.c, C.uint(line), C.uint(column))}
+}
+
+// Retrieves the source location associated with a given character offset in a particular translation unit.
+func (tu TranslationUnit) LocationForOffset(file File, offset uint16) SourceLocation {
+	return SourceLocation{C.clang_getLocationForOffset(tu.c, file.c, C.uint(offset))}
+}
+
 // Determine the number of diagnostics produced for the given translation unit.
 func (tu TranslationUnit) NumDiagnostics() uint16 {
 	return uint16(C.clang_getNumDiagnostics(tu.c))

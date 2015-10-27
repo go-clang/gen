@@ -302,7 +302,7 @@ func main() {
 		if len(f.Parameters) > 0 && isEnumOrStruct(f.ReturnType) {
 			found := false
 			for _, p := range f.Parameters {
-				if !isEnumOrStruct(p.Type) {
+				if !isEnumOrStruct(p.Type) && p.PrimitiveType == "" {
 					found = true
 
 					break
@@ -339,6 +339,21 @@ func main() {
 				p.CType = e.Receiver.CType
 				p.PrimitiveType = e.Receiver.PrimitiveType
 			} else if _, ok := lookupStruct[p.Name]; ok {
+			} else {
+				switch p.Type {
+				case "int":
+					p.Type = "uint16"
+					p.PrimitiveType = "int"
+				case "unsigned int":
+					p.Type = "uint16"
+					p.PrimitiveType = "uint"
+				case "long long":
+					p.Type = "int64"
+					p.PrimitiveType = "longlong"
+				case "unsigned long long":
+					p.Type = "uint64"
+					p.PrimitiveType = "ulonglong"
+				}
 			}
 		}
 

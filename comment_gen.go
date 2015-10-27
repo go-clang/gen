@@ -18,6 +18,11 @@ func (c Comment) NumChildren() uint16 {
 	return uint16(C.clang_Comment_getNumChildren(c.c))
 }
 
+// \param Comment AST node of any kind. \param ChildIdx child index (zero-based). \returns the specified child of the AST node.
+func (c Comment) Child(ChildIdx uint16) Comment {
+	return Comment{C.clang_Comment_getChild(c.c, C.uint(ChildIdx))}
+}
+
 // A \c CXComment_Paragraph node is considered whitespace if it contains only \c CXComment_Text nodes that are empty or whitespace. Other AST nodes (except \c CXComment_Paragraph and \c CXComment_Text) are never considered whitespace. \returns non-zero if \c Comment is whitespace.
 func (c Comment) IsWhitespace() bool {
 	o := C.clang_Comment_isWhitespace(c.c)

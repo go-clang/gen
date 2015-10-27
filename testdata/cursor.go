@@ -200,37 +200,6 @@ func (c OverriddenCursors) At(i int) Cursor {
 }
 
 /**
- * \brief Retrieve the argument cursor of a function or method.
- *
- * If a cursor that is not a function or method is passed in or the index
- * exceeds the number of arguments, an invalid cursor is returned.
- */
-// CINDEX_LINKAGE CXCursor clang_Cursor_getArgument(CXCursor C, unsigned i);
-func (c Cursor) Argument(i uint) Cursor {
-	o := C.clang_Cursor_getArgument(c.c, C.uint(i))
-	return Cursor{o}
-}
-
-/**
- * \brief Retrieve a cursor for one of the overloaded declarations referenced
- * by a \c CXCursor_OverloadedDeclRef cursor.
- *
- * \param cursor The cursor whose overloaded declarations are being queried.
- *
- * \param index The zero-based index into the set of overloaded declarations in
- * the cursor.
- *
- * \returns A cursor representing the declaration referenced by the given
- * \c cursor at the specified \c index. If the cursor does not have an
- * associated set of overloaded declarations, or if the index is out of bounds,
- * returns \c clang_getNullCursor();
- */
-func (c Cursor) OverloadedDecl(i int) Cursor {
-	o := C.clang_getOverloadedDecl(c.c, C.uint(i))
-	return Cursor{o}
-}
-
-/**
  * \brief Visitor invoked for each cursor found by a traversal.
  *
  * This visitor function will be invoked for each cursor found by
@@ -286,37 +255,4 @@ func GoClangCursorVisitor(cursor, parent C.CXCursor, cfct unsafe.Pointer) (statu
 	fct := *(*CursorVisitor)(cfct)
 	o := fct(Cursor{cursor}, Cursor{parent})
 	return o
-}
-
-/**
- * \defgroup CINDEX_CPP C++ AST introspection
- *
- * The routines in this group provide access information in the ASTs specific
- * to C++ language features.
- *
- * @{
- */
-
-/**
- * \brief Given a cursor that references something else, return the source range
- * covering that reference.
- *
- * \param C A cursor pointing to a member reference, a declaration reference, or
- * an operator call.
- * \param NameFlags A bitset with three independent flags:
- * CXNameRange_WantQualifier, CXNameRange_WantTemplateArgs, and
- * CXNameRange_WantSinglePiece.
- * \param PieceIndex For contiguous names or when passing the flag
- * CXNameRange_WantSinglePiece, only one piece with index 0 is
- * available. When the CXNameRange_WantSinglePiece flag is not passed for a
- * non-contiguous names, this index can be used to retreive the individual
- * pieces of the name. See also CXNameRange_WantSinglePiece.
- *
- * \returns The piece of the name pointed to by the given cursor. If there is no
- * name, or if the PieceIndex is out-of-range, a null-cursor will be returned.
- */
-func (c Cursor) ReferenceNameRange(flags NameRefFlags, pieceIdx uint) SourceRange {
-	o := C.clang_getCursorReferenceNameRange(c.c,
-		C.uint(flags), C.uint(pieceIdx))
-	return SourceRange{o}
 }

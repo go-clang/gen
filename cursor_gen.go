@@ -182,6 +182,11 @@ func (c Cursor) NumArguments() uint16 {
 	return uint16(C.clang_Cursor_getNumArguments(c.c))
 }
 
+// Retrieve the argument cursor of a function or method. The argument cursor can be determined for calls as well as for declarations of functions or methods. For other cursors and for invalid indices, an invalid cursor is returned.
+func (c Cursor) Argument(i uint16) Cursor {
+	return Cursor{C.clang_Cursor_getArgument(c.c, C.uint(i))}
+}
+
 // Returns the Objective-C type encoding for the specified declaration.
 func (c Cursor) DeclObjCTypeEncoding() string {
 	o := cxstring{C.clang_getDeclObjCTypeEncoding(c.c)}
@@ -219,6 +224,11 @@ func (c Cursor) NumOverloadedDecls() uint16 {
 	return uint16(C.clang_getNumOverloadedDecls(c.c))
 }
 
+// Retrieve a cursor for one of the overloaded declarations referenced by a \c CXCursor_OverloadedDeclRef cursor. \param cursor The cursor whose overloaded declarations are being queried. \param index The zero-based index into the set of overloaded declarations in the cursor. \returns A cursor representing the declaration referenced by the given \c cursor at the specified \c index. If the cursor does not have an associated set of overloaded declarations, or if the index is out of bounds, returns \c clang_getNullCursor();
+func (c Cursor) OverloadedDecl(index uint16) Cursor {
+	return Cursor{C.clang_getOverloadedDecl(c.c, C.uint(index))}
+}
+
 // For cursors representing an iboutletcollection attribute, this function returns the collection element type.
 func (c Cursor) IBOutletCollectionType() Type {
 	return Type{C.clang_getIBOutletCollectionType(c.c)}
@@ -238,6 +248,11 @@ func (c Cursor) Spelling() string {
 	defer o.Dispose()
 
 	return o.String()
+}
+
+// Retrieve a range for a piece that forms the cursors spelling name. Most of the times there is only one range for the complete spelling but for objc methods and objc message expressions, there are multiple pieces for each selector identifier. \param pieceIndex the index of the spelling name piece. If this is greater than the actual number of pieces, it will return a NULL (invalid) range. \param options Reserved.
+func (c Cursor) SpellingNameRange(pieceIndex uint16, options uint16) SourceRange {
+	return SourceRange{C.clang_Cursor_getSpellingNameRange(c.c, C.uint(pieceIndex), C.uint(options))}
 }
 
 // Retrieve the display name for the entity referenced by this cursor. The display name contains extra information that helps identify the cursor, such as the parameters of a function or template or the arguments of a class template specialization.
@@ -416,6 +431,11 @@ func (c Cursor) TemplateCursorKind() CursorKind {
 // Given a cursor that may represent a specialization or instantiation of a template, retrieve the cursor that represents the template that it specializes or from which it was instantiated. This routine determines the template involved both for explicit specializations of templates and for implicit instantiations of the template, both of which are referred to as "specializations". For a class template specialization (e.g., \c std::vector<bool>), this routine will return either the primary template (\c std::vector) or, if the specialization was instantiated from a class template partial specialization, the class template partial specialization. For a class template partial specialization and a function template specialization (including instantiations), this this routine will return the specialized template. For members of a class template (e.g., member functions, member classes, or static data members), returns the specialized or instantiated member. Although not strictly "templates" in the C++ language, members of class templates have the same notions of specializations and instantiations that templates do, so this routine treats them similarly. \param C A cursor that may be a specialization of a template or a member of a template. \returns If the given cursor is a specialization or instantiation of a template or a member thereof, the template or member that it specializes or from which it was instantiated. Otherwise, returns a NULL cursor.
 func (c Cursor) SpecializedCursorTemplate() Cursor {
 	return Cursor{C.clang_getSpecializedCursorTemplate(c.c)}
+}
+
+// Given a cursor that references something else, return the source range covering that reference. \param C A cursor pointing to a member reference, a declaration reference, or an operator call. \param NameFlags A bitset with three independent flags: CXNameRange_WantQualifier, CXNameRange_WantTemplateArgs, and CXNameRange_WantSinglePiece. \param PieceIndex For contiguous names or when passing the flag CXNameRange_WantSinglePiece, only one piece with index 0 is available. When the CXNameRange_WantSinglePiece flag is not passed for a non-contiguous names, this index can be used to retrieve the individual pieces of the name. See also CXNameRange_WantSinglePiece. \returns The piece of the name pointed to by the given cursor. If there is no name, or if the PieceIndex is out-of-range, a null-cursor will be returned.
+func (c Cursor) ReferenceNameRange(NameFlags uint16, PieceIndex uint16) SourceRange {
+	return SourceRange{C.clang_getCursorReferenceNameRange(c.c, C.uint(NameFlags), C.uint(PieceIndex))}
 }
 
 // Retrieve a completion string for an arbitrary declaration or macro definition cursor. \param cursor The cursor to query. \returns A non-context-sensitive completion string for declaration and macro definition cursors, or NULL for other kinds of cursors.
