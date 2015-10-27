@@ -8,6 +8,7 @@ type Receiver struct {
 	Name          string
 	CName         string
 	Type          string
+	CType         string
 	PrimitiveType string
 }
 

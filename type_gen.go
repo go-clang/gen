@@ -17,8 +17,8 @@ func (t Type) Spelling() string {
 }
 
 // Determine whether two CXTypes represent the same type. \returns non-zero if the CXTypes represent the same type and zero otherwise.
-func EqualTypes(t1, t2 Type) bool {
-	o := C.clang_equalTypes(t1.c, t2.c)
+func (t Type) EqualTypes(t2 Type) bool {
+	o := C.clang_equalTypes(t.c, t2.c)
 
 	return o != C.uint(0)
 }

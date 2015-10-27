@@ -14,8 +14,8 @@ func NewNullCursor() Cursor {
 }
 
 // Determine whether two cursors are equivalent.
-func EqualCursors(c1, c2 Cursor) bool {
-	o := C.clang_equalCursors(c1.c, c2.c)
+func (c Cursor) EqualCursors(c2 Cursor) bool {
+	o := C.clang_equalCursors(c.c, c2.c)
 
 	return o != C.uint(0)
 }

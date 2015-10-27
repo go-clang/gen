@@ -111,7 +111,7 @@ const (
 
 // Retrieve the spelling of a given CXTypeKind.
 func (tk TypeKind) Spelling() string {
-	o := cxstring{C.clang_getTypeKindSpelling(uint32(tk))}
+	o := cxstring{C.clang_getTypeKindSpelling(C.enum_CXTypeKind(tk))}
 	defer o.Dispose()
 
 	return o.String()
