@@ -111,25 +111,6 @@ type CursorSet struct {
 	c C.CXCursorSet
 }
 
-// Contains queries a CursorSet to see if it contains a specific Cursor
-func (c CursorSet) Contains(cursor Cursor) bool {
-	o := C.clang_CXCursorSet_contains(c.c, cursor.c)
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
-// Insert inserts a Cursor into the set and returns false if the cursor was
-// already in that set.
-func (c CursorSet) Insert(cursor Cursor) bool {
-	o := C.clang_CXCursorSet_insert(c.c, cursor.c)
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
 /**
  * \brief Determine the set of methods that are overridden by the given
  * method.

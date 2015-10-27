@@ -13,6 +13,23 @@ func (i Index) Dispose() {
 	C.clang_disposeIndex(i.c)
 }
 
+/*
+ * \brief Sets general options associated with a CXIndex.
+ *
+ * For example:
+ * \code
+ * CXIndex idx = ...;
+ * clang_CXIndex_setGlobalOptions(idx,
+ *     clang_CXIndex_getGlobalOptions(idx) |
+ *     CXGlobalOpt_ThreadBackgroundPriorityForIndexing);
+ * \endcode
+ *
+ * \param options A bitmask of options, a bitwise OR of CXGlobalOpt_XXX flags.
+ */
+func (i Index) SetGlobalOptions(options uint16) {
+	C.clang_CXIndex_setGlobalOptions(i.c, C.uint(options))
+}
+
 // Gets the general options associated with a CXIndex. \returns A bitmask of options, a bitwise OR of CXGlobalOpt_XXX flags that are associated with the given CXIndex object.
 func (i Index) GlobalOptions() uint16 {
 	return uint16(C.clang_CXIndex_getGlobalOptions(i.c))

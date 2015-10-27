@@ -6,18 +6,6 @@ type Token struct {
 }
 
 /**
- * \brief Determine the spelling of the given token.
- *
- * The spelling of a token is the textual representation of that token, e.g.,
- * the text of an identifier or keyword.
- */
-func (tu TranslationUnit) TokenSpelling(tok Token) string {
-	cstr := cxstring{C.clang_getTokenSpelling(tu.c, tok.c)}
-	defer cstr.Dispose()
-	return cstr.String()
-}
-
-/**
  * \brief Tokenize the source code described by the given range into raw
  * lexical tokens.
  *

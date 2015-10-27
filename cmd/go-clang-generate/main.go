@@ -262,21 +262,7 @@ func main() {
 			}
 
 			return addMethod(f, fname, fnamePrefix, rt)
-		} else if len(f.Parameters) == 1 && f.ReturnType == "String" {
-			fname = trimCommonFName(fname, rt)
-
-			f.ReturnType = "string"
-
-			return addMethod(f, fname, fnamePrefix, rt)
-		} else if len(f.Parameters) == 1 &&
-			((fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3])))) &&
-			(f.ReturnType == "unsigned int" || f.ReturnType == "int") {
-			// TODO use the REAL C type to make it perfect
-			if f.ReturnType == "int" {
-				f.ReturnPrimitiveType = "int"
-			} else {
-				f.ReturnPrimitiveType = "uint"
-			}
+		} else if (fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3]))) {
 			f.ReturnType = "bool"
 
 			return addMethod(f, fname, fnamePrefix, rt)
@@ -284,38 +270,13 @@ func main() {
 			fname = "Dispose"
 
 			return addMethod(f, fname, fnamePrefix, rt)
-		} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && f.ReturnType == "unsigned int" && isEnumOrStruct(f.Parameters[0].Type) && f.Parameters[0].Type == f.Parameters[1].Type {
+		} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && isEnumOrStruct(f.Parameters[0].Type) && f.Parameters[0].Type == f.Parameters[1].Type {
 			f.Parameters[0].Name = receiverName(f.Parameters[0].Type)
 			f.Parameters[1].Name = f.Parameters[0].Name + "2"
 
-			// TODO use the REAL C type to make it perfect
-			if f.ReturnType == "int" {
-				f.ReturnPrimitiveType = "int"
-			} else {
-				f.ReturnPrimitiveType = "uint"
-			}
 			f.ReturnType = "bool"
 
 			return addMethod(f, fname, fnamePrefix, rt)
-		}
-
-		if len(f.Parameters) > 0 && isEnumOrStruct(f.ReturnType) {
-			found := false
-			for _, p := range f.Parameters {
-				if !isEnumOrStruct(p.Type) && p.PrimitiveType == "" {
-					found = true
-
-					break
-				}
-			}
-
-			if !found {
-				fname = trimCommonFName(fname, rt)
-
-				if addMethod(f, fname, fnamePrefix, rt) {
-					return true
-				}
-			}
 		}
 
 		return false
@@ -340,19 +301,9 @@ func main() {
 				p.PrimitiveType = e.Receiver.PrimitiveType
 			} else if _, ok := lookupStruct[p.Name]; ok {
 			} else {
-				switch p.Type {
-				case "int":
-					p.Type = "uint16"
-					p.PrimitiveType = "int"
-				case "unsigned int":
-					p.Type = "uint16"
-					p.PrimitiveType = "uint"
-				case "long long":
-					p.Type = "int64"
-					p.PrimitiveType = "longlong"
-				case "unsigned long long":
-					p.Type = "uint64"
-					p.PrimitiveType = "ulonglong"
+				if goType, primitiveType := goAndPrimitiveType(p.Type); goType != "" {
+					p.Type = goType
+					p.PrimitiveType = primitiveType
 				}
 			}
 		}
@@ -363,6 +314,10 @@ func main() {
 		if e, ok := lookupEnum[f.ReturnType]; ok {
 			f.ReturnPrimitiveType = e.Receiver.PrimitiveType
 		} else if _, ok := lookupStruct[f.ReturnType]; ok {
+		}
+		if goType, primitiveType := goAndPrimitiveType(f.ReturnType); goType != "" {
+			f.ReturnType = goType
+			f.ReturnPrimitiveType = primitiveType
 		}
 
 		var rt Receiver
@@ -415,6 +370,25 @@ func main() {
 		}
 
 		if !added {
+			if len(f.Parameters) > 0 && (isEnumOrStruct(f.ReturnType) || f.ReturnPrimitiveType != "") {
+				found := false
+				for _, p := range f.Parameters {
+					if !isEnumOrStruct(p.Type) && p.PrimitiveType == "" {
+						found = true
+
+						break
+					}
+				}
+
+				if !found {
+					fname = trimCommonFName(fname, rt)
+
+					added = addMethod(f, fname, "", rt)
+				}
+			}
+		}
+
+		if !added {
 			fmt.Println("Unused:", f.Name)
 		}
 	}
@@ -434,4 +408,23 @@ func main() {
 	if _, _, err = execToBuffer("gofmt", "-w", "./"); err != nil { // TODO do this before saving the files using go/fmt
 		exitWithFatal("Gofmt failed", err)
 	}
+}
+
+func goAndPrimitiveType(typ string) (string, string) {
+	switch typ {
+	case "int":
+		return "uint16", "int"
+	case "unsigned int":
+		return "uint16", "uint"
+	case "long long":
+		return "int64", "longlong"
+	case "unsigned long long":
+		return "uint64", "ulonglong"
+	case "void":
+		return "void", "void"
+	case "String":
+		return "string", "String"
+	}
+
+	return "", ""
 }

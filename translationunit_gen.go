@@ -8,6 +8,13 @@ type TranslationUnit struct {
 	c C.CXTranslationUnit
 }
 
+// Determine whether the given header is guarded against multiple inclusions, either with the conventional \#ifndef/\#define/\#endif macro guards or with \#pragma once.
+func (tu TranslationUnit) IsFileMultipleIncludeGuarded(file File) bool {
+	o := C.clang_isFileMultipleIncludeGuarded(tu.c, file.c)
+
+	return o != C.uint(0)
+}
+
 // Retrieves the source location associated with a given file/line/column in a particular translation unit.
 func (tu TranslationUnit) Location(file File, line uint16, column uint16) SourceLocation {
 	return SourceLocation{C.clang_getLocation(tu.c, file.c, C.uint(line), C.uint(column))}
@@ -64,6 +71,19 @@ func (tu TranslationUnit) TranslationUnitCursor() Cursor {
 // Map a source location to the cursor that describes the entity at that location in the source code. clang_getCursor() maps an arbitrary source location within a translation unit down to the most specific cursor that describes the entity at that location. For example, given an expression \c x + y, invoking clang_getCursor() with a source location pointing to "x" will return the cursor for "x"; similarly for "y". If the cursor points anywhere between "x" or "y" (e.g., on the + or the whitespace around it), clang_getCursor() will return a cursor referring to the "+" expression. \returns a cursor representing the entity at the given source location, or a NULL cursor if no such entity can be found.
 func (tu TranslationUnit) Cursor(sl SourceLocation) Cursor {
 	return Cursor{C.clang_getCursor(tu.c, sl.c)}
+}
+
+// \param Module a module object. \returns the number of top level headers associated with this module.
+func (tu TranslationUnit) Module_getNumTopLevelHeaders(Module Module) uint16 {
+	return uint16(C.clang_Module_getNumTopLevelHeaders(tu.c, Module.c))
+}
+
+// Determine the spelling of the given token. The spelling of a token is the textual representation of that token, e.g., the text of an identifier or keyword.
+func (tu TranslationUnit) TokenSpelling(t Token) string {
+	o := cxstring{C.clang_getTokenSpelling(tu.c, t.c)}
+	defer o.Dispose()
+
+	return o.String()
 }
 
 // Retrieve the source location of the given token.

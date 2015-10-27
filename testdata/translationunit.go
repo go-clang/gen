@@ -100,17 +100,6 @@ func (tu TranslationUnit) File(file_name string) File {
 	return File{f}
 }
 
-// IsFileMultipleIncludeGuarded determines whether the given header is guarded
-// against multiple inclusions, either with the conventional
-// #ifndef/#define/#endif macro guards or with #pragma once.
-func (tu TranslationUnit) IsFileMultipleIncludeGuarded(file File) bool {
-	o := C.clang_isFileMultipleIncludeGuarded(tu.c, file.c)
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
 /**
  * \brief Reparse the source files that produced this translation unit.
  *
@@ -201,15 +190,6 @@ func (tu TranslationUnit) Diagnostics() (ret Diagnostics) {
 		ret[i].c = C.clang_getDiagnostic(tu.c, C.uint(i))
 	}
 	return
-}
-
-/**
- * \param Module a module object.
- *
- * \returns the number of top level headers associated with this module.
- */
-func (tu TranslationUnit) NumTopLevelHeaders(m Module) int {
-	return int(C.clang_Module_getNumTopLevelHeaders(tu.c, m.c))
 }
 
 /**

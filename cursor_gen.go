@@ -352,6 +352,11 @@ func (c Cursor) ReceiverType() Type {
 	return Type{C.clang_Cursor_getReceiverType(c.c)}
 }
 
+// Given a cursor that represents a property declaration, return the associated property attributes. The bits are formed from \c CXObjCPropertyAttrKind. \param reserved Reserved for future use, pass 0.
+func (c Cursor) ObjCPropertyAttributes(reserved uint16) uint16 {
+	return uint16(C.clang_Cursor_getObjCPropertyAttributes(c.c, C.uint(reserved)))
+}
+
 // Given a cursor that represents an ObjC method or parameter declaration, return the associated ObjC qualifiers for the return type or the parameter respectively. The bits are formed from CXObjCDeclQualifierKind.
 func (c Cursor) ObjCDeclQualifiers() uint16 {
 	return uint16(C.clang_Cursor_getObjCDeclQualifiers(c.c))

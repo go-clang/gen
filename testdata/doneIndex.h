@@ -92,21 +92,6 @@ CXIndex clang_createIndex(int excludeDeclarationsFromPCH,
                                          int displayDiagnostics);
 
 /**
- * \brief Sets general options associated with a CXIndex.
- *
- * For example:
- * \code
- * CXIndex idx = ...;
- * clang_CXIndex_setGlobalOptions(idx,
- *     clang_CXIndex_getGlobalOptions(idx) |
- *     CXGlobalOpt_ThreadBackgroundPriorityForIndexing);
- * \endcode
- *
- * \param options A bitmask of options, a bitwise OR of CXGlobalOpt_XXX flags.
- */
-void clang_CXIndex_setGlobalOptions(CXIndex, unsigned options);
-
-/**
  * \brief Retrieve the last modification time of the given file.
  */
 time_t clang_getFileTime(CXFile SFile);
@@ -128,14 +113,6 @@ typedef struct {
  * otherwise returns 0.
 */
 int clang_getFileUniqueID(CXFile file, CXFileUniqueID *outID);
-
-/**
- * \brief Determine whether the given header is guarded against
- * multiple inclusions, either with the conventional
- * \#ifndef/\#define/\#endif macro guards or with \#pragma once.
- */
-unsigned
-clang_isFileMultipleIncludeGuarded(CXTranslationUnit tu, CXFile file);
 
 /**
  * \brief Retrieve a file handle within the given translation unit.
@@ -358,24 +335,6 @@ CXDiagnosticSet clang_loadDiagnostics(const char *file,
  */
 CXDiagnostic clang_getDiagnostic(CXTranslationUnit Unit,
                                                 unsigned Index);
-
-/**
- * \brief Format the given diagnostic in a manner that is suitable for display.
- *
- * This routine will format the given diagnostic to a string, rendering
- * the diagnostic according to the various options given. The
- * \c clang_defaultDiagnosticDisplayOptions() function returns the set of
- * options that most closely mimics the behavior of the clang compiler.
- *
- * \param Diagnostic The diagnostic to print.
- *
- * \param Options A set of options that control the diagnostic display,
- * created by combining \c CXDiagnosticDisplayOptions values.
- *
- * \returns A new string containing for formatted diagnostic.
- */
-CXString clang_formatDiagnostic(CXDiagnostic Diagnostic,
-                                               unsigned Options);
 
 /**
  * \brief Retrieve the set of display options most similar to the
@@ -787,22 +746,6 @@ void
 clang_disposeCXPlatformAvailability(CXPlatformAvailability *availability);
 
 /**
- * \brief Queries a CXCursorSet to see if it contains a specific CXCursor.
- *
- * \returns non-zero if the set contains the specified cursor.
-*/
-unsigned clang_CXCursorSet_contains(CXCursorSet cset,
-                                                   CXCursor cursor);
-
-/**
- * \brief Inserts a CXCursor into a CXCursorSet.
- *
- * \returns zero if the CXCursor was already in the set, and non-zero otherwise.
-*/
-unsigned clang_CXCursorSet_insert(CXCursorSet cset,
-                                                 CXCursor cursor);
-
-/**
  * \brief Determine the set of methods that are overridden by the given
  * method.
  *
@@ -986,23 +929,6 @@ CXString clang_constructUSR_ObjCProperty(const char *property,
                                                         CXString classUSR);
 
 /**
- * \brief Given a cursor that represents a property declaration, return the
- * associated property attributes. The bits are formed from
- * \c CXObjCPropertyAttrKind.
- *
- * \param reserved Reserved for future use, pass 0.
- */
-unsigned clang_Cursor_getObjCPropertyAttributes(CXCursor C, unsigned reserved);
-
-/**
- * \param Module a module object.
- *
- * \returns the number of top level headers associated with this module.
- */
-unsigned clang_Module_getNumTopLevelHeaders(CXTranslationUnit,
-                                                           CXModule Module);
-
-/**
  * \param Module a module object.
  *
  * \param Index top level header index (zero-based).
@@ -1013,78 +939,12 @@ CXFile clang_Module_getTopLevelHeader(CXTranslationUnit,
                                       CXModule Module, unsigned Index);
 
 /**
- * \param Comment a \c CXComment_InlineCommand AST node.
- *
- * \param ArgIdx argument index (zero-based).
- *
- * \returns text of the specified argument.
- */
-CXString clang_InlineCommandComment_getArgText(CXComment Comment,
-                                               unsigned ArgIdx);
-
-/**
- * \param Comment a \c CXComment_HTMLStartTag AST node.
- *
- * \param AttrIdx attribute index (zero-based).
- *
- * \returns name of the specified attribute.
- */
-CXString clang_HTMLStartTag_getAttrName(CXComment Comment, unsigned AttrIdx);
-
-/**
- * \param Comment a \c CXComment_HTMLStartTag AST node.
- *
- * \param AttrIdx attribute index (zero-based).
- *
- * \returns value of the specified attribute.
- */
-CXString clang_HTMLStartTag_getAttrValue(CXComment Comment, unsigned AttrIdx);
-
-/**
- * \param Comment a \c CXComment_BlockCommand AST node.
- *
- * \param ArgIdx argument index (zero-based).
- *
- * \returns text of the specified word-like argument.
- */
-CXString clang_BlockCommandComment_getArgText(CXComment Comment,
-                                              unsigned ArgIdx);
-
-/**
- * \param Comment a \c CXComment_TParamCommand AST node.
- *
- * \returns zero-based parameter index in the template parameter list at a
- * given nesting depth.
- *
- * For example,
- * \verbatim
- *     template<typename C, template<typename T> class TT>
- *     void test(TT<int> aaa);
- * \endverbatim
- * for C and TT nesting depth is 0, so we can ask for index at depth 0:
- * at depth 0 C's index is 0, TT's index is 1.
- *
- * For T nesting depth is 1, so we can ask for index at depth 0 and 1:
- * at depth 0 T's index is 1 (same as TT's),
- * at depth 1 T's index is 0.
- */
-unsigned clang_TParamCommandComment_getIndex(CXComment Comment, unsigned Depth);
-
-/**
  * \brief Describes a single preprocessing token.
  */
 typedef struct {
   unsigned int_data[4];
   void *ptr_data;
 } CXToken;
-
-/**
- * \brief Determine the spelling of the given token.
- *
- * The spelling of a token is the textual representation of that token, e.g.,
- * the text of an identifier or keyword.
- */
-CXString clang_getTokenSpelling(CXTranslationUnit, CXToken);
 
 /**
  * \brief Tokenize the source code described by the given range into raw
@@ -1180,35 +1040,6 @@ typedef struct {
    */
   CXCompletionString CompletionString;
 } CXCompletionResult;
-
-/**
- * \brief Retrieve the text associated with a particular chunk within a
- * completion string.
- *
- * \param completion_string the completion string to query.
- *
- * \param chunk_number the 0-based index of the chunk in the completion string.
- *
- * \returns the text associated with the chunk at index \c chunk_number.
- */
-CXString
-clang_getCompletionChunkText(CXCompletionString completion_string,
-                             unsigned chunk_number);
-
-/**
- * \brief Retrieve the annotation associated with the given completion string.
- *
- * \param completion_string the completion string to query.
- *
- * \param annotation_number the 0-based index of the annotation of the
- * completion string.
- *
- * \returns annotation string associated with the completion at index
- * \c annotation_number, or a NULL string if that annotation is not available.
- */
-CXString
-clang_getCompletionAnnotation(CXCompletionString completion_string,
-                              unsigned annotation_number);
 
 /**
  * \brief Retrieve the parent context of the given completion string.

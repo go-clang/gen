@@ -100,27 +100,6 @@ func (d Diagnostic) FixIts() (ret []FixIt) {
 	return
 }
 
-/**
- * \brief Format the given diagnostic in a manner that is suitable for display.
- *
- * This routine will format the given diagnostic to a string, rendering
- * the diagnostic according to the various options given. The
- * \c clang_defaultDiagnosticDisplayOptions() function returns the set of
- * options that most closely mimics the behavior of the clang compiler.
- *
- * \param Diagnostic The diagnostic to print.
- *
- * \param Options A set of options that control the diagnostic display,
- * created by combining \c CXDiagnosticDisplayOptions values.
- *
- * \returns A new string containing for formatted diagnostic.
- */
-func (d Diagnostic) Format(options DiagnosticDisplayOptions) string {
-	cx := cxstring{C.clang_formatDiagnostic(d.c, C.uint(options))}
-	defer cx.Dispose()
-	return cx.String()
-}
-
 func (d Diagnostic) String() string {
 	return d.Format(DefaultDiagnosticDisplayOptions())
 }
