@@ -58,6 +58,10 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 		p.Name = p.CName
 		p.Type = trimClangPrefix(p.CType)
 
+		if p.Name == "" {
+			p.Name = receiverName(p.Type)
+		}
+
 		f.Parameters = append(f.Parameters, p)
 	}
 
@@ -123,26 +127,26 @@ func generateASTFunction(f *Function) string {
 			f.Parameters[0].Name = f.Receiver.Name
 		}
 
+		astFunc.Type.Params = &ast.FieldList{
+			List: []*ast.Field{},
+		}
+
 		// Add parameters to the function
 		for i, p := range f.Parameters {
 			if i == 0 && f.Receiver.Name != "" {
 				continue
 			}
 
-			astFunc.Type.Params = &ast.FieldList{
-				List: []*ast.Field{
-					&ast.Field{
-						Names: []*ast.Ident{
-							&ast.Ident{
-								Name: p.Name,
-							},
-						},
-						Type: &ast.Ident{
-							Name: p.Type,
-						},
+			astFunc.Type.Params.List = append(astFunc.Type.Params.List, &ast.Field{
+				Names: []*ast.Ident{
+					&ast.Ident{
+						Name: p.Name,
 					},
 				},
-			}
+				Type: &ast.Ident{
+					Name: p.Type,
+				},
+			})
 		}
 
 		// Add arguments to the C function call

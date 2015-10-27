@@ -18,22 +18,6 @@ func (tu TranslationUnit) TokenSpelling(tok Token) string {
 }
 
 /**
- * \brief Retrieve the source location of the given token.
- */
-func (tu TranslationUnit) TokenLocation(tok Token) SourceLocation {
-	o := C.clang_getTokenLocation(tu.c, tok.c)
-	return SourceLocation{o}
-}
-
-/**
- * \brief Retrieve a source range that covers the given token.
- */
-func (tu TranslationUnit) TokenExtent(tok Token) SourceRange {
-	o := C.clang_getTokenExtent(tu.c, tok.c)
-	return SourceRange{o}
-}
-
-/**
  * \brief Tokenize the source code described by the given range into raw
  * lexical tokens.
  *

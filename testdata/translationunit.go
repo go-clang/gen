@@ -111,24 +111,6 @@ func (tu TranslationUnit) IsFileMultipleIncludeGuarded(file File) bool {
 	return false
 }
 
-// CursorOf maps a source location to the cursor that describes the entity at that
-// location in the source code.
-//
-// clang_getCursor() maps an arbitrary source location within a translation
-// unit down to the most specific cursor that describes the entity at that
-// location. For example, given an expression \c x + y, invoking
-// clang_getCursor() with a source location pointing to "x" will return the
-// cursor for "x"; similarly for "y". If the cursor points anywhere between
-// "x" or "y" (e.g., on the + or the whitespace around it), clang_getCursor()
-// will return a cursor referring to the "+" expression.
-//
-// Returns a cursor representing the entity at the given source location, or
-// a NULL cursor if no such entity can be found.
-func (tu TranslationUnit) Cursor(loc SourceLocation) Cursor {
-	o := C.clang_getCursor(tu.c, loc.c)
-	return Cursor{o}
-}
-
 /**
  * \brief Reparse the source files that produced this translation unit.
  *

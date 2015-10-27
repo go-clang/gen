@@ -47,6 +47,26 @@ func (tu TranslationUnit) TUResourceUsage() TUResourceUsage {
 }
 
 // Retrieve the cursor that represents the given translation unit. The translation unit cursor can be used to start traversing the various declarations within the given translation unit.
-func (tu TranslationUnit) Cursor() Cursor {
+func (tu TranslationUnit) TranslationUnitCursor() Cursor {
 	return Cursor{C.clang_getTranslationUnitCursor(tu.c)}
+}
+
+// Map a source location to the cursor that describes the entity at that location in the source code. clang_getCursor() maps an arbitrary source location within a translation unit down to the most specific cursor that describes the entity at that location. For example, given an expression \c x + y, invoking clang_getCursor() with a source location pointing to "x" will return the cursor for "x"; similarly for "y". If the cursor points anywhere between "x" or "y" (e.g., on the + or the whitespace around it), clang_getCursor() will return a cursor referring to the "+" expression. \returns a cursor representing the entity at the given source location, or a NULL cursor if no such entity can be found.
+func (tu TranslationUnit) Cursor(sl SourceLocation) Cursor {
+	return Cursor{C.clang_getCursor(tu.c, sl.c)}
+}
+
+// Retrieve the source location of the given token.
+func (tu TranslationUnit) TokenLocation(t Token) SourceLocation {
+	return SourceLocation{C.clang_getTokenLocation(tu.c, t.c)}
+}
+
+// Retrieve a source range that covers the given token.
+func (tu TranslationUnit) TokenExtent(t Token) SourceRange {
+	return SourceRange{C.clang_getTokenExtent(tu.c, t.c)}
+}
+
+// Find #import/#include directives in a specific file. \param TU translation unit containing the file to query. \param file to search for #import/#include directives. \param visitor callback that will receive pairs of CXCursor/CXSourceRange for each directive found. \returns one of the CXResult enumerators.
+func (tu TranslationUnit) FindIncludesInFile(file File, visitor CursorAndRangeVisitor) Result {
+	return Result(C.clang_findIncludesInFile(tu.c, file.c, visitor.c))
 }

@@ -191,13 +191,6 @@ CXSourceLocation clang_getLocationForOffset(CXTranslationUnit tu,
                                                            unsigned offset);
 
 /**
- * \brief Retrieve a source range given the beginning and ending source
- * locations.
- */
-CXSourceRange clang_getRange(CXSourceLocation begin,
-                                            CXSourceLocation end);
-
-/**
  * \brief Retrieve the file, line, column, and offset represented by
  * the given source location.
  *
@@ -895,23 +888,6 @@ void clang_getOverriddenCursors(CXCursor cursor,
 void clang_disposeOverriddenCursors(CXCursor *overridden);
 
 /**
- * \brief Map a source location to the cursor that describes the entity at that
- * location in the source code.
- *
- * clang_getCursor() maps an arbitrary source location within a translation
- * unit down to the most specific cursor that describes the entity at that
- * location. For example, given an expression \c x + y, invoking
- * clang_getCursor() with a source location pointing to "x" will return the
- * cursor for "x"; similarly for "y". If the cursor points anywhere between
- * "x" or "y" (e.g., on the + or the whitespace around it), clang_getCursor()
- * will return a cursor referring to the "+" expression.
- *
- * \returns a cursor representing the entity at the given source location, or
- * a NULL cursor if no such entity can be found.
- */
-CXCursor clang_getCursor(CXTranslationUnit, CXSourceLocation);
-
-/**
  * \brief The type of an element in the abstract syntax tree.
  *
  */
@@ -1220,17 +1196,6 @@ typedef struct {
  * the text of an identifier or keyword.
  */
 CXString clang_getTokenSpelling(CXTranslationUnit, CXToken);
-
-/**
- * \brief Retrieve the source location of the given token.
- */
-CXSourceLocation clang_getTokenLocation(CXTranslationUnit,
-                                                       CXToken);
-
-/**
- * \brief Retrieve a source range that covers the given token.
- */
-CXSourceRange clang_getTokenExtent(CXTranslationUnit, CXToken);
 
 /**
  * \brief Tokenize the source code described by the given range into raw
@@ -1692,39 +1657,6 @@ typedef enum {
   CXResult_VisitBreak = 2
 
 } CXResult;
-
-/**
- * \brief Find references of a declaration in a specific file.
- *
- * \param cursor pointing to a declaration or a reference of one.
- *
- * \param file to search for references.
- *
- * \param visitor callback that will receive pairs of CXCursor/CXSourceRange for
- * each reference found.
- * The CXSourceRange will point inside the file; if the reference is inside
- * a macro (and not a macro argument) the CXSourceRange will be invalid.
- *
- * \returns one of the CXResult enumerators.
- */
-CXResult clang_findReferencesInFile(CXCursor cursor, CXFile file,
-                                               CXCursorAndRangeVisitor visitor);
-
-/**
- * \brief Find #import/#include directives in a specific file.
- *
- * \param TU translation unit containing the file to query.
- *
- * \param file to search for #import/#include directives.
- *
- * \param visitor callback that will receive pairs of CXCursor/CXSourceRange for
- * each directive found.
- *
- * \returns one of the CXResult enumerators.
- */
-CXResult clang_findIncludesInFile(CXTranslationUnit TU,
-                                                 CXFile file,
-                                              CXCursorAndRangeVisitor visitor);
 
 #ifdef __has_feature
 #  if __has_feature(blocks)

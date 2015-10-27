@@ -33,3 +33,8 @@ func (sl SourceLocation) Location_IsFromMainFile() bool {
 
 	return o != C.int(0)
 }
+
+// Retrieve a source range given the beginning and ending source locations.
+func (sl SourceLocation) Range(end SourceLocation) SourceRange {
+	return SourceRange{C.clang_getRange(sl.c, end.c)}
+}

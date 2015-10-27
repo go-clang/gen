@@ -228,6 +228,11 @@ func main() {
 	addMethod := func(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 		fname = upperFirstCharacter(fname)
 
+		// TODO this is a big HACK. Figure out how we can trim receiver names while still not having two "Cursor" methods for TranslationUnit
+		if f.CName == "clang_getTranslationUnitCursor" {
+			fname = "TranslationUnitCursor"
+		}
+
 		if e, ok := lookupEnum[rt.Type]; ok {
 			f.Name = fnamePrefix + fname
 			f.Receiver = e.Receiver
@@ -263,10 +268,6 @@ func main() {
 			f.ReturnType = "string"
 
 			return addMethod(f, fname, fnamePrefix, rt)
-		} else if len(f.Parameters) == 1 && isEnumOrStruct(f.ReturnType) && isEnumOrStruct(f.Parameters[0].Type) {
-			fname = trimCommonFName(fname, rt)
-
-			return addMethod(f, fname, fnamePrefix, rt)
 		} else if len(f.Parameters) == 1 &&
 			((fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3])))) &&
 			(f.ReturnType == "unsigned int" || f.ReturnType == "int") {
@@ -296,6 +297,25 @@ func main() {
 			f.ReturnType = "bool"
 
 			return addMethod(f, fname, fnamePrefix, rt)
+		}
+
+		if len(f.Parameters) > 0 && isEnumOrStruct(f.ReturnType) {
+			found := false
+			for _, p := range f.Parameters {
+				if !isEnumOrStruct(p.Type) {
+					found = true
+
+					break
+				}
+			}
+
+			if !found {
+				fname = trimCommonFName(fname, rt)
+
+				if addMethod(f, fname, fnamePrefix, rt) {
+					return true
+				}
+			}
 		}
 
 		return false
