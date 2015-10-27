@@ -288,9 +288,6 @@ func main() {
 		for i := range f.Parameters {
 			p := &f.Parameters[i]
 
-			if n, ok := lookupNonTypedefs[p.Name]; ok {
-				p.Name = n
-			}
 			if n, ok := lookupNonTypedefs[p.Type]; ok {
 				p.Type = n
 			}
@@ -299,7 +296,7 @@ func main() {
 				p.Type = e.Receiver.Type
 				p.CType = e.Receiver.CType
 				p.PrimitiveType = e.Receiver.PrimitiveType
-			} else if _, ok := lookupStruct[p.Name]; ok {
+			} else if _, ok := lookupStruct[p.Type]; ok {
 			} else {
 				if goType, primitiveType := goAndPrimitiveType(p.Type); goType != "" {
 					p.Type = goType
@@ -389,7 +386,7 @@ func main() {
 		}
 
 		if !added {
-			fmt.Println("Unused:", f.Name)
+			fmt.Println("Unused function:", f.Name)
 		}
 	}
 

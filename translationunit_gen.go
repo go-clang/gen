@@ -30,6 +30,11 @@ func (tu TranslationUnit) NumDiagnostics() uint16 {
 	return uint16(C.clang_getNumDiagnostics(tu.c))
 }
 
+// Retrieve a diagnostic associated with the given translation unit. \param Unit the translation unit to query. \param Index the zero-based diagnostic number to retrieve. \returns the requested diagnostic. This diagnostic must be freed via a call to \c clang_disposeDiagnostic().
+func (tu TranslationUnit) Diagnostic(Index uint16) Diagnostic {
+	return Diagnostic{C.clang_getDiagnostic(tu.c, C.uint(Index))}
+}
+
 // Retrieve the complete set of diagnostics associated with a translation unit. \param Unit the translation unit to query.
 func (tu TranslationUnit) DiagnosticSetFromTU() DiagnosticSet {
 	return DiagnosticSet{C.clang_getDiagnosticSetFromTU(tu.c)}
@@ -76,6 +81,11 @@ func (tu TranslationUnit) Cursor(sl SourceLocation) Cursor {
 // \param Module a module object. \returns the number of top level headers associated with this module.
 func (tu TranslationUnit) Module_getNumTopLevelHeaders(Module Module) uint16 {
 	return uint16(C.clang_Module_getNumTopLevelHeaders(tu.c, Module.c))
+}
+
+// \param Module a module object. \param Index top level header index (zero-based). \returns the specified top level header associated with the module.
+func (tu TranslationUnit) Module_getTopLevelHeader(Module Module, Index uint16) File {
+	return File{C.clang_Module_getTopLevelHeader(tu.c, Module.c, C.uint(Index))}
 }
 
 // Determine the spelling of the given token. The spelling of a token is the textual representation of that token, e.g., the text of an identifier or keyword.

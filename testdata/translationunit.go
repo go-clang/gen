@@ -191,14 +191,3 @@ func (tu TranslationUnit) Diagnostics() (ret Diagnostics) {
 	}
 	return
 }
-
-/**
- * \param Module a module object.
- *
- * \param Index top level header index (zero-based).
- *
- * \returns the specified top level header associated with the module.
- */
-func (tu TranslationUnit) TopLevelHeader(m Module, i int) File {
-	return File{C.clang_Module_getTopLevelHeader(tu.c, m.c, C.unsigned(i))}
-}

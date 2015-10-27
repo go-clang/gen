@@ -296,18 +296,6 @@ void clang_getFileLocation(CXSourceLocation location,
                                           unsigned *offset);
 
 /**
- * \brief Retrieve a diagnostic associated with the given CXDiagnosticSet.
- *
- * \param Diags the CXDiagnosticSet to query.
- * \param Index the zero-based diagnostic number to retrieve.
- *
- * \returns the requested diagnostic. This diagnostic must be freed
- * via a call to \c clang_disposeDiagnostic().
- */
-CXDiagnostic clang_getDiagnosticInSet(CXDiagnosticSet Diags,
-                                                     unsigned Index);
-
-/**
  * \brief Deserialize a set of diagnostics from a Clang diagnostics bitcode
  * file.
  *
@@ -323,18 +311,6 @@ CXDiagnostic clang_getDiagnosticInSet(CXDiagnosticSet Diags,
 CXDiagnosticSet clang_loadDiagnostics(const char *file,
                                                   enum CXLoadDiag_Error *error,
                                                   CXString *errorString);
-
-/**
- * \brief Retrieve a diagnostic associated with the given translation unit.
- *
- * \param Unit the translation unit to query.
- * \param Index the zero-based diagnostic number to retrieve.
- *
- * \returns the requested diagnostic. This diagnostic must be freed
- * via a call to \c clang_disposeDiagnostic().
- */
-CXDiagnostic clang_getDiagnostic(CXTranslationUnit Unit,
-                                                unsigned Index);
 
 /**
  * \brief Retrieve the set of display options most similar to the
@@ -927,16 +903,6 @@ CXString clang_constructUSR_ObjCMethod(const char *name,
  */
 CXString clang_constructUSR_ObjCProperty(const char *property,
                                                         CXString classUSR);
-
-/**
- * \param Module a module object.
- *
- * \param Index top level header index (zero-based).
- *
- * \returns the specified top level header associated with the module.
- */
-CXFile clang_Module_getTopLevelHeader(CXTranslationUnit,
-                                      CXModule Module, unsigned Index);
 
 /**
  * \brief Describes a single preprocessing token.
