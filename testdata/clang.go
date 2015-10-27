@@ -50,16 +50,6 @@ func NewIndex(excludeDeclarationsFromPCH, displayDiagnostics int) Index {
 }
 
 /**
- * \brief Create a translation unit from an AST file (-emit-ast).
- */
-func (idx Index) CreateTranslationUnit(fname string) TranslationUnit {
-	cstr := C.CString(fname)
-	defer C.free(unsafe.Pointer(cstr))
-	o := C.clang_createTranslationUnit(idx.c, cstr)
-	return TranslationUnit{o}
-}
-
-/**
  * \brief Return the CXTranslationUnit for a given source file and the provided
  * command line arguments one would pass to the compiler.
  *

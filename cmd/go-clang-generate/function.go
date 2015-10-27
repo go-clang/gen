@@ -149,24 +149,90 @@ func generateASTFunction(f *Function) string {
 			})
 		}
 
+		goToCTypeConversions := false
+
 		// Add arguments to the C function call
 		for _, p := range f.Parameters {
 			if p.PrimitiveType != "" {
-				call.Args = append(call.Args, &ast.CallExpr{
-					Fun: &ast.SelectorExpr{
-						X: &ast.Ident{
-							Name: "C",
+				// Handle Go type to C type conversions
+				if p.PrimitiveType == "const char *" {
+					goToCTypeConversions = true
+
+					astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
+						Lhs: []ast.Expr{
+							&ast.Ident{
+								Name: "cstr_" + p.Name,
+							},
 						},
-						Sel: &ast.Ident{
-							Name: p.PrimitiveType,
+						Tok: token.DEFINE,
+						Rhs: []ast.Expr{
+							&ast.CallExpr{
+								Fun: &ast.SelectorExpr{
+									X: &ast.Ident{
+										Name: "C",
+									},
+									Sel: &ast.Ident{
+										Name: "CString",
+									},
+								},
+								Args: []ast.Expr{
+									&ast.Ident{
+										Name: p.Name,
+									},
+								},
+							},
 						},
-					},
-					Args: []ast.Expr{
-						&ast.Ident{
-							Name: p.Name,
+					})
+					astFunc.Body.List = append(astFunc.Body.List, &ast.DeferStmt{
+						Call: &ast.CallExpr{
+							Fun: &ast.SelectorExpr{
+								X: &ast.Ident{
+									Name: "C",
+								},
+								Sel: &ast.Ident{
+									Name: "free",
+								},
+							},
+							Args: []ast.Expr{
+								&ast.CallExpr{
+									Fun: &ast.SelectorExpr{
+										X: &ast.Ident{
+											Name: "unsafe",
+										},
+										Sel: &ast.Ident{
+											Name: "Pointer",
+										},
+									},
+									Args: []ast.Expr{
+										&ast.Ident{
+											Name: "cstr_" + p.Name,
+										},
+									},
+								},
+							},
 						},
-					},
-				})
+					})
+
+					call.Args = append(call.Args, &ast.Ident{
+						Name: "cstr_" + p.Name,
+					})
+				} else {
+					call.Args = append(call.Args, &ast.CallExpr{
+						Fun: &ast.SelectorExpr{
+							X: &ast.Ident{
+								Name: "C",
+							},
+							Sel: &ast.Ident{
+								Name: p.PrimitiveType,
+							},
+						},
+						Args: []ast.Expr{
+							&ast.Ident{
+								Name: p.Name,
+							},
+						},
+					})
+				}
 			} else {
 				call.Args = append(call.Args, &ast.SelectorExpr{
 					X: &ast.Ident{
@@ -177,6 +243,17 @@ func generateASTFunction(f *Function) string {
 					},
 				})
 			}
+		}
+
+		if goToCTypeConversions {
+			// TODO maybe somehow remove this?! We add an empty line here
+			astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
+				X: &ast.CallExpr{
+					Fun: &ast.Ident{
+						Name: "REMOVE",
+					},
+				},
+			})
 		}
 	}
 
@@ -267,57 +344,76 @@ func generateASTFunction(f *Function) string {
 				},
 			}
 		} else if f.ReturnType == "string" {
-			// Do the C function call and save the result into the new variable "o" while transforming it into a cxstring
-			astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
-				Lhs: []ast.Expr{
-					&ast.Ident{
-						Name: "o",
-					},
-				},
-				Tok: token.DEFINE,
-				Rhs: []ast.Expr{
-					&ast.CompositeLit{
-						Type: &ast.Ident{
-							Name: "cxstring",
+			// If this is a normal const char * C type there is not so much to do
+			if f.ReturnPrimitiveType == "const char *" {
+				result = &ast.CallExpr{
+					Fun: &ast.SelectorExpr{
+						X: &ast.Ident{
+							Name: "C",
 						},
-						Elts: []ast.Expr{
-							call,
+						Sel: &ast.Ident{
+							Name: "GoString",
 						},
 					},
-				},
-			})
-			astFunc.Body.List = append(astFunc.Body.List, &ast.DeferStmt{
-				Call: &ast.CallExpr{
+					Args: []ast.Expr{
+						call,
+					},
+				}
+			} else {
+				// This should be a CXString so handle it accordingly
+
+				// Do the C function call and save the result into the new variable "o" while transforming it into a cxstring
+				astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
+					Lhs: []ast.Expr{
+						&ast.Ident{
+							Name: "o",
+						},
+					},
+					Tok: token.DEFINE,
+					Rhs: []ast.Expr{
+						&ast.CompositeLit{
+							Type: &ast.Ident{
+								Name: "cxstring",
+							},
+							Elts: []ast.Expr{
+								call,
+							},
+						},
+					},
+				})
+				astFunc.Body.List = append(astFunc.Body.List, &ast.DeferStmt{
+					Call: &ast.CallExpr{
+						Fun: &ast.SelectorExpr{
+							X: &ast.Ident{
+								Name: "o",
+							},
+							Sel: &ast.Ident{
+								Name: "Dispose",
+							},
+						},
+					},
+				})
+
+				// TODO maybe somehow remove this?! We add an empty line here
+				astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
+					X: &ast.CallExpr{
+						Fun: &ast.Ident{
+							Name: "REMOVE",
+						},
+					},
+				})
+
+				// Call the String method on the cxstring instance
+				result = &ast.CallExpr{
 					Fun: &ast.SelectorExpr{
 						X: &ast.Ident{
 							Name: "o",
 						},
 						Sel: &ast.Ident{
-							Name: "Dispose",
+							Name: "String",
 						},
 					},
-				},
-			})
-
-			// TODO maybe somehow remove this?! We add an empty line here
-			astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
-				X: &ast.CallExpr{
-					Fun: &ast.Ident{
-						Name: "REMOVE",
-					},
-				},
-			})
-
-			// Call the String method on the cxstring instance
-			result = &ast.CallExpr{
-				Fun: &ast.SelectorExpr{
-					X: &ast.Ident{
-						Name: "o",
-					},
-					Sel: &ast.Ident{
-						Name: "String",
-					},
-				},
+				}
 			}
 		}
 

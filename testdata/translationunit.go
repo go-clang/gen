@@ -93,13 +93,6 @@ func (tu TranslationUnit) IsValid() bool {
 	return tu.c != nil
 }
 
-func (tu TranslationUnit) File(file_name string) File {
-	cfname := C.CString(file_name)
-	defer C.free(unsafe.Pointer(cfname))
-	f := C.clang_getFile(tu.c, cfname)
-	return File{f}
-}
-
 /**
  * \brief Reparse the source files that produced this translation unit.
  *
@@ -142,37 +135,6 @@ func (tu TranslationUnit) Reparse(us UnsavedFiles, options TranslationUnitFlags)
 	c_us := us.to_c()
 	defer c_us.Dispose()
 	return int(C.clang_reparseTranslationUnit(tu.c, C.uint(len(c_us)), c_us.ptr(), C.uint(options)))
-}
-
-/**
- * \brief Saves a translation unit into a serialized representation of
- * that translation unit on disk.
- *
- * Any translation unit that was parsed without error can be saved
- * into a file. The translation unit can then be deserialized into a
- * new \c CXTranslationUnit with \c clang_createTranslationUnit() or,
- * if it is an incomplete translation unit that corresponds to a
- * header, used as a precompiled header when parsing other translation
- * units.
- *
- * \param TU The translation unit to save.
- *
- * \param FileName The file to which the translation unit will be saved.
- *
- * \param options A bitmask of options that affects how the translation unit
- * is saved. This should be a bitwise OR of the
- * CXSaveTranslationUnit_XXX flags.
- *
- * \returns A value that will match one of the enumerators of the CXSaveError
- * enumeration. Zero (CXSaveError_None) indicates that the translation unit was
- * saved successfully, while a non-zero value indicates that a problem occurred.
- */
-func (tu TranslationUnit) Save(fname string, options uint) uint32 {
-	cstr := C.CString(fname)
-	defer C.free(unsafe.Pointer(cstr))
-	o := C.clang_saveTranslationUnit(tu.c, cstr, C.uint(options))
-	// FIXME: should be a SaveError type...
-	return uint32(o)
 }
 
 /**

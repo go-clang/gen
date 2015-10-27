@@ -17,6 +17,8 @@ type Enum struct {
 	Comment        string
 	UnderlyingType string
 
+	ImportUnsafe bool
+
 	Items []Enumerator
 
 	Methods []string
@@ -79,6 +81,8 @@ var templateGenerateEnum = template.Must(template.New("go-clang-generate-enum").
 
 // #include "go-clang.h"
 import "C"
+{{if $.ImportUnsafe}}
+import "unsafe"{{end}}
 
 {{$.Comment}}
 type {{$.Name}} {{$.UnderlyingType}}
@@ -95,6 +99,15 @@ const (
 `))
 
 func generateEnum(e *Enum) error {
+	// TODO remove this hack
+	for _, m := range e.Methods {
+		if strings.Contains(m, "unsafe.") {
+			e.ImportUnsafe = true
+
+			break
+		}
+	}
+
 	var b bytes.Buffer
 	if err := templateGenerateEnum.Execute(&b, e); err != nil {
 		return err

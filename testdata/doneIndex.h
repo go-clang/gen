@@ -432,12 +432,6 @@ CXTranslationUnit clang_createTranslationUnitFromSourceFile(
                                          struct CXUnsavedFile *unsaved_files);
 
 /**
- * \brief Create a translation unit from an AST file (-emit-ast).
- */
-CXTranslationUnit clang_createTranslationUnit(CXIndex,
-                                             const char *ast_filename);
-
-/**
  * \brief Returns the set of flags that is suitable for parsing a translation
  * unit that is being edited.
  *
@@ -502,33 +496,6 @@ CXTranslationUnit clang_parseTranslationUnit(CXIndex CIdx,
                                                             unsigned options);
 
 /**
- * \brief Saves a translation unit into a serialized representation of
- * that translation unit on disk.
- *
- * Any translation unit that was parsed without error can be saved
- * into a file. The translation unit can then be deserialized into a
- * new \c CXTranslationUnit with \c clang_createTranslationUnit() or,
- * if it is an incomplete translation unit that corresponds to a
- * header, used as a precompiled header when parsing other translation
- * units.
- *
- * \param TU The translation unit to save.
- *
- * \param FileName The file to which the translation unit will be saved.
- *
- * \param options A bitmask of options that affects how the translation unit
- * is saved. This should be a bitwise OR of the
- * CXSaveTranslationUnit_XXX flags.
- *
- * \returns A value that will match one of the enumerators of the CXSaveError
- * enumeration. Zero (CXSaveError_None) indicates that the translation unit was
- * saved successfully, while a non-zero value indicates that a problem occurred.
- */
-int clang_saveTranslationUnit(CXTranslationUnit TU,
-                                             const char *FileName,
-                                             unsigned options);
-
-/**
  * \brief Reparse the source files that produced this translation unit.
  *
  * This routine can be used to re-parse the source files that originally
@@ -570,12 +537,6 @@ int clang_reparseTranslationUnit(CXTranslationUnit TU,
                                                 unsigned num_unsaved_files,
                                           struct CXUnsavedFile *unsaved_files,
                                                 unsigned options);
-
-/**
-  * \brief Returns the human-readable null-terminated C string that represents
-  *  the name of the memory category.  This string should never be freed.
-  */
-const char *clang_getTUResourceUsageName(enum CXTUResourceUsageKind kind);
 
 typedef struct CXTUResourceUsageEntry {
   /* \brief The memory usage category. */
@@ -782,21 +743,6 @@ typedef struct {
   enum CXTypeKind kind;
   void *data[2];
 } CXType;
-
-/**
- * \brief Return the offset of a field named S in a record of type T in bits
- *   as it would be returned by __offsetof__ as per C++11[18.2p4]
- *
- * If the cursor is not a record field declaration, CXTypeLayoutError_Invalid
- *   is returned.
- * If the field's type declaration is an incomplete type,
- *   CXTypeLayoutError_Incomplete is returned.
- * If the field's type declaration is a dependent type,
- *   CXTypeLayoutError_Dependent is returned.
- * If the field's name S is not found,
- *   CXTypeLayoutError_InvalidFieldName is returned.
- */
-long long clang_Type_getOffsetOf(CXType T, const char *S);
 
 /**
  * \brief Visitor invoked for each cursor found by a traversal.

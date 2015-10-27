@@ -1,6 +1,8 @@
 #ifndef _GO_CLANG
 #define _GO_CLANG
 
+#include <stdlib.h>
+
 #include "clang-c/Index.h"
 
 /* TODO define as constants

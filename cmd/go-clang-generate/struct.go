@@ -16,7 +16,8 @@ type Struct struct {
 	CNameIsTypeDef bool
 	Receiver       Receiver
 	Comment        string
-	ImportUnsafe   bool
+
+	ImportUnsafe bool
 
 	Methods []string
 }
@@ -112,8 +113,16 @@ type {{$.Name}} struct {
 `))
 
 func generateStruct(s *Struct) error {
-	var b bytes.Buffer
+	// TODO remove this hack
+	for _, m := range s.Methods {
+		if strings.Contains(m, "unsafe.") {
+			s.ImportUnsafe = true
 
+			break
+		}
+	}
+
+	var b bytes.Buffer
 	if err := templateGenerateStruct.Execute(&b, s); err != nil {
 		return err
 	}

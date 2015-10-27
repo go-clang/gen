@@ -421,6 +421,8 @@ func goAndPrimitiveType(typ string) (string, string) {
 		return "void", "void"
 	case "String":
 		return "string", "String"
+	case "const char *":
+		return "string", "const char *"
 	}
 
 	return "", ""

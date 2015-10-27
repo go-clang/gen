@@ -3,6 +3,8 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import "unsafe"
+
 // The type of an element in the abstract syntax tree.
 type Type struct {
 	c C.CXType
@@ -126,6 +128,14 @@ func (t Type) ClassType() Type {
 // Return the size of a type in bytes as per C++[expr.sizeof] standard. If the type declaration is invalid, CXTypeLayoutError_Invalid is returned. If the type declaration is an incomplete type, CXTypeLayoutError_Incomplete is returned. If the type declaration is a dependent type, CXTypeLayoutError_Dependent is returned.
 func (t Type) SizeOf() int64 {
 	return int64(C.clang_Type_getSizeOf(t.c))
+}
+
+// Return the offset of a field named S in a record of type T in bits as it would be returned by __offsetof__ as per C++11[18.2p4] If the cursor is not a record field declaration, CXTypeLayoutError_Invalid is returned. If the field's type declaration is an incomplete type, CXTypeLayoutError_Incomplete is returned. If the field's type declaration is a dependent type, CXTypeLayoutError_Dependent is returned. If the field's name S is not found, CXTypeLayoutError_InvalidFieldName is returned.
+func (t Type) OffsetOf(S string) int64 {
+	cstr_S := C.CString(S)
+	defer C.free(unsafe.Pointer(cstr_S))
+
+	return int64(C.clang_Type_getOffsetOf(t.c, cstr_S))
 }
 
 // Retrieve the ref-qualifier kind of a function or method. The ref-qualifier is returned for C++ functions or methods. For other types or non-C++ declarations, CXRefQualifier_None is returned.
