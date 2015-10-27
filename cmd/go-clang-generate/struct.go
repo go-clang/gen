@@ -120,10 +120,11 @@ type {{$.Name}} struct {
 func generateStruct(s *Struct) error {
 	// TODO remove this hack
 	for _, m := range s.Methods {
+		if strings.Contains(m, "time.Time") {
+			s.Imports["time"] = struct{}{}
+		}
 		if strings.Contains(m, "unsafe.") {
 			s.Imports["unsafe"] = struct{}{}
-
-			break
 		}
 	}
 

@@ -415,6 +415,31 @@ func generateASTFunction(f *Function) string {
 					},
 				}
 			}
+		} else if f.ReturnType == "time.Time" {
+			result = &ast.CallExpr{
+				Fun: &ast.SelectorExpr{
+					X: &ast.Ident{
+						Name: "time",
+					},
+					Sel: &ast.Ident{
+						Name: "Unix",
+					},
+				},
+				Args: []ast.Expr{
+					&ast.CallExpr{
+						Fun: &ast.Ident{
+							Name: "int64",
+						},
+						Args: []ast.Expr{
+							call,
+						},
+					},
+					&ast.BasicLit{
+						Kind:  token.INT,
+						Value: "0",
+					},
+				},
+			}
 		}
 
 		// Add the return statement

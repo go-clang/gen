@@ -92,11 +92,6 @@ CXIndex clang_createIndex(int excludeDeclarationsFromPCH,
                                          int displayDiagnostics);
 
 /**
- * \brief Retrieve the last modification time of the given file.
- */
-time_t clang_getFileTime(CXFile SFile);
-
-/**
  * \brief Uniquely identifies a CXFile, that refers to the same underlying file,
  * across an indexing session.
  */

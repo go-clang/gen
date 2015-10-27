@@ -103,10 +103,11 @@ const (
 func generateEnum(e *Enum) error {
 	// TODO remove this hack
 	for _, m := range e.Methods {
+		if strings.Contains(m, "time.Time") {
+			e.Imports["time"] = struct{}{}
+		}
 		if strings.Contains(m, "unsafe.") {
 			e.Imports["unsafe"] = struct{}{}
-
-			break
 		}
 	}
 
