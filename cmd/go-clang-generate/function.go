@@ -161,7 +161,7 @@ func generateASTFunction(f *Function) string {
 					astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
 						Lhs: []ast.Expr{
 							&ast.Ident{
-								Name: "cstr_" + p.Name,
+								Name: "c_" + p.Name,
 							},
 						},
 						Tok: token.DEFINE,
@@ -205,7 +205,7 @@ func generateASTFunction(f *Function) string {
 									},
 									Args: []ast.Expr{
 										&ast.Ident{
-											Name: "cstr_" + p.Name,
+											Name: "c_" + p.Name,
 										},
 									},
 								},
@@ -214,7 +214,7 @@ func generateASTFunction(f *Function) string {
 					})
 
 					call.Args = append(call.Args, &ast.Ident{
-						Name: "cstr_" + p.Name,
+						Name: "c_" + p.Name,
 					})
 				} else {
 					call.Args = append(call.Args, &ast.CallExpr{

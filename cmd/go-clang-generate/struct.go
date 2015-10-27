@@ -17,7 +17,7 @@ type Struct struct {
 	Receiver       Receiver
 	Comment        string
 
-	ImportUnsafe bool
+	Imports map[string]struct{}
 
 	Methods []string
 }
@@ -46,7 +46,8 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 				if conv.PointerLevel >= 1 && conv.GoType == "void" {
 					conv.GoType = GoPointer
 					conv.PointerLevel--
-					s.ImportUnsafe = true
+
+					s.Imports["unsafe"] = struct{}{}
 				}
 
 				var method string
@@ -88,6 +89,8 @@ func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bo
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
 		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
+
+		Imports: map[string]struct{}{},
 	}
 
 	s.Name = trimClangPrefix(s.CName)
@@ -100,14 +103,16 @@ var templateGenerateStruct = template.Must(template.New("go-clang-generate-struc
 
 // #include "go-clang.h"
 import "C"
-{{if $.ImportUnsafe}}
-import "unsafe"{{end}}
+{{if $.Imports}}
+import (
+{{range $import, $empty := $.Imports}}	"{{$import}}"
+{{end}}){{end}}
 
 {{$.Comment}}
 type {{$.Name}} struct {
 	c C.{{if not $.CNameIsTypeDef}}struct_{{end}}{{$.CName}}
 }
-{{range $i, $m := .Methods}}
+{{range $i, $m := $.Methods}}
 {{$m}}
 {{end}}
 `))
@@ -116,7 +121,7 @@ func generateStruct(s *Struct) error {
 	// TODO remove this hack
 	for _, m := range s.Methods {
 		if strings.Contains(m, "unsafe.") {
-			s.ImportUnsafe = true
+			s.Imports["unsafe"] = struct{}{}
 
 			break
 		}

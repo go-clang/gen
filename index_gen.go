@@ -3,7 +3,9 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
-import "unsafe"
+import (
+	"unsafe"
+)
 
 // An "index" that consists of a set of translation units that would typically be linked together into an executable or library.
 type Index struct {
@@ -39,10 +41,10 @@ func (i Index) GlobalOptions() uint16 {
 
 // Create a translation unit from an AST file (-emit-ast).
 func (i Index) TranslationUnit(ast_filename string) TranslationUnit {
-	cstr_ast_filename := C.CString(ast_filename)
-	defer C.free(unsafe.Pointer(cstr_ast_filename))
+	c_ast_filename := C.CString(ast_filename)
+	defer C.free(unsafe.Pointer(c_ast_filename))
 
-	return TranslationUnit{C.clang_createTranslationUnit(i.c, cstr_ast_filename)}
+	return TranslationUnit{C.clang_createTranslationUnit(i.c, c_ast_filename)}
 }
 
 // An indexing action/session, to be applied to one or multiple translation units. \param CIdx The index object with which the index action will be associated.
