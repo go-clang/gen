@@ -19,9 +19,7 @@ type Function struct {
 	IsReturnTypePointer bool
 	IsReturnTypeEnumLit bool
 
-	Receiver              string
-	ReceiverType          string
-	ReceiverPrimitiveType string
+	Receiver Receiver
 
 	Member string
 }
@@ -59,8 +57,8 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 }
 
 var templateGenerateFunctionGetter = template.Must(template.New("go-clang-generate-function-getter").Parse(`{{$.Comment}}
-func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() {{$.ReturnType}} {
-	return {{$.ReturnType}}{{if $.ReturnPrimitiveType}}({{else}}{{"{"}}{{end}}C.{{$.CName}}({{if ne $.ReceiverPrimitiveType ""}}{{$.ReceiverPrimitiveType}}({{$.Receiver}}{{else}}{{$.Receiver}}.c{{end}}){{if $.ReturnPrimitiveType}}){{else}}{{"}"}}{{end}}
+func ({{$.Receiver.Name}} {{$.Receiver.Type}}) {{$.Name}}() {{$.ReturnType}} {
+	return {{$.ReturnType}}{{if $.ReturnPrimitiveType}}({{else}}{{"{"}}{{end}}C.{{$.CName}}({{if ne $.Receiver.PrimitiveType ""}}{{$.Receiver.PrimitiveType}}({{$.Receiver.Name}}){{else}}{{$.Receiver.Name}}.c{{end}}){{if $.ReturnPrimitiveType}}){{else}}{{"}"}}{{end}}
 }
 `))
 
@@ -73,9 +71,24 @@ func generateFunctionGetter(f *Function) string {
 	return b.String()
 }
 
+var templateGenerateFunctionGetterPrimitive = template.Must(template.New("go-clang-generate-function-getter-primitive").Parse(`{{$.Comment}}
+func ({{$.Receiver.Name}} {{$.Receiver.Type}}) {{$.Name}}() {{$.ReturnType}} {
+	return {{$.ReturnType}}(C.{{$.CName}}({{if ne $.Receiver.PrimitiveType ""}}{{$.Receiver.PrimitiveType}}({{$.Receiver.Name}}){{else}}{{$.Receiver.Name}}.c{{end}}))
+}
+`))
+
+func generateFunctionGetterPrimitive(f *Function) string {
+	var b bytes.Buffer
+	if err := templateGenerateFunctionGetterPrimitive.Execute(&b, f); err != nil {
+		panic(err)
+	}
+
+	return b.String()
+}
+
 var templateGenerateFunctionStringGetter = template.Must(template.New("go-clang-generate-function-string-getter").Parse(`{{$.Comment}}
-func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() string {
-	o := cxstring{C.{{$.CName}}({{if ne $.ReceiverPrimitiveType ""}}{{$.ReceiverPrimitiveType}}({{$.Receiver}}){{else}}{{$.Receiver}}.c{{end}})}
+func ({{$.Receiver.Name}} {{$.Receiver.Type}}) {{$.Name}}() string {
+	o := cxstring{C.{{$.CName}}({{if ne $.Receiver.PrimitiveType ""}}{{$.Receiver.PrimitiveType}}({{$.Receiver.Name}}){{else}}{{$.Receiver.Name}}.c{{end}})}
 	defer o.Dispose()
 
 	return o.String()
@@ -92,10 +105,10 @@ func generateFunctionStringGetter(f *Function) string {
 }
 
 var templateGenerateFunctionIs = template.Must(template.New("go-clang-generate-function-is").Parse(`{{$.Comment}}
-func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() bool {
-	o := C.{{$.CName}}({{if ne $.ReceiverPrimitiveType ""}}{{$.ReceiverPrimitiveType}}({{$.Receiver}}){{else}}{{$.Receiver}}.c{{end}})
+func ({{$.Receiver.Name}} {{$.Receiver.Type}}) {{$.Name}}() bool {
+	o := C.{{$.CName}}({{if ne $.Receiver.PrimitiveType ""}}C.{{$.Receiver.CName}}({{$.Receiver.Name}}){{else}}{{$.Receiver.Name}}.c{{end}})
 
-	return o != C.uint(0)
+	return o != C.{{if eq $.ReturnType "int"}}int{{else}}uint{{end}}(0)
 }
 `))
 
@@ -109,8 +122,8 @@ func generateFunctionIs(f *Function) string {
 }
 
 var templateGenerateFunctionVoidMethod = template.Must(template.New("go-clang-generate-function-void-method").Parse(`{{$.Comment}}
-func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() {
-	C.{{$.CName}}({{if ne $.ReceiverPrimitiveType ""}}{{$.ReceiverPrimitiveType}}({{$.Receiver}}){{else}}{{$.Receiver}}.c{{end}})
+func ({{$.Receiver.Name}} {{$.Receiver.Type}}) {{$.Name}}() {
+	C.{{$.CName}}({{if ne $.Receiver.PrimitiveType ""}}{{$.Receiver.PrimitiveType}}({{$.Receiver.Name}}){{else}}{{$.Receiver.Name}}.c{{end}})
 }
 `))
 
@@ -123,9 +136,24 @@ func generateFunctionVoidMethod(f *Function) string {
 	return b.String()
 }
 
+var templateGenerateFunctionVoidReturningMethod = template.Must(template.New("go-clang-generate-function-void-returning-method").Parse(`{{$.Comment}}
+func {{$.Name}}() {{$.ReturnType}} {
+	return {{$.ReturnType}}{{"{"}}C.{{$.CName}}(){{"}"}}
+}
+`))
+
+func generateFunctionVoidReturningMethod(f *Function) string {
+	var b bytes.Buffer
+	if err := templateGenerateFunctionVoidReturningMethod.Execute(&b, f); err != nil {
+		panic(err)
+	}
+
+	return b.String()
+}
+
 var templateGenerateFunctionEqual = template.Must(template.New("go-clang-generate-function-equal").Parse(`{{$.Comment}}
-func {{$.Name}}({{$.Receiver}}1, {{$.Receiver}}2 {{$.ReceiverType}}) bool {
-	o := C.{{$.CName}}({{$.Receiver}}1.c, {{$.Receiver}}2.c)
+func {{$.Name}}({{$.Receiver.Name}}1, {{$.Receiver.Name}}2 {{$.Receiver.Type}}) bool {
+	o := C.{{$.CName}}({{$.Receiver.Name}}1.c, {{$.Receiver.Name}}2.c)
 
 	return o != C.uint(0)
 }
@@ -215,8 +243,10 @@ func generateFunction(name, cname, comment, member string, conv Conversion) *Fun
 		IsReturnTypePointer: conv.PointerLevel > 0,
 		IsReturnTypeEnumLit: conv.IsEnumLiteral,
 
-		Receiver:     receiverName,
-		ReceiverType: receiverType,
+		Receiver: Receiver{
+			Name: receiverName,
+			Type: receiverType,
+		},
 
 		Member: member,
 	}

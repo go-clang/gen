@@ -10,12 +10,11 @@ import (
 )
 
 type Enum struct {
-	Name                  string
-	CName                 string
-	CNameIsTypeDef        bool
-	Receiver              string
-	ReceiverPrimitiveType string
-	Comment               string
+	Name           string
+	CName          string
+	CNameIsTypeDef bool
+	Receiver       Receiver
+	Comment        string
 
 	Items []Enumerator
 
@@ -38,7 +37,12 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 	}
 
 	e.Name = trimClangPrefix(e.CName)
-	e.Receiver = receiverName(e.Name)
+	e.Receiver.Name = receiverName(e.Name)
+	if cnameIsTypeDef {
+		e.Receiver.CName = e.CName
+	} else {
+		e.Receiver.CName = "enum_" + e.CName // TODO remove this hack somehow "enum_" is Go's way of using enums and struts without typedef it is not the real CName. We need this for example for the Go->C type conversion in clang_index_isEntityObjCContainerKind.
+	}
 
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {
@@ -60,9 +64,9 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 	})
 
 	if strings.HasSuffix(e.Name, "Error") {
-		e.ReceiverPrimitiveType = "int32"
+		e.Receiver.PrimitiveType = "int32"
 	} else {
-		e.ReceiverPrimitiveType = "uint32"
+		e.Receiver.PrimitiveType = "uint32"
 	}
 
 	return &e
@@ -74,7 +78,7 @@ var templateGenerateEnum = template.Must(template.New("go-clang-generate-enum").
 import "C"
 
 {{$.Comment}}
-type {{$.Name}} {{$.ReceiverPrimitiveType}}
+type {{$.Name}} {{$.Receiver.PrimitiveType}}
 
 const (
 {{range $i, $e := .Items}}	{{if $e.Comment}}{{$e.Comment}}

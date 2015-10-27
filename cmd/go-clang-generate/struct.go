@@ -14,7 +14,7 @@ type Struct struct {
 	Name           string
 	CName          string
 	CNameIsTypeDef bool
-	Receiver       string
+	Receiver       Receiver
 	Comment        string
 	ImportUnsafe   bool
 
@@ -90,14 +90,14 @@ func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bo
 	}
 
 	s.Name = trimClangPrefix(s.CName)
-	s.Receiver = receiverName(s.Name)
+	s.Receiver.Name = receiverName(s.Name)
 
 	return &s
 }
 
 var templateGenerateStruct = template.Must(template.New("go-clang-generate-struct").Parse(`package phoenix
 
-//#include "go-clang.h"
+// #include "go-clang.h"
 import "C"
 {{if $.ImportUnsafe}}
 import "unsafe"{{end}}

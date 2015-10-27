@@ -12,23 +12,9 @@ type SourceRange struct {
 	c C.CXSourceRange
 }
 
-// NewNullRange creates a NULL (invalid) source range.
-func NewNullRange() SourceRange {
-	return SourceRange{C.clang_getNullRange()}
-}
-
 // NewRange creates a source range given the beginning and ending source
 // locations.
 func NewRange(beg, end SourceLocation) SourceRange {
 	o := C.clang_getRange(beg.c, end.c)
 	return SourceRange{o}
-}
-
-// IsNull checks if the underlying source range is null.
-func (r SourceRange) IsNull() bool {
-	o := C.clang_Range_isNull(r.c)
-	if o != C.int(0) {
-		return true
-	}
-	return false
 }

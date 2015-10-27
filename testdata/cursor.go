@@ -29,26 +29,6 @@ type Cursor struct {
 	c C.CXCursor
 }
 
-// Retrieve the NULL cursor, which represents no entity.
-func NewNullCursor() Cursor {
-	return Cursor{C.clang_getNullCursor()}
-}
-
-// IsNull returns true if the underlying Cursor is null
-func (c Cursor) IsNull() bool {
-	o := C.clang_Cursor_isNull(c.c)
-	if o != C.int(0) {
-		return true
-	}
-	return false
-}
-
-// Hash computes a hash value for the cursor
-func (c Cursor) Hash() uint {
-	o := C.clang_hashCursor(c.c)
-	return uint(o)
-}
-
 /**
  * \brief Determine the availability of the entity that this cursor refers to
  * on any platforms for which availability information is known.
@@ -126,25 +106,9 @@ func (c Cursor) PlatformAvailability(availability []PlatformAvailability) (alway
 	return
 }
 
-// TranslationUnit returns the translation unit that a cursor originated from
-func (c Cursor) TranslationUnit() TranslationUnit {
-	o := C.clang_Cursor_getTranslationUnit(c.c)
-	return TranslationUnit{o}
-}
-
 // CursorSet is a fast container representing a set of Cursors.
 type CursorSet struct {
 	c C.CXCursorSet
-}
-
-// NewCursorSet creates an empty CursorSet
-func NewCursorSet() CursorSet {
-	return CursorSet{C.clang_createCXCursorSet()}
-}
-
-// Dispose releases the memory associated with a CursorSet
-func (c CursorSet) Dispose() {
-	C.clang_disposeCXCursorSet(c.c)
 }
 
 // Contains queries a CursorSet to see if it contains a specific Cursor
@@ -236,51 +200,6 @@ func (c OverriddenCursors) At(i int) Cursor {
 }
 
 /**
- * \brief Retrieve the integer value of an enum constant declaration as a signed
- *  long long.
- *
- * If the cursor does not reference an enum constant declaration, LLONG_MIN is returned.
- * Since this is also potentially a valid constant value, the kind of the cursor
- * must be verified before calling this function.
- */
-func (c Cursor) EnumConstantDeclValue() int64 {
-	return int64(C.clang_getEnumConstantDeclValue(c.c))
-}
-
-/**
- * \brief Retrieve the integer value of an enum constant declaration as an unsigned
- *  long long.
- *
- * If the cursor does not reference an enum constant declaration, ULLONG_MAX is returned.
- * Since this is also potentially a valid constant value, the kind of the cursor
- * must be verified before calling this function.
- */
-func (c Cursor) EnumConstantDeclUnsignedValue() uint64 {
-	return uint64(C.clang_getEnumConstantDeclUnsignedValue(c.c))
-}
-
-/**
- * \brief Retrieve the bit width of a bit field declaration as an integer.
- *
- * If a cursor that is not a bit field declaration is passed in, -1 is returned.
- */
-func (c Cursor) FieldDeclBitWidth() int {
-	return int(C.clang_getFieldDeclBitWidth(c.c))
-}
-
-/**
- * \brief Retrieve the number of non-variadic arguments associated with a given
- * cursor.
- *
- * If a cursor that is not a function or method is passed in, -1 is returned.
- */
-// CINDEX_LINKAGE int clang_Cursor_getNumArguments(CXCursor C);
-func (c Cursor) NumArguments() int {
-	n := C.clang_Cursor_getNumArguments(c.c)
-	return int(n)
-}
-
-/**
  * \brief Retrieve the argument cursor of a function or method.
  *
  * If a cursor that is not a function or method is passed in or the index
@@ -290,20 +209,6 @@ func (c Cursor) NumArguments() int {
 func (c Cursor) Argument(i uint) Cursor {
 	o := C.clang_Cursor_getArgument(c.c, C.uint(i))
 	return Cursor{o}
-}
-
-/**
- * \brief Determine the number of overloaded declarations referenced by a
- * \c CXCursor_OverloadedDeclRef cursor.
- *
- * \param cursor The cursor whose overloaded declarations are being queried.
- *
- * \returns The number of overloaded declarations referenced by \c cursor. If it
- * is not a \c CXCursor_OverloadedDeclRef cursor, returns 0.
- */
-func (c Cursor) NumOverloadedDecls() int {
-	o := C.clang_getNumOverloadedDecls(c.c)
-	return int(o)
 }
 
 /**
@@ -384,25 +289,6 @@ func GoClangCursorVisitor(cursor, parent C.CXCursor, cfct unsafe.Pointer) (statu
 }
 
 /**
- * \brief Given a cursor pointing to a C++ method call or an ObjC message,
- * returns non-zero if the method/message is "dynamic", meaning:
- *
- * For a C++ method: the call is virtual.
- * For an ObjC message: the receiver is an object instance, not 'super' or a
- * specific class.
- *
- * If the method/message is "static" or the cursor does not point to a
- * method/message, it will return zero.
- */
-func (c Cursor) IsDynamicCall() bool {
-	o := C.clang_Cursor_isDynamicCall(c.c)
-	if o != 0 {
-		return true
-	}
-	return false
-}
-
-/**
  * \defgroup CINDEX_CPP C++ AST introspection
  *
  * The routines in this group provide access information in the ASTs specific
@@ -410,43 +296,6 @@ func (c Cursor) IsDynamicCall() bool {
  *
  * @{
  */
-
-/**
- * \brief Determine if a C++ member function or member function template is
- * pure virtual.
- */
-func (c Cursor) CXXMethod_IsPureVirtual() bool {
-	o := C.clang_CXXMethod_isPureVirtual(c.c)
-	if o != 0 {
-		return true
-	}
-	return false
-}
-
-/**
- * \brief Determine if a C++ member function or member function template is
- * declared 'static'.
- */
-func (c Cursor) CXXMethod_IsStatic() bool {
-	o := C.clang_CXXMethod_isStatic(c.c)
-	if o != 0 {
-		return true
-	}
-	return false
-}
-
-/**
- * \brief Determine if a C++ member function or member function template is
- * explicitly declared 'virtual' or if it overrides a virtual method from
- * one of the base classes.
- */
-func (c Cursor) CXXMethod_IsVirtual() bool {
-	o := C.clang_CXXMethod_isVirtual(c.c)
-	if o != 0 {
-		return true
-	}
-	return false
-}
 
 /**
  * \brief Given a cursor that references something else, return the source range

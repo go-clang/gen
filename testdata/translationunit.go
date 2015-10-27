@@ -111,26 +111,6 @@ func (tu TranslationUnit) IsFileMultipleIncludeGuarded(file File) bool {
 	return false
 }
 
-/**
- * \brief Retrieve the cursor that represents the given translation unit.
- *
- * The translation unit cursor can be used to start traversing the
- * various declarations within the given translation unit.
- */
-func (tu TranslationUnit) ToCursor() Cursor {
-	o := C.clang_getTranslationUnitCursor(tu.c)
-	return Cursor{o}
-}
-
-/**
- * \brief Get the original translation unit source file name.
- */
-func (tu TranslationUnit) Spelling() string {
-	cstr := cxstring{C.clang_getTranslationUnitSpelling(tu.c)}
-	defer cstr.Dispose()
-	return cstr.String()
-}
-
 // CursorOf maps a source location to the cursor that describes the entity at that
 // location in the source code.
 //
@@ -239,13 +219,6 @@ func (tu TranslationUnit) Diagnostics() (ret Diagnostics) {
 		ret[i].c = C.clang_getDiagnostic(tu.c, C.uint(i))
 	}
 	return
-}
-
-/**
- * \brief Destroy the specified CXTranslationUnit object.
- */
-func (tu TranslationUnit) Dispose() {
-	C.clang_disposeTranslationUnit(tu.c)
 }
 
 // Location returns the source location associated with a given file/line/column

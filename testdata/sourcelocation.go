@@ -13,34 +13,6 @@ type SourceLocation struct {
 	c C.CXSourceLocation
 }
 
-// NewNullLocation creates a NULL (invalid) source location.
-func NewNullLocation() SourceLocation {
-	return SourceLocation{C.clang_getNullLocation()}
-}
-
-/**
- * \brief Returns non-zero if the given source location is in a system header.
- */
-func (loc SourceLocation) IsInSystemHeader() bool {
-	o := C.clang_Location_isInSystemHeader(loc.c)
-	if o != 0 {
-		return true
-	}
-	return false
-}
-
-/**
- * \brief Returns non-zero if the given source location is in the main file of
- * the corresponding translation unit.
- */
-func (loc SourceLocation) IsFromMainFile() bool {
-	o := C.clang_Location_isFromMainFile(loc.c)
-	if o != 0 {
-		return true
-	}
-	return false
-}
-
 // ExpansionLocation returns the file, line, column, and offset represented by
 // the given source location.
 //

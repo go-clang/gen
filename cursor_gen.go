@@ -8,11 +8,28 @@ type Cursor struct {
 	c C.CXCursor
 }
 
+// Retrieve the NULL cursor, which represents no entity.
+func NewNullCursor() Cursor {
+	return Cursor{C.clang_getNullCursor()}
+}
+
 // Determine whether two cursors are equivalent.
 func EqualCursors(c1, c2 Cursor) bool {
 	o := C.clang_equalCursors(c1.c, c2.c)
 
 	return o != C.uint(0)
+}
+
+// Returns non-zero if \p cursor is null.
+func (c Cursor) IsNull() bool {
+	o := C.clang_Cursor_isNull(c.c)
+
+	return o != C.int(0)
+}
+
+// Compute a hash value for the given cursor.
+func (c Cursor) HashCursor() uint16 {
+	return uint16(C.clang_hashCursor(c.c))
 }
 
 // Retrieve the kind of the given cursor.
@@ -33,6 +50,11 @@ func (c Cursor) Availability() AvailabilityKind {
 // Determine the "language" of the entity referred to by a given cursor.
 func (c Cursor) Language() LanguageKind {
 	return LanguageKind(C.clang_getCursorLanguage(c.c))
+}
+
+// Returns the translation unit that a cursor originated from.
+func (c Cursor) TranslationUnit() TranslationUnit {
+	return TranslationUnit{C.clang_Cursor_getTranslationUnit(c.c)}
 }
 
 /*
@@ -140,6 +162,26 @@ func (c Cursor) EnumDeclIntegerType() Type {
 	return Type{C.clang_getEnumDeclIntegerType(c.c)}
 }
 
+// Retrieve the integer value of an enum constant declaration as a signed long long. If the cursor does not reference an enum constant declaration, LLONG_MIN is returned. Since this is also potentially a valid constant value, the kind of the cursor must be verified before calling this function.
+func (c Cursor) EnumConstantDeclValue() int64 {
+	return int64(C.clang_getEnumConstantDeclValue(c.c))
+}
+
+// Retrieve the integer value of an enum constant declaration as an unsigned long long. If the cursor does not reference an enum constant declaration, ULLONG_MAX is returned. Since this is also potentially a valid constant value, the kind of the cursor must be verified before calling this function.
+func (c Cursor) EnumConstantDeclUnsignedValue() uint64 {
+	return uint64(C.clang_getEnumConstantDeclUnsignedValue(c.c))
+}
+
+// Retrieve the bit width of a bit field declaration as an integer. If a cursor that is not a bit field declaration is passed in, -1 is returned.
+func (c Cursor) FieldDeclBitWidth() uint16 {
+	return uint16(C.clang_getFieldDeclBitWidth(c.c))
+}
+
+// Retrieve the number of non-variadic arguments associated with a given cursor. The number of arguments can be determined for calls as well as for declarations of functions or methods. For other cursors -1 is returned.
+func (c Cursor) NumArguments() uint16 {
+	return uint16(C.clang_Cursor_getNumArguments(c.c))
+}
+
 // Returns the Objective-C type encoding for the specified declaration.
 func (c Cursor) DeclObjCTypeEncoding() string {
 	o := cxstring{C.clang_getDeclObjCTypeEncoding(c.c)}
@@ -168,8 +210,13 @@ func (c Cursor) IsVirtualBase() bool {
 }
 
 // Returns the access control level for the referenced object. If the cursor refers to a C++ declaration, its access control level within its parent scope is returned. Otherwise, if the cursor refers to a base specifier or access specifier, the specifier itself is returned.
-func (c Cursor) CXXAccessSpecifier() AccessSpecifier {
+func (c Cursor) AccessSpecifier() AccessSpecifier {
 	return AccessSpecifier(C.clang_getCXXAccessSpecifier(c.c))
+}
+
+// Determine the number of overloaded declarations referenced by a \c CXCursor_OverloadedDeclRef cursor. \param cursor The cursor whose overloaded declarations are being queried. \returns The number of overloaded declarations referenced by \c cursor. If it is not a \c CXCursor_OverloadedDeclRef cursor, returns 0.
+func (c Cursor) NumOverloadedDecls() uint16 {
+	return uint16(C.clang_getNumOverloadedDecls(c.c))
 }
 
 // For cursors representing an iboutletcollection attribute, this function returns the collection element type.
@@ -273,9 +320,26 @@ func (c Cursor) CanonicalCursor() Cursor {
 	return Cursor{C.clang_getCanonicalCursor(c.c)}
 }
 
+// If the cursor points to a selector identifier in a objc method or message expression, this returns the selector index. After getting a cursor with #clang_getCursor, this can be called to determine if the location points to a selector identifier. \returns The selector index if the cursor is an objc method or message expression and the cursor is pointing to a selector identifier, or -1 otherwise.
+func (c Cursor) ObjCSelectorIndex() uint16 {
+	return uint16(C.clang_Cursor_getObjCSelectorIndex(c.c))
+}
+
+// Given a cursor pointing to a C++ method call or an ObjC message, returns non-zero if the method/message is "dynamic", meaning: For a C++ method: the call is virtual. For an ObjC message: the receiver is an object instance, not 'super' or a specific class. If the method/message is "static" or the cursor does not point to a method/message, it will return zero.
+func (c Cursor) IsDynamicCall() bool {
+	o := C.clang_Cursor_isDynamicCall(c.c)
+
+	return o != C.int(0)
+}
+
 // Given a cursor pointing to an ObjC message, returns the CXType of the receiver.
 func (c Cursor) ReceiverType() Type {
 	return Type{C.clang_Cursor_getReceiverType(c.c)}
+}
+
+// Given a cursor that represents an ObjC method or parameter declaration, return the associated ObjC qualifiers for the return type or the parameter respectively. The bits are formed from CXObjCDeclQualifierKind.
+func (c Cursor) ObjCDeclQualifiers() uint16 {
+	return uint16(C.clang_Cursor_getObjCDeclQualifiers(c.c))
 }
 
 // Given a cursor that represents an ObjC method or property declaration, return non-zero if the declaration was affected by "@optional". Returns zero if the cursor is not such a declaration or it is "@required".
@@ -321,6 +385,27 @@ func (c Cursor) ParsedComment() Comment {
 // Given a CXCursor_ModuleImportDecl cursor, return the associated module.
 func (c Cursor) Module() Module {
 	return Module{C.clang_Cursor_getModule(c.c)}
+}
+
+// Determine if a C++ member function or member function template is pure virtual.
+func (c Cursor) CXXMethod_IsPureVirtual() bool {
+	o := C.clang_CXXMethod_isPureVirtual(c.c)
+
+	return o != C.uint(0)
+}
+
+// Determine if a C++ member function or member function template is declared 'static'.
+func (c Cursor) CXXMethod_IsStatic() bool {
+	o := C.clang_CXXMethod_isStatic(c.c)
+
+	return o != C.uint(0)
+}
+
+// Determine if a C++ member function or member function template is explicitly declared 'virtual' or if it overrides a virtual method from one of the base classes.
+func (c Cursor) CXXMethod_IsVirtual() bool {
+	o := C.clang_CXXMethod_isVirtual(c.c)
+
+	return o != C.uint(0)
 }
 
 // Given a cursor that represents a template, determine the cursor kind of the specializations would be generated by instantiating the template. This routine can be used to determine what flavor of function template, class template, or class template partial specialization is stored in the cursor. For example, it can describe whether a class template cursor is declared with "struct", "class" or "union". \param C The cursor to query. This cursor should represent a template declaration. \returns The cursor kind of the specializations that would be generated by instantiating the template \p C. If \p C is not a template, returns \c CXCursor_NoDeclFound.

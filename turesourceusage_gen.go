@@ -7,3 +7,7 @@ import "C"
 type TUResourceUsage struct {
 	c C.CXTUResourceUsage
 }
+
+func (turu TUResourceUsage) Dispose() {
+	C.clang_disposeCXTUResourceUsage(turu.c)
+}

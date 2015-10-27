@@ -153,12 +153,6 @@ func main() {
 				break
 			}
 
-			switch cname {
-			// TODO ignore declarations like "typedef struct CXTranslationUnitImpl *CXTranslationUnit" for now
-			case "CXCursorSetImpl", "CXTranslationUnitImpl":
-				return clang.CVR_Recurse
-			}
-
 			s := handleStructCursor(cursor, cname, cnameIsTypeDef)
 
 			lookupStruct[s.Name] = s
@@ -167,7 +161,30 @@ func main() {
 
 			structs = append(structs, s)
 		case clang.CK_TypedefDecl:
-			if cursor.TypedefDeclUnderlyingType().TypeSpelling() == "void *" {
+			underlyingType := cursor.TypedefDeclUnderlyingType().TypeSpelling()
+			underlyingStructType := strings.TrimSuffix(strings.TrimPrefix(underlyingType, "struct "), " *")
+
+			if s, ok := lookupStruct[underlyingStructType]; ok && !s.CNameIsTypeDef && strings.HasPrefix(underlyingType, "struct "+s.CName) {
+				// Sometimes the typedef is not a parent of the struct but a sibling TODO find out if this is a bug?
+
+				sn := handleVoidStructCursor(cursor, cname, true)
+
+				lookupStruct[sn.Name] = sn
+				lookupNonTypedefs["struct "+sn.CName] = sn.Name
+				lookupStruct[sn.CName] = sn
+
+				// Update the lookups for the old struct
+				lookupStruct[s.Name] = sn
+				lookupStruct[s.CName] = sn
+
+				for i, si := range structs {
+					if si == s {
+						structs[i] = sn
+
+						break
+					}
+				}
+			} else if underlyingType == "void *" {
 				s := handleVoidStructCursor(cursor, cname, true)
 
 				lookupStruct[s.Name] = s
@@ -181,31 +198,48 @@ func main() {
 		return clang.CVR_Recurse
 	})
 
-	trimCommonFName := func(fname string, rt string) string {
-		fname = strings.TrimPrefix(fname, rt+"_")
-
+	trimCommonFName := func(fname string, rt Receiver) string {
+		fname = strings.TrimPrefix(fname, "create")
 		fname = strings.TrimPrefix(fname, "get")
-		fname = strings.TrimPrefix(fname, rt)
+
+		fname = trimClangPrefix(fname)
+
+		if fn := strings.TrimPrefix(fname, rt.Name+"_"); len(fn) != len(fname) {
+			fname = fn
+		} else if fn := strings.TrimPrefix(fname, rt.Name); len(fn) != len(fname) {
+			fname = fn
+		} else if fn := strings.TrimSuffix(fname, rt.CName); len(fn) != len(fname) {
+			fname = fn
+		}
+
+		fname = strings.TrimPrefix(fname, "create")
+		fname = strings.TrimPrefix(fname, "get")
+
+		fname = trimClangPrefix(fname)
+
+		// If the function name is empty at this point, it is a constructor
+		if fname == "" {
+			fname = rt.Name
+		}
 
 		return fname
 	}
 
-	addMethod := func(f *Function, fname string, rt string, method func(f *Function) string) bool {
+	addMethod := func(f *Function, fname string, fnamePrefix string, rt Receiver, method func(f *Function) string) bool {
 		fname = upperFirstCharacter(fname)
 
-		if e, ok := lookupEnum[rt]; ok {
-			f.Name = fname
+		if e, ok := lookupEnum[rt.Name]; ok {
+			f.Name = fnamePrefix + fname
 			f.Receiver = e.Receiver
-			f.ReceiverType = rt
-			f.ReceiverPrimitiveType = e.ReceiverPrimitiveType
+			f.Receiver.Type = rt.Name
 
 			e.Methods = append(e.Methods, method(f))
 
 			return true
-		} else if s, ok := lookupStruct[rt]; ok {
-			f.Name = fname
-			f.ReceiverType = rt
+		} else if s, ok := lookupStruct[rt.Name]; ok {
+			f.Name = fnamePrefix + fname
 			f.Receiver = s.Receiver
+			f.Receiver.Type = rt.Name
 
 			s.Methods = append(s.Methods, method(f))
 
@@ -215,23 +249,35 @@ func main() {
 		return false
 	}
 
-	addBasicMethods := func(f *Function, fname string, rt string) bool {
-		if len(f.Parameters) == 1 && f.ReturnType == "String" {
+	addBasicMethods := func(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
+		if len(f.Parameters) == 0 && isEnumOrStruct(f.ReturnType) {
+			rtc := rt
+			rtc.Name = f.ReturnType
+
+			fname = trimCommonFName(fname, rtc)
+			if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
+				fname = "New" + fname
+			}
+
+			return addMethod(f, fname, fnamePrefix, rtc, generateFunctionVoidReturningMethod)
+		} else if len(f.Parameters) == 1 && f.ReturnType == "String" {
 			fname = trimCommonFName(fname, rt)
 
-			return addMethod(f, fname, rt, generateFunctionStringGetter)
+			return addMethod(f, fname, fnamePrefix, rt, generateFunctionStringGetter)
 		} else if len(f.Parameters) == 1 && isEnumOrStruct(f.ReturnType) && isEnumOrStruct(f.Parameters[0].Type) {
 			fname = trimCommonFName(fname, rt)
 
-			return addMethod(f, fname, rt, generateFunctionGetter)
-		} else if len(f.Parameters) == 1 && fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2])) && f.ReturnType == "unsigned int" {
-			return addMethod(f, fname, rt, generateFunctionIs)
-		} else if len(f.Parameters) == 1 && strings.HasPrefix(fname, "dispose") && f.ReturnType == "void" && (fname == "dispose" || fname[len("dispose"):] == rt) {
+			return addMethod(f, fname, fnamePrefix, rt, generateFunctionGetter)
+		} else if len(f.Parameters) == 1 &&
+			((fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3])))) &&
+			(f.ReturnType == "unsigned int" || f.ReturnType == "int") {
+			return addMethod(f, fname, fnamePrefix, rt, generateFunctionIs)
+		} else if len(f.Parameters) == 1 && strings.HasPrefix(fname, "dispose") && f.ReturnType == "void" {
 			fname = "Dispose"
 
-			return addMethod(f, fname, rt, generateFunctionVoidMethod)
+			return addMethod(f, fname, fnamePrefix, rt, generateFunctionVoidMethod)
 		} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && f.ReturnType == "unsigned int" && f.Parameters[0].Type == f.Parameters[1].Type {
-			return addMethod(f, fname, rt, generateFunctionEqual)
+			return addMethod(f, fname, fnamePrefix, rt, generateFunctionEqual)
 		}
 
 		return false
@@ -239,11 +285,12 @@ func main() {
 
 	for _, f := range functions {
 		fname := f.Name
-		var rt string
+		var rt Receiver
 		if len(f.Parameters) > 0 {
-			rt = trimClangPrefix(f.Parameters[0].Type)
-			if n, ok := lookupNonTypedefs[rt]; ok {
-				rt = n
+			rt.CName = f.Parameters[0].Type
+			rt.Name = trimClangPrefix(rt.CName)
+			if n, ok := lookupNonTypedefs[rt.Name]; ok {
+				rt.Name = n
 			}
 		}
 
@@ -251,17 +298,40 @@ func main() {
 			f.ReturnType = n
 		}
 		if e, ok := lookupEnum[f.ReturnType]; ok {
-			f.ReturnPrimitiveType = e.ReceiverPrimitiveType
+			f.ReturnPrimitiveType = e.Receiver.PrimitiveType
 		} else if _, ok := lookupStruct[f.ReturnType]; ok {
 		}
 
-		added := addBasicMethods(f, fname, rt)
+		added := addBasicMethods(f, fname, "", rt)
 
 		if !added {
-			if s := strings.SplitN(f.Name, "_", 2); len(s) == 2 {
-				if s[0] == rt {
-					added = addBasicMethods(f, s[1], s[0])
+			if s := strings.Split(f.Name, "_"); len(s) == 2 {
+				if s[0] == rt.Name {
+					rtc := rt
+					rtc.Name = s[0]
+
+					added = addBasicMethods(f, s[1], "", rtc)
+				} else {
+					added = addBasicMethods(f, strings.Join(s[1:], ""), s[0]+"_", rt)
 				}
+			}
+		}
+		if !added {
+			if len(f.Parameters) == 1 && (f.ReturnType == "int" || f.ReturnType == "unsigned int" || f.ReturnType == "long long" || f.ReturnType == "unsigned long long") && isEnumOrStruct(f.Parameters[0].Type) {
+				fname = trimCommonFName(fname, rt)
+
+				switch f.ReturnType { // TODO refactor to use getTypeConversion(...) somehow, maybe do the conversion during the create of a Function instance
+				case "int":
+					f.ReturnType = "uint16"
+				case "unsigned int":
+					f.ReturnType = "uint16"
+				case "long long":
+					f.ReturnType = "int64"
+				case "unsigned long long":
+					f.ReturnType = "uint64"
+				}
+
+				added = addMethod(f, fname, "", rt, generateFunctionGetterPrimitive)
 			}
 		}
 

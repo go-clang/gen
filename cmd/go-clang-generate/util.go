@@ -88,18 +88,6 @@ func fileExists(filepath string) error {
 	return nil
 }
 
-func receiverName(s string) string {
-	var n []rune
-
-	for _, c := range s {
-		if unicode.IsUpper(c) {
-			n = append(n, unicode.ToLower(c))
-		}
-	}
-
-	return string(n)
-}
-
 func upperFirstCharacter(s string) string {
 	r := []rune(s)
 
