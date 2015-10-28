@@ -23,9 +23,11 @@ const (
 	GoPointer   = "unsafe.Pointer"
 )
 
-type Conversion struct {
-	GoType            string
-	CType             string
+type Type struct {
+	Name      string
+	CName     string
+	Primitive string
+
 	PointerLevel      int
 	IsPrimitive       bool
 	IsArray           bool
@@ -33,9 +35,9 @@ type Conversion struct {
 	IsFunctionPointer bool
 }
 
-func getTypeConversion(cType clang.Type) (Conversion, error) {
-	conv := Conversion{
-		CType:             cType.TypeSpelling(),
+func getType(cType clang.Type) (Type, error) {
+	typ := Type{
+		CName:             cType.TypeSpelling(),
 		PointerLevel:      0,
 		IsPrimitive:       true,
 		IsArray:           false,
@@ -44,38 +46,38 @@ func getTypeConversion(cType clang.Type) (Conversion, error) {
 
 	switch cType.Kind() {
 	case clang.TK_Char_S:
-		conv.GoType = string(GoInt8)
+		typ.Name = string(GoInt8)
 	case clang.TK_Char_U:
-		conv.GoType = GoUInt8
+		typ.Name = GoUInt8
 	case clang.TK_Int, clang.TK_Short:
-		conv.GoType = GoInt16
+		typ.Name = GoInt16
 	case clang.TK_UInt, clang.TK_UShort:
-		conv.GoType = GoUInt16
+		typ.Name = GoUInt16
 	case clang.TK_Long:
-		conv.GoType = GoInt32
+		typ.Name = GoInt32
 	case clang.TK_ULong:
-		conv.GoType = GoUInt32
+		typ.Name = GoUInt32
 	case clang.TK_LongLong:
-		conv.GoType = GoInt64
+		typ.Name = GoInt64
 	case clang.TK_ULongLong:
-		conv.GoType = GoUInt64
+		typ.Name = GoUInt64
 	case clang.TK_Float:
-		conv.GoType = GoFloat32
+		typ.Name = GoFloat32
 	case clang.TK_Double:
-		conv.GoType = GoFloat64
+		typ.Name = GoFloat64
 	case clang.TK_Bool:
-		conv.GoType = GoBool
+		typ.Name = GoBool
 	case clang.TK_Void:
-		conv.GoType = "void"
+		typ.Name = "void"
 	case clang.TK_ConstantArray:
-		subConv, err := getTypeConversion(cType.ArrayElementType())
+		subConv, err := getType(cType.ArrayElementType())
 		if err != nil {
-			return Conversion{}, err
+			return Type{}, err
 		}
 
-		conv.GoType = subConv.GoType
-		conv.PointerLevel += subConv.PointerLevel
-		conv.IsArray = true
+		typ.Name = subConv.Name
+		typ.PointerLevel += subConv.PointerLevel
+		typ.IsArray = true
 
 	case clang.TK_Typedef:
 		typeStr := cType.TypeSpelling()
@@ -85,50 +87,50 @@ func getTypeConversion(cType clang.Type) (Conversion, error) {
 			typeStr = trimClangPrefix(cType.TypeSpelling())
 		}
 
-		conv.GoType = typeStr
-		conv.IsPrimitive = false
+		typ.Name = typeStr
+		typ.IsPrimitive = false
 
 		if cType.CanonicalType().Kind() == clang.TK_Enum {
-			conv.IsEnumLiteral = true
-			conv.IsPrimitive = true
+			typ.IsEnumLiteral = true
+			typ.IsPrimitive = true
 		}
 
 	case clang.TK_Pointer:
-		conv.PointerLevel++
+		typ.PointerLevel++
 
 		if cType.PointeeType().CanonicalType().Kind() == clang.TK_FunctionProto {
-			conv.IsFunctionPointer = true
+			typ.IsFunctionPointer = true
 		}
 
-		subConv, err := getTypeConversion(cType.PointeeType().Declaration().Type()) // ComplexTypes
+		subConv, err := getType(cType.PointeeType().Declaration().Type()) // ComplexTypes
 		if err != nil {
-			return Conversion{}, err
+			return Type{}, err
 		}
 
-		if subConv.GoType == "" { // datatypes
-			subConv, err = getTypeConversion(cType.PointeeType())
+		if subConv.Name == "" { // datatypes
+			subConv, err = getType(cType.PointeeType())
 			if err != nil {
-				return Conversion{}, err
+				return Type{}, err
 			}
 		} else {
-			conv.IsPrimitive = false
+			typ.IsPrimitive = false
 		}
 
-		conv.GoType = subConv.GoType
-		conv.PointerLevel += subConv.PointerLevel
+		typ.Name = subConv.Name
+		typ.PointerLevel += subConv.PointerLevel
 
 	case clang.TK_Unexposed: // there is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013
 
 		if cType.CanonicalType().Kind() == clang.TK_Enum {
-			conv.GoType = trimClangPrefix(cType.CanonicalType().Declaration().DisplayName())
-			fmt.Println("blub" + conv.GoType)
-			conv.IsEnumLiteral = true
-			conv.IsPrimitive = true
+			typ.Name = trimClangPrefix(cType.CanonicalType().Declaration().DisplayName())
+			fmt.Println("blub" + typ.Name)
+			typ.IsEnumLiteral = true
+			typ.IsPrimitive = true
 		} else {
-			return Conversion{}, errors.New("unknown type")
+			return Type{}, errors.New("unknown type")
 		}
 
 	}
 
-	return conv, nil
+	return typ, nil
 }
