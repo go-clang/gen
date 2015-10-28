@@ -177,8 +177,14 @@ func generateASTFunction(f *Function) string {
 			}
 		}
 		if typ.Name != "" {
-			f.Type = &ast.Ident{
-				Name: typ.Name,
+			if typ.Name == GoUInt8 {
+				f.Type = &ast.Ident{
+					Name: "string",
+				}
+			} else {
+				f.Type = &ast.Ident{
+					Name: typ.Name,
+				}
 			}
 
 			if typ.IsSlice {
@@ -254,12 +260,20 @@ func generateASTFunction(f *Function) string {
 				hasDeclaration = true
 
 				// Declare the slice
+				var sliceType ast.Expr = doCType(p.Type.Primitive)
+
+				for i := 1; i < p.Type.PointerLevel; i++ {
+					sliceType = &ast.StarExpr{
+						X: sliceType,
+					}
+				}
+
 				addAssignment(
 					"ca_"+p.Name,
 					doCast(
 						"make",
 						&ast.ArrayType{
-							Elt: doCType(p.Type.Primitive),
+							Elt: sliceType,
 						},
 						doCast(
 							"len",
@@ -271,6 +285,92 @@ func generateASTFunction(f *Function) string {
 				)
 
 				// Assign elements
+				var loopStatements []ast.Stmt
+
+				// Handle our good old friend the const char * differently...
+				if p.Type.Name == GoUInt8 {
+					loopStatements = append(loopStatements, &ast.AssignStmt{
+						Lhs: []ast.Expr{
+							&ast.Ident{
+								Name: "ci_str",
+							},
+						},
+						Tok: token.DEFINE,
+						Rhs: []ast.Expr{
+							doCCast(
+								"CString",
+								&ast.IndexExpr{
+									X: &ast.Ident{
+										Name: p.Name,
+									},
+									Index: &ast.Ident{
+										Name: "i",
+									},
+								},
+							),
+						},
+					})
+					loopStatements = append(loopStatements, &ast.DeferStmt{
+						Call: doCCast(
+							"free",
+							doCall(
+								"unsafe",
+								"Pointer",
+								&ast.Ident{
+									Name: "ci_str",
+								},
+							),
+						),
+					})
+					loopStatements = append(loopStatements, &ast.AssignStmt{
+						Lhs: []ast.Expr{
+							&ast.IndexExpr{
+								X: &ast.Ident{
+									Name: "ca_" + p.Name,
+								},
+								Index: &ast.Ident{
+									Name: "i",
+								},
+							},
+						},
+						Tok: token.ASSIGN,
+						Rhs: []ast.Expr{
+							&ast.Ident{
+								Name: "ci_str",
+							},
+						},
+					})
+				} else {
+					loopStatements = append(loopStatements, &ast.AssignStmt{
+						Lhs: []ast.Expr{
+							&ast.IndexExpr{
+								X: &ast.Ident{
+									Name: "ca_" + p.Name,
+								},
+								Index: &ast.Ident{
+									Name: "i",
+								},
+							},
+						},
+						Tok: token.ASSIGN,
+						Rhs: []ast.Expr{
+							&ast.SelectorExpr{
+								X: &ast.IndexExpr{
+									X: &ast.Ident{
+										Name: p.Name,
+									},
+									Index: &ast.Ident{
+										Name: "i",
+									},
+								},
+								Sel: &ast.Ident{
+									Name: "c",
+								},
+							},
+						},
+					})
+				}
+
 				addStatement(&ast.RangeStmt{
 					Key: &ast.Ident{
 						Name: "i",
@@ -280,36 +380,7 @@ func generateASTFunction(f *Function) string {
 						Name: p.Name,
 					},
 					Body: &ast.BlockStmt{
-						List: []ast.Stmt{
-							&ast.AssignStmt{
-								Lhs: []ast.Expr{
-									&ast.IndexExpr{
-										X: &ast.Ident{
-											Name: "ca_" + p.Name,
-										},
-										Index: &ast.Ident{
-											Name: "i",
-										},
-									},
-								},
-								Tok: token.ASSIGN,
-								Rhs: []ast.Expr{
-									&ast.SelectorExpr{
-										X: &ast.IndexExpr{
-											X: &ast.Ident{
-												Name: p.Name,
-											},
-											Index: &ast.Ident{
-												Name: "i",
-											},
-										},
-										Sel: &ast.Ident{
-											Name: "c",
-										},
-									},
-								},
-							},
-						},
+						List: loopStatements,
 					},
 				})
 			} else if p.Type.IsReturnArgument {

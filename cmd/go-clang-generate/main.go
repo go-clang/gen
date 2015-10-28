@@ -525,7 +525,7 @@ func main() {
 
 func hasHandleablePointers(params []FunctionParameter) bool {
 	for _, p := range params {
-		if p.Type.IsSlice && p.Type.PointerLevel == 1 { // TODO we can handle currently only ingoing array pointers
+		if p.Type.IsSlice && (p.Type.PointerLevel == 1 || (p.Type.PointerLevel == 2 && p.Type.CName == "const char *const *")) { // TODO we can handle currently only ingoing array pointers
 			continue
 		}
 
