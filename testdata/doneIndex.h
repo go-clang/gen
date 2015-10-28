@@ -942,18 +942,3 @@ int clang_indexTranslationUnit(CXIndexAction,
                                               unsigned index_options,
                                               CXTranslationUnit);
 
-/**
- * \brief Retrieve the CXIdxFile, file, line, column, and offset represented by
- * the given CXIdxLoc.
- *
- * If the location refers into a macro expansion, retrieves the
- * location of the macro expansion and if it refers into a macro argument
- * retrieves the location of the argument.
- */
-void clang_indexLoc_getFileLocation(CXIdxLoc loc,
-                                                   CXIdxClientFile *indexFile,
-                                                   CXFile *file,
-                                                   unsigned *line,
-                                                   unsigned *column,
-                                                   unsigned *offset);
-
