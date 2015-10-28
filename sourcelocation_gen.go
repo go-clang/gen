@@ -60,3 +60,51 @@ func (sl SourceLocation) Location_IsFromMainFile() bool {
 func (sl SourceLocation) Range(end SourceLocation) SourceRange {
 	return SourceRange{C.clang_getRange(sl.c, end.c)}
 }
+
+// Retrieve the file, line, column, and offset represented by the given source location. If the location refers into a macro expansion, retrieves the location of the macro expansion. \param location the location within a source file that will be decomposed into its parts. \param file [out] if non-NULL, will be set to the file to which the given source location points. \param line [out] if non-NULL, will be set to the line to which the given source location points. \param column [out] if non-NULL, will be set to the column to which the given source location points. \param offset [out] if non-NULL, will be set to the offset into the buffer to which the given source location points.
+func (sl SourceLocation) ExpansionLocation() (File, uint16, uint16, uint16) {
+	var file File
+	var line C.uint
+	var column C.uint
+	var offset C.uint
+
+	C.clang_getExpansionLocation(sl.c, &file.c, &line, &column, &offset)
+
+	return file, uint16(line), uint16(column), uint16(offset)
+}
+
+// Legacy API to retrieve the file, line, column, and offset represented by the given source location. This interface has been replaced by the newer interface #clang_getExpansionLocation(). See that interface's documentation for details.
+func (sl SourceLocation) InstantiationLocation() (File, uint16, uint16, uint16) {
+	var file File
+	var line C.uint
+	var column C.uint
+	var offset C.uint
+
+	C.clang_getInstantiationLocation(sl.c, &file.c, &line, &column, &offset)
+
+	return file, uint16(line), uint16(column), uint16(offset)
+}
+
+// Retrieve the file, line, column, and offset represented by the given source location. If the location refers into a macro instantiation, return where the location was originally spelled in the source file. \param location the location within a source file that will be decomposed into its parts. \param file [out] if non-NULL, will be set to the file to which the given source location points. \param line [out] if non-NULL, will be set to the line to which the given source location points. \param column [out] if non-NULL, will be set to the column to which the given source location points. \param offset [out] if non-NULL, will be set to the offset into the buffer to which the given source location points.
+func (sl SourceLocation) SpellingLocation() (File, uint16, uint16, uint16) {
+	var file File
+	var line C.uint
+	var column C.uint
+	var offset C.uint
+
+	C.clang_getSpellingLocation(sl.c, &file.c, &line, &column, &offset)
+
+	return file, uint16(line), uint16(column), uint16(offset)
+}
+
+// Retrieve the file, line, column, and offset represented by the given source location. If the location refers into a macro expansion, return where the macro was expanded or where the macro argument was written, if the location points at a macro argument. \param location the location within a source file that will be decomposed into its parts. \param file [out] if non-NULL, will be set to the file to which the given source location points. \param line [out] if non-NULL, will be set to the line to which the given source location points. \param column [out] if non-NULL, will be set to the column to which the given source location points. \param offset [out] if non-NULL, will be set to the offset into the buffer to which the given source location points.
+func (sl SourceLocation) FileLocation() (File, uint16, uint16, uint16) {
+	var file File
+	var line C.uint
+	var column C.uint
+	var offset C.uint
+
+	C.clang_getFileLocation(sl.c, &file.c, &line, &column, &offset)
+
+	return file, uint16(line), uint16(column), uint16(offset)
+}

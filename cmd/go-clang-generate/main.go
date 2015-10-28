@@ -356,17 +356,10 @@ func main() {
 				p.Type = e.Receiver.Type
 			} else if _, ok := lookupStruct[p.Type.Name]; ok {
 			}
-		}
 
-		switch f.CName { // TODO this is a happy hack
-		case "clang_getFileUniqueID":
-			// Check the parameters for return arguments
-			for i := range f.Parameters {
-				p := &f.Parameters[i]
-
-				if p.Type.PointerLevel > 0 {
-					p.Type.IsReturnArgument = true
-				}
+			// TODO happy hack, whiteflag types that are return arguments
+			if p.Type.PointerLevel == 1 && (p.Type.Name == "File" || p.Type.Name == "FileUniqueID" || p.Type.Name == GoUInt16) {
+				p.Type.IsReturnArgument = true
 			}
 		}
 

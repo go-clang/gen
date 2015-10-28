@@ -160,6 +160,22 @@ func generateASTFunction(f *Function) string {
 				})
 
 				// Declare the return argument's variable
+				var varType ast.Expr
+				if p.Type.Primitive != "" {
+					varType = &ast.SelectorExpr{
+						X: &ast.Ident{
+							Name: "C",
+						},
+						Sel: &ast.Ident{
+							Name: p.Type.Primitive,
+						},
+					}
+				} else {
+					varType = &ast.Ident{
+						Name: p.Type.Name,
+					}
+				}
+
 				astFunc.Body.List = append(astFunc.Body.List, &ast.DeclStmt{
 					Decl: &ast.GenDecl{
 						Tok: token.VAR,
@@ -170,18 +186,29 @@ func generateASTFunction(f *Function) string {
 										Name: p.Name,
 									},
 								},
-								Type: &ast.Ident{
-									Name: p.Type.Name,
-								},
+								Type: varType,
 							},
 						},
 					},
 				})
 
 				// Add the return argument to the return statement
-				retur.Results = append(retur.Results, &ast.Ident{
-					Name: p.Name,
-				})
+				if p.Type.Primitive != "" {
+					retur.Results = append(retur.Results, &ast.CallExpr{
+						Fun: &ast.Ident{
+							Name: p.Type.Name,
+						},
+						Args: []ast.Expr{
+							&ast.Ident{
+								Name: p.Name,
+							},
+						},
+					})
+				} else {
+					retur.Results = append(retur.Results, &ast.Ident{
+						Name: p.Name,
+					})
+				}
 
 				continue
 			}
@@ -288,20 +315,27 @@ func generateASTFunction(f *Function) string {
 						},
 					}
 				} else {
-					pf = &ast.CallExpr{
-						Fun: &ast.SelectorExpr{
-							X: &ast.Ident{
-								Name: "C",
+					if p.Type.IsReturnArgument {
+						// Return arguemnts already have a cast
+						pf = &ast.Ident{
+							Name: p.Name,
+						}
+					} else {
+						pf = &ast.CallExpr{
+							Fun: &ast.SelectorExpr{
+								X: &ast.Ident{
+									Name: "C",
+								},
+								Sel: &ast.Ident{
+									Name: p.Type.Primitive,
+								},
 							},
-							Sel: &ast.Ident{
-								Name: p.Type.Primitive,
+							Args: []ast.Expr{
+								&ast.Ident{
+									Name: p.Name,
+								},
 							},
-						},
-						Args: []ast.Expr{
-							&ast.Ident{
-								Name: p.Name,
-							},
-						},
+						}
 					}
 				}
 			} else {
@@ -338,13 +372,15 @@ func generateASTFunction(f *Function) string {
 	}
 
 	// Check if we need to add a return
-	if f.ReturnType.Name != "void" {
-		// Add the function return type
-		astFunc.Type.Results.List = append(astFunc.Type.Results.List, &ast.Field{
-			Type: &ast.Ident{
-				Name: f.ReturnType.Name,
-			},
-		})
+	if f.ReturnType.Name != "void" || hasReturnArguments {
+		if f.ReturnType.Name != "void" {
+			// Add the function return type
+			astFunc.Type.Results.List = append(astFunc.Type.Results.List, &ast.Field{
+				Type: &ast.Ident{
+					Name: f.ReturnType.Name,
+				},
+			})
+		}
 
 		// Do we need to convert the return of the C function into a boolean?
 		if f.ReturnType.Name == "bool" && f.ReturnType.Primitive != "" {
@@ -490,6 +526,22 @@ func generateASTFunction(f *Function) string {
 					&ast.BasicLit{
 						Kind:  token.INT,
 						Value: "0",
+					},
+				},
+			})
+		} else if f.ReturnType.Name == "void" {
+			// Handle the case where the C function has no return argument but parameters that are return arguments
+
+			// Do the C function call
+			astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
+				X: call,
+			})
+
+			// TODO maybe somehow remove this?! We add an empty line here
+			astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
+				X: &ast.CallExpr{
+					Fun: &ast.Ident{
+						Name: "REMOVE",
 					},
 				},
 			})
