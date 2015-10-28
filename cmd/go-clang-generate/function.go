@@ -84,6 +84,11 @@ func generateASTFunction(f *Function) string {
 		Body: &ast.BlockStmt{},
 	}
 
+	retur := &ast.ReturnStmt{
+		Results: []ast.Expr{},
+	}
+	hasReturnArguments := false
+
 	accessMember := func(variable string, member string) *ast.SelectorExpr {
 		return &ast.SelectorExpr{
 			X: &ast.Ident{
@@ -106,6 +111,9 @@ func generateASTFunction(f *Function) string {
 				},
 			},
 		})
+	}
+	addReturnItem := func(item ast.Expr) {
+		retur.Results = append(retur.Results, item)
 	}
 	doCall := func(variable string, method string, args ...ast.Expr) *ast.CallExpr {
 		return &ast.CallExpr{
@@ -164,11 +172,6 @@ func generateASTFunction(f *Function) string {
 
 	// Basic call to the C function
 	call := doCCast(f.CName)
-
-	retur := &ast.ReturnStmt{
-		Results: []ast.Expr{},
-	}
-	hasReturnArguments := false
 
 	if len(f.Parameters) != 0 {
 		if f.Receiver.Name != "" {
@@ -235,7 +238,7 @@ func generateASTFunction(f *Function) string {
 
 				// Add the return argument to the return statement
 				if p.Type.Primitive != "" {
-					retur.Results = append(retur.Results, doCast(
+					addReturnItem(doCast(
 						p.Type.Name,
 						&ast.Ident{
 							Name: p.Name,
@@ -243,9 +246,9 @@ func generateASTFunction(f *Function) string {
 					))
 				} else {
 					if p.Type.Name == "cxstring" {
-						retur.Results = append(retur.Results, doCall(p.Name, "String"))
+						addReturnItem(doCall(p.Name, "String"))
 					} else {
-						retur.Results = append(retur.Results, &ast.Ident{
+						addReturnItem(&ast.Ident{
 							Name: p.Name,
 						})
 					}
@@ -378,7 +381,7 @@ func generateASTFunction(f *Function) string {
 			addEmptyLine()
 
 			// Check if o is not equal to zero and return the result
-			retur.Results = append(retur.Results, &ast.BinaryExpr{
+			addReturnItem(&ast.BinaryExpr{
 				X: &ast.Ident{
 					Name: "o",
 				},
@@ -393,7 +396,7 @@ func generateASTFunction(f *Function) string {
 			})
 		} else if f.ReturnType.Name == "string" {
 			// If this is a normal const char * C type there is not so much to do
-			retur.Results = append(retur.Results, doCCast(
+			addReturnItem(doCCast(
 				"GoString",
 				call,
 			))
@@ -424,7 +427,7 @@ func generateASTFunction(f *Function) string {
 			addEmptyLine()
 
 			// Call the String method on the cxstring instance
-			retur.Results = append(retur.Results, doCall("o", "String"))
+			addReturnItem(doCall("o", "String"))
 
 			// Change the return type to "string"
 			astFunc.Type.Results.List[len(astFunc.Type.Results.List)-1] = &ast.Field{
@@ -433,7 +436,7 @@ func generateASTFunction(f *Function) string {
 				},
 			}
 		} else if f.ReturnType.Name == "time.Time" {
-			retur.Results = append(retur.Results, doCall(
+			addReturnItem(doCall(
 				"time",
 				"Unix",
 				doCast("int64", call),
@@ -485,11 +488,11 @@ func generateASTFunction(f *Function) string {
 				addEmptyLine()
 
 				// Add the C function call result to the return statement
-				retur.Results = append(retur.Results, &ast.Ident{
+				addReturnItem(&ast.Ident{
 					Name: "o",
 				})
 			} else {
-				retur.Results = append(retur.Results, convCall)
+				addReturnItem(convCall)
 			}
 		}
 
