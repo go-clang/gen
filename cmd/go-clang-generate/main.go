@@ -57,13 +57,8 @@ func trimCommonFName(fname string, rt Receiver) string {
 func addFunction(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 	fname = upperFirstCharacter(fname)
 
-	// TODO Ignore pointer types for now
-	for i := range f.Parameters {
-		p := &f.Parameters[i]
-
-		if p.Type.PointerLevel > 0 && p.Type.CName != "const char *" {
-			return false
-		}
+	if !hasHandleablePointers(f.Parameters) {
+		return false
 	}
 
 	if e, ok := lookupEnum[rt.Type.Name]; ok {
@@ -108,13 +103,8 @@ func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool 
 		fname = "TranslationUnitCursor"
 	}
 
-	// TODO Ignore pointer types for now
-	for i := range f.Parameters {
-		p := &f.Parameters[i]
-
-		if p.Type.PointerLevel > 0 && p.Type.CName != "const char *" {
-			return false
-		}
+	if !hasHandleablePointers(f.Parameters) {
+		return false
 	}
 
 	if e, ok := lookupEnum[rt.Type.Name]; ok {
@@ -441,19 +431,7 @@ func main() {
 						added = addFunction(f, fname, "", rtc)
 					}
 					if !added {
-						// TODO Ignore pointer types for now
-						found := false
-						for i := range f.Parameters {
-							p := &f.Parameters[i]
-
-							if p.Type.PointerLevel > 0 && p.Type.CName != "const char *" {
-								found = true
-
-								break
-							}
-						}
-
-						if !found {
+						if hasHandleablePointers(f.Parameters) {
 							clangFile.Functions = append(clangFile.Functions, generateASTFunction(f))
 
 							added = true
@@ -491,6 +469,16 @@ func main() {
 
 		exitWithFatal("Gofmt failed", err)
 	}
+}
+
+func hasHandleablePointers(params []FunctionParameter) bool {
+	for _, p := range params {
+		if p.Type.PointerLevel > 0 && p.Type.CName != "const char *" {
+			return false
+		}
+	}
+
+	return true
 }
 
 func goAndTypePrimitive(typ Type) (string, string) {
