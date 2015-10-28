@@ -30,7 +30,7 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 
 			switch cursor.Kind() {
 			case clang.CK_FieldDecl:
-				conv, err := getTypeConversion(cursor.Type()) // TODO error handling
+				conv, err := getType(cursor.Type()) // TODO error handling
 				if err != nil {
 					return clang.CVR_Continue
 				}

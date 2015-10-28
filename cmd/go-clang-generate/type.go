@@ -23,7 +23,7 @@ const (
 	GoPointer   = "unsafe.Pointer"
 )
 
-type Conversion struct {
+type Type struct {
 	GoType            string
 	CType             string
 	PointerLevel      int
@@ -33,8 +33,8 @@ type Conversion struct {
 	IsFunctionPointer bool
 }
 
-func getTypeConversion(cType clang.Type) (Conversion, error) {
-	conv := Conversion{
+func getType(cType clang.Type) (Type, error) {
+	typ := Type{
 		CType:             cType.TypeSpelling(),
 		PointerLevel:      0,
 		IsPrimitive:       true,
@@ -44,38 +44,38 @@ func getTypeConversion(cType clang.Type) (Conversion, error) {
 
 	switch cType.Kind() {
 	case clang.TK_Char_S:
-		conv.GoType = string(GoInt8)
+		typ.GoType = string(GoInt8)
 	case clang.TK_Char_U:
-		conv.GoType = GoUInt8
+		typ.GoType = GoUInt8
 	case clang.TK_Int, clang.TK_Short:
-		conv.GoType = GoInt16
+		typ.GoType = GoInt16
 	case clang.TK_UInt, clang.TK_UShort:
-		conv.GoType = GoUInt16
+		typ.GoType = GoUInt16
 	case clang.TK_Long:
-		conv.GoType = GoInt32
+		typ.GoType = GoInt32
 	case clang.TK_ULong:
-		conv.GoType = GoUInt32
+		typ.GoType = GoUInt32
 	case clang.TK_LongLong:
-		conv.GoType = GoInt64
+		typ.GoType = GoInt64
 	case clang.TK_ULongLong:
-		conv.GoType = GoUInt64
+		typ.GoType = GoUInt64
 	case clang.TK_Float:
-		conv.GoType = GoFloat32
+		typ.GoType = GoFloat32
 	case clang.TK_Double:
-		conv.GoType = GoFloat64
+		typ.GoType = GoFloat64
 	case clang.TK_Bool:
-		conv.GoType = GoBool
+		typ.GoType = GoBool
 	case clang.TK_Void:
-		conv.GoType = "void"
+		typ.GoType = "void"
 	case clang.TK_ConstantArray:
-		subConv, err := getTypeConversion(cType.ArrayElementType())
+		subConv, err := getType(cType.ArrayElementType())
 		if err != nil {
-			return Conversion{}, err
+			return Type{}, err
 		}
 
-		conv.GoType = subConv.GoType
-		conv.PointerLevel += subConv.PointerLevel
-		conv.IsArray = true
+		typ.GoType = subConv.GoType
+		typ.PointerLevel += subConv.PointerLevel
+		typ.IsArray = true
 
 	case clang.TK_Typedef:
 		typeStr := cType.TypeSpelling()
@@ -85,50 +85,50 @@ func getTypeConversion(cType clang.Type) (Conversion, error) {
 			typeStr = trimClangPrefix(cType.TypeSpelling())
 		}
 
-		conv.GoType = typeStr
-		conv.IsPrimitive = false
+		typ.GoType = typeStr
+		typ.IsPrimitive = false
 
 		if cType.CanonicalType().Kind() == clang.TK_Enum {
-			conv.IsEnumLiteral = true
-			conv.IsPrimitive = true
+			typ.IsEnumLiteral = true
+			typ.IsPrimitive = true
 		}
 
 	case clang.TK_Pointer:
-		conv.PointerLevel++
+		typ.PointerLevel++
 
 		if cType.PointeeType().CanonicalType().Kind() == clang.TK_FunctionProto {
-			conv.IsFunctionPointer = true
+			typ.IsFunctionPointer = true
 		}
 
-		subConv, err := getTypeConversion(cType.PointeeType().Declaration().Type()) // ComplexTypes
+		subConv, err := getType(cType.PointeeType().Declaration().Type()) // ComplexTypes
 		if err != nil {
-			return Conversion{}, err
+			return Type{}, err
 		}
 
 		if subConv.GoType == "" { // datatypes
-			subConv, err = getTypeConversion(cType.PointeeType())
+			subConv, err = getType(cType.PointeeType())
 			if err != nil {
-				return Conversion{}, err
+				return Type{}, err
 			}
 		} else {
-			conv.IsPrimitive = false
+			typ.IsPrimitive = false
 		}
 
-		conv.GoType = subConv.GoType
-		conv.PointerLevel += subConv.PointerLevel
+		typ.GoType = subConv.GoType
+		typ.PointerLevel += subConv.PointerLevel
 
 	case clang.TK_Unexposed: // there is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013
 
 		if cType.CanonicalType().Kind() == clang.TK_Enum {
-			conv.GoType = trimClangPrefix(cType.CanonicalType().Declaration().DisplayName())
-			fmt.Println("blub" + conv.GoType)
-			conv.IsEnumLiteral = true
-			conv.IsPrimitive = true
+			typ.GoType = trimClangPrefix(cType.CanonicalType().Declaration().DisplayName())
+			fmt.Println("blub" + typ.GoType)
+			typ.IsEnumLiteral = true
+			typ.IsPrimitive = true
 		} else {
-			return Conversion{}, errors.New("unknown type")
+			return Type{}, errors.New("unknown type")
 		}
 
 	}
 
-	return conv, nil
+	return typ, nil
 }

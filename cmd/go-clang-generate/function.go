@@ -532,7 +532,7 @@ func generateFunctionSliceReturn(f *FunctionSliceReturn) string {
 
 }
 
-func generateFunction(name, cname, comment, member string, conv Conversion) *Function {
+func generateFunction(name, cname, comment, member string, typ Type) *Function {
 	receiverType := trimClangPrefix(cname)
 	receiverName := receiverName(string(receiverType[0]))
 	functionName := upperFirstCharacter(name)
@@ -540,10 +540,10 @@ func generateFunction(name, cname, comment, member string, conv Conversion) *Fun
 	rType := ""
 	rTypePrimitive := ""
 
-	if conv.IsPrimitive {
-		rTypePrimitive = conv.GoType
+	if typ.IsPrimitive {
+		rTypePrimitive = typ.GoType
 	} else {
-		rType = conv.GoType
+		rType = typ.GoType
 	}
 
 	f := &Function{
@@ -555,8 +555,8 @@ func generateFunction(name, cname, comment, member string, conv Conversion) *Fun
 
 		ReturnType:          rType,
 		ReturnPrimitiveType: rTypePrimitive,
-		IsReturnTypePointer: conv.PointerLevel > 0,
-		IsReturnTypeEnumLit: conv.IsEnumLiteral,
+		IsReturnTypePointer: typ.PointerLevel > 0,
+		IsReturnTypeEnumLit: typ.IsEnumLiteral,
 
 		Receiver: Receiver{
 			Name: receiverName,
