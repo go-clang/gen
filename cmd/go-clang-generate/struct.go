@@ -43,8 +43,8 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 
 				comment := cleanDoxygenComment(cursor.RawCommentText())
 
-				if conv.PointerLevel >= 1 && conv.GoType == "void" {
-					conv.GoType = GoPointer
+				if conv.PointerLevel >= 1 && conv.Name == "void" {
+					conv.Name = GoPointer
 					conv.PointerLevel--
 
 					s.Imports["unsafe"] = struct{}{}
@@ -56,7 +56,7 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 					f := &FunctionSliceReturn{
 						Function: *generateFunction(cursor.DisplayName(), cname, comment, cursor.DisplayName(), conv),
 
-						ElementType:     conv.GoType,
+						ElementType:     conv.Name,
 						IsPrimitive:     conv.IsPrimitive,
 						ArrayDimensions: conv.PointerLevel,
 					}

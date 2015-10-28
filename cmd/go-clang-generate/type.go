@@ -24,8 +24,9 @@ const (
 )
 
 type Type struct {
-	GoType            string
-	CType             string
+	Name  string
+	CName string
+
 	PointerLevel      int
 	IsPrimitive       bool
 	IsArray           bool
@@ -35,7 +36,7 @@ type Type struct {
 
 func getType(cType clang.Type) (Type, error) {
 	typ := Type{
-		CType:             cType.TypeSpelling(),
+		CName:             cType.TypeSpelling(),
 		PointerLevel:      0,
 		IsPrimitive:       true,
 		IsArray:           false,
@@ -44,36 +45,36 @@ func getType(cType clang.Type) (Type, error) {
 
 	switch cType.Kind() {
 	case clang.TK_Char_S:
-		typ.GoType = string(GoInt8)
+		typ.Name = string(GoInt8)
 	case clang.TK_Char_U:
-		typ.GoType = GoUInt8
+		typ.Name = GoUInt8
 	case clang.TK_Int, clang.TK_Short:
-		typ.GoType = GoInt16
+		typ.Name = GoInt16
 	case clang.TK_UInt, clang.TK_UShort:
-		typ.GoType = GoUInt16
+		typ.Name = GoUInt16
 	case clang.TK_Long:
-		typ.GoType = GoInt32
+		typ.Name = GoInt32
 	case clang.TK_ULong:
-		typ.GoType = GoUInt32
+		typ.Name = GoUInt32
 	case clang.TK_LongLong:
-		typ.GoType = GoInt64
+		typ.Name = GoInt64
 	case clang.TK_ULongLong:
-		typ.GoType = GoUInt64
+		typ.Name = GoUInt64
 	case clang.TK_Float:
-		typ.GoType = GoFloat32
+		typ.Name = GoFloat32
 	case clang.TK_Double:
-		typ.GoType = GoFloat64
+		typ.Name = GoFloat64
 	case clang.TK_Bool:
-		typ.GoType = GoBool
+		typ.Name = GoBool
 	case clang.TK_Void:
-		typ.GoType = "void"
+		typ.Name = "void"
 	case clang.TK_ConstantArray:
 		subConv, err := getType(cType.ArrayElementType())
 		if err != nil {
 			return Type{}, err
 		}
 
-		typ.GoType = subConv.GoType
+		typ.Name = subConv.Name
 		typ.PointerLevel += subConv.PointerLevel
 		typ.IsArray = true
 
@@ -85,7 +86,7 @@ func getType(cType clang.Type) (Type, error) {
 			typeStr = trimClangPrefix(cType.TypeSpelling())
 		}
 
-		typ.GoType = typeStr
+		typ.Name = typeStr
 		typ.IsPrimitive = false
 
 		if cType.CanonicalType().Kind() == clang.TK_Enum {
@@ -105,7 +106,7 @@ func getType(cType clang.Type) (Type, error) {
 			return Type{}, err
 		}
 
-		if subConv.GoType == "" { // datatypes
+		if subConv.Name == "" { // datatypes
 			subConv, err = getType(cType.PointeeType())
 			if err != nil {
 				return Type{}, err
@@ -114,14 +115,14 @@ func getType(cType clang.Type) (Type, error) {
 			typ.IsPrimitive = false
 		}
 
-		typ.GoType = subConv.GoType
+		typ.Name = subConv.Name
 		typ.PointerLevel += subConv.PointerLevel
 
 	case clang.TK_Unexposed: // there is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013
 
 		if cType.CanonicalType().Kind() == clang.TK_Enum {
-			typ.GoType = trimClangPrefix(cType.CanonicalType().Declaration().DisplayName())
-			fmt.Println("blub" + typ.GoType)
+			typ.Name = trimClangPrefix(cType.CanonicalType().Declaration().DisplayName())
+			fmt.Println("blub" + typ.Name)
 			typ.IsEnumLiteral = true
 			typ.IsPrimitive = true
 		} else {

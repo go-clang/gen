@@ -541,9 +541,9 @@ func generateFunction(name, cname, comment, member string, typ Type) *Function {
 	rTypePrimitive := ""
 
 	if typ.IsPrimitive {
-		rTypePrimitive = typ.GoType
+		rTypePrimitive = typ.Name
 	} else {
-		rType = typ.GoType
+		rType = typ.Name
 	}
 
 	f := &Function{
