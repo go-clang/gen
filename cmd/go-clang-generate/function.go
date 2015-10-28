@@ -283,6 +283,58 @@ func generateASTFunction(f *Function) string {
 						),
 					),
 				)
+				addStatement(&ast.DeclStmt{
+					Decl: &ast.GenDecl{
+						Tok: token.VAR,
+						Specs: []ast.Spec{
+							&ast.ValueSpec{
+								Names: []*ast.Ident{
+									&ast.Ident{
+										Name: "cp_" + p.Name,
+									},
+								},
+								Type: &ast.StarExpr{
+									X: sliceType,
+								},
+							},
+						},
+					},
+				})
+				addStatement(&ast.IfStmt{
+					Cond: &ast.BinaryExpr{
+						X: doCast(
+							"len",
+							&ast.Ident{
+								Name: p.Name,
+							},
+						),
+						Op: token.GTR,
+						Y:  doZero(),
+					},
+					Body: &ast.BlockStmt{
+						List: []ast.Stmt{
+							&ast.AssignStmt{
+								Lhs: []ast.Expr{
+									&ast.Ident{
+										Name: "cp_" + p.Name,
+									},
+								},
+								Tok: token.ASSIGN,
+								Rhs: []ast.Expr{
+									&ast.UnaryExpr{
+										Op: token.AND,
+										X: &ast.IndexExpr{
+											X: &ast.Ident{
+												Name: "ca_" + p.Name,
+											},
+											Index: doZero(),
+										},
+									},
+								},
+							},
+						},
+					},
+				})
 
 				// Assign elements
 				var loopStatements []ast.Stmt
@@ -467,14 +519,8 @@ func generateASTFunction(f *Function) string {
 			var pf ast.Expr
 
 			if p.Type.IsSlice {
-				pf = &ast.UnaryExpr{
-					Op: token.AND,
-					X: &ast.IndexExpr{
-						X: &ast.Ident{
-							Name: "ca_" + p.Name,
-						},
-						Index: doZero(),
-					},
+				pf = &ast.Ident{
+					Name: "cp_" + p.Name,
 				}
 			} else if p.Type.Primitive != "" {
 				// Handle Go type to C type conversions
