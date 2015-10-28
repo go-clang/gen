@@ -84,6 +84,16 @@ func generateASTFunction(f *Function) string {
 		Body: &ast.BlockStmt{},
 	}
 
+	accessMember := func(variable string, member string) *ast.SelectorExpr {
+		return &ast.SelectorExpr{
+			X: &ast.Ident{
+				Name: variable,
+			},
+			Sel: &ast.Ident{
+				Name: member,
+			},
+		}
+	}
 	addStatement := func(stmt ast.Stmt) {
 		astFunc.Body.List = append(astFunc.Body.List, stmt)
 	}
@@ -97,21 +107,17 @@ func generateASTFunction(f *Function) string {
 			},
 		})
 	}
-	doCType := func(c string) *ast.SelectorExpr {
-		return &ast.SelectorExpr{
-			X: &ast.Ident{
-				Name: "C",
-			},
-			Sel: &ast.Ident{
-				Name: c,
-			},
-		}
-	}
-	doCCast := func(c string, args ...ast.Expr) *ast.CallExpr {
+	doCall := func(variable string, method string, args ...ast.Expr) *ast.CallExpr {
 		return &ast.CallExpr{
-			Fun:  doCType(c),
+			Fun:  accessMember(variable, method),
 			Args: args,
 		}
+	}
+	doCType := func(c string) *ast.SelectorExpr {
+		return accessMember("C", c)
+	}
+	doCCast := func(typ string, args ...ast.Expr) *ast.CallExpr {
+		return doCall("C", typ, args...)
 	}
 
 	// TODO maybe name the return arguments ... because of clang_getDiagnosticOption -> the normal return can be always just "o"?
@@ -215,16 +221,7 @@ func generateASTFunction(f *Function) string {
 				})
 				if p.Type.Name == "cxstring" {
 					addStatement(&ast.DeferStmt{
-						Call: &ast.CallExpr{
-							Fun: &ast.SelectorExpr{
-								X: &ast.Ident{
-									Name: p.Name,
-								},
-								Sel: &ast.Ident{
-									Name: "Dispose",
-								},
-							},
-						},
+						Call: doCall(p.Name, "Dispose"),
 					})
 				}
 
@@ -242,16 +239,7 @@ func generateASTFunction(f *Function) string {
 					})
 				} else {
 					if p.Type.Name == "cxstring" {
-						retur.Results = append(retur.Results, &ast.CallExpr{
-							Fun: &ast.SelectorExpr{
-								X: &ast.Ident{
-									Name: p.Name,
-								},
-								Sel: &ast.Ident{
-									Name: "String",
-								},
-							},
-						})
+						retur.Results = append(retur.Results, doCall(p.Name, "String"))
 					} else {
 						retur.Results = append(retur.Results, &ast.Ident{
 							Name: p.Name,
@@ -308,21 +296,13 @@ func generateASTFunction(f *Function) string {
 					addStatement(&ast.DeferStmt{
 						Call: doCCast(
 							"free",
-							&ast.CallExpr{
-								Fun: &ast.SelectorExpr{
-									X: &ast.Ident{
-										Name: "unsafe",
-									},
-									Sel: &ast.Ident{
-										Name: "Pointer",
-									},
+							doCall(
+								"unsafe",
+								"Pointer",
+								&ast.Ident{
+									Name: "c_" + p.Name,
 								},
-								Args: []ast.Expr{
-									&ast.Ident{
-										Name: "c_" + p.Name,
-									},
-								},
-							},
+							),
 						),
 					})
 
@@ -330,14 +310,7 @@ func generateASTFunction(f *Function) string {
 						Name: "c_" + p.Name,
 					}
 				} else if p.Type.Primitive == "cxstring" { // TODO try to get cxstring and "String" completely out of this function since it is just a struct which can be handled by the struct code
-					pf = &ast.SelectorExpr{
-						X: &ast.Ident{
-							Name: p.Name,
-						},
-						Sel: &ast.Ident{
-							Name: "c",
-						},
-					}
+					pf = accessMember(p.Name, "c")
 				} else {
 					if p.Type.IsReturnArgument {
 						// Return arguemnts already have a cast
@@ -354,14 +327,7 @@ func generateASTFunction(f *Function) string {
 					}
 				}
 			} else {
-				pf = &ast.SelectorExpr{
-					X: &ast.Ident{
-						Name: p.Name,
-					},
-					Sel: &ast.Ident{
-						Name: "c",
-					},
-				}
+				pf = accessMember(p.Name, "c")
 			}
 
 			if p.Type.IsReturnArgument {
@@ -448,31 +414,13 @@ func generateASTFunction(f *Function) string {
 				},
 			})
 			addStatement(&ast.DeferStmt{
-				Call: &ast.CallExpr{
-					Fun: &ast.SelectorExpr{
-						X: &ast.Ident{
-							Name: "o",
-						},
-						Sel: &ast.Ident{
-							Name: "Dispose",
-						},
-					},
-				},
+				Call: doCall("o", "Dispose"),
 			})
 
 			addEmptyLine()
 
 			// Call the String method on the cxstring instance
-			retur.Results = append(retur.Results, &ast.CallExpr{
-				Fun: &ast.SelectorExpr{
-					X: &ast.Ident{
-						Name: "o",
-					},
-					Sel: &ast.Ident{
-						Name: "String",
-					},
-				},
-			})
+			retur.Results = append(retur.Results, doCall("o", "String"))
 
 			// Change the return type to "string"
 			astFunc.Type.Results.List[len(astFunc.Type.Results.List)-1] = &ast.Field{
@@ -481,30 +429,22 @@ func generateASTFunction(f *Function) string {
 				},
 			}
 		} else if f.ReturnType.Name == "time.Time" {
-			retur.Results = append(retur.Results, &ast.CallExpr{
-				Fun: &ast.SelectorExpr{
-					X: &ast.Ident{
-						Name: "time",
+			retur.Results = append(retur.Results, doCall(
+				"time",
+				"Unix",
+				&ast.CallExpr{
+					Fun: &ast.Ident{
+						Name: "int64",
 					},
-					Sel: &ast.Ident{
-						Name: "Unix",
-					},
-				},
-				Args: []ast.Expr{
-					&ast.CallExpr{
-						Fun: &ast.Ident{
-							Name: "int64",
-						},
-						Args: []ast.Expr{
-							call,
-						},
-					},
-					&ast.BasicLit{
-						Kind:  token.INT,
-						Value: "0",
+					Args: []ast.Expr{
+						call,
 					},
 				},
-			})
+				&ast.BasicLit{
+					Kind:  token.INT,
+					Value: "0",
+				},
+			))
 		} else if f.ReturnType.Name == "void" {
 			// Handle the case where the C function has no return argument but parameters that are return arguments
 
