@@ -39,7 +39,6 @@ struct CXUnsavedFile {
 CXFile clang_getFile(CXTranslationUnit tu,
                                     const char *file_name);
 
-
 /**
  * \brief Deserialize a set of diagnostics from a Clang diagnostics bitcode
  * file.
