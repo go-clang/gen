@@ -115,6 +115,19 @@ func generateASTFunction(f *Function) string {
 	addReturnItem := func(item ast.Expr) {
 		retur.Results = append(retur.Results, item)
 	}
+	assignToO := func(e ast.Expr) {
+		addStatement(&ast.AssignStmt{
+			Lhs: []ast.Expr{
+				&ast.Ident{
+					Name: "o",
+				},
+			},
+			Tok: token.DEFINE,
+			Rhs: []ast.Expr{
+				e,
+			},
+		})
+	}
 	doCall := func(variable string, method string, args ...ast.Expr) *ast.CallExpr {
 		return &ast.CallExpr{
 			Fun:  accessMember(variable, method),
@@ -366,18 +379,7 @@ func generateASTFunction(f *Function) string {
 		// Do we need to convert the return of the C function into a boolean?
 		if f.ReturnType.Name == "bool" && f.ReturnType.Primitive != "" {
 			// Do the C function call and save the result into the new variable "o"
-			addStatement(&ast.AssignStmt{
-				Lhs: []ast.Expr{
-					&ast.Ident{
-						Name: "o",
-					},
-				},
-				Tok: token.DEFINE,
-				Rhs: []ast.Expr{
-					call, // No cast needed
-				},
-			})
-
+			assignToO(call)
 			addEmptyLine()
 
 			// Check if o is not equal to zero and return the result
@@ -402,28 +404,17 @@ func generateASTFunction(f *Function) string {
 			))
 		} else if f.ReturnType.Name == "cxstring" {
 			// Do the C function call and save the result into the new variable "o" while transforming it into a cxstring
-			addStatement(&ast.AssignStmt{
-				Lhs: []ast.Expr{
-					&ast.Ident{
-						Name: "o",
-					},
+			assignToO(&ast.CompositeLit{
+				Type: &ast.Ident{
+					Name: "cxstring",
 				},
-				Tok: token.DEFINE,
-				Rhs: []ast.Expr{
-					&ast.CompositeLit{
-						Type: &ast.Ident{
-							Name: "cxstring",
-						},
-						Elts: []ast.Expr{
-							call,
-						},
-					},
+				Elts: []ast.Expr{
+					call,
 				},
 			})
 			addStatement(&ast.DeferStmt{
 				Call: doCall("o", "Dispose"),
 			})
-
 			addEmptyLine()
 
 			// Call the String method on the cxstring instance
@@ -452,7 +443,6 @@ func generateASTFunction(f *Function) string {
 			addStatement(&ast.ExprStmt{
 				X: call,
 			})
-
 			addEmptyLine()
 		} else {
 			var convCall ast.Expr
@@ -473,18 +463,7 @@ func generateASTFunction(f *Function) string {
 
 			if hasReturnArguments {
 				// Do the C function call and save the result into the new variable "o"
-				addStatement(&ast.AssignStmt{
-					Lhs: []ast.Expr{
-						&ast.Ident{
-							Name: "o",
-						},
-					},
-					Tok: token.DEFINE,
-					Rhs: []ast.Expr{
-						convCall,
-					},
-				})
-
+				assignToO(convCall)
 				addEmptyLine()
 
 				// Add the C function call result to the return statement
