@@ -27,16 +27,6 @@ struct CXUnsavedFile {
 
 
 /**
- * \brief Retrieve the unique ID for the given \c file.
- *
- * \param file the file to get the ID for.
- * \param outID stores the returned CXFileUniqueID.
- * \returns If there was a failure getting the unique ID, returns non-zero,
- * otherwise returns 0.
-*/
-int clang_getFileUniqueID(CXFile file, CXFileUniqueID *outID);
-
-/**
  * \brief Retrieve a file handle within the given translation unit.
  *
  * \param tu the translation unit

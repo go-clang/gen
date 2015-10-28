@@ -76,7 +76,11 @@ func generateASTFunction(f *Function) string {
 		Name: &ast.Ident{
 			Name: f.Name,
 		},
-		Type: &ast.FuncType{},
+		Type: &ast.FuncType{
+			Results: &ast.FieldList{
+				List: []*ast.Field{},
+			},
+		},
 		Body: &ast.BlockStmt{},
 	}
 
@@ -125,6 +129,11 @@ func generateASTFunction(f *Function) string {
 		Args: []ast.Expr{},
 	}
 
+	retur := &ast.ReturnStmt{
+		Results: []ast.Expr{},
+	}
+	hasReturnArguments := false
+
 	if len(f.Parameters) != 0 {
 		if f.Receiver.Name != "" {
 			f.Parameters[0].Name = f.Receiver.Name
@@ -140,6 +149,43 @@ func generateASTFunction(f *Function) string {
 				continue
 			}
 
+			if p.Type.IsReturnArgument {
+				hasReturnArguments = true
+
+				// Add the return type to the function return arguments
+				astFunc.Type.Results.List = append(astFunc.Type.Results.List, &ast.Field{
+					Type: &ast.Ident{
+						Name: p.Type.Name,
+					},
+				})
+
+				// Declare the return argument's variable
+				astFunc.Body.List = append(astFunc.Body.List, &ast.DeclStmt{
+					Decl: &ast.GenDecl{
+						Tok: token.VAR,
+						Specs: []ast.Spec{
+							&ast.ValueSpec{
+								Names: []*ast.Ident{
+									&ast.Ident{
+										Name: p.Name,
+									},
+								},
+								Type: &ast.Ident{
+									Name: p.Type.Name,
+								},
+							},
+						},
+					},
+				})
+
+				// Add the return argument to the return statement
+				retur.Results = append(retur.Results, &ast.Ident{
+					Name: p.Name,
+				})
+
+				continue
+			}
+
 			astFunc.Type.Params.List = append(astFunc.Type.Params.List, &ast.Field{
 				Names: []*ast.Ident{
 					&ast.Ident{
@@ -152,10 +198,23 @@ func generateASTFunction(f *Function) string {
 			})
 		}
 
+		if hasReturnArguments {
+			// TODO maybe somehow remove this?! We add an empty line here
+			astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
+				X: &ast.CallExpr{
+					Fun: &ast.Ident{
+						Name: "REMOVE",
+					},
+				},
+			})
+		}
+
 		goToCTypeConversions := false
 
 		// Add arguments to the C function call
 		for _, p := range f.Parameters {
+			var pf ast.Expr
+
 			if p.Type.Primitive != "" {
 				// Handle Go type to C type conversions
 				if p.Type.CName == "const char *" {
@@ -216,20 +275,20 @@ func generateASTFunction(f *Function) string {
 						},
 					})
 
-					call.Args = append(call.Args, &ast.Ident{
+					pf = &ast.Ident{
 						Name: "c_" + p.Name,
-					})
+					}
 				} else if p.Type.Primitive == "cxstring" { // TODO try to get cxstring and "String" completely out of this function since it is just a struct which can be handled by the struct code
-					call.Args = append(call.Args, &ast.SelectorExpr{
+					pf = &ast.SelectorExpr{
 						X: &ast.Ident{
 							Name: p.Name,
 						},
 						Sel: &ast.Ident{
 							Name: "c",
 						},
-					})
+					}
 				} else {
-					call.Args = append(call.Args, &ast.CallExpr{
+					pf = &ast.CallExpr{
 						Fun: &ast.SelectorExpr{
 							X: &ast.Ident{
 								Name: "C",
@@ -243,18 +302,27 @@ func generateASTFunction(f *Function) string {
 								Name: p.Name,
 							},
 						},
-					})
+					}
 				}
 			} else {
-				call.Args = append(call.Args, &ast.SelectorExpr{
+				pf = &ast.SelectorExpr{
 					X: &ast.Ident{
 						Name: p.Name,
 					},
 					Sel: &ast.Ident{
 						Name: "c",
 					},
-				})
+				}
 			}
+
+			if p.Type.IsReturnArgument {
+				pf = &ast.UnaryExpr{
+					Op: token.AND,
+					X:  pf,
+				}
+			}
+
+			call.Args = append(call.Args, pf)
 		}
 
 		if goToCTypeConversions {
@@ -272,41 +340,11 @@ func generateASTFunction(f *Function) string {
 	// Check if we need to add a return
 	if f.ReturnType.Name != "void" {
 		// Add the function return type
-		astFunc.Type.Results = &ast.FieldList{
-			List: []*ast.Field{
-				&ast.Field{
-					Type: &ast.Ident{
-						Name: f.ReturnType.Name,
-					},
-				},
+		astFunc.Type.Results.List = append(astFunc.Type.Results.List, &ast.Field{
+			Type: &ast.Ident{
+				Name: f.ReturnType.Name,
 			},
-		}
-
-		// Convert the return value of the C function
-		var convCall ast.Expr
-
-		// Structs are literals, everything else is a cast
-		if f.ReturnType.Primitive == "" {
-			convCall = &ast.CompositeLit{
-				Type: &ast.Ident{
-					Name: f.ReturnType.Name,
-				},
-				Elts: []ast.Expr{
-					call,
-				},
-			}
-		} else {
-			convCall = &ast.CallExpr{
-				Fun: &ast.Ident{
-					Name: f.ReturnType.Name,
-				},
-				Args: []ast.Expr{
-					call,
-				},
-			}
-		}
-
-		result := convCall
+		})
 
 		// Do we need to convert the return of the C function into a boolean?
 		if f.ReturnType.Name == "bool" && f.ReturnType.Primitive != "" {
@@ -333,7 +371,7 @@ func generateASTFunction(f *Function) string {
 			})
 
 			// Check if o is not equal to zero and return the result
-			result = &ast.BinaryExpr{
+			retur.Results = append(retur.Results, &ast.BinaryExpr{
 				X: &ast.Ident{
 					Name: "o",
 				},
@@ -354,10 +392,10 @@ func generateASTFunction(f *Function) string {
 						},
 					},
 				},
-			}
+			})
 		} else if f.ReturnType.Name == "string" {
 			// If this is a normal const char * C type there is not so much to do
-			result = &ast.CallExpr{
+			retur.Results = append(retur.Results, &ast.CallExpr{
 				Fun: &ast.SelectorExpr{
 					X: &ast.Ident{
 						Name: "C",
@@ -369,7 +407,7 @@ func generateASTFunction(f *Function) string {
 				Args: []ast.Expr{
 					call,
 				},
-			}
+			})
 		} else if f.ReturnType.Name == "cxstring" {
 			// Do the C function call and save the result into the new variable "o" while transforming it into a cxstring
 			astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
@@ -413,7 +451,7 @@ func generateASTFunction(f *Function) string {
 			})
 
 			// Call the String method on the cxstring instance
-			result = &ast.CallExpr{
+			retur.Results = append(retur.Results, &ast.CallExpr{
 				Fun: &ast.SelectorExpr{
 					X: &ast.Ident{
 						Name: "o",
@@ -422,20 +460,16 @@ func generateASTFunction(f *Function) string {
 						Name: "String",
 					},
 				},
-			}
+			})
 
 			// Change the return type to "string"
-			astFunc.Type.Results = &ast.FieldList{
-				List: []*ast.Field{
-					&ast.Field{
-						Type: &ast.Ident{
-							Name: "string",
-						},
-					},
+			astFunc.Type.Results.List[len(astFunc.Type.Results.List)-1] = &ast.Field{
+				Type: &ast.Ident{
+					Name: "string",
 				},
 			}
 		} else if f.ReturnType.Name == "time.Time" {
-			result = &ast.CallExpr{
+			retur.Results = append(retur.Results, &ast.CallExpr{
 				Fun: &ast.SelectorExpr{
 					X: &ast.Ident{
 						Name: "time",
@@ -458,15 +492,65 @@ func generateASTFunction(f *Function) string {
 						Value: "0",
 					},
 				},
+			})
+		} else {
+			var convCall ast.Expr
+
+			// Structs are literals, everything else is a cast
+			if f.ReturnType.Primitive == "" {
+				convCall = &ast.CompositeLit{
+					Type: &ast.Ident{
+						Name: f.ReturnType.Name,
+					},
+					Elts: []ast.Expr{
+						call,
+					},
+				}
+			} else {
+				convCall = &ast.CallExpr{
+					Fun: &ast.Ident{
+						Name: f.ReturnType.Name,
+					},
+					Args: []ast.Expr{
+						call,
+					},
+				}
+			}
+
+			if hasReturnArguments {
+				// Do the C function call and save the result into the new variable "o"
+				astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
+					Lhs: []ast.Expr{
+						&ast.Ident{
+							Name: "o",
+						},
+					},
+					Tok: token.DEFINE,
+					Rhs: []ast.Expr{
+						convCall,
+					},
+				})
+
+				// TODO maybe somehow remove this?! We add an empty line here
+				astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
+					X: &ast.CallExpr{
+						Fun: &ast.Ident{
+							Name: "REMOVE",
+						},
+					},
+				})
+
+				// Add the C function call result to the return statement
+				retur.Results = append(retur.Results, &ast.Ident{
+					Name: "o",
+				})
+			} else {
+				retur.Results = append(retur.Results, convCall)
 			}
 		}
 
 		// Add the return statement
-		astFunc.Body.List = append(astFunc.Body.List, &ast.ReturnStmt{
-			Results: []ast.Expr{
-				result,
-			},
-		})
+		astFunc.Body.List = append(astFunc.Body.List, retur)
 	} else {
 		// No return needed, just add the C function call
 		astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{

@@ -50,6 +50,7 @@ type Type struct {
 	ArraySize         int64
 	IsEnumLiteral     bool
 	IsFunctionPointer bool
+	IsReturnArgument  bool
 }
 
 func getType(cType clang.Type) (Type, error) {

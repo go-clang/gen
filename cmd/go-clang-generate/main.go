@@ -344,6 +344,7 @@ func main() {
 	for _, f := range functions {
 		fname := f.Name
 
+		// Prepare the parameters
 		for i := range f.Parameters {
 			p := &f.Parameters[i]
 
@@ -357,6 +358,19 @@ func main() {
 			}
 		}
 
+		switch f.CName { // TODO this is a happy hack
+		case "clang_getFileUniqueID":
+			// Check the parameters for return arguments
+			for i := range f.Parameters {
+				p := &f.Parameters[i]
+
+				if p.Type.PointerLevel > 0 {
+					p.Type.IsReturnArgument = true
+				}
+			}
+		}
+
+		// Prepare the return argument
 		if n, ok := lookupNonTypedefs[f.ReturnType.CName]; ok {
 			f.ReturnType.Name = n
 		}
@@ -365,6 +379,7 @@ func main() {
 		} else if _, ok := lookupStruct[f.ReturnType.Name]; ok {
 		}
 
+		// Prepare the receiver
 		var rt Receiver
 		if len(f.Parameters) > 0 {
 			rt.Name = receiverName(f.Parameters[0].Type.Name)
@@ -464,10 +479,14 @@ func main() {
 
 func hasHandleablePointers(params []FunctionParameter) bool {
 	for _, p := range params {
-		if p.Type.PointerLevel > 0 {
+		if p.Type.PointerLevel > 0 && !p.Type.IsReturnArgument {
 			return false
 		}
 	}
 
 	return true
+}
+
+func printFunctionDetails(f *Function) {
+	fmt.Printf("@@ %s %#v %#v\n", f.CName, f.ReturnType, f.Parameters)
 }
