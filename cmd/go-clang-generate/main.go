@@ -20,7 +20,12 @@ var structs []*Struct
 
 var lookupEnum = map[string]*Enum{}
 var lookupNonTypedefs = map[string]string{}
-var lookupStruct = map[string]*Struct{}
+var lookupStruct = map[string]*Struct{
+	"cxstring": &Struct{
+		Name:  "cxstring",
+		CName: "CXString",
+	},
+}
 
 func trimCommonFName(fname string, rt Receiver) string {
 	fname = strings.TrimPrefix(fname, "create")
@@ -52,13 +57,22 @@ func trimCommonFName(fname string, rt Receiver) string {
 func addFunction(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 	fname = upperFirstCharacter(fname)
 
+	// TODO Ignore pointer types for now
+	for i := range f.Parameters {
+		p := &f.Parameters[i]
+
+		if p.Type.PointerLevel > 0 && p.Type.CName != "const char *" {
+			return false
+		}
+	}
+
 	if e, ok := lookupEnum[rt.Type.Name]; ok {
 		f.Name = fnamePrefix + fname
 
 		e.Methods = append(e.Methods, generateASTFunction(f))
 
 		return true
-	} else if s, ok := lookupStruct[rt.Type.Name]; ok {
+	} else if s, ok := lookupStruct[rt.Type.Name]; ok && s.CName != "CXString" {
 		f.Name = fnamePrefix + fname
 
 		fStr := generateASTFunction(f)
@@ -94,6 +108,15 @@ func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool 
 		fname = "TranslationUnitCursor"
 	}
 
+	// TODO Ignore pointer types for now
+	for i := range f.Parameters {
+		p := &f.Parameters[i]
+
+		if p.Type.PointerLevel > 0 && p.Type.CName != "const char *" {
+			return false
+		}
+	}
+
 	if e, ok := lookupEnum[rt.Type.Name]; ok {
 		f.Name = fnamePrefix + fname
 		f.Receiver = e.Receiver
@@ -102,7 +125,7 @@ func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool 
 		e.Methods = append(e.Methods, generateASTFunction(f))
 
 		return true
-	} else if s, ok := lookupStruct[rt.Type.Name]; ok {
+	} else if s, ok := lookupStruct[rt.Type.Name]; ok && s.CName != "CXString" {
 		f.Name = fnamePrefix + fname
 		f.Receiver = s.Receiver
 		f.Receiver.Type = rt.Type
@@ -334,7 +357,7 @@ func main() {
 		for i := range f.Parameters {
 			p := &f.Parameters[i]
 
-			if n, ok := lookupNonTypedefs[p.Type.Name]; ok {
+			if n, ok := lookupNonTypedefs[p.Type.CName]; ok {
 				p.Type.Name = n
 			}
 			if e, ok := lookupEnum[p.Type.Name]; ok {
@@ -342,26 +365,23 @@ func main() {
 				p.Type = e.Receiver.Type
 			} else if _, ok := lookupStruct[p.Type.Name]; ok {
 			} else {
-				if goType, primitiveType := goAndTypePrimitive(p.Type.Name); goType != "" {
+				if goType, primitiveType := goAndTypePrimitive(p.Type); goType != "" {
 					p.Type.Name = goType
 					p.Type.Primitive = primitiveType
 				}
 			}
 		}
 
-		if n, ok := lookupNonTypedefs[f.ReturnType.Name]; ok {
+		if n, ok := lookupNonTypedefs[f.ReturnType.CName]; ok {
 			f.ReturnType.Name = n
 		}
 		if e, ok := lookupEnum[f.ReturnType.Name]; ok {
 			f.ReturnType.Primitive = e.Receiver.Type.Primitive
 		} else if _, ok := lookupStruct[f.ReturnType.Name]; ok {
 		}
-		if goType, primitiveType := goAndTypePrimitive(f.ReturnType.Name); goType != "" {
+		if goType, primitiveType := goAndTypePrimitive(f.ReturnType); goType != "" {
 			f.ReturnType.Name = goType
 			f.ReturnType.Primitive = primitiveType
-		}
-		if f.ReturnType.Name == "cxstring" {
-			f.ReturnType.Name = "string"
 		}
 
 		var rt Receiver
@@ -415,6 +435,7 @@ func main() {
 		if !added {
 			if len(f.Parameters) > 0 && (isEnumOrStruct(f.ReturnType.Name) || f.ReturnType.Primitive != "") {
 				found := false
+
 				for _, p := range f.Parameters {
 					if !isEnumOrStruct(p.Type.Name) && p.Type.Primitive == "" {
 						found = true
@@ -440,9 +461,23 @@ func main() {
 						added = addFunction(f, fname, "", rtc)
 					}
 					if !added {
-						clangFile.Functions = append(clangFile.Functions, generateASTFunction(f))
+						// TODO Ignore pointer types for now
+						found := false
+						for i := range f.Parameters {
+							p := &f.Parameters[i]
 
-						added = true
+							if p.Type.PointerLevel > 0 && p.Type.CName != "const char *" {
+								found = true
+
+								break
+							}
+						}
+
+						if !found {
+							clangFile.Functions = append(clangFile.Functions, generateASTFunction(f))
+
+							added = true
+						}
 					}
 				}
 			}
@@ -478,8 +513,8 @@ func main() {
 	}
 }
 
-func goAndTypePrimitive(typ string) (string, string) {
-	switch typ {
+func goAndTypePrimitive(typ Type) (string, string) {
+	switch typ.CName {
 	case "int":
 		return "uint16", "int"
 	case "unsigned int":
@@ -494,8 +529,6 @@ func goAndTypePrimitive(typ string) (string, string) {
 		return "time.Time", "time_t"
 	case "const char *":
 		return "string", "const char *"
-	case "String":
-		return "cxstring", "cxstring"
 	}
 
 	return "", ""

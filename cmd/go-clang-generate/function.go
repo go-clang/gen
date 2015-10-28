@@ -36,12 +36,15 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 		Comment: cleanDoxygenComment(cursor.RawCommentText()),
 
 		Parameters: []FunctionParameter{},
-		ReturnType: Type{
-			Name: trimClangPrefix(cursor.ResultType().TypeSpelling()),
-		},
 	}
 
 	f.Name = strings.TrimPrefix(f.CName, "clang_")
+
+	typ, err := getType(cursor.ResultType())
+	if err != nil {
+		panic(err)
+	}
+	f.ReturnType = typ
 
 	numParam := uint(cursor.NumArguments())
 	for i := uint(0); i < numParam; i++ {
@@ -49,13 +52,14 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 
 		p := FunctionParameter{
 			CName: param.DisplayName(),
-			Type: Type{
-				CName: param.Type().TypeSpelling(),
-			},
 		}
 
 		p.Name = p.CName
-		p.Type.Name = trimClangPrefix(p.Type.CName)
+		typ, err := getType(param.Type())
+		if err != nil {
+			panic(err)
+		}
+		p.Type = typ
 
 		if p.Name == "" {
 			p.Name = receiverName(p.Type.Name)
@@ -154,7 +158,7 @@ func generateASTFunction(f *Function) string {
 		for _, p := range f.Parameters {
 			if p.Type.Primitive != "" {
 				// Handle Go type to C type conversions
-				if p.Type.Primitive == "const char *" {
+				if p.Type.CName == "const char *" {
 					goToCTypeConversions = true
 
 					astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
@@ -353,75 +357,82 @@ func generateASTFunction(f *Function) string {
 			}
 		} else if f.ReturnType.Name == "string" {
 			// If this is a normal const char * C type there is not so much to do
-			if f.ReturnType.Primitive == "const char *" {
-				result = &ast.CallExpr{
-					Fun: &ast.SelectorExpr{
-						X: &ast.Ident{
-							Name: "C",
-						},
-						Sel: &ast.Ident{
-							Name: "GoString",
-						},
+			result = &ast.CallExpr{
+				Fun: &ast.SelectorExpr{
+					X: &ast.Ident{
+						Name: "C",
 					},
-					Args: []ast.Expr{
-						call,
+					Sel: &ast.Ident{
+						Name: "GoString",
 					},
-				}
-			} else {
-				// This should be a CXString so handle it accordingly
-
-				// Do the C function call and save the result into the new variable "o" while transforming it into a cxstring
-				astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
-					Lhs: []ast.Expr{
-						&ast.Ident{
-							Name: "o",
+				},
+				Args: []ast.Expr{
+					call,
+				},
+			}
+		} else if f.ReturnType.Name == "cxstring" {
+			// Do the C function call and save the result into the new variable "o" while transforming it into a cxstring
+			astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
+				Lhs: []ast.Expr{
+					&ast.Ident{
+						Name: "o",
+					},
+				},
+				Tok: token.DEFINE,
+				Rhs: []ast.Expr{
+					&ast.CompositeLit{
+						Type: &ast.Ident{
+							Name: "cxstring",
 						},
-					},
-					Tok: token.DEFINE,
-					Rhs: []ast.Expr{
-						&ast.CompositeLit{
-							Type: &ast.Ident{
-								Name: "cxstring",
-							},
-							Elts: []ast.Expr{
-								call,
-							},
+						Elts: []ast.Expr{
+							call,
 						},
 					},
-				})
-				astFunc.Body.List = append(astFunc.Body.List, &ast.DeferStmt{
-					Call: &ast.CallExpr{
-						Fun: &ast.SelectorExpr{
-							X: &ast.Ident{
-								Name: "o",
-							},
-							Sel: &ast.Ident{
-								Name: "Dispose",
-							},
-						},
-					},
-				})
-
-				// TODO maybe somehow remove this?! We add an empty line here
-				astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
-					X: &ast.CallExpr{
-						Fun: &ast.Ident{
-							Name: "REMOVE",
-						},
-					},
-				})
-
-				// Call the String method on the cxstring instance
-				result = &ast.CallExpr{
+				},
+			})
+			astFunc.Body.List = append(astFunc.Body.List, &ast.DeferStmt{
+				Call: &ast.CallExpr{
 					Fun: &ast.SelectorExpr{
 						X: &ast.Ident{
 							Name: "o",
 						},
 						Sel: &ast.Ident{
-							Name: "String",
+							Name: "Dispose",
 						},
 					},
-				}
+				},
+			})
+
+			// TODO maybe somehow remove this?! We add an empty line here
+			astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
+				X: &ast.CallExpr{
+					Fun: &ast.Ident{
+						Name: "REMOVE",
+					},
+				},
+			})
+
+			// Call the String method on the cxstring instance
+			result = &ast.CallExpr{
+				Fun: &ast.SelectorExpr{
+					X: &ast.Ident{
+						Name: "o",
+					},
+					Sel: &ast.Ident{
+						Name: "String",
+					},
+				},
+			}
+
+			// Change the return type to "string"
+			astFunc.Type.Results = &ast.FieldList{
+				List: []*ast.Field{
+					&ast.Field{
+						Type: &ast.Ident{
+							Name: "string",
+						},
+					},
+				},
 			}
 		} else if f.ReturnType.Name == "time.Time" {
 			result = &ast.CallExpr{

@@ -55,6 +55,7 @@ type Type struct {
 func getType(cType clang.Type) (Type, error) {
 	typ := Type{
 		Original: cType.TypeSpelling(),
+		CName:    cType.TypeSpelling(),
 
 		PointerLevel:      0,
 		IsPrimitive:       true,
@@ -117,7 +118,6 @@ func getType(cType clang.Type) (Type, error) {
 		typ.PointerLevel += subTyp.PointerLevel
 		typ.IsArray = true
 		typ.ArraySize = cType.ArraySize()
-
 	case clang.TK_Typedef:
 		typeStr := cType.TypeSpelling()
 		if typeStr == "CXString" {
@@ -134,7 +134,6 @@ func getType(cType clang.Type) (Type, error) {
 			typ.IsEnumLiteral = true
 			typ.IsPrimitive = true
 		}
-
 	case clang.TK_Pointer:
 		typ.PointerLevel++
 
