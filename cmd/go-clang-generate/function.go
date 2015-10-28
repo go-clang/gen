@@ -113,6 +113,14 @@ func generateASTFunction(f *Function) string {
 			Args: args,
 		}
 	}
+	doCast := func(typ string, args ...ast.Expr) *ast.CallExpr {
+		return &ast.CallExpr{
+			Fun: &ast.Ident{
+				Name: typ,
+			},
+			Args: args,
+		}
+	}
 	doCType := func(c string) *ast.SelectorExpr {
 		return accessMember("C", c)
 	}
@@ -227,16 +235,12 @@ func generateASTFunction(f *Function) string {
 
 				// Add the return argument to the return statement
 				if p.Type.Primitive != "" {
-					retur.Results = append(retur.Results, &ast.CallExpr{
-						Fun: &ast.Ident{
-							Name: p.Type.Name,
+					retur.Results = append(retur.Results, doCast(
+						p.Type.Name,
+						&ast.Ident{
+							Name: p.Name,
 						},
-						Args: []ast.Expr{
-							&ast.Ident{
-								Name: p.Name,
-							},
-						},
-					})
+					))
 				} else {
 					if p.Type.Name == "cxstring" {
 						retur.Results = append(retur.Results, doCall(p.Name, "String"))
@@ -432,14 +436,7 @@ func generateASTFunction(f *Function) string {
 			retur.Results = append(retur.Results, doCall(
 				"time",
 				"Unix",
-				&ast.CallExpr{
-					Fun: &ast.Ident{
-						Name: "int64",
-					},
-					Args: []ast.Expr{
-						call,
-					},
-				},
+				doCast("int64", call),
 				&ast.BasicLit{
 					Kind:  token.INT,
 					Value: "0",
@@ -468,14 +465,7 @@ func generateASTFunction(f *Function) string {
 					},
 				}
 			} else {
-				convCall = &ast.CallExpr{
-					Fun: &ast.Ident{
-						Name: f.ReturnType.Name,
-					},
-					Args: []ast.Expr{
-						call,
-					},
-				}
+				convCall = doCast(f.ReturnType.Name, call)
 			}
 
 			if hasReturnArguments {
