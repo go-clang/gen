@@ -16,10 +16,8 @@ type Function struct {
 	CName   string
 	Comment string
 
-	Parameters          []FunctionParameter
-	ReturnType          Type
-	IsReturnTypePointer bool
-	IsReturnTypeEnumLit bool
+	Parameters []FunctionParameter
+	ReturnType Type
 
 	Receiver Receiver
 
@@ -485,8 +483,8 @@ func generateASTFunction(f *Function) string {
 }
 
 var templateGenerateStructMemberGetter = template.Must(template.New("go-clang-generate-function-getter").Parse(`{{$.Comment}}
-func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() {{if $.IsReturnTypePointer}}*{{end}}{{if $.ReturnType.Primitive}}{{$.ReturnType.Primitive}}{{else}}{{$.ReturnType}}{{end}} {
-	return {{if $.IsReturnTypePointer}}&{{end}}{{if $.ReturnType.Primitive}}{{$.ReturnType.Primitive}}{{else}}{{$.ReturnType}}{{end}}{{if $.ReturnType.Primitive}}({{if $.IsReturnTypePointer}}*{{end}}{{$.Receiver}}.c.{{$.Member}}){{else}}{{"{"}}{{if $.IsReturnTypePointer}}*{{end}}{{$.Receiver}}.c.{{$.Member}}{{"}"}}{{end}}
+func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() {{if $.Type.PointerLevel}}*{{end}}{{if $.ReturnType.Primitive}}{{$.ReturnType.Primitive}}{{else}}{{$.ReturnType}}{{end}} {
+	return {{if $.Type.PointerLevel}}&{{end}}{{if $.ReturnType.Primitive}}{{$.ReturnType.Primitive}}{{else}}{{$.ReturnType}}{{end}}{{if $.ReturnType.Primitive}}({{if $.Type.PointerLevel}}*{{end}}{{$.Receiver}}.c.{{$.Member}}){{else}}{{"{"}}{{if $.Type.PointerLevel}}*{{end}}{{$.Receiver}}.c.{{$.Member}}{{"}"}}{{end}}
 }
 `))
 
@@ -557,10 +555,10 @@ func generateFunction(name, cname, comment, member string, typ Type) *Function {
 		ReturnType: Type{
 			Name:      rType,
 			Primitive: rTypePrimitive,
-		},
 
-		IsReturnTypePointer: typ.PointerLevel > 0,
-		IsReturnTypeEnumLit: typ.IsEnumLiteral,
+			PointerLevel:  typ.PointerLevel,
+			IsEnumLiteral: typ.IsEnumLiteral,
+		},
 
 		Receiver: Receiver{
 			Name: receiverName,
