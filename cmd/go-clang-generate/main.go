@@ -402,7 +402,13 @@ func main() {
 		}
 
 		if !added {
-			if len(f.Parameters) > 0 && (isEnumOrStruct(f.ReturnType.Name) || f.ReturnType.Primitive != "") {
+			if len(f.Parameters) == 0 {
+				if !added {
+					clangFile.Functions = append(clangFile.Functions, generateASTFunction(f))
+
+					added = true
+				}
+			} else if isEnumOrStruct(f.ReturnType.Name) || f.ReturnType.Primitive != "" {
 				found := false
 
 				for _, p := range f.Parameters {

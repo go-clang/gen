@@ -57,15 +57,6 @@ CXDiagnosticSet clang_loadDiagnostics(const char *file,
                                                   CXString *errorString);
 
 /**
- * \brief Retrieve the set of display options most similar to the
- * default behavior of the clang compiler.
- *
- * \returns A set of display options suitable for use with \c
- * clang_formatDiagnostic().
- */
-unsigned clang_defaultDiagnosticDisplayOptions(void);
-
-/**
  * \brief Retrieve the replacement information for a given fix-it.
  *
  * Fix-its are described in terms of a source range whose contents
@@ -147,20 +138,6 @@ CXTranslationUnit clang_createTranslationUnitFromSourceFile(
                                    const char * const *clang_command_line_args,
                                          unsigned num_unsaved_files,
                                          struct CXUnsavedFile *unsaved_files);
-
-/**
- * \brief Returns the set of flags that is suitable for parsing a translation
- * unit that is being edited.
- *
- * The set of flags returned provide options for \c clang_parseTranslationUnit()
- * to indicate that the translation unit is likely to be reparsed many times,
- * either explicitly (via \c clang_reparseTranslationUnit()) or implicitly
- * (e.g., by code completion (\c clang_codeCompletionAt())). The returned flag
- * set contains an unspecified set of optimizations (e.g., the precompiled
- * preamble) geared toward improving the performance of these routines. The
- * set of optimizations enabled may change from one version to the next.
- */
-unsigned clang_defaultEditingTranslationUnitOptions(void);
 
 /**
  * \brief Parse the given source file and the translation unit corresponding
@@ -496,7 +473,6 @@ void clang_getDefinitionSpellingAndExtent(CXCursor,
                                           unsigned *startColumn,
                                           unsigned *endLine,
                                           unsigned *endColumn);
-void clang_enableStackTraces(void);
 void clang_executeOnThread(void (*fn)(void*), void *user_data,
                                           unsigned stack_size);
 
@@ -526,6 +502,7 @@ clang_getCompletionParent(CXCompletionString completion_string,
  * passed to\c clang_codeCompleteAt().
  */
 unsigned clang_defaultCodeCompleteOptions(void);
+
 
 /**
  * \brief Perform code completion at a given location in a translation unit.
@@ -692,12 +669,6 @@ CXString clang_codeCompleteGetContainerUSR(CXCodeCompleteResults *Results);
  * for an Objective-C message send.
  */
 CXString clang_codeCompleteGetObjCSelector(CXCodeCompleteResults *Results);
-
-/**
- * \brief Return a version string, suitable for showing to a user, but not
- *        intended to be parsed (the format is not guaranteed to be stable).
- */
-CXString clang_getClangVersion(void);
 
  /**
   * \brief Visitor invoked for each file in a translation unit

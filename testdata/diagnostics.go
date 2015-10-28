@@ -83,14 +83,3 @@ func (d Diagnostic) FixIts() (ret []FixIt) {
 func (d Diagnostic) String() string {
 	return d.Format(DefaultDiagnosticDisplayOptions())
 }
-
-/**
- * \brief Retrieve the set of display options most similar to the
- * default behavior of the clang compiler.
- *
- * \returns A set of display options suitable for use with \c
- * clang_displayDiagnostic().
- */
-func DefaultDiagnosticDisplayOptions() DiagnosticDisplayOptions {
-	return DiagnosticDisplayOptions(C.clang_defaultDiagnosticDisplayOptions())
-}

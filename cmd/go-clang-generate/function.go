@@ -341,7 +341,7 @@ func generateASTFunction(f *Function) string {
 					pf = accessMember(p.Name, "c")
 				} else {
 					if p.Type.IsReturnArgument {
-						// Return arguemnts already have a cast
+						// Return arguments already have a cast
 						pf = &ast.Ident{
 							Name: p.Name,
 						}
