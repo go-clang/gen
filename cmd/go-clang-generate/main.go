@@ -14,6 +14,128 @@ import (
 	// "github.com/termie/go-shutil"
 )
 
+var enums []*Enum
+var functions []*Function
+var structs []*Struct
+
+var lookupEnum = map[string]*Enum{}
+var lookupNonTypedefs = map[string]string{}
+var lookupStruct = map[string]*Struct{}
+
+func trimCommonFName(fname string, rt Receiver) string {
+	fname = strings.TrimPrefix(fname, "create")
+	fname = strings.TrimPrefix(fname, "get")
+
+	fname = trimClangPrefix(fname)
+
+	if fn := strings.TrimPrefix(fname, rt.Type+"_"); len(fn) != len(fname) {
+		fname = fn
+	} else if fn := strings.TrimPrefix(fname, rt.Type); len(fn) != len(fname) {
+		fname = fn
+	} else if fn := strings.TrimSuffix(fname, rt.CName); len(fn) != len(fname) {
+		fname = fn
+	}
+
+	fname = strings.TrimPrefix(fname, "create")
+	fname = strings.TrimPrefix(fname, "get")
+
+	fname = trimClangPrefix(fname)
+
+	// If the function name is empty at this point, it is a constructor
+	if fname == "" {
+		fname = rt.Type
+	}
+
+	return fname
+}
+
+func addFunction(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
+	fname = upperFirstCharacter(fname)
+
+	if e, ok := lookupEnum[rt.Type]; ok {
+		f.Name = fnamePrefix + fname
+
+		e.Methods = append(e.Methods, generateASTFunction(f))
+
+		return true
+	} else if s, ok := lookupStruct[rt.Type]; ok {
+		f.Name = fnamePrefix + fname
+
+		s.Methods = append(s.Methods, generateASTFunction(f))
+
+		return true
+	}
+
+	return false
+}
+
+func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
+	fname = upperFirstCharacter(fname)
+
+	// TODO this is a big HACK. Figure out how we can trim receiver names while still not having two "Cursor" methods for TranslationUnit
+	if f.CName == "clang_getTranslationUnitCursor" {
+		fname = "TranslationUnitCursor"
+	}
+
+	if e, ok := lookupEnum[rt.Type]; ok {
+		f.Name = fnamePrefix + fname
+		f.Receiver = e.Receiver
+		f.Receiver.Type = rt.Type
+
+		e.Methods = append(e.Methods, generateASTFunction(f))
+
+		return true
+	} else if s, ok := lookupStruct[rt.Type]; ok {
+		f.Name = fnamePrefix + fname
+		f.Receiver = s.Receiver
+		f.Receiver.Type = rt.Type
+
+		s.Methods = append(s.Methods, generateASTFunction(f))
+
+		return true
+	}
+
+	return false
+}
+
+func addBasicMethods(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
+	if len(f.Parameters) == 0 && isEnumOrStruct(f.ReturnType) {
+		fname = trimCommonFName(fname, rt)
+		if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
+			fname = "New" + fname
+		}
+
+		return addMethod(f, fname, fnamePrefix, rt)
+	} else if (fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3]))) {
+		f.ReturnType = "bool"
+
+		return addMethod(f, fname, fnamePrefix, rt)
+	} else if len(f.Parameters) == 1 && isEnumOrStruct(f.Parameters[0].Type) && strings.HasPrefix(fname, "dispose") && f.ReturnType == "void" {
+		fname = "Dispose"
+
+		return addMethod(f, fname, fnamePrefix, rt)
+	} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && isEnumOrStruct(f.Parameters[0].Type) && f.Parameters[0].Type == f.Parameters[1].Type {
+		f.Parameters[0].Name = receiverName(f.Parameters[0].Type)
+		f.Parameters[1].Name = f.Parameters[0].Name + "2"
+
+		f.ReturnType = "bool"
+
+		return addMethod(f, fname, fnamePrefix, rt)
+	}
+
+	return false
+}
+
+func isEnumOrStruct(name string) bool {
+	if _, ok := lookupEnum[name]; ok {
+		return true
+	} else if _, ok := lookupStruct[name]; ok {
+		return true
+	}
+
+	return false
+}
+
 func main() {
 	rawLLVMVersion, _, err := execToBuffer("llvm-config", "--version")
 	if err != nil {
@@ -94,24 +216,6 @@ func main() {
 		case clang.Diagnostic_Fatal:
 			exitWithFatal("Diagnostic fatal in Index.h", errors.New(diag.Spelling()))
 		}
-	}
-
-	var enums []*Enum
-	var functions []*Function
-	var structs []*Struct
-
-	lookupEnum := map[string]*Enum{}
-	lookupNonTypedefs := map[string]string{}
-	lookupStruct := map[string]*Struct{}
-
-	isEnumOrStruct := func(name string) bool {
-		if _, ok := lookupEnum[name]; ok {
-			return true
-		} else if _, ok := lookupStruct[name]; ok {
-			return true
-		}
-
-		return false
 	}
 
 	cursor := tu.ToCursor()
@@ -197,110 +301,6 @@ func main() {
 
 		return clang.CVR_Recurse
 	})
-
-	trimCommonFName := func(fname string, rt Receiver) string {
-		fname = strings.TrimPrefix(fname, "create")
-		fname = strings.TrimPrefix(fname, "get")
-
-		fname = trimClangPrefix(fname)
-
-		if fn := strings.TrimPrefix(fname, rt.Type+"_"); len(fn) != len(fname) {
-			fname = fn
-		} else if fn := strings.TrimPrefix(fname, rt.Type); len(fn) != len(fname) {
-			fname = fn
-		} else if fn := strings.TrimSuffix(fname, rt.CName); len(fn) != len(fname) {
-			fname = fn
-		}
-
-		fname = strings.TrimPrefix(fname, "create")
-		fname = strings.TrimPrefix(fname, "get")
-
-		fname = trimClangPrefix(fname)
-
-		// If the function name is empty at this point, it is a constructor
-		if fname == "" {
-			fname = rt.Type
-		}
-
-		return fname
-	}
-
-	addFunction := func(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
-		fname = upperFirstCharacter(fname)
-
-		if e, ok := lookupEnum[rt.Type]; ok {
-			f.Name = fnamePrefix + fname
-
-			e.Methods = append(e.Methods, generateASTFunction(f))
-
-			return true
-		} else if s, ok := lookupStruct[rt.Type]; ok {
-			f.Name = fnamePrefix + fname
-
-			s.Methods = append(s.Methods, generateASTFunction(f))
-
-			return true
-		}
-
-		return false
-	}
-
-	addMethod := func(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
-		fname = upperFirstCharacter(fname)
-
-		// TODO this is a big HACK. Figure out how we can trim receiver names while still not having two "Cursor" methods for TranslationUnit
-		if f.CName == "clang_getTranslationUnitCursor" {
-			fname = "TranslationUnitCursor"
-		}
-
-		if e, ok := lookupEnum[rt.Type]; ok {
-			f.Name = fnamePrefix + fname
-			f.Receiver = e.Receiver
-			f.Receiver.Type = rt.Type
-
-			e.Methods = append(e.Methods, generateASTFunction(f))
-
-			return true
-		} else if s, ok := lookupStruct[rt.Type]; ok {
-			f.Name = fnamePrefix + fname
-			f.Receiver = s.Receiver
-			f.Receiver.Type = rt.Type
-
-			s.Methods = append(s.Methods, generateASTFunction(f))
-
-			return true
-		}
-
-		return false
-	}
-
-	addBasicMethods := func(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
-		if len(f.Parameters) == 0 && isEnumOrStruct(f.ReturnType) {
-			fname = trimCommonFName(fname, rt)
-			if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
-				fname = "New" + fname
-			}
-
-			return addMethod(f, fname, fnamePrefix, rt)
-		} else if (fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3]))) {
-			f.ReturnType = "bool"
-
-			return addMethod(f, fname, fnamePrefix, rt)
-		} else if len(f.Parameters) == 1 && isEnumOrStruct(f.Parameters[0].Type) && strings.HasPrefix(fname, "dispose") && f.ReturnType == "void" {
-			fname = "Dispose"
-
-			return addMethod(f, fname, fnamePrefix, rt)
-		} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && isEnumOrStruct(f.Parameters[0].Type) && f.Parameters[0].Type == f.Parameters[1].Type {
-			f.Parameters[0].Name = receiverName(f.Parameters[0].Type)
-			f.Parameters[1].Name = f.Parameters[0].Name + "2"
-
-			f.ReturnType = "bool"
-
-			return addMethod(f, fname, fnamePrefix, rt)
-		}
-
-		return false
-	}
 
 	clangFile := &File{
 		Name: "clang",
