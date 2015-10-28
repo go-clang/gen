@@ -464,7 +464,7 @@ func main() {
 
 func hasHandleablePointers(params []FunctionParameter) bool {
 	for _, p := range params {
-		if p.Type.PointerLevel > 0 && p.Type.CName != "const char *" {
+		if p.Type.PointerLevel > 0 {
 			return false
 		}
 	}
