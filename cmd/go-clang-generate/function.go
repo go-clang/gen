@@ -216,6 +216,15 @@ func generateASTFunction(f *Function) string {
 					call.Args = append(call.Args, &ast.Ident{
 						Name: "c_" + p.Name,
 					})
+				} else if p.PrimitiveType == "cxstring" { // TODO try to get cxstring and "String" completely out of this function since it is just a struct which can be handled by the struct code
+					call.Args = append(call.Args, &ast.SelectorExpr{
+						X: &ast.Ident{
+							Name: p.Name,
+						},
+						Sel: &ast.Ident{
+							Name: "c",
+						},
+					})
 				} else {
 					call.Args = append(call.Args, &ast.CallExpr{
 						Fun: &ast.SelectorExpr{

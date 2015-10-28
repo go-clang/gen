@@ -225,6 +225,26 @@ func main() {
 		return fname
 	}
 
+	addFunction := func(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
+		fname = upperFirstCharacter(fname)
+
+		if e, ok := lookupEnum[rt.Type]; ok {
+			f.Name = fnamePrefix + fname
+
+			e.Methods = append(e.Methods, generateASTFunction(f))
+
+			return true
+		} else if s, ok := lookupStruct[rt.Type]; ok {
+			f.Name = fnamePrefix + fname
+
+			s.Methods = append(s.Methods, generateASTFunction(f))
+
+			return true
+		}
+
+		return false
+	}
+
 	addMethod := func(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 		fname = upperFirstCharacter(fname)
 
@@ -266,7 +286,7 @@ func main() {
 			f.ReturnType = "bool"
 
 			return addMethod(f, fname, fnamePrefix, rt)
-		} else if len(f.Parameters) == 1 && strings.HasPrefix(fname, "dispose") && f.ReturnType == "void" {
+		} else if len(f.Parameters) == 1 && isEnumOrStruct(f.Parameters[0].Type) && strings.HasPrefix(fname, "dispose") && f.ReturnType == "void" {
 			fname = "Dispose"
 
 			return addMethod(f, fname, fnamePrefix, rt)
@@ -280,6 +300,12 @@ func main() {
 		}
 
 		return false
+	}
+
+	clangFile := &File{
+		Name: "clang",
+
+		Imports: map[string]struct{}{},
 	}
 
 	for _, f := range functions {
@@ -315,6 +341,9 @@ func main() {
 		if goType, primitiveType := goAndPrimitiveType(f.ReturnType); goType != "" {
 			f.ReturnType = goType
 			f.ReturnPrimitiveType = primitiveType
+		}
+		if f.ReturnType == "cxstring" {
+			f.ReturnType = "string"
 		}
 
 		var rt Receiver
@@ -381,6 +410,23 @@ func main() {
 					fname = trimCommonFName(fname, rt)
 
 					added = addMethod(f, fname, "", rt)
+
+					if !added && isEnumOrStruct(f.ReturnType) {
+						fname = trimCommonFName(fname, rt)
+						if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
+							fname = "New" + fname
+						}
+
+						rtc := rt
+						rtc.Type = f.ReturnType
+
+						added = addFunction(f, fname, "", rtc)
+					}
+					if !added {
+						clangFile.Functions = append(clangFile.Functions, generateASTFunction(f))
+
+						added = true
+					}
 				}
 			}
 		}
@@ -402,6 +448,12 @@ func main() {
 		}
 	}
 
+	if len(clangFile.Functions) > 0 {
+		if err := generateFile(clangFile); err != nil {
+			exitWithFatal("Cannot generate clang file", err)
+		}
+	}
+
 	if _, _, err = execToBuffer("gofmt", "-w", "./"); err != nil { // TODO do this before saving the files using go/fmt
 		exitWithFatal("Gofmt failed", err)
 	}
@@ -419,12 +471,12 @@ func goAndPrimitiveType(typ string) (string, string) {
 		return "uint64", "ulonglong"
 	case "void":
 		return "void", "void"
-	case "String":
-		return "string", "String"
 	case "time_t":
 		return "time.Time", "time_t"
 	case "const char *":
 		return "string", "const char *"
+	case "String":
+		return "cxstring", "cxstring"
 	}
 
 	return "", ""

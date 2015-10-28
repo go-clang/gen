@@ -36,6 +36,8 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 		CNameIsTypeDef: cnameIsTypeDef,
 		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
 
+		Imports: map[string]struct{}{},
+
 		Items: []Enumerator{},
 	}
 

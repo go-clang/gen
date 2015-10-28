@@ -49,49 +49,6 @@ typedef struct CXVersion {
 } CXVersion;
 
 /**
- * \brief Provides a shared context for creating translation units.
- *
- * It provides two options:
- *
- * - excludeDeclarationsFromPCH: When non-zero, allows enumeration of "local"
- * declarations (when loading any new translation units). A "local" declaration
- * is one that belongs in the translation unit itself and not in a precompiled
- * header that was used by the translation unit. If zero, all declarations
- * will be enumerated.
- *
- * Here is an example:
- *
- * \code
- *   // excludeDeclsFromPCH = 1, displayDiagnostics=1
- *   Idx = clang_createIndex(1, 1);
- *
- *   // IndexTest.pch was produced with the following command:
- *   // "clang -x c IndexTest.h -emit-ast -o IndexTest.pch"
- *   TU = clang_createTranslationUnit(Idx, "IndexTest.pch");
- *
- *   // This will load all the symbols from 'IndexTest.pch'
- *   clang_visitChildren(clang_getTranslationUnitCursor(TU),
- *                       TranslationUnitVisitor, 0);
- *   clang_disposeTranslationUnit(TU);
- *
- *   // This will load all the symbols from 'IndexTest.c', excluding symbols
- *   // from 'IndexTest.pch'.
- *   char *args[] = { "-Xclang", "-include-pch=IndexTest.pch" };
- *   TU = clang_createTranslationUnitFromSourceFile(Idx, "IndexTest.c", 2, args,
- *                                                  0, 0);
- *   clang_visitChildren(clang_getTranslationUnitCursor(TU),
- *                       TranslationUnitVisitor, 0);
- *   clang_disposeTranslationUnit(TU);
- * \endcode
- *
- * This process of creating the 'pch', loading it separately, and using it (via
- * -include-pch) allows 'excludeDeclsFromPCH' to remove redundant callbacks
- * (which gives the indexer the same performance benefit as the compiler).
- */
-CXIndex clang_createIndex(int excludeDeclarationsFromPCH,
-                                         int displayDiagnostics);
-
-/**
  * \brief Uniquely identifies a CXFile, that refers to the same underlying file,
  * across an indexing session.
  */
@@ -330,18 +287,6 @@ unsigned clang_defaultDiagnosticDisplayOptions(void);
  */
 CXString clang_getDiagnosticOption(CXDiagnostic Diag,
                                                   CXString *Disable);
-
-/**
- * \brief Retrieve the name of a particular diagnostic category.  This
- *  is now deprecated.  Use clang_getDiagnosticCategoryText()
- *  instead.
- *
- * \param Category A diagnostic category number, as returned by
- * \c clang_getDiagnosticCategory().
- *
- * \returns The name of the given diagnostic category.
- */
-CXString clang_getDiagnosticCategoryName(unsigned Category);
 
 /**
  * \brief Retrieve the replacement information for a given fix-it.
@@ -805,47 +750,6 @@ unsigned clang_visitChildrenWithBlock(CXCursor parent,
 #endif
 
 /**
- * \brief Construct a USR for a specified Objective-C class.
- */
-CXString clang_constructUSR_ObjCClass(const char *class_name);
-
-/**
- * \brief Construct a USR for a specified Objective-C category.
- */
-CXString
-  clang_constructUSR_ObjCCategory(const char *class_name,
-                                 const char *category_name);
-
-/**
- * \brief Construct a USR for a specified Objective-C protocol.
- */
-CXString
-  clang_constructUSR_ObjCProtocol(const char *protocol_name);
-
-
-/**
- * \brief Construct a USR for a specified Objective-C instance variable and
- *   the USR for its containing class.
- */
-CXString clang_constructUSR_ObjCIvar(const char *name,
-                                                    CXString classUSR);
-
-/**
- * \brief Construct a USR for a specified Objective-C method and
- *   the USR for its containing class.
- */
-CXString clang_constructUSR_ObjCMethod(const char *name,
-                                                      unsigned isInstanceMethod,
-                                                      CXString classUSR);
-
-/**
- * \brief Construct a USR for a specified Objective-C property and the USR
- *  for its containing class.
- */
-CXString clang_constructUSR_ObjCProperty(const char *property,
-                                                        CXString classUSR);
-
-/**
  * \brief Describes a single preprocessing token.
  */
 typedef struct {
@@ -1166,15 +1070,6 @@ CXString clang_codeCompleteGetObjCSelector(CXCodeCompleteResults *Results);
  */
 CXString clang_getClangVersion(void);
 
-
-/**
- * \brief Enable/disable crash recovery.
- *
- * \param isEnabled Flag to indicate if crash recovery is enabled.  A non-zero
- *        value enables crash recovery, while 0 disables it.
- */
-void clang_toggleCrashRecovery(unsigned isEnabled);
-
  /**
   * \brief Visitor invoked for each file in a translation unit
   *        (used with clang_getInclusions()).
@@ -1200,16 +1095,6 @@ typedef void (*CXInclusionVisitor)(CXFile included_file,
 void clang_getInclusions(CXTranslationUnit tu,
                                         CXInclusionVisitor visitor,
                                         CXClientData client_data);
-
-/**
- * \brief Retrieve a remapping.
- *
- * \param path the path that contains metadata about remappings.
- *
- * \returns the requested remapping. This remapping must be freed
- * via a call to \c clang_remap_dispose(). Can return NULL if an error occurred.
- */
-CXRemapping clang_getRemappings(const char *path);
 
 /**
  * \brief Retrieve a remapping.
