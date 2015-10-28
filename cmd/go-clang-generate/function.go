@@ -102,6 +102,11 @@ func generateASTFunction(f *Function) string {
 	addStatement := func(stmt ast.Stmt) {
 		astFunc.Body.List = append(astFunc.Body.List, stmt)
 	}
+	addDefer := func(call *ast.CallExpr) {
+		addStatement(&ast.DeferStmt{
+			Call: call,
+		})
+	}
 	addEmptyLine := func() {
 		// TODO this should be done using something else than a fake statement.
 		addStatement(&ast.ExprStmt{
@@ -244,9 +249,7 @@ func generateASTFunction(f *Function) string {
 					},
 				})
 				if p.Type.Name == "cxstring" {
-					addStatement(&ast.DeferStmt{
-						Call: doCall(p.Name, "Dispose"),
-					})
+					addDefer(doCall(p.Name, "Dispose"))
 				}
 
 				// Add the return argument to the return statement
@@ -313,18 +316,16 @@ func generateASTFunction(f *Function) string {
 							),
 						},
 					})
-					addStatement(&ast.DeferStmt{
-						Call: doCCast(
-							"free",
-							doCall(
-								"unsafe",
-								"Pointer",
-								&ast.Ident{
-									Name: "c_" + p.Name,
-								},
-							),
+					addDefer(doCCast(
+						"free",
+						doCall(
+							"unsafe",
+							"Pointer",
+							&ast.Ident{
+								Name: "c_" + p.Name,
+							},
 						),
-					})
+					))
 
 					pf = &ast.Ident{
 						Name: "c_" + p.Name,
@@ -412,9 +413,7 @@ func generateASTFunction(f *Function) string {
 					call,
 				},
 			})
-			addStatement(&ast.DeferStmt{
-				Call: doCall("o", "Dispose"),
-			})
+			addDefer(doCall("o", "Dispose"))
 			addEmptyLine()
 
 			// Call the String method on the cxstring instance
