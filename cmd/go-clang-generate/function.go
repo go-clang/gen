@@ -97,6 +97,22 @@ func generateASTFunction(f *Function) string {
 			},
 		})
 	}
+	doCType := func(c string) *ast.SelectorExpr {
+		return &ast.SelectorExpr{
+			X: &ast.Ident{
+				Name: "C",
+			},
+			Sel: &ast.Ident{
+				Name: c,
+			},
+		}
+	}
+	doCCast := func(c string, args ...ast.Expr) *ast.CallExpr {
+		return &ast.CallExpr{
+			Fun:  doCType(c),
+			Args: args,
+		}
+	}
 
 	// TODO maybe name the return arguments ... because of clang_getDiagnosticOption -> the normal return can be always just "o"?
 
@@ -133,17 +149,7 @@ func generateASTFunction(f *Function) string {
 	}
 
 	// Basic call to the C function
-	call := &ast.CallExpr{
-		Fun: &ast.SelectorExpr{
-			X: &ast.Ident{
-				Name: "C",
-			},
-			Sel: &ast.Ident{
-				Name: f.CName,
-			},
-		},
-		Args: []ast.Expr{},
-	}
+	call := doCCast(f.CName)
 
 	retur := &ast.ReturnStmt{
 		Results: []ast.Expr{},
@@ -185,14 +191,7 @@ func generateASTFunction(f *Function) string {
 				// Declare the return argument's variable
 				var varType ast.Expr
 				if p.Type.Primitive != "" {
-					varType = &ast.SelectorExpr{
-						X: &ast.Ident{
-							Name: "C",
-						},
-						Sel: &ast.Ident{
-							Name: p.Type.Primitive,
-						},
-					}
+					varType = doCType(p.Type.Primitive)
 				} else {
 					varType = &ast.Ident{
 						Name: p.Type.Name,
@@ -298,51 +297,33 @@ func generateASTFunction(f *Function) string {
 						},
 						Tok: token.DEFINE,
 						Rhs: []ast.Expr{
+							doCCast(
+								"CString",
+								&ast.Ident{
+									Name: p.Name,
+								},
+							),
+						},
+					})
+					addStatement(&ast.DeferStmt{
+						Call: doCCast(
+							"free",
 							&ast.CallExpr{
 								Fun: &ast.SelectorExpr{
 									X: &ast.Ident{
-										Name: "C",
+										Name: "unsafe",
 									},
 									Sel: &ast.Ident{
-										Name: "CString",
+										Name: "Pointer",
 									},
 								},
 								Args: []ast.Expr{
 									&ast.Ident{
-										Name: p.Name,
+										Name: "c_" + p.Name,
 									},
 								},
 							},
-						},
-					})
-					addStatement(&ast.DeferStmt{
-						Call: &ast.CallExpr{
-							Fun: &ast.SelectorExpr{
-								X: &ast.Ident{
-									Name: "C",
-								},
-								Sel: &ast.Ident{
-									Name: "free",
-								},
-							},
-							Args: []ast.Expr{
-								&ast.CallExpr{
-									Fun: &ast.SelectorExpr{
-										X: &ast.Ident{
-											Name: "unsafe",
-										},
-										Sel: &ast.Ident{
-											Name: "Pointer",
-										},
-									},
-									Args: []ast.Expr{
-										&ast.Ident{
-											Name: "c_" + p.Name,
-										},
-									},
-								},
-							},
-						},
+						),
 					})
 
 					pf = &ast.Ident{
@@ -364,21 +345,12 @@ func generateASTFunction(f *Function) string {
 							Name: p.Name,
 						}
 					} else {
-						pf = &ast.CallExpr{
-							Fun: &ast.SelectorExpr{
-								X: &ast.Ident{
-									Name: "C",
-								},
-								Sel: &ast.Ident{
-									Name: p.Type.Primitive,
-								},
+						pf = doCCast(
+							p.Type.Primitive,
+							&ast.Ident{
+								Name: p.Name,
 							},
-							Args: []ast.Expr{
-								&ast.Ident{
-									Name: p.Name,
-								},
-							},
-						}
+						)
 					}
 				}
 			} else {
@@ -441,38 +413,20 @@ func generateASTFunction(f *Function) string {
 					Name: "o",
 				},
 				Op: token.NEQ,
-				Y: &ast.CallExpr{
-					Fun: &ast.SelectorExpr{
-						X: &ast.Ident{
-							Name: "C",
-						},
-						Sel: &ast.Ident{
-							Name: f.ReturnType.Primitive,
-						},
+				Y: doCCast(
+					f.ReturnType.Primitive,
+					&ast.BasicLit{
+						Kind:  token.INT,
+						Value: "0",
 					},
-					Args: []ast.Expr{
-						&ast.BasicLit{
-							Kind:  token.INT,
-							Value: "0",
-						},
-					},
-				},
+				),
 			})
 		} else if f.ReturnType.Name == "string" {
 			// If this is a normal const char * C type there is not so much to do
-			retur.Results = append(retur.Results, &ast.CallExpr{
-				Fun: &ast.SelectorExpr{
-					X: &ast.Ident{
-						Name: "C",
-					},
-					Sel: &ast.Ident{
-						Name: "GoString",
-					},
-				},
-				Args: []ast.Expr{
-					call,
-				},
-			})
+			retur.Results = append(retur.Results, doCCast(
+				"GoString",
+				call,
+			))
 		} else if f.ReturnType.Name == "cxstring" {
 			// Do the C function call and save the result into the new variable "o" while transforming it into a cxstring
 			addStatement(&ast.AssignStmt{
