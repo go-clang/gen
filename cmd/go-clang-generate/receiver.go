@@ -5,11 +5,9 @@ import (
 )
 
 type Receiver struct {
-	Name          string
-	CName         string
-	Type          string
-	CType         string
-	PrimitiveType string
+	Name  string
+	CName string
+	Type  Type
 }
 
 func receiverName(s string) string {

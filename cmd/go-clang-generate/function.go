@@ -17,8 +17,7 @@ type Function struct {
 	Comment string
 
 	Parameters          []FunctionParameter
-	ReturnType          string
-	ReturnPrimitiveType string
+	ReturnType          Type
 	IsReturnTypePointer bool
 	IsReturnTypeEnumLit bool
 
@@ -28,11 +27,9 @@ type Function struct {
 }
 
 type FunctionParameter struct {
-	Name          string
-	CName         string
-	Type          string
-	CType         string
-	PrimitiveType string
+	Name  string
+	CName string
+	Type  Type
 }
 
 func handleFunctionCursor(cursor clang.Cursor) *Function {
@@ -41,7 +38,9 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 		Comment: cleanDoxygenComment(cursor.RawCommentText()),
 
 		Parameters: []FunctionParameter{},
-		ReturnType: trimClangPrefix(cursor.ResultType().TypeSpelling()),
+		ReturnType: Type{
+			Name: trimClangPrefix(cursor.ResultType().TypeSpelling()),
+		},
 	}
 
 	f.Name = strings.TrimPrefix(f.CName, "clang_")
@@ -52,14 +51,16 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 
 		p := FunctionParameter{
 			CName: param.DisplayName(),
-			CType: param.Type().TypeSpelling(),
+			Type: Type{
+				CName: param.Type().TypeSpelling(),
+			},
 		}
 
 		p.Name = p.CName
-		p.Type = trimClangPrefix(p.CType)
+		p.Type.Name = trimClangPrefix(p.Type.CName)
 
 		if p.Name == "" {
-			p.Name = receiverName(p.Type)
+			p.Name = receiverName(p.Type.Name)
 		}
 
 		f.Parameters = append(f.Parameters, p)
@@ -101,7 +102,7 @@ func generateASTFunction(f *Function) string {
 							},
 						},
 						Type: &ast.Ident{
-							Name: f.Receiver.Type,
+							Name: f.Receiver.Type.Name,
 						},
 					},
 				},
@@ -144,7 +145,7 @@ func generateASTFunction(f *Function) string {
 					},
 				},
 				Type: &ast.Ident{
-					Name: p.Type,
+					Name: p.Type.Name,
 				},
 			})
 		}
@@ -153,9 +154,9 @@ func generateASTFunction(f *Function) string {
 
 		// Add arguments to the C function call
 		for _, p := range f.Parameters {
-			if p.PrimitiveType != "" {
+			if p.Type.Primitive != "" {
 				// Handle Go type to C type conversions
-				if p.PrimitiveType == "const char *" {
+				if p.Type.Primitive == "const char *" {
 					goToCTypeConversions = true
 
 					astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
@@ -216,7 +217,7 @@ func generateASTFunction(f *Function) string {
 					call.Args = append(call.Args, &ast.Ident{
 						Name: "c_" + p.Name,
 					})
-				} else if p.PrimitiveType == "cxstring" { // TODO try to get cxstring and "String" completely out of this function since it is just a struct which can be handled by the struct code
+				} else if p.Type.Primitive == "cxstring" { // TODO try to get cxstring and "String" completely out of this function since it is just a struct which can be handled by the struct code
 					call.Args = append(call.Args, &ast.SelectorExpr{
 						X: &ast.Ident{
 							Name: p.Name,
@@ -232,7 +233,7 @@ func generateASTFunction(f *Function) string {
 								Name: "C",
 							},
 							Sel: &ast.Ident{
-								Name: p.PrimitiveType,
+								Name: p.Type.Primitive,
 							},
 						},
 						Args: []ast.Expr{
@@ -267,13 +268,13 @@ func generateASTFunction(f *Function) string {
 	}
 
 	// Check if we need to add a return
-	if f.ReturnType != "void" {
+	if f.ReturnType.Name != "void" {
 		// Add the function return type
 		astFunc.Type.Results = &ast.FieldList{
 			List: []*ast.Field{
 				&ast.Field{
 					Type: &ast.Ident{
-						Name: f.ReturnType,
+						Name: f.ReturnType.Name,
 					},
 				},
 			},
@@ -283,10 +284,10 @@ func generateASTFunction(f *Function) string {
 		var convCall ast.Expr
 
 		// Structs are literals, everything else is a cast
-		if f.ReturnPrimitiveType == "" {
+		if f.ReturnType.Primitive == "" {
 			convCall = &ast.CompositeLit{
 				Type: &ast.Ident{
-					Name: f.ReturnType,
+					Name: f.ReturnType.Name,
 				},
 				Elts: []ast.Expr{
 					call,
@@ -295,7 +296,7 @@ func generateASTFunction(f *Function) string {
 		} else {
 			convCall = &ast.CallExpr{
 				Fun: &ast.Ident{
-					Name: f.ReturnType,
+					Name: f.ReturnType.Name,
 				},
 				Args: []ast.Expr{
 					call,
@@ -306,7 +307,7 @@ func generateASTFunction(f *Function) string {
 		result := convCall
 
 		// Do we need to convert the return of the C function into a boolean?
-		if f.ReturnType == "bool" && f.ReturnPrimitiveType != "" {
+		if f.ReturnType.Name == "bool" && f.ReturnType.Primitive != "" {
 			// Do the C function call and save the result into the new variable "o"
 			astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
 				Lhs: []ast.Expr{
@@ -341,7 +342,7 @@ func generateASTFunction(f *Function) string {
 							Name: "C",
 						},
 						Sel: &ast.Ident{
-							Name: f.ReturnPrimitiveType,
+							Name: f.ReturnType.Primitive,
 						},
 					},
 					Args: []ast.Expr{
@@ -352,9 +353,9 @@ func generateASTFunction(f *Function) string {
 					},
 				},
 			}
-		} else if f.ReturnType == "string" {
+		} else if f.ReturnType.Name == "string" {
 			// If this is a normal const char * C type there is not so much to do
-			if f.ReturnPrimitiveType == "const char *" {
+			if f.ReturnType.Primitive == "const char *" {
 				result = &ast.CallExpr{
 					Fun: &ast.SelectorExpr{
 						X: &ast.Ident{
@@ -424,7 +425,7 @@ func generateASTFunction(f *Function) string {
 					},
 				}
 			}
-		} else if f.ReturnType == "time.Time" {
+		} else if f.ReturnType.Name == "time.Time" {
 			result = &ast.CallExpr{
 				Fun: &ast.SelectorExpr{
 					X: &ast.Ident{
@@ -484,8 +485,8 @@ func generateASTFunction(f *Function) string {
 }
 
 var templateGenerateStructMemberGetter = template.Must(template.New("go-clang-generate-function-getter").Parse(`{{$.Comment}}
-func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() {{if $.IsReturnTypePointer}}*{{end}}{{if $.ReturnPrimitiveType}}{{$.ReturnPrimitiveType}}{{else}}{{$.ReturnType}}{{end}} {
-	return {{if $.IsReturnTypePointer}}&{{end}}{{if $.ReturnPrimitiveType}}{{$.ReturnPrimitiveType}}{{else}}{{$.ReturnType}}{{end}}{{if $.ReturnPrimitiveType}}({{if $.IsReturnTypePointer}}*{{end}}{{$.Receiver}}.c.{{$.Member}}){{else}}{{"{"}}{{if $.IsReturnTypePointer}}*{{end}}{{$.Receiver}}.c.{{$.Member}}{{"}"}}{{end}}
+func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() {{if $.IsReturnTypePointer}}*{{end}}{{if $.ReturnType.Primitive}}{{$.ReturnType.Primitive}}{{else}}{{$.ReturnType}}{{end}} {
+	return {{if $.IsReturnTypePointer}}&{{end}}{{if $.ReturnType.Primitive}}{{$.ReturnType.Primitive}}{{else}}{{$.ReturnType}}{{end}}{{if $.ReturnType.Primitive}}({{if $.IsReturnTypePointer}}*{{end}}{{$.Receiver}}.c.{{$.Member}}){{else}}{{"{"}}{{if $.IsReturnTypePointer}}*{{end}}{{$.Receiver}}.c.{{$.Member}}{{"}"}}{{end}}
 }
 `))
 
@@ -534,7 +535,7 @@ func generateFunctionSliceReturn(f *FunctionSliceReturn) string {
 
 func generateFunction(name, cname, comment, member string, typ Type) *Function {
 	receiverType := trimClangPrefix(cname)
-	receiverName := receiverName(string(receiverType[0]))
+	receiverName := receiverName(receiverType)
 	functionName := upperFirstCharacter(name)
 
 	rType := ""
@@ -553,14 +554,19 @@ func generateFunction(name, cname, comment, member string, typ Type) *Function {
 
 		Parameters: []FunctionParameter{},
 
-		ReturnType:          rType,
-		ReturnPrimitiveType: rTypePrimitive,
+		ReturnType: Type{
+			Name:      rType,
+			Primitive: rTypePrimitive,
+		},
+
 		IsReturnTypePointer: typ.PointerLevel > 0,
 		IsReturnTypeEnumLit: typ.IsEnumLiteral,
 
 		Receiver: Receiver{
 			Name: receiverName,
-			Type: receiverType,
+			Type: Type{
+				Name: receiverType,
+			},
 		},
 
 		Member: member,

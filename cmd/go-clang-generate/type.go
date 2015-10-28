@@ -24,8 +24,9 @@ const (
 )
 
 type Type struct {
-	Name  string
-	CName string
+	Name      string
+	CName     string
+	Primitive string
 
 	PointerLevel      int
 	IsPrimitive       bool
