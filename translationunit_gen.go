@@ -66,11 +66,11 @@ func (tu TranslationUnit) DefaultSaveOptions() uint16 {
 }
 
 // Saves a translation unit into a serialized representation of that translation unit on disk. Any translation unit that was parsed without error can be saved into a file. The translation unit can then be deserialized into a new \c CXTranslationUnit with \c clang_createTranslationUnit() or, if it is an incomplete translation unit that corresponds to a header, used as a precompiled header when parsing other translation units. \param TU The translation unit to save. \param FileName The file to which the translation unit will be saved. \param options A bitmask of options that affects how the translation unit is saved. This should be a bitwise OR of the CXSaveTranslationUnit_XXX flags. \returns A value that will match one of the enumerators of the CXSaveError enumeration. Zero (CXSaveError_None) indicates that the translation unit was saved successfully, while a non-zero value indicates that a problem occurred.
-func (tu TranslationUnit) SaveTranslationUnit(FileName string, options uint16) uint16 {
+func (tu TranslationUnit) SaveTranslationUnit(FileName string, options uint16) int16 {
 	c_FileName := C.CString(FileName)
 	defer C.free(unsafe.Pointer(c_FileName))
 
-	return uint16(C.clang_saveTranslationUnit(tu.c, c_FileName, C.uint(options)))
+	return int16(C.clang_saveTranslationUnit(tu.c, c_FileName, C.uint(options)))
 }
 
 // Destroy the specified CXTranslationUnit object.

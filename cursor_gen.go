@@ -195,13 +195,13 @@ func (c Cursor) EnumConstantDeclUnsignedValue() uint64 {
 }
 
 // Retrieve the bit width of a bit field declaration as an integer. If a cursor that is not a bit field declaration is passed in, -1 is returned.
-func (c Cursor) FieldDeclBitWidth() uint16 {
-	return uint16(C.clang_getFieldDeclBitWidth(c.c))
+func (c Cursor) FieldDeclBitWidth() int16 {
+	return int16(C.clang_getFieldDeclBitWidth(c.c))
 }
 
 // Retrieve the number of non-variadic arguments associated with a given cursor. The number of arguments can be determined for calls as well as for declarations of functions or methods. For other cursors -1 is returned.
-func (c Cursor) NumArguments() uint16 {
-	return uint16(C.clang_Cursor_getNumArguments(c.c))
+func (c Cursor) NumArguments() int16 {
+	return int16(C.clang_Cursor_getNumArguments(c.c))
 }
 
 // Retrieve the argument cursor of a function or method. The argument cursor can be determined for calls as well as for declarations of functions or methods. For other cursors and for invalid indices, an invalid cursor is returned.
@@ -358,8 +358,8 @@ func (c Cursor) CanonicalCursor() Cursor {
 }
 
 // If the cursor points to a selector identifier in a objc method or message expression, this returns the selector index. After getting a cursor with #clang_getCursor, this can be called to determine if the location points to a selector identifier. \returns The selector index if the cursor is an objc method or message expression and the cursor is pointing to a selector identifier, or -1 otherwise.
-func (c Cursor) ObjCSelectorIndex() uint16 {
-	return uint16(C.clang_Cursor_getObjCSelectorIndex(c.c))
+func (c Cursor) ObjCSelectorIndex() int16 {
+	return int16(C.clang_Cursor_getObjCSelectorIndex(c.c))
 }
 
 // Given a cursor pointing to a C++ method call or an ObjC message, returns non-zero if the method/message is "dynamic", meaning: For a C++ method: the call is virtual. For an ObjC message: the receiver is an object instance, not 'super' or a specific class. If the method/message is "static" or the cursor does not point to a method/message, it will return zero.

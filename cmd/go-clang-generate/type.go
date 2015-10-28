@@ -130,17 +130,15 @@ func getType(cType clang.Type) (Type, error) {
 		typ.Name = typeStr
 		typ.IsPrimitive = false
 
+		typ.Name = typeStr
+		typ.IsPrimitive = false
+
 		if cType.CanonicalType().Kind() == clang.TK_Enum {
 			typ.IsEnumLiteral = true
 			typ.IsPrimitive = true
 		}
 	case clang.TK_Pointer:
 		typ.PointerLevel++
-
-		if cType.PointeeType().CanonicalType().Kind() == clang.TK_FunctionProto {
-			typ.IsFunctionPointer = true
-		}
-
 		subTyp, err := getType(cType.PointeeType())
 		if err != nil {
 			return Type{}, err

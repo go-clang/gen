@@ -92,8 +92,8 @@ func (t Type) ResultType() Type {
 }
 
 // Retrieve the number of non-variadic arguments associated with a function type. If a non-function type is passed in, -1 is returned.
-func (t Type) NumArgTypes() uint16 {
-	return uint16(C.clang_getNumArgTypes(t.c))
+func (t Type) NumArgTypes() int16 {
+	return int16(C.clang_getNumArgTypes(t.c))
 }
 
 // Retrieve the type of an argument of a function type. If a non-function type is passed in or the function does not have enough parameters, an invalid type is returned.

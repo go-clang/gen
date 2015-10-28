@@ -52,7 +52,7 @@ type Index struct {
  * -include-pch) allows 'excludeDeclsFromPCH' to remove redundant callbacks
  * (which gives the indexer the same performance benefit as the compiler).
  */
-func NewIndex(excludeDeclarationsFromPCH uint16, displayDiagnostics uint16) Index {
+func NewIndex(excludeDeclarationsFromPCH int16, displayDiagnostics int16) Index {
 	return Index{C.clang_createIndex(C.int(excludeDeclarationsFromPCH), C.int(displayDiagnostics))}
 }
 

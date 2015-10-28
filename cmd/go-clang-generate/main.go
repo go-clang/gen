@@ -354,11 +354,6 @@ func main() {
 				p.CName = e.Receiver.CName
 				p.Type = e.Receiver.Type
 			} else if _, ok := lookupStruct[p.Type.Name]; ok {
-			} else {
-				if goType, primitiveType := goAndTypePrimitive(p.Type); goType != "" {
-					p.Type.Name = goType
-					p.Type.Primitive = primitiveType
-				}
 			}
 		}
 
@@ -368,10 +363,6 @@ func main() {
 		if e, ok := lookupEnum[f.ReturnType.Name]; ok {
 			f.ReturnType.Primitive = e.Receiver.Type.Primitive
 		} else if _, ok := lookupStruct[f.ReturnType.Name]; ok {
-		}
-		if goType, primitiveType := goAndTypePrimitive(f.ReturnType); goType != "" {
-			f.ReturnType.Name = goType
-			f.ReturnType.Primitive = primitiveType
 		}
 
 		var rt Receiver
@@ -479,25 +470,4 @@ func hasHandleablePointers(params []FunctionParameter) bool {
 	}
 
 	return true
-}
-
-func goAndTypePrimitive(typ Type) (string, string) {
-	switch typ.CName {
-	case "int":
-		return "uint16", "int"
-	case "unsigned int":
-		return "uint16", "uint"
-	case "long long":
-		return "int64", "longlong"
-	case "unsigned long long":
-		return "uint64", "ulonglong"
-	case "void":
-		return "void", "void"
-	case "time_t":
-		return "time.Time", "time_t"
-	case "const char *":
-		return "string", "const char *"
-	}
-
-	return "", ""
 }
