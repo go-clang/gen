@@ -102,6 +102,22 @@ func generateASTFunction(f *Function) string {
 	addStatement := func(stmt ast.Stmt) {
 		astFunc.Body.List = append(astFunc.Body.List, stmt)
 	}
+	addAssignment := func(variable string, e ast.Expr) {
+		addStatement(&ast.AssignStmt{
+			Lhs: []ast.Expr{
+				&ast.Ident{
+					Name: variable,
+				},
+			},
+			Tok: token.DEFINE,
+			Rhs: []ast.Expr{
+				e,
+			},
+		})
+	}
+	addAssignmentToO := func(e ast.Expr) {
+		addAssignment("o", e)
+	}
 	addDefer := func(call *ast.CallExpr) {
 		addStatement(&ast.DeferStmt{
 			Call: call,
@@ -119,19 +135,6 @@ func generateASTFunction(f *Function) string {
 	}
 	addReturnItem := func(item ast.Expr) {
 		retur.Results = append(retur.Results, item)
-	}
-	assignToO := func(e ast.Expr) {
-		addStatement(&ast.AssignStmt{
-			Lhs: []ast.Expr{
-				&ast.Ident{
-					Name: "o",
-				},
-			},
-			Tok: token.DEFINE,
-			Rhs: []ast.Expr{
-				e,
-			},
-		})
 	}
 	doCall := func(variable string, method string, args ...ast.Expr) *ast.CallExpr {
 		return &ast.CallExpr{
@@ -300,22 +303,15 @@ func generateASTFunction(f *Function) string {
 				if p.Type.CName == "const char *" {
 					goToCTypeConversions = true
 
-					addStatement(&ast.AssignStmt{
-						Lhs: []ast.Expr{
+					addAssignment(
+						"c_"+p.Name,
+						doCCast(
+							"CString",
 							&ast.Ident{
-								Name: "c_" + p.Name,
+								Name: p.Name,
 							},
-						},
-						Tok: token.DEFINE,
-						Rhs: []ast.Expr{
-							doCCast(
-								"CString",
-								&ast.Ident{
-									Name: p.Name,
-								},
-							),
-						},
-					})
+						),
+					)
 					addDefer(doCCast(
 						"free",
 						doCall(
@@ -380,7 +376,7 @@ func generateASTFunction(f *Function) string {
 		// Do we need to convert the return of the C function into a boolean?
 		if f.ReturnType.Name == "bool" && f.ReturnType.Primitive != "" {
 			// Do the C function call and save the result into the new variable "o"
-			assignToO(call)
+			addAssignmentToO(call)
 			addEmptyLine()
 
 			// Check if o is not equal to zero and return the result
@@ -405,7 +401,7 @@ func generateASTFunction(f *Function) string {
 			))
 		} else if f.ReturnType.Name == "cxstring" {
 			// Do the C function call and save the result into the new variable "o" while transforming it into a cxstring
-			assignToO(&ast.CompositeLit{
+			addAssignmentToO(&ast.CompositeLit{
 				Type: &ast.Ident{
 					Name: "cxstring",
 				},
@@ -462,7 +458,7 @@ func generateASTFunction(f *Function) string {
 
 			if hasReturnArguments {
 				// Do the C function call and save the result into the new variable "o"
-				assignToO(convCall)
+				addAssignmentToO(convCall)
 				addEmptyLine()
 
 				// Add the C function call result to the return statement
