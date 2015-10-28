@@ -150,6 +150,16 @@ func generateASTFunction(f *Function) string {
 			Args: args,
 		}
 	}
+	doCompose := func(typ string, v ast.Expr) *ast.CompositeLit {
+		return &ast.CompositeLit{
+			Type: &ast.Ident{
+				Name: typ,
+			},
+			Elts: []ast.Expr{
+				v,
+			},
+		}
+	}
 	doCType := func(c string) *ast.SelectorExpr {
 		return accessMember("C", c)
 	}
@@ -367,14 +377,7 @@ func generateASTFunction(f *Function) string {
 	if f.ReturnType.Name != "void" || hasReturnArguments {
 		if f.ReturnType.Name == "cxstring" {
 			// Do the C function call and save the result into the new variable "o" while transforming it into a cxstring
-			addAssignmentToO(&ast.CompositeLit{
-				Type: &ast.Ident{
-					Name: "cxstring",
-				},
-				Elts: []ast.Expr{
-					call,
-				},
-			})
+			addAssignmentToO(doCompose("cxstring", call))
 			addDefer(doCall("o", "Dispose"))
 			addEmptyLine()
 
@@ -440,14 +443,7 @@ func generateASTFunction(f *Function) string {
 
 				// Structs are literals, everything else is a cast
 				if f.ReturnType.Primitive == "" {
-					convCall = &ast.CompositeLit{
-						Type: &ast.Ident{
-							Name: f.ReturnType.Name,
-						},
-						Elts: []ast.Expr{
-							call,
-						},
-					}
+					convCall = doCompose(f.ReturnType.Name, call)
 				} else {
 					convCall = doCast(f.ReturnType.Name, call)
 				}
