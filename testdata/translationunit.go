@@ -93,42 +93,6 @@ func (tu TranslationUnit) IsValid() bool {
 	return tu.c != nil
 }
 
-func (tu TranslationUnit) File(file_name string) File {
-	cfname := C.CString(file_name)
-	defer C.free(unsafe.Pointer(cfname))
-	f := C.clang_getFile(tu.c, cfname)
-	return File{f}
-}
-
-// IsFileMultipleIncludeGuarded determines whether the given header is guarded
-// against multiple inclusions, either with the conventional
-// #ifndef/#define/#endif macro guards or with #pragma once.
-func (tu TranslationUnit) IsFileMultipleIncludeGuarded(file File) bool {
-	o := C.clang_isFileMultipleIncludeGuarded(tu.c, file.c)
-	if o != C.uint(0) {
-		return true
-	}
-	return false
-}
-
-// CursorOf maps a source location to the cursor that describes the entity at that
-// location in the source code.
-//
-// clang_getCursor() maps an arbitrary source location within a translation
-// unit down to the most specific cursor that describes the entity at that
-// location. For example, given an expression \c x + y, invoking
-// clang_getCursor() with a source location pointing to "x" will return the
-// cursor for "x"; similarly for "y". If the cursor points anywhere between
-// "x" or "y" (e.g., on the + or the whitespace around it), clang_getCursor()
-// will return a cursor referring to the "+" expression.
-//
-// Returns a cursor representing the entity at the given source location, or
-// a NULL cursor if no such entity can be found.
-func (tu TranslationUnit) Cursor(loc SourceLocation) Cursor {
-	o := C.clang_getCursor(tu.c, loc.c)
-	return Cursor{o}
-}
-
 /**
  * \brief Reparse the source files that produced this translation unit.
  *
@@ -174,37 +138,6 @@ func (tu TranslationUnit) Reparse(us UnsavedFiles, options TranslationUnitFlags)
 }
 
 /**
- * \brief Saves a translation unit into a serialized representation of
- * that translation unit on disk.
- *
- * Any translation unit that was parsed without error can be saved
- * into a file. The translation unit can then be deserialized into a
- * new \c CXTranslationUnit with \c clang_createTranslationUnit() or,
- * if it is an incomplete translation unit that corresponds to a
- * header, used as a precompiled header when parsing other translation
- * units.
- *
- * \param TU The translation unit to save.
- *
- * \param FileName The file to which the translation unit will be saved.
- *
- * \param options A bitmask of options that affects how the translation unit
- * is saved. This should be a bitwise OR of the
- * CXSaveTranslationUnit_XXX flags.
- *
- * \returns A value that will match one of the enumerators of the CXSaveError
- * enumeration. Zero (CXSaveError_None) indicates that the translation unit was
- * saved successfully, while a non-zero value indicates that a problem occurred.
- */
-func (tu TranslationUnit) Save(fname string, options uint) uint32 {
-	cstr := C.CString(fname)
-	defer C.free(unsafe.Pointer(cstr))
-	o := C.clang_saveTranslationUnit(tu.c, cstr, C.uint(options))
-	// FIXME: should be a SaveError type...
-	return uint32(o)
-}
-
-/**
  * \brief Retrieve a diagnostic associated with the given translation unit.
  *
  * \param Unit the translation unit to query.
@@ -219,38 +152,4 @@ func (tu TranslationUnit) Diagnostics() (ret Diagnostics) {
 		ret[i].c = C.clang_getDiagnostic(tu.c, C.uint(i))
 	}
 	return
-}
-
-// Location returns the source location associated with a given file/line/column
-// in a particular translation unit.
-func (tu TranslationUnit) Location(f File, line, column uint) SourceLocation {
-	loc := C.clang_getLocation(tu.c, f.c, C.uint(line), C.uint(column))
-	return SourceLocation{loc}
-}
-
-// LocationForOffset returns the source location associated with a given
-// character offset in a particular translation unit.
-func (tu TranslationUnit) LocationForOffset(f File, offset uint) SourceLocation {
-	loc := C.clang_getLocationForOffset(tu.c, f.c, C.uint(offset))
-	return SourceLocation{loc}
-}
-
-/**
- * \param Module a module object.
- *
- * \returns the number of top level headers associated with this module.
- */
-func (tu TranslationUnit) NumTopLevelHeaders(m Module) int {
-	return int(C.clang_Module_getNumTopLevelHeaders(tu.c, m.c))
-}
-
-/**
- * \param Module a module object.
- *
- * \param Index top level header index (zero-based).
- *
- * \returns the specified top level header associated with the module.
- */
-func (tu TranslationUnit) TopLevelHeader(m Module, i int) File {
-	return File{C.clang_Module_getTopLevelHeader(tu.c, m.c, C.unsigned(i))}
 }

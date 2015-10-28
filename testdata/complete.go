@@ -10,23 +10,6 @@ import (
 )
 
 /**
- * \brief Retrieve the annotation associated with the given completion string.
- *
- * \param completion_string the completion string to query.
- *
- * \param annotation_number the 0-based index of the annotation of the
- * completion string.
- *
- * \returns annotation string associated with the completion at index
- * \c annotation_number, or a NULL string if that annotation is not available.
- */
-func (cs CompletionString) Annotation(i int) string {
-	cx := cxstring{C.clang_getCompletionAnnotation(cs.c, C.uint(i))}
-	defer cx.Dispose()
-	return cx.String()
-}
-
-/**
  * \brief Retrieve the parent context of the given completion string.
  *
  * The parent context of a completion string is the semantic parent of
@@ -76,35 +59,6 @@ type CompletionChunk struct {
 
 func (cc CompletionChunk) String() string {
 	return fmt.Sprintf("%s %s", cc.Kind(), cc.Text())
-}
-
-/**
- * \brief Retrieve the text associated with a particular chunk within a
- * completion string.
- *
- * \param completion_string the completion string to query.
- *
- * \param chunk_number the 0-based index of the chunk in the completion string.
- *
- * \returns the text associated with the chunk at index \c chunk_number.
- */
-func (cc CompletionChunk) Text() string {
-	cx := cxstring{C.clang_getCompletionChunkText(cc.cs, cc.number)}
-	defer cx.Dispose()
-	return cx.String()
-}
-
-/**
- * \brief Determine the kind of a particular chunk within a completion string.
- *
- * \param completion_string the completion string to query.
- *
- * \param chunk_number the 0-based index of the chunk in the completion string.
- *
- * \returns the kind of the chunk at the index \c chunk_number.
- */
-func (cs CompletionChunk) Kind() CompletionChunkKind {
-	return CompletionChunkKind(C.clang_getCompletionChunkKind(cs.cs, cs.number))
 }
 
 /**

@@ -204,9 +204,9 @@ func main() {
 
 		fname = trimClangPrefix(fname)
 
-		if fn := strings.TrimPrefix(fname, rt.Name+"_"); len(fn) != len(fname) {
+		if fn := strings.TrimPrefix(fname, rt.Type+"_"); len(fn) != len(fname) {
 			fname = fn
-		} else if fn := strings.TrimPrefix(fname, rt.Name); len(fn) != len(fname) {
+		} else if fn := strings.TrimPrefix(fname, rt.Type); len(fn) != len(fname) {
 			fname = fn
 		} else if fn := strings.TrimSuffix(fname, rt.CName); len(fn) != len(fname) {
 			fname = fn
@@ -219,29 +219,54 @@ func main() {
 
 		// If the function name is empty at this point, it is a constructor
 		if fname == "" {
-			fname = rt.Name
+			fname = rt.Type
 		}
 
 		return fname
 	}
 
-	addMethod := func(f *Function, fname string, fnamePrefix string, rt Receiver, method func(f *Function) string) bool {
+	addFunction := func(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 		fname = upperFirstCharacter(fname)
 
-		if e, ok := lookupEnum[rt.Name]; ok {
+		if e, ok := lookupEnum[rt.Type]; ok {
 			f.Name = fnamePrefix + fname
-			f.Receiver = e.Receiver
-			f.Receiver.Type = rt.Name
 
-			e.Methods = append(e.Methods, method(f))
+			e.Methods = append(e.Methods, generateASTFunction(f))
 
 			return true
-		} else if s, ok := lookupStruct[rt.Name]; ok {
+		} else if s, ok := lookupStruct[rt.Type]; ok {
+			f.Name = fnamePrefix + fname
+
+			s.Methods = append(s.Methods, generateASTFunction(f))
+
+			return true
+		}
+
+		return false
+	}
+
+	addMethod := func(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
+		fname = upperFirstCharacter(fname)
+
+		// TODO this is a big HACK. Figure out how we can trim receiver names while still not having two "Cursor" methods for TranslationUnit
+		if f.CName == "clang_getTranslationUnitCursor" {
+			fname = "TranslationUnitCursor"
+		}
+
+		if e, ok := lookupEnum[rt.Type]; ok {
+			f.Name = fnamePrefix + fname
+			f.Receiver = e.Receiver
+			f.Receiver.Type = rt.Type
+
+			e.Methods = append(e.Methods, generateASTFunction(f))
+
+			return true
+		} else if s, ok := lookupStruct[rt.Type]; ok {
 			f.Name = fnamePrefix + fname
 			f.Receiver = s.Receiver
-			f.Receiver.Type = rt.Name
+			f.Receiver.Type = rt.Type
 
-			s.Methods = append(s.Methods, method(f))
+			s.Methods = append(s.Methods, generateASTFunction(f))
 
 			return true
 		}
@@ -251,46 +276,58 @@ func main() {
 
 	addBasicMethods := func(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 		if len(f.Parameters) == 0 && isEnumOrStruct(f.ReturnType) {
-			rtc := rt
-			rtc.Name = f.ReturnType
-
-			fname = trimCommonFName(fname, rtc)
+			fname = trimCommonFName(fname, rt)
 			if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
 				fname = "New" + fname
 			}
 
-			return addMethod(f, fname, fnamePrefix, rtc, generateFunctionVoidReturningMethod)
-		} else if len(f.Parameters) == 1 && f.ReturnType == "String" {
-			fname = trimCommonFName(fname, rt)
+			return addMethod(f, fname, fnamePrefix, rt)
+		} else if (fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3]))) {
+			f.ReturnType = "bool"
 
-			return addMethod(f, fname, fnamePrefix, rt, generateFunctionStringGetter)
-		} else if len(f.Parameters) == 1 && isEnumOrStruct(f.ReturnType) && isEnumOrStruct(f.Parameters[0].Type) {
-			fname = trimCommonFName(fname, rt)
-
-			return addMethod(f, fname, fnamePrefix, rt, generateFunctionGetter)
-		} else if len(f.Parameters) == 1 &&
-			((fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3])))) &&
-			(f.ReturnType == "unsigned int" || f.ReturnType == "int") {
-			return addMethod(f, fname, fnamePrefix, rt, generateFunctionIs)
-		} else if len(f.Parameters) == 1 && strings.HasPrefix(fname, "dispose") && f.ReturnType == "void" {
+			return addMethod(f, fname, fnamePrefix, rt)
+		} else if len(f.Parameters) == 1 && isEnumOrStruct(f.Parameters[0].Type) && strings.HasPrefix(fname, "dispose") && f.ReturnType == "void" {
 			fname = "Dispose"
 
-			return addMethod(f, fname, fnamePrefix, rt, generateFunctionVoidMethod)
-		} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && f.ReturnType == "unsigned int" && f.Parameters[0].Type == f.Parameters[1].Type {
-			return addMethod(f, fname, fnamePrefix, rt, generateFunctionEqual)
+			return addMethod(f, fname, fnamePrefix, rt)
+		} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && isEnumOrStruct(f.Parameters[0].Type) && f.Parameters[0].Type == f.Parameters[1].Type {
+			f.Parameters[0].Name = receiverName(f.Parameters[0].Type)
+			f.Parameters[1].Name = f.Parameters[0].Name + "2"
+
+			f.ReturnType = "bool"
+
+			return addMethod(f, fname, fnamePrefix, rt)
 		}
 
 		return false
 	}
 
+	clangFile := &File{
+		Name: "clang",
+
+		Imports: map[string]struct{}{},
+	}
+
 	for _, f := range functions {
 		fname := f.Name
-		var rt Receiver
-		if len(f.Parameters) > 0 {
-			rt.CName = f.Parameters[0].Type
-			rt.Name = trimClangPrefix(rt.CName)
-			if n, ok := lookupNonTypedefs[rt.Name]; ok {
-				rt.Name = n
+
+		for i := range f.Parameters {
+			p := &f.Parameters[i]
+
+			if n, ok := lookupNonTypedefs[p.Type]; ok {
+				p.Type = n
+			}
+			if e, ok := lookupEnum[p.Type]; ok {
+				p.CName = e.Receiver.CName
+				p.Type = e.Receiver.Type
+				p.CType = e.Receiver.CType
+				p.PrimitiveType = e.Receiver.PrimitiveType
+			} else if _, ok := lookupStruct[p.Type]; ok {
+			} else {
+				if goType, primitiveType := goAndPrimitiveType(p.Type); goType != "" {
+					p.Type = goType
+					p.PrimitiveType = primitiveType
+				}
 			}
 		}
 
@@ -301,12 +338,34 @@ func main() {
 			f.ReturnPrimitiveType = e.Receiver.PrimitiveType
 		} else if _, ok := lookupStruct[f.ReturnType]; ok {
 		}
+		if goType, primitiveType := goAndPrimitiveType(f.ReturnType); goType != "" {
+			f.ReturnType = goType
+			f.ReturnPrimitiveType = primitiveType
+		}
+		if f.ReturnType == "cxstring" {
+			f.ReturnType = "string"
+		}
+
+		var rt Receiver
+		if len(f.Parameters) > 0 {
+			rt.Name = receiverName(f.Parameters[0].Type)
+			rt.CName = f.Parameters[0].CName
+			rt.Type = f.Parameters[0].Type
+			rt.CType = f.Parameters[0].CType
+			rt.PrimitiveType = f.Parameters[0].PrimitiveType
+		} else {
+			if e, ok := lookupEnum[f.ReturnType]; ok {
+				rt.Type = e.Receiver.Type
+			} else if s, ok := lookupStruct[f.ReturnType]; ok {
+				rt.Type = s.Name
+			}
+		}
 
 		added := addBasicMethods(f, fname, "", rt)
 
 		if !added {
 			if s := strings.Split(f.Name, "_"); len(s) == 2 {
-				if s[0] == rt.Name {
+				if s[0] == rt.Type {
 					rtc := rt
 					rtc.Name = s[0]
 
@@ -320,6 +379,7 @@ func main() {
 			if len(f.Parameters) == 1 && (f.ReturnType == "int" || f.ReturnType == "unsigned int" || f.ReturnType == "long long" || f.ReturnType == "unsigned long long") && isEnumOrStruct(f.Parameters[0].Type) {
 				fname = trimCommonFName(fname, rt)
 
+				f.ReturnPrimitiveType = f.ReturnType
 				switch f.ReturnType { // TODO refactor to use getTypeConversion(...) somehow, maybe do the conversion during the create of a Function instance
 				case "int":
 					f.ReturnType = "uint16"
@@ -331,12 +391,48 @@ func main() {
 					f.ReturnType = "uint64"
 				}
 
-				added = addMethod(f, fname, "", rt, generateFunctionGetterPrimitive)
+				added = addMethod(f, fname, "", rt)
 			}
 		}
 
 		if !added {
-			fmt.Println("Unused:", f.Name)
+			if len(f.Parameters) > 0 && (isEnumOrStruct(f.ReturnType) || f.ReturnPrimitiveType != "") {
+				found := false
+				for _, p := range f.Parameters {
+					if !isEnumOrStruct(p.Type) && p.PrimitiveType == "" {
+						found = true
+
+						break
+					}
+				}
+
+				if !found {
+					fname = trimCommonFName(fname, rt)
+
+					added = addMethod(f, fname, "", rt)
+
+					if !added && isEnumOrStruct(f.ReturnType) {
+						fname = trimCommonFName(fname, rt)
+						if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
+							fname = "New" + fname
+						}
+
+						rtc := rt
+						rtc.Type = f.ReturnType
+
+						added = addFunction(f, fname, "", rtc)
+					}
+					if !added {
+						clangFile.Functions = append(clangFile.Functions, generateASTFunction(f))
+
+						added = true
+					}
+				}
+			}
+		}
+
+		if !added {
+			fmt.Println("Unused function:", f.Name)
 		}
 	}
 
@@ -352,7 +448,36 @@ func main() {
 		}
 	}
 
+	if len(clangFile.Functions) > 0 {
+		if err := generateFile(clangFile); err != nil {
+			exitWithFatal("Cannot generate clang file", err)
+		}
+	}
+
 	if _, _, err = execToBuffer("gofmt", "-w", "./"); err != nil { // TODO do this before saving the files using go/fmt
 		exitWithFatal("Gofmt failed", err)
 	}
+}
+
+func goAndPrimitiveType(typ string) (string, string) {
+	switch typ {
+	case "int":
+		return "uint16", "int"
+	case "unsigned int":
+		return "uint16", "uint"
+	case "long long":
+		return "int64", "longlong"
+	case "unsigned long long":
+		return "uint64", "ulonglong"
+	case "void":
+		return "void", "void"
+	case "time_t":
+		return "time.Time", "time_t"
+	case "const char *":
+		return "string", "const char *"
+	case "String":
+		return "cxstring", "cxstring"
+	}
+
+	return "", ""
 }

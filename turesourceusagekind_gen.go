@@ -26,3 +26,8 @@ const (
 	TUResourceUsage_First                                                  = C.CXTUResourceUsage_First
 	TUResourceUsage_Last                                                   = C.CXTUResourceUsage_Last
 )
+
+// Returns the human-readable null-terminated C string that represents the name of the memory category. This string should never be freed.
+func (turuk TUResourceUsageKind) TUResourceUsageName() string {
+	return C.GoString(C.clang_getTUResourceUsageName(C.enum_CXTUResourceUsageKind(turuk)))
+}

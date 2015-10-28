@@ -6,34 +6,6 @@ type Token struct {
 }
 
 /**
- * \brief Determine the spelling of the given token.
- *
- * The spelling of a token is the textual representation of that token, e.g.,
- * the text of an identifier or keyword.
- */
-func (tu TranslationUnit) TokenSpelling(tok Token) string {
-	cstr := cxstring{C.clang_getTokenSpelling(tu.c, tok.c)}
-	defer cstr.Dispose()
-	return cstr.String()
-}
-
-/**
- * \brief Retrieve the source location of the given token.
- */
-func (tu TranslationUnit) TokenLocation(tok Token) SourceLocation {
-	o := C.clang_getTokenLocation(tu.c, tok.c)
-	return SourceLocation{o}
-}
-
-/**
- * \brief Retrieve a source range that covers the given token.
- */
-func (tu TranslationUnit) TokenExtent(tok Token) SourceRange {
-	o := C.clang_getTokenExtent(tu.c, tok.c)
-	return SourceRange{o}
-}
-
-/**
  * \brief Tokenize the source code described by the given range into raw
  * lexical tokens.
  *

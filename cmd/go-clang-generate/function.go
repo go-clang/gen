@@ -2,6 +2,9 @@ package main
 
 import (
 	"bytes"
+	"go/ast"
+	"go/format"
+	"go/token"
 	"strings"
 	"text/template"
 
@@ -25,9 +28,11 @@ type Function struct {
 }
 
 type FunctionParameter struct {
-	Name  string
-	CName string
-	Type  string
+	Name          string
+	CName         string
+	Type          string
+	CType         string
+	PrimitiveType string
 }
 
 func handleFunctionCursor(cursor clang.Cursor) *Function {
@@ -47,7 +52,14 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 
 		p := FunctionParameter{
 			CName: param.DisplayName(),
-			Type:  param.Type().TypeSpelling(),
+			CType: param.Type().TypeSpelling(),
+		}
+
+		p.Name = p.CName
+		p.Type = trimClangPrefix(p.CType)
+
+		if p.Name == "" {
+			p.Name = receiverName(p.Type)
 		}
 
 		f.Parameters = append(f.Parameters, p)
@@ -56,116 +68,419 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 	return &f
 }
 
-var templateGenerateFunctionGetter = template.Must(template.New("go-clang-generate-function-getter").Parse(`{{$.Comment}}
-func ({{$.Receiver.Name}} {{$.Receiver.Type}}) {{$.Name}}() {{$.ReturnType}} {
-	return {{$.ReturnType}}{{if $.ReturnPrimitiveType}}({{else}}{{"{"}}{{end}}C.{{$.CName}}({{if ne $.Receiver.PrimitiveType ""}}{{$.Receiver.PrimitiveType}}({{$.Receiver.Name}}){{else}}{{$.Receiver.Name}}.c{{end}}){{if $.ReturnPrimitiveType}}){{else}}{{"}"}}{{end}}
-}
-`))
+func generateASTFunction(f *Function) string {
+	astFunc := ast.FuncDecl{
+		Name: &ast.Ident{
+			Name: f.Name,
+		},
+		Type: &ast.FuncType{},
+		Body: &ast.BlockStmt{},
+	}
 
-func generateFunctionGetter(f *Function) string {
+	// TODO reenable this, see the comment at the bottom of the generate function for details
+	// Add function comment
+	/*if f.Comment != "" {
+		astFunc.Doc = &ast.CommentGroup{
+			List: []*ast.Comment{
+				&ast.Comment{
+					Text: f.Comment,
+				},
+			},
+		}
+	}*/
+
+	// Add receiver to make function a method
+	if f.Receiver.Name != "" {
+		if len(f.Parameters) > 0 { // TODO maybe to not set the receiver at all? -> do this outside of the generate function?
+			astFunc.Recv = &ast.FieldList{
+				List: []*ast.Field{
+					&ast.Field{
+						Names: []*ast.Ident{
+							&ast.Ident{
+								Name: f.Receiver.Name,
+							},
+						},
+						Type: &ast.Ident{
+							Name: f.Receiver.Type,
+						},
+					},
+				},
+			}
+		}
+	}
+
+	// Basic call to the C function
+	call := &ast.CallExpr{
+		Fun: &ast.SelectorExpr{
+			X: &ast.Ident{
+				Name: "C",
+			},
+			Sel: &ast.Ident{
+				Name: f.CName,
+			},
+		},
+		Args: []ast.Expr{},
+	}
+
+	if len(f.Parameters) != 0 {
+		if f.Receiver.Name != "" {
+			f.Parameters[0].Name = f.Receiver.Name
+		}
+
+		astFunc.Type.Params = &ast.FieldList{
+			List: []*ast.Field{},
+		}
+
+		// Add parameters to the function
+		for i, p := range f.Parameters {
+			if i == 0 && f.Receiver.Name != "" {
+				continue
+			}
+
+			astFunc.Type.Params.List = append(astFunc.Type.Params.List, &ast.Field{
+				Names: []*ast.Ident{
+					&ast.Ident{
+						Name: p.Name,
+					},
+				},
+				Type: &ast.Ident{
+					Name: p.Type,
+				},
+			})
+		}
+
+		goToCTypeConversions := false
+
+		// Add arguments to the C function call
+		for _, p := range f.Parameters {
+			if p.PrimitiveType != "" {
+				// Handle Go type to C type conversions
+				if p.PrimitiveType == "const char *" {
+					goToCTypeConversions = true
+
+					astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
+						Lhs: []ast.Expr{
+							&ast.Ident{
+								Name: "c_" + p.Name,
+							},
+						},
+						Tok: token.DEFINE,
+						Rhs: []ast.Expr{
+							&ast.CallExpr{
+								Fun: &ast.SelectorExpr{
+									X: &ast.Ident{
+										Name: "C",
+									},
+									Sel: &ast.Ident{
+										Name: "CString",
+									},
+								},
+								Args: []ast.Expr{
+									&ast.Ident{
+										Name: p.Name,
+									},
+								},
+							},
+						},
+					})
+					astFunc.Body.List = append(astFunc.Body.List, &ast.DeferStmt{
+						Call: &ast.CallExpr{
+							Fun: &ast.SelectorExpr{
+								X: &ast.Ident{
+									Name: "C",
+								},
+								Sel: &ast.Ident{
+									Name: "free",
+								},
+							},
+							Args: []ast.Expr{
+								&ast.CallExpr{
+									Fun: &ast.SelectorExpr{
+										X: &ast.Ident{
+											Name: "unsafe",
+										},
+										Sel: &ast.Ident{
+											Name: "Pointer",
+										},
+									},
+									Args: []ast.Expr{
+										&ast.Ident{
+											Name: "c_" + p.Name,
+										},
+									},
+								},
+							},
+						},
+					})
+
+					call.Args = append(call.Args, &ast.Ident{
+						Name: "c_" + p.Name,
+					})
+				} else if p.PrimitiveType == "cxstring" { // TODO try to get cxstring and "String" completely out of this function since it is just a struct which can be handled by the struct code
+					call.Args = append(call.Args, &ast.SelectorExpr{
+						X: &ast.Ident{
+							Name: p.Name,
+						},
+						Sel: &ast.Ident{
+							Name: "c",
+						},
+					})
+				} else {
+					call.Args = append(call.Args, &ast.CallExpr{
+						Fun: &ast.SelectorExpr{
+							X: &ast.Ident{
+								Name: "C",
+							},
+							Sel: &ast.Ident{
+								Name: p.PrimitiveType,
+							},
+						},
+						Args: []ast.Expr{
+							&ast.Ident{
+								Name: p.Name,
+							},
+						},
+					})
+				}
+			} else {
+				call.Args = append(call.Args, &ast.SelectorExpr{
+					X: &ast.Ident{
+						Name: p.Name,
+					},
+					Sel: &ast.Ident{
+						Name: "c",
+					},
+				})
+			}
+		}
+
+		if goToCTypeConversions {
+			// TODO maybe somehow remove this?! We add an empty line here
+			astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
+				X: &ast.CallExpr{
+					Fun: &ast.Ident{
+						Name: "REMOVE",
+					},
+				},
+			})
+		}
+	}
+
+	// Check if we need to add a return
+	if f.ReturnType != "void" {
+		// Add the function return type
+		astFunc.Type.Results = &ast.FieldList{
+			List: []*ast.Field{
+				&ast.Field{
+					Type: &ast.Ident{
+						Name: f.ReturnType,
+					},
+				},
+			},
+		}
+
+		// Convert the return value of the C function
+		var convCall ast.Expr
+
+		// Structs are literals, everything else is a cast
+		if f.ReturnPrimitiveType == "" {
+			convCall = &ast.CompositeLit{
+				Type: &ast.Ident{
+					Name: f.ReturnType,
+				},
+				Elts: []ast.Expr{
+					call,
+				},
+			}
+		} else {
+			convCall = &ast.CallExpr{
+				Fun: &ast.Ident{
+					Name: f.ReturnType,
+				},
+				Args: []ast.Expr{
+					call,
+				},
+			}
+		}
+
+		result := convCall
+
+		// Do we need to convert the return of the C function into a boolean?
+		if f.ReturnType == "bool" && f.ReturnPrimitiveType != "" {
+			// Do the C function call and save the result into the new variable "o"
+			astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
+				Lhs: []ast.Expr{
+					&ast.Ident{
+						Name: "o",
+					},
+				},
+				Tok: token.DEFINE,
+				Rhs: []ast.Expr{
+					call, // No cast needed
+				},
+			})
+
+			// TODO maybe somehow remove this?! We add an empty line here
+			astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
+				X: &ast.CallExpr{
+					Fun: &ast.Ident{
+						Name: "REMOVE",
+					},
+				},
+			})
+
+			// Check if o is not equal to zero and return the result
+			result = &ast.BinaryExpr{
+				X: &ast.Ident{
+					Name: "o",
+				},
+				Op: token.NEQ,
+				Y: &ast.CallExpr{
+					Fun: &ast.SelectorExpr{
+						X: &ast.Ident{
+							Name: "C",
+						},
+						Sel: &ast.Ident{
+							Name: f.ReturnPrimitiveType,
+						},
+					},
+					Args: []ast.Expr{
+						&ast.BasicLit{
+							Kind:  token.INT,
+							Value: "0",
+						},
+					},
+				},
+			}
+		} else if f.ReturnType == "string" {
+			// If this is a normal const char * C type there is not so much to do
+			if f.ReturnPrimitiveType == "const char *" {
+				result = &ast.CallExpr{
+					Fun: &ast.SelectorExpr{
+						X: &ast.Ident{
+							Name: "C",
+						},
+						Sel: &ast.Ident{
+							Name: "GoString",
+						},
+					},
+					Args: []ast.Expr{
+						call,
+					},
+				}
+			} else {
+				// This should be a CXString so handle it accordingly
+
+				// Do the C function call and save the result into the new variable "o" while transforming it into a cxstring
+				astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
+					Lhs: []ast.Expr{
+						&ast.Ident{
+							Name: "o",
+						},
+					},
+					Tok: token.DEFINE,
+					Rhs: []ast.Expr{
+						&ast.CompositeLit{
+							Type: &ast.Ident{
+								Name: "cxstring",
+							},
+							Elts: []ast.Expr{
+								call,
+							},
+						},
+					},
+				})
+				astFunc.Body.List = append(astFunc.Body.List, &ast.DeferStmt{
+					Call: &ast.CallExpr{
+						Fun: &ast.SelectorExpr{
+							X: &ast.Ident{
+								Name: "o",
+							},
+							Sel: &ast.Ident{
+								Name: "Dispose",
+							},
+						},
+					},
+				})
+
+				// TODO maybe somehow remove this?! We add an empty line here
+				astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
+					X: &ast.CallExpr{
+						Fun: &ast.Ident{
+							Name: "REMOVE",
+						},
+					},
+				})
+
+				// Call the String method on the cxstring instance
+				result = &ast.CallExpr{
+					Fun: &ast.SelectorExpr{
+						X: &ast.Ident{
+							Name: "o",
+						},
+						Sel: &ast.Ident{
+							Name: "String",
+						},
+					},
+				}
+			}
+		} else if f.ReturnType == "time.Time" {
+			result = &ast.CallExpr{
+				Fun: &ast.SelectorExpr{
+					X: &ast.Ident{
+						Name: "time",
+					},
+					Sel: &ast.Ident{
+						Name: "Unix",
+					},
+				},
+				Args: []ast.Expr{
+					&ast.CallExpr{
+						Fun: &ast.Ident{
+							Name: "int64",
+						},
+						Args: []ast.Expr{
+							call,
+						},
+					},
+					&ast.BasicLit{
+						Kind:  token.INT,
+						Value: "0",
+					},
+				},
+			}
+		}
+
+		// Add the return statement
+		astFunc.Body.List = append(astFunc.Body.List, &ast.ReturnStmt{
+			Results: []ast.Expr{
+				result,
+			},
+		})
+	} else {
+		// No return needed, just add the C function call
+		astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
+			X: call,
+		})
+	}
+
 	var b bytes.Buffer
-	if err := templateGenerateFunctionGetter.Execute(&b, f); err != nil {
+	err := format.Node(&b, token.NewFileSet(), []ast.Decl{&astFunc})
+	if err != nil {
 		panic(err)
 	}
 
-	return b.String()
-}
+	sss := b.String()
 
-var templateGenerateFunctionGetterPrimitive = template.Must(template.New("go-clang-generate-function-getter-primitive").Parse(`{{$.Comment}}
-func ({{$.Receiver.Name}} {{$.Receiver.Type}}) {{$.Name}}() {{$.ReturnType}} {
-	return {{$.ReturnType}}(C.{{$.CName}}({{if ne $.Receiver.PrimitiveType ""}}{{$.Receiver.PrimitiveType}}({{$.Receiver.Name}}){{else}}{{$.Receiver.Name}}.c{{end}}))
-}
-`))
+	// TODO hack to make new lines...
+	sss = strings.Replace(sss, "REMOVE()", "", -1)
 
-func generateFunctionGetterPrimitive(f *Function) string {
-	var b bytes.Buffer
-	if err := templateGenerateFunctionGetterPrimitive.Execute(&b, f); err != nil {
-		panic(err)
+	// TODO find out how to position the comment correctly and do this using the AST
+	if f.Comment != "" {
+		sss = f.Comment + "\n" + sss
 	}
 
-	return b.String()
-}
-
-var templateGenerateFunctionStringGetter = template.Must(template.New("go-clang-generate-function-string-getter").Parse(`{{$.Comment}}
-func ({{$.Receiver.Name}} {{$.Receiver.Type}}) {{$.Name}}() string {
-	o := cxstring{C.{{$.CName}}({{if ne $.Receiver.PrimitiveType ""}}{{$.Receiver.PrimitiveType}}({{$.Receiver.Name}}){{else}}{{$.Receiver.Name}}.c{{end}})}
-	defer o.Dispose()
-
-	return o.String()
-}
-`))
-
-func generateFunctionStringGetter(f *Function) string {
-	var b bytes.Buffer
-	if err := templateGenerateFunctionStringGetter.Execute(&b, f); err != nil {
-		panic(err)
-	}
-
-	return b.String()
-}
-
-var templateGenerateFunctionIs = template.Must(template.New("go-clang-generate-function-is").Parse(`{{$.Comment}}
-func ({{$.Receiver.Name}} {{$.Receiver.Type}}) {{$.Name}}() bool {
-	o := C.{{$.CName}}({{if ne $.Receiver.PrimitiveType ""}}C.{{$.Receiver.CName}}({{$.Receiver.Name}}){{else}}{{$.Receiver.Name}}.c{{end}})
-
-	return o != C.{{if eq $.ReturnType "int"}}int{{else}}uint{{end}}(0)
-}
-`))
-
-func generateFunctionIs(f *Function) string {
-	var b bytes.Buffer
-	if err := templateGenerateFunctionIs.Execute(&b, f); err != nil {
-		panic(err)
-	}
-
-	return b.String()
-}
-
-var templateGenerateFunctionVoidMethod = template.Must(template.New("go-clang-generate-function-void-method").Parse(`{{$.Comment}}
-func ({{$.Receiver.Name}} {{$.Receiver.Type}}) {{$.Name}}() {
-	C.{{$.CName}}({{if ne $.Receiver.PrimitiveType ""}}{{$.Receiver.PrimitiveType}}({{$.Receiver.Name}}){{else}}{{$.Receiver.Name}}.c{{end}})
-}
-`))
-
-func generateFunctionVoidMethod(f *Function) string {
-	var b bytes.Buffer
-	if err := templateGenerateFunctionVoidMethod.Execute(&b, f); err != nil {
-		panic(err)
-	}
-
-	return b.String()
-}
-
-var templateGenerateFunctionVoidReturningMethod = template.Must(template.New("go-clang-generate-function-void-returning-method").Parse(`{{$.Comment}}
-func {{$.Name}}() {{$.ReturnType}} {
-	return {{$.ReturnType}}{{"{"}}C.{{$.CName}}(){{"}"}}
-}
-`))
-
-func generateFunctionVoidReturningMethod(f *Function) string {
-	var b bytes.Buffer
-	if err := templateGenerateFunctionVoidReturningMethod.Execute(&b, f); err != nil {
-		panic(err)
-	}
-
-	return b.String()
-}
-
-var templateGenerateFunctionEqual = template.Must(template.New("go-clang-generate-function-equal").Parse(`{{$.Comment}}
-func {{$.Name}}({{$.Receiver.Name}}1, {{$.Receiver.Name}}2 {{$.Receiver.Type}}) bool {
-	o := C.{{$.CName}}({{$.Receiver.Name}}1.c, {{$.Receiver.Name}}2.c)
-
-	return o != C.uint(0)
-}
-`))
-
-func generateFunctionEqual(f *Function) string {
-	var b bytes.Buffer
-	if err := templateGenerateFunctionEqual.Execute(&b, f); err != nil {
-		panic(err)
-	}
-
-	return b.String()
+	return sss
 }
 
 var templateGenerateStructMemberGetter = template.Must(template.New("go-clang-generate-function-getter").Parse(`{{$.Comment}}

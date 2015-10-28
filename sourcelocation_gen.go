@@ -14,8 +14,8 @@ func NewNullLocation() SourceLocation {
 }
 
 // Determine whether two source locations, which must refer into the same translation unit, refer to exactly the same point in the source code. \returns non-zero if the source locations refer to the same location, zero if they refer to different locations.
-func EqualLocations(sl1, sl2 SourceLocation) bool {
-	o := C.clang_equalLocations(sl1.c, sl2.c)
+func (sl SourceLocation) EqualLocations(sl2 SourceLocation) bool {
+	o := C.clang_equalLocations(sl.c, sl2.c)
 
 	return o != C.uint(0)
 }
@@ -32,4 +32,9 @@ func (sl SourceLocation) Location_IsFromMainFile() bool {
 	o := C.clang_Location_isFromMainFile(sl.c)
 
 	return o != C.int(0)
+}
+
+// Retrieve a source range given the beginning and ending source locations.
+func (sl SourceLocation) Range(end SourceLocation) SourceRange {
+	return SourceRange{C.clang_getRange(sl.c, end.c)}
 }

@@ -15,6 +15,9 @@ type Enum struct {
 	CNameIsTypeDef bool
 	Receiver       Receiver
 	Comment        string
+	UnderlyingType string
+
+	Imports map[string]struct{}
 
 	Items []Enumerator
 
@@ -33,15 +36,19 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 		CNameIsTypeDef: cnameIsTypeDef,
 		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
 
+		Imports: map[string]struct{}{},
+
 		Items: []Enumerator{},
 	}
 
 	e.Name = trimClangPrefix(e.CName)
 	e.Receiver.Name = receiverName(e.Name)
+	e.Receiver.Type = e.Name
+	e.Receiver.CType = e.CName
 	if cnameIsTypeDef {
-		e.Receiver.CName = e.CName
+		e.Receiver.PrimitiveType = e.CName
 	} else {
-		e.Receiver.CName = "enum_" + e.CName // TODO remove this hack somehow "enum_" is Go's way of using enums and struts without typedef it is not the real CName. We need this for example for the Go->C type conversion in clang_index_isEntityObjCContainerKind.
+		e.Receiver.PrimitiveType = "enum_" + e.CName
 	}
 
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
@@ -64,9 +71,9 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 	})
 
 	if strings.HasSuffix(e.Name, "Error") {
-		e.Receiver.PrimitiveType = "int32"
+		e.UnderlyingType = "int32"
 	} else {
-		e.Receiver.PrimitiveType = "uint32"
+		e.UnderlyingType = "uint32"
 	}
 
 	return &e
@@ -76,9 +83,13 @@ var templateGenerateEnum = template.Must(template.New("go-clang-generate-enum").
 
 // #include "go-clang.h"
 import "C"
+{{if $.Imports}}
+import (
+{{range $import, $empty := $.Imports}}	"{{$import}}"
+{{end}}){{end}}
 
 {{$.Comment}}
-type {{$.Name}} {{$.Receiver.PrimitiveType}}
+type {{$.Name}} {{$.UnderlyingType}}
 
 const (
 {{range $i, $e := .Items}}	{{if $e.Comment}}{{$e.Comment}}
@@ -86,12 +97,22 @@ const (
 {{end}}
 )
 
-{{range $i, $m := .Methods}}
+{{range $i, $m := $.Methods}}
 {{$m}}
 {{end}}
 `))
 
 func generateEnum(e *Enum) error {
+	// TODO remove this hack
+	for _, m := range e.Methods {
+		if strings.Contains(m, "time.Time") {
+			e.Imports["time"] = struct{}{}
+		}
+		if strings.Contains(m, "unsafe.") {
+			e.Imports["unsafe"] = struct{}{}
+		}
+	}
+
 	var b bytes.Buffer
 	if err := templateGenerateEnum.Execute(&b, e); err != nil {
 		return err
