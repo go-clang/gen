@@ -358,7 +358,7 @@ func main() {
 			}
 
 			// TODO happy hack, whiteflag types that are return arguments
-			if p.Type.PointerLevel == 1 && (p.Type.Name == "File" || p.Type.Name == "FileUniqueID" || p.Type.Name == GoUInt16) {
+			if p.Type.PointerLevel == 1 && (p.Type.Name == "File" || p.Type.Name == "FileUniqueID" || p.Type.Name == "cxstring" || p.Type.Name == GoUInt16) {
 				p.Type.IsReturnArgument = true
 			}
 		}

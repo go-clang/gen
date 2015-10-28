@@ -73,6 +73,57 @@ func (sl SourceLocation) ExpansionLocation() (File, uint16, uint16, uint16) {
 	return file, uint16(line), uint16(column), uint16(offset)
 }
 
+/*
+ * \brief Retrieve the file, line, column, and offset represented by
+ * the given source location, as specified in a # line directive.
+ *
+ * Example: given the following source code in a file somefile.c
+ *
+ * \code
+ * #123 "dummy.c" 1
+ *
+ * static int func(void)
+ * {
+ *     return 0;
+ * }
+ * \endcode
+ *
+ * the location information returned by this function would be
+ *
+ * File: dummy.c Line: 124 Column: 12
+ *
+ * whereas clang_getExpansionLocation would have returned
+ *
+ * File: somefile.c Line: 3 Column: 12
+ *
+ * \param location the location within a source file that will be decomposed
+ * into its parts.
+ *
+ * \param filename [out] if non-NULL, will be set to the filename of the
+ * source location. Note that filenames returned will be for "virtual" files,
+ * which don't necessarily exist on the machine running clang - e.g. when
+ * parsing preprocessed output obtained from a different environment. If
+ * a non-NULL value is passed in, remember to dispose of the returned value
+ * using \c clang_disposeString() once you've finished with it. For an invalid
+ * source location, an empty string is returned.
+ *
+ * \param line [out] if non-NULL, will be set to the line number of the
+ * source location. For an invalid source location, zero is returned.
+ *
+ * \param column [out] if non-NULL, will be set to the column number of the
+ * source location. For an invalid source location, zero is returned.
+ */
+func (sl SourceLocation) PresumedLocation() (string, uint16, uint16) {
+	var filename cxstring
+	defer filename.Dispose()
+	var line C.uint
+	var column C.uint
+
+	C.clang_getPresumedLocation(sl.c, &filename.c, &line, &column)
+
+	return filename.String(), uint16(line), uint16(column)
+}
+
 // Legacy API to retrieve the file, line, column, and offset represented by the given source location. This interface has been replaced by the newer interface #clang_getExpansionLocation(). See that interface's documentation for details.
 func (sl SourceLocation) InstantiationLocation() (File, uint16, uint16, uint16) {
 	var file File

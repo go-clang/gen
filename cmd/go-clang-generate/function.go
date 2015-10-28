@@ -84,6 +84,8 @@ func generateASTFunction(f *Function) string {
 		Body: &ast.BlockStmt{},
 	}
 
+	// TODO maybe name the return arguments ... because of clang_getDiagnosticOption -> the normal return can be always just "o"?
+
 	// TODO reenable this, see the comment at the bottom of the generate function for details
 	// Add function comment
 	/*if f.Comment != "" {
@@ -153,9 +155,16 @@ func generateASTFunction(f *Function) string {
 				hasReturnArguments = true
 
 				// Add the return type to the function return arguments
+				var retType string
+				if p.Type.Name == "cxstring" {
+					retType = "string"
+				} else {
+					retType = p.Type.Name
+				}
+
 				astFunc.Type.Results.List = append(astFunc.Type.Results.List, &ast.Field{
 					Type: &ast.Ident{
-						Name: p.Type.Name,
+						Name: retType,
 					},
 				})
 
@@ -191,6 +200,20 @@ func generateASTFunction(f *Function) string {
 						},
 					},
 				})
+				if p.Type.Name == "cxstring" {
+					astFunc.Body.List = append(astFunc.Body.List, &ast.DeferStmt{
+						Call: &ast.CallExpr{
+							Fun: &ast.SelectorExpr{
+								X: &ast.Ident{
+									Name: p.Name,
+								},
+								Sel: &ast.Ident{
+									Name: "Dispose",
+								},
+							},
+						},
+					})
+				}
 
 				// Add the return argument to the return statement
 				if p.Type.Primitive != "" {
@@ -205,9 +228,22 @@ func generateASTFunction(f *Function) string {
 						},
 					})
 				} else {
-					retur.Results = append(retur.Results, &ast.Ident{
-						Name: p.Name,
-					})
+					if p.Type.Name == "cxstring" {
+						retur.Results = append(retur.Results, &ast.CallExpr{
+							Fun: &ast.SelectorExpr{
+								X: &ast.Ident{
+									Name: p.Name,
+								},
+								Sel: &ast.Ident{
+									Name: "String",
+								},
+							},
+						})
+					} else {
+						retur.Results = append(retur.Results, &ast.Ident{
+							Name: p.Name,
+						})
+					}
 				}
 
 				continue
