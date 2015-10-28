@@ -156,6 +156,24 @@ func generateASTFunction(f *Function) string {
 	doCCast := func(typ string, args ...ast.Expr) *ast.CallExpr {
 		return doCall("C", typ, args...)
 	}
+	doField := func(name string, typ Type) *ast.Field {
+		f := &ast.Field{}
+
+		if name != "" {
+			f.Names = []*ast.Ident{
+				&ast.Ident{
+					Name: name,
+				},
+			}
+		}
+		if typ.Name != "" {
+			f.Type = &ast.Ident{
+				Name: typ.Name,
+			}
+		}
+
+		return f
+	}
 
 	// TODO maybe name the return arguments ... because of clang_getDiagnosticOption -> the normal return can be always just "o"?
 
@@ -176,16 +194,7 @@ func generateASTFunction(f *Function) string {
 		if len(f.Parameters) > 0 { // TODO maybe to not set the receiver at all? -> do this outside of the generate function?
 			astFunc.Recv = &ast.FieldList{
 				List: []*ast.Field{
-					&ast.Field{
-						Names: []*ast.Ident{
-							&ast.Ident{
-								Name: f.Receiver.Name,
-							},
-						},
-						Type: &ast.Ident{
-							Name: f.Receiver.Type.Name,
-						},
-					},
+					doField(f.Receiver.Name, f.Receiver.Type),
 				},
 			}
 		}
@@ -220,11 +229,9 @@ func generateASTFunction(f *Function) string {
 					retType = p.Type.Name
 				}
 
-				astFunc.Type.Results.List = append(astFunc.Type.Results.List, &ast.Field{
-					Type: &ast.Ident{
-						Name: retType,
-					},
-				})
+				astFunc.Type.Results.List = append(astFunc.Type.Results.List, doField("", Type{
+					Name: retType,
+				}))
 
 				// Declare the return argument's variable
 				var varType ast.Expr
@@ -276,16 +283,7 @@ func generateASTFunction(f *Function) string {
 				continue
 			}
 
-			astFunc.Type.Params.List = append(astFunc.Type.Params.List, &ast.Field{
-				Names: []*ast.Ident{
-					&ast.Ident{
-						Name: p.Name,
-					},
-				},
-				Type: &ast.Ident{
-					Name: p.Type.Name,
-				},
-			})
+			astFunc.Type.Params.List = append(astFunc.Type.Params.List, doField(p.Name, p.Type))
 		}
 
 		if hasReturnArguments {
@@ -366,11 +364,7 @@ func generateASTFunction(f *Function) string {
 	if f.ReturnType.Name != "void" || hasReturnArguments {
 		if f.ReturnType.Name != "void" {
 			// Add the function return type
-			astFunc.Type.Results.List = append(astFunc.Type.Results.List, &ast.Field{
-				Type: &ast.Ident{
-					Name: f.ReturnType.Name,
-				},
-			})
+			astFunc.Type.Results.List = append(astFunc.Type.Results.List, doField("", f.ReturnType))
 		}
 
 		// Do we need to convert the return of the C function into a boolean?
@@ -416,11 +410,9 @@ func generateASTFunction(f *Function) string {
 			addReturnItem(doCall("o", "String"))
 
 			// Change the return type to "string"
-			astFunc.Type.Results.List[len(astFunc.Type.Results.List)-1] = &ast.Field{
-				Type: &ast.Ident{
-					Name: "string",
-				},
-			}
+			astFunc.Type.Results.List[len(astFunc.Type.Results.List)-1] = doField("", Type{
+				Name: "string",
+			})
 		} else if f.ReturnType.Name == "time.Time" {
 			addReturnItem(doCall(
 				"time",
