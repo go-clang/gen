@@ -413,26 +413,6 @@ func main() {
 		}
 
 		if !added {
-			if len(f.Parameters) == 1 && (f.ReturnType.Name == "int" || f.ReturnType.Name == "unsigned int" || f.ReturnType.Name == "long long" || f.ReturnType.Name == "unsigned long long") && isEnumOrStruct(f.Parameters[0].Type.Name) {
-				fname = trimCommonFName(fname, rt)
-
-				f.ReturnType.Primitive = f.ReturnType.Name
-				switch f.ReturnType.Name { // TODO refactor to use getTypeConversion(...) somehow, maybe do the conversion during the create of a Function instance
-				case "int":
-					f.ReturnType.Name = "uint16"
-				case "unsigned int":
-					f.ReturnType.Name = "uint16"
-				case "long long":
-					f.ReturnType.Name = "int64"
-				case "unsigned long long":
-					f.ReturnType.Name = "uint64"
-				}
-
-				added = addMethod(f, fname, "", rt)
-			}
-		}
-
-		if !added {
 			if len(f.Parameters) > 0 && (isEnumOrStruct(f.ReturnType.Name) || f.ReturnType.Primitive != "") {
 				found := false
 
