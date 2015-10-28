@@ -84,6 +84,17 @@ func generateASTFunction(f *Function) string {
 		Body: &ast.BlockStmt{},
 	}
 
+	addEmptyLine := func() {
+		// TODO this should be done using something else than a fake statement.
+		astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
+			X: &ast.CallExpr{
+				Fun: &ast.Ident{
+					Name: "REMOVE",
+				},
+			},
+		})
+	}
+
 	// TODO maybe name the return arguments ... because of clang_getDiagnosticOption -> the normal return can be always just "o"?
 
 	// TODO reenable this, see the comment at the bottom of the generate function for details
@@ -262,14 +273,7 @@ func generateASTFunction(f *Function) string {
 		}
 
 		if hasReturnArguments {
-			// TODO maybe somehow remove this?! We add an empty line here
-			astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
-				X: &ast.CallExpr{
-					Fun: &ast.Ident{
-						Name: "REMOVE",
-					},
-				},
-			})
+			addEmptyLine()
 		}
 
 		goToCTypeConversions := false
@@ -396,14 +400,7 @@ func generateASTFunction(f *Function) string {
 		}
 
 		if goToCTypeConversions {
-			// TODO maybe somehow remove this?! We add an empty line here
-			astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
-				X: &ast.CallExpr{
-					Fun: &ast.Ident{
-						Name: "REMOVE",
-					},
-				},
-			})
+			addEmptyLine()
 		}
 	}
 
@@ -433,14 +430,7 @@ func generateASTFunction(f *Function) string {
 				},
 			})
 
-			// TODO maybe somehow remove this?! We add an empty line here
-			astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
-				X: &ast.CallExpr{
-					Fun: &ast.Ident{
-						Name: "REMOVE",
-					},
-				},
-			})
+			addEmptyLine()
 
 			// Check if o is not equal to zero and return the result
 			retur.Results = append(retur.Results, &ast.BinaryExpr{
@@ -513,14 +503,7 @@ func generateASTFunction(f *Function) string {
 				},
 			})
 
-			// TODO maybe somehow remove this?! We add an empty line here
-			astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
-				X: &ast.CallExpr{
-					Fun: &ast.Ident{
-						Name: "REMOVE",
-					},
-				},
-			})
+			addEmptyLine()
 
 			// Call the String method on the cxstring instance
 			retur.Results = append(retur.Results, &ast.CallExpr{
@@ -573,14 +556,7 @@ func generateASTFunction(f *Function) string {
 				X: call,
 			})
 
-			// TODO maybe somehow remove this?! We add an empty line here
-			astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
-				X: &ast.CallExpr{
-					Fun: &ast.Ident{
-						Name: "REMOVE",
-					},
-				},
-			})
+			addEmptyLine()
 		} else {
 			var convCall ast.Expr
 
@@ -619,14 +595,7 @@ func generateASTFunction(f *Function) string {
 					},
 				})
 
-				// TODO maybe somehow remove this?! We add an empty line here
-				astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
-					X: &ast.CallExpr{
-						Fun: &ast.Ident{
-							Name: "REMOVE",
-						},
-					},
-				})
+				addEmptyLine()
 
 				// Add the C function call result to the return statement
 				retur.Results = append(retur.Results, &ast.Ident{
