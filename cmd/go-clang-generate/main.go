@@ -361,6 +361,37 @@ func main() {
 			if p.Type.PointerLevel == 1 && (p.Type.Name == "File" || p.Type.Name == "FileUniqueID" || p.Type.Name == "IdxClientFile" || p.Type.Name == "cxstring" || p.Type.Name == GoUInt16) {
 				p.Type.IsReturnArgument = true
 			}
+
+			// TODO happy hack, if this is an array length parameter we need to find its partner
+			if paName := strings.TrimPrefix(p.Name, "num_"); len(paName) != len(p.Name) {
+				for j := range f.Parameters {
+					pa := &f.Parameters[j]
+
+					// TODO we handle only incoming array pointers for now
+					if pa.Type.PointerLevel != 1 && pa.Type.CName != "const char *const *" {
+						continue
+					}
+
+					if pa.Name == paName {
+						p.Type.LengthOfSlice = pa.Name
+						pa.Type.IsSlice = true
+
+						// TODO remove this when getType cane handle this kind of conversion
+						switch pa.Type.CName {
+						case "const char *const *":
+							pa.Type.Name = GoUInt8
+							pa.Type.Primitive = "char"
+						case "struct CXUnsavedFile *":
+							pa.Type.Name = "UnsavedFile"
+							pa.Type.Primitive = "struct_CXUnsavedFile"
+						default:
+							panic(pa.Type.CName)
+						}
+
+						break
+					}
+				}
+			}
 		}
 
 		// Prepare the return argument
@@ -417,6 +448,10 @@ func main() {
 
 						break
 					}
+				}
+
+				if f.ReturnType.PointerLevel > 0 { // TODO implement to return slices
+					found = true
 				}
 
 				if !found {
@@ -478,6 +513,10 @@ func main() {
 
 func hasHandleablePointers(params []FunctionParameter) bool {
 	for _, p := range params {
+		if p.Type.IsSlice && p.Type.PointerLevel == 1 { // TODO we can handle currently only ingoing array pointers
+			continue
+		}
+
 		if p.Type.PointerLevel > 0 && !p.Type.IsReturnArgument {
 			return false
 		}

@@ -180,12 +180,24 @@ func generateASTFunction(f *Function) string {
 			f.Type = &ast.Ident{
 				Name: typ.Name,
 			}
+
+			if typ.IsSlice {
+				f.Type = &ast.ArrayType{
+					Elt: f.Type,
+				}
+			}
 		}
 
 		return f
 	}
 	addReturnType := func(name string, typ Type) {
 		astFunc.Type.Results.List = append(astFunc.Type.Results.List, doField(name, typ))
+	}
+	doZero := func() *ast.BasicLit {
+		return &ast.BasicLit{
+			Kind:  token.INT,
+			Value: "0",
+		}
 	}
 
 	// TODO maybe name the return arguments ... because of clang_getDiagnosticOption -> the normal return can be always just "o"?
@@ -225,13 +237,82 @@ func generateASTFunction(f *Function) string {
 			List: []*ast.Field{},
 		}
 
+		hasDeclaration := false
+
 		// Add parameters to the function
 		for i, p := range f.Parameters {
 			if i == 0 && f.Receiver.Name != "" {
 				continue
 			}
 
-			if p.Type.IsReturnArgument {
+			// Ingore length parameters since they will be filled by the slice itself
+			if p.Type.LengthOfSlice != "" {
+				continue
+			}
+
+			if p.Type.IsSlice { // TODO think about doing slice return arguments
+				hasDeclaration = true
+
+				// Declare the slice
+				addAssignment(
+					"ca_"+p.Name,
+					doCast(
+						"make",
+						&ast.ArrayType{
+							Elt: doCType(p.Type.Primitive),
+						},
+						doCast(
+							"len",
+							&ast.Ident{
+								Name: p.Name,
+							},
+						),
+					),
+				)
+
+				// Assign elements
+				addStatement(&ast.RangeStmt{
+					Key: &ast.Ident{
+						Name: "i",
+					},
+					Tok: token.DEFINE,
+					X: &ast.Ident{
+						Name: p.Name,
+					},
+					Body: &ast.BlockStmt{
+						List: []ast.Stmt{
+							&ast.AssignStmt{
+								Lhs: []ast.Expr{
+									&ast.IndexExpr{
+										X: &ast.Ident{
+											Name: "ca_" + p.Name,
+										},
+										Index: &ast.Ident{
+											Name: "i",
+										},
+									},
+								},
+								Tok: token.ASSIGN,
+								Rhs: []ast.Expr{
+									&ast.SelectorExpr{
+										X: &ast.IndexExpr{
+											X: &ast.Ident{
+												Name: p.Name,
+											},
+											Index: &ast.Ident{
+												Name: "i",
+											},
+										},
+										Sel: &ast.Ident{
+											Name: "c",
+										},
+									},
+								},
+							},
+						},
+					},
+				})
+			} else if p.Type.IsReturnArgument {
 				hasReturnArguments = true
 
 				// Add the return type to the function return arguments
@@ -253,6 +334,11 @@ func generateASTFunction(f *Function) string {
 				} else {
 					varType = &ast.Ident{
 						Name: p.Type.Name,
+					}
+				}
+				if p.Type.IsSlice {
+					varType = &ast.ArrayType{
+						Elt: varType,
 					}
 				}
 
@@ -299,7 +385,7 @@ func generateASTFunction(f *Function) string {
 			astFunc.Type.Params.List = append(astFunc.Type.Params.List, doField(p.Name, p.Type))
 		}
 
-		if hasReturnArguments {
+		if hasReturnArguments || hasDeclaration {
 			addEmptyLine()
 		}
 
@@ -309,9 +395,19 @@ func generateASTFunction(f *Function) string {
 		for _, p := range f.Parameters {
 			var pf ast.Expr
 
-			if p.Type.Primitive != "" {
+			if p.Type.IsSlice {
+				pf = &ast.UnaryExpr{
+					Op: token.AND,
+					X: &ast.IndexExpr{
+						X: &ast.Ident{
+							Name: "ca_" + p.Name,
+						},
+						Index: doZero(),
+					},
+				}
+			} else if p.Type.Primitive != "" {
 				// Handle Go type to C type conversions
-				if p.Type.CName == "const char *" {
+				if p.Type.Primitive == "const char *" {
 					goToCTypeConversions = true
 
 					addAssignment(
@@ -345,6 +441,16 @@ func generateASTFunction(f *Function) string {
 						pf = &ast.Ident{
 							Name: p.Name,
 						}
+					} else if p.Type.LengthOfSlice != "" {
+						pf = doCCast(
+							p.Type.Primitive,
+							doCast(
+								"len",
+								&ast.Ident{
+									Name: p.Type.LengthOfSlice,
+								},
+							),
+						)
 					} else {
 						pf = doCCast(
 							p.Type.Primitive,
@@ -408,10 +514,7 @@ func generateASTFunction(f *Function) string {
 					Op: token.NEQ,
 					Y: doCCast(
 						f.ReturnType.Primitive,
-						&ast.BasicLit{
-							Kind:  token.INT,
-							Value: "0",
-						},
+						doZero(),
 					),
 				})
 			} else if f.ReturnType.Name == "string" {
@@ -425,10 +528,7 @@ func generateASTFunction(f *Function) string {
 					"time",
 					"Unix",
 					doCast("int64", call),
-					&ast.BasicLit{
-						Kind:  token.INT,
-						Value: "0",
-					},
+					doZero(),
 				))
 			} else if f.ReturnType.Name == "void" {
 				// Handle the case where the C function has no return argument but parameters that are return arguments

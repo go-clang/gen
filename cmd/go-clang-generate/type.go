@@ -51,6 +51,9 @@ type Type struct {
 	IsEnumLiteral     bool
 	IsFunctionPointer bool
 	IsReturnArgument  bool
+
+	IsSlice       bool
+	LengthOfSlice string
 }
 
 func getType(cType clang.Type) (Type, error) {

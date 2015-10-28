@@ -235,7 +235,6 @@ int clang_reparseTranslationUnit(CXTranslationUnit TU,
 
 
 
-
 /**
  * \brief Determine the availability of the entity that this cursor refers to
  * on any platforms for which availability information is known.
