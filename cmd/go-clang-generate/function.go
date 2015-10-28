@@ -174,6 +174,9 @@ func generateASTFunction(f *Function) string {
 
 		return f
 	}
+	addReturnType := func(name string, typ Type) {
+		astFunc.Type.Results.List = append(astFunc.Type.Results.List, doField(name, typ))
+	}
 
 	// TODO maybe name the return arguments ... because of clang_getDiagnosticOption -> the normal return can be always just "o"?
 
@@ -229,9 +232,9 @@ func generateASTFunction(f *Function) string {
 					retType = p.Type.Name
 				}
 
-				astFunc.Type.Results.List = append(astFunc.Type.Results.List, doField("", Type{
+				addReturnType("", Type{
 					Name: retType,
-				}))
+				})
 
 				// Declare the return argument's variable
 				var varType ast.Expr
@@ -362,38 +365,7 @@ func generateASTFunction(f *Function) string {
 
 	// Check if we need to add a return
 	if f.ReturnType.Name != "void" || hasReturnArguments {
-		if f.ReturnType.Name != "void" {
-			// Add the function return type
-			astFunc.Type.Results.List = append(astFunc.Type.Results.List, doField("", f.ReturnType))
-		}
-
-		// Do we need to convert the return of the C function into a boolean?
-		if f.ReturnType.Name == "bool" && f.ReturnType.Primitive != "" {
-			// Do the C function call and save the result into the new variable "o"
-			addAssignmentToO(call)
-			addEmptyLine()
-
-			// Check if o is not equal to zero and return the result
-			addReturnItem(&ast.BinaryExpr{
-				X: &ast.Ident{
-					Name: "o",
-				},
-				Op: token.NEQ,
-				Y: doCCast(
-					f.ReturnType.Primitive,
-					&ast.BasicLit{
-						Kind:  token.INT,
-						Value: "0",
-					},
-				),
-			})
-		} else if f.ReturnType.Name == "string" {
-			// If this is a normal const char * C type there is not so much to do
-			addReturnItem(doCCast(
-				"GoString",
-				call,
-			))
-		} else if f.ReturnType.Name == "cxstring" {
+		if f.ReturnType.Name == "cxstring" {
 			// Do the C function call and save the result into the new variable "o" while transforming it into a cxstring
 			addAssignmentToO(&ast.CompositeLit{
 				Type: &ast.Ident{
@@ -410,55 +382,88 @@ func generateASTFunction(f *Function) string {
 			addReturnItem(doCall("o", "String"))
 
 			// Change the return type to "string"
-			astFunc.Type.Results.List[len(astFunc.Type.Results.List)-1] = doField("", Type{
+			addReturnType("", Type{
 				Name: "string",
 			})
-		} else if f.ReturnType.Name == "time.Time" {
-			addReturnItem(doCall(
-				"time",
-				"Unix",
-				doCast("int64", call),
-				&ast.BasicLit{
-					Kind:  token.INT,
-					Value: "0",
-				},
-			))
-		} else if f.ReturnType.Name == "void" {
-			// Handle the case where the C function has no return argument but parameters that are return arguments
-
-			// Do the C function call
-			addStatement(&ast.ExprStmt{
-				X: call,
-			})
-			addEmptyLine()
 		} else {
-			var convCall ast.Expr
-
-			// Structs are literals, everything else is a cast
-			if f.ReturnType.Primitive == "" {
-				convCall = &ast.CompositeLit{
-					Type: &ast.Ident{
-						Name: f.ReturnType.Name,
-					},
-					Elts: []ast.Expr{
-						call,
-					},
-				}
-			} else {
-				convCall = doCast(f.ReturnType.Name, call)
+			if f.ReturnType.Name != "void" {
+				// Add the function return type
+				addReturnType("", f.ReturnType)
 			}
 
-			if hasReturnArguments {
+			// Do we need to convert the return of the C function into a boolean?
+			if f.ReturnType.Name == "bool" && f.ReturnType.Primitive != "" {
 				// Do the C function call and save the result into the new variable "o"
-				addAssignmentToO(convCall)
+				addAssignmentToO(call)
 				addEmptyLine()
 
-				// Add the C function call result to the return statement
-				addReturnItem(&ast.Ident{
-					Name: "o",
+				// Check if o is not equal to zero and return the result
+				addReturnItem(&ast.BinaryExpr{
+					X: &ast.Ident{
+						Name: "o",
+					},
+					Op: token.NEQ,
+					Y: doCCast(
+						f.ReturnType.Primitive,
+						&ast.BasicLit{
+							Kind:  token.INT,
+							Value: "0",
+						},
+					),
 				})
+			} else if f.ReturnType.Name == "string" {
+				// If this is a normal const char * C type there is not so much to do
+				addReturnItem(doCCast(
+					"GoString",
+					call,
+				))
+			} else if f.ReturnType.Name == "time.Time" {
+				addReturnItem(doCall(
+					"time",
+					"Unix",
+					doCast("int64", call),
+					&ast.BasicLit{
+						Kind:  token.INT,
+						Value: "0",
+					},
+				))
+			} else if f.ReturnType.Name == "void" {
+				// Handle the case where the C function has no return argument but parameters that are return arguments
+
+				// Do the C function call
+				addStatement(&ast.ExprStmt{
+					X: call,
+				})
+				addEmptyLine()
 			} else {
-				addReturnItem(convCall)
+				var convCall ast.Expr
+
+				// Structs are literals, everything else is a cast
+				if f.ReturnType.Primitive == "" {
+					convCall = &ast.CompositeLit{
+						Type: &ast.Ident{
+							Name: f.ReturnType.Name,
+						},
+						Elts: []ast.Expr{
+							call,
+						},
+					}
+				} else {
+					convCall = doCast(f.ReturnType.Name, call)
+				}
+
+				if hasReturnArguments {
+					// Do the C function call and save the result into the new variable "o"
+					addAssignmentToO(convCall)
+					addEmptyLine()
+
+					// Add the C function call result to the return statement
+					addReturnItem(&ast.Ident{
+						Name: "o",
+					})
+				} else {
+					addReturnItem(convCall)
+				}
 			}
 		}
 
