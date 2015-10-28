@@ -10,4 +10,6 @@
 #define CINDEX_VERSION_MINOR 20
 */
 
+unsigned _go_clang_visit_children(CXCursor c, void *fct);
+
 #endif

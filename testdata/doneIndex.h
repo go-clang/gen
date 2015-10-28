@@ -380,6 +380,7 @@ typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor,
 unsigned clang_visitChildren(CXCursor parent,
                                             CXCursorVisitor visitor,
                                             CXClientData client_data);
+
 #ifdef __has_feature
 #  if __has_feature(blocks)
 /**

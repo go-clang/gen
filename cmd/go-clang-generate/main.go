@@ -251,6 +251,18 @@ func main() {
 		}
 	}
 
+	/*
+		TODO mark the enum
+			typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor, CXCursor parent, CXClientData client_data);
+		as manually implemented
+	*/
+
+	/*
+		TODO mark the function
+			unsigned clang_visitChildren(CXCursor parent, CXCursorVisitor visitor, CXClientData client_data);
+		as manually implemented
+	*/
+
 	cursor := tu.ToCursor()
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		// Only handle code of the current file
