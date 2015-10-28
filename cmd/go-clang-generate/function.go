@@ -84,9 +84,12 @@ func generateASTFunction(f *Function) string {
 		Body: &ast.BlockStmt{},
 	}
 
+	addStatement := func(stmt ast.Stmt) {
+		astFunc.Body.List = append(astFunc.Body.List, stmt)
+	}
 	addEmptyLine := func() {
 		// TODO this should be done using something else than a fake statement.
-		astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
+		addStatement(&ast.ExprStmt{
 			X: &ast.CallExpr{
 				Fun: &ast.Ident{
 					Name: "REMOVE",
@@ -196,7 +199,7 @@ func generateASTFunction(f *Function) string {
 					}
 				}
 
-				astFunc.Body.List = append(astFunc.Body.List, &ast.DeclStmt{
+				addStatement(&ast.DeclStmt{
 					Decl: &ast.GenDecl{
 						Tok: token.VAR,
 						Specs: []ast.Spec{
@@ -212,7 +215,7 @@ func generateASTFunction(f *Function) string {
 					},
 				})
 				if p.Type.Name == "cxstring" {
-					astFunc.Body.List = append(astFunc.Body.List, &ast.DeferStmt{
+					addStatement(&ast.DeferStmt{
 						Call: &ast.CallExpr{
 							Fun: &ast.SelectorExpr{
 								X: &ast.Ident{
@@ -287,7 +290,7 @@ func generateASTFunction(f *Function) string {
 				if p.Type.CName == "const char *" {
 					goToCTypeConversions = true
 
-					astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
+					addStatement(&ast.AssignStmt{
 						Lhs: []ast.Expr{
 							&ast.Ident{
 								Name: "c_" + p.Name,
@@ -312,7 +315,7 @@ func generateASTFunction(f *Function) string {
 							},
 						},
 					})
-					astFunc.Body.List = append(astFunc.Body.List, &ast.DeferStmt{
+					addStatement(&ast.DeferStmt{
 						Call: &ast.CallExpr{
 							Fun: &ast.SelectorExpr{
 								X: &ast.Ident{
@@ -418,7 +421,7 @@ func generateASTFunction(f *Function) string {
 		// Do we need to convert the return of the C function into a boolean?
 		if f.ReturnType.Name == "bool" && f.ReturnType.Primitive != "" {
 			// Do the C function call and save the result into the new variable "o"
-			astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
+			addStatement(&ast.AssignStmt{
 				Lhs: []ast.Expr{
 					&ast.Ident{
 						Name: "o",
@@ -472,7 +475,7 @@ func generateASTFunction(f *Function) string {
 			})
 		} else if f.ReturnType.Name == "cxstring" {
 			// Do the C function call and save the result into the new variable "o" while transforming it into a cxstring
-			astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
+			addStatement(&ast.AssignStmt{
 				Lhs: []ast.Expr{
 					&ast.Ident{
 						Name: "o",
@@ -490,7 +493,7 @@ func generateASTFunction(f *Function) string {
 					},
 				},
 			})
-			astFunc.Body.List = append(astFunc.Body.List, &ast.DeferStmt{
+			addStatement(&ast.DeferStmt{
 				Call: &ast.CallExpr{
 					Fun: &ast.SelectorExpr{
 						X: &ast.Ident{
@@ -552,7 +555,7 @@ func generateASTFunction(f *Function) string {
 			// Handle the case where the C function has no return argument but parameters that are return arguments
 
 			// Do the C function call
-			astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
+			addStatement(&ast.ExprStmt{
 				X: call,
 			})
 
@@ -583,7 +586,7 @@ func generateASTFunction(f *Function) string {
 
 			if hasReturnArguments {
 				// Do the C function call and save the result into the new variable "o"
-				astFunc.Body.List = append(astFunc.Body.List, &ast.AssignStmt{
+				addStatement(&ast.AssignStmt{
 					Lhs: []ast.Expr{
 						&ast.Ident{
 							Name: "o",
@@ -607,10 +610,10 @@ func generateASTFunction(f *Function) string {
 		}
 
 		// Add the return statement
-		astFunc.Body.List = append(astFunc.Body.List, retur)
+		addStatement(retur)
 	} else {
 		// No return needed, just add the C function call
-		astFunc.Body.List = append(astFunc.Body.List, &ast.ExprStmt{
+		addStatement(&ast.ExprStmt{
 			X: call,
 		})
 	}
