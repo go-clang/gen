@@ -62,6 +62,30 @@ func (cc CompletionChunk) String() string {
 }
 
 /**
+- * \brief Contains the results of code-completion.
+- *
+- * This data structure contains the results of code completion, as
+- * produced by \c clang_codeCompleteAt(). Its contents must be freed by
+- * \c clang_disposeCodeCompleteResults.
+- */
+type CodeCompleteResults struct {
+	c *C.CXCodeCompleteResults
+}
+
+func (ccr CodeCompleteResults) IsValid() bool {
+	return ccr.c != nil
+}
+
+// TODO(): is there a better way to handle this?
+func (ccr CodeCompleteResults) Results() (ret []CompletionResult) {
+	header := (*reflect.SliceHeader)((unsafe.Pointer(&ret)))
+	header.Cap = int(ccr.c.NumResults)
+	header.Len = int(ccr.c.NumResults)
+	header.Data = uintptr(unsafe.Pointer(ccr.c.Results))
+	return
+}
+
+/**
  * \brief Sort the code-completion results in case-insensitive alphabetical
  * order.
  *
