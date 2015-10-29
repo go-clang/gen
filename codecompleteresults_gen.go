@@ -7,3 +7,15 @@ import "C"
 type CodeCompleteResults struct {
 	c C.CXCodeCompleteResults
 }
+
+// The code-completion results.
+func (ccr CodeCompleteResults) Results() *CompletionResult {
+	value := CompletionResult{*ccr.c.Results}
+	return &value
+}
+
+// The number of code-completion results stored in the \c Results array.
+func (ccr CodeCompleteResults) NumResults() uint16 {
+	value := uint16(ccr.c.NumResults)
+	return value
+}

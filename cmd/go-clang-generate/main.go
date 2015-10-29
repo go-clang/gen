@@ -201,7 +201,7 @@ func main() {
 	clangIndexHeaderFilepath := "./clang-c/Index.h"
 	tu := idx.Parse(clangIndexHeaderFilepath, []string{
 		"-I", ".", // Include current folder
-		"-I", "/usr/local/lib/clang/3.4.2/include/", // Include clang headers TODO make this generic
+		"-I", "/usr/include/clang/3.6.2/include/", // Include clang headers TODO make this generic
 	}, nil, 0)
 	defer tu.Dispose()
 
@@ -424,6 +424,26 @@ func main() {
 						added = true
 					}
 				}
+			}
+		}
+
+		for _, s := range structs {
+			fmt.Println(s.Name + "blub")
+			fmt.Println(f.Receiver.Type.Name)
+			if s.Name == f.Receiver.Type.Name {
+				idx := -1
+				for i, mem := range s.Methods {
+					fmt.Println(mem)
+					fmt.Println(f.Name + "()")
+					if strings.Contains(mem, f.Name+"()") {
+						idx = i
+					}
+				}
+
+				if idx != -1 {
+					s.Methods = append(s.Methods[:idx], s.Methods[idx+1:]...)
+				}
+
 			}
 		}
 

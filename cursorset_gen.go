@@ -8,16 +8,6 @@ type CursorSet struct {
 	c C.CXCursorSet
 }
 
-// Creates an empty CXCursorSet.
-func NewCursorSet() CursorSet {
-	return CursorSet{C.clang_createCXCursorSet()}
-}
-
-// Disposes a CXCursorSet and releases its associated memory.
-func (cs CursorSet) Dispose() {
-	C.clang_disposeCXCursorSet(cs.c)
-}
-
 // Queries a CXCursorSet to see if it contains a specific CXCursor. \returns non-zero if the set contains the specified cursor.
 func (cs CursorSet) Contains(cursor Cursor) uint16 {
 	return uint16(C.clang_CXCursorSet_contains(cs.c, cursor.c))
