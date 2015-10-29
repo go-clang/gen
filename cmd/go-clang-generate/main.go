@@ -61,12 +61,29 @@ func addFunction(f *Function, fname string, fnamePrefix string, rt Receiver) boo
 	} else if s, ok := lookupStruct[rt.Type.Name]; ok {
 		f.Name = fnamePrefix + fname
 
-		s.Methods = append(s.Methods, generateASTFunction(f))
+		fStr := generateASTFunction(f)
+		s.Methods = deleteMethod(s.Methods, fname)
+		s.Methods = append(s.Methods, fStr)
 
 		return true
 	}
 
 	return false
+}
+
+func deleteMethod(methods []string, fName string) []string {
+	idx := -1
+	for i, mem := range methods {
+		if strings.Contains(mem, fName+"()") {
+			idx = i
+		}
+	}
+
+	if idx != -1 {
+		methods = append(methods[:idx], methods[idx+1:]...)
+	}
+
+	return methods
 }
 
 func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
@@ -90,7 +107,9 @@ func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool 
 		f.Receiver = s.Receiver
 		f.Receiver.Type = rt.Type
 
-		s.Methods = append(s.Methods, generateASTFunction(f))
+		fStr := generateASTFunction(f)
+		s.Methods = deleteMethod(s.Methods, fname)
+		s.Methods = append(s.Methods, fStr)
 
 		return true
 	}
@@ -371,6 +390,7 @@ func main() {
 				}
 			}
 		}
+
 		if !added {
 			if len(f.Parameters) == 1 && (f.ReturnType.Name == "int" || f.ReturnType.Name == "unsigned int" || f.ReturnType.Name == "long long" || f.ReturnType.Name == "unsigned long long") && isEnumOrStruct(f.Parameters[0].Type.Name) {
 				fname = trimCommonFName(fname, rt)
@@ -424,26 +444,6 @@ func main() {
 						added = true
 					}
 				}
-			}
-		}
-
-		for _, s := range structs {
-			fmt.Println(s.Name + "blub")
-			fmt.Println(f.Receiver.Type.Name)
-			if s.Name == f.Receiver.Type.Name {
-				idx := -1
-				for i, mem := range s.Methods {
-					fmt.Println(mem)
-					fmt.Println(f.Name + "()")
-					if strings.Contains(mem, f.Name+"()") {
-						idx = i
-					}
-				}
-
-				if idx != -1 {
-					s.Methods = append(s.Methods[:idx], s.Methods[idx+1:]...)
-				}
-
 			}
 		}
 

@@ -525,37 +525,6 @@ func ({{$.Receiver.Name}} {{$.Receiver.Type.Name}}) {{$.Name}}() []{{if eq $.Arr
 }
 `))
 
-/*
-
-	p := {{$.Receiver}}.c.{{$.Member}}
-	for i := 0; i < length; i++ {
-        p := ({{if eq $.ArrayDimensions 2 }}*{{end}}{{$.ElementType}})(unsafe.Pointer(uintptr(unsafe.Pointer(p))+unsafe.Sizeof(*p)))
-  		sc = append(sc, {{if eq $.ArrayDimensions 2}}&{{$.ElementType}}{{else}}{{$.ElementType}}{{end}}{{if $.IsPrimitive}}(*p){{else}}{{"{"}}*p{{"}"}}{{end}})
-
-    }
-
-
-		var CArray *C.{{$.CName}} = {{$.Receiver}}.c.{{$.Member}}
-    hdr := reflect.SliceHeader{
-        Data: uintptr(unsafe.Pointer(CArray)),
-        Len:  length,
-        Cap:  length,
-    }
-    goSlice := *(*[]C.{{$.CName}})(unsafe.Pointer(&hdr))
-
-	for is := 0; is < length; is++ {
-		sc = append(sc, {{if eq $.ArrayDimensions 2}}&{{$.ElementType}}{{else}}{{$.ElementType}}{{end}}{{if $.IsPrimitive}}(goSlice[is]){{else}}{{"{"}}goSlice[is]{{"}"}}{{end}})
-	}
-
-	sc = append(sc, {{if eq $.ArrayDimensions 2}}&{{$.ElementType}}{{else}}{{$.ElementType}}{{end}}{{if $.IsPrimitive}}([]{{if eq $.ArrayDimensions 2 }}*{{end}}{{$.ElementType}}({{$.Receiver}}.c.{{$.Member}}[is]))){{else}}{{"{"}}([]{{if eq $.ArrayDimensions 2 }}*{{end}}{{$.ElementType}}({{$.Receiver}}.c.{{$.Member}}[is]))){{"}"}}{{end}}
-
-	{{if eq $.ArrayDimensions 2 }}
-	length := unsafe.Sizeof({{$.Receiver}}.c.{{$.Member}}[0]) / unsafe.Sizeof({{$.Receiver}}.c.{{$.Member}}[0][0])
-	{{else}}
-	length := unsafe.Sizeof({{$.Receiver}}.c.{{$.Member}})
-	{{end}}
-*/
-
 func generateFunctionSliceReturn(f *FunctionSliceReturn) string {
 	var b bytes.Buffer
 	if err := templateGenerateReturnSlice.Execute(&b, f); err != nil {

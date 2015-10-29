@@ -29,3 +29,8 @@ func (il IdxLoc) Int_data() uint16 {
 	value := uint16(il.c.int_data)
 	return value
 }
+
+// Retrieve the CXSourceLocation represented by the given CXIdxLoc.
+func (il IdxLoc) IndexLoc_getCXSourceLocation() SourceLocation {
+	return SourceLocation{C.clang_indexLoc_getCXSourceLocation(il.c)}
+}

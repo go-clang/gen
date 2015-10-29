@@ -56,6 +56,11 @@ func NewIndex(excludeDeclarationsFromPCH uint16, displayDiagnostics uint16) Inde
 	return Index{C.clang_createIndex(C.int(excludeDeclarationsFromPCH), C.int(displayDiagnostics))}
 }
 
+// Destroy the given index. The index must not be destroyed until all of the translation units created within that index have been destroyed.
+func (i Index) Dispose() {
+	C.clang_disposeIndex(i.c)
+}
+
 /*
  * \brief Sets general options associated with a CXIndex.
  *
@@ -73,10 +78,20 @@ func (i Index) SetGlobalOptions(options uint16) {
 	C.clang_CXIndex_setGlobalOptions(i.c, C.uint(options))
 }
 
+// Gets the general options associated with a CXIndex. \returns A bitmask of options, a bitwise OR of CXGlobalOpt_XXX flags that are associated with the given CXIndex object.
+func (i Index) GlobalOptions() uint16 {
+	return uint16(C.clang_CXIndex_getGlobalOptions(i.c))
+}
+
 // Create a translation unit from an AST file (-emit-ast).
 func (i Index) TranslationUnit(ast_filename string) TranslationUnit {
 	c_ast_filename := C.CString(ast_filename)
 	defer C.free(unsafe.Pointer(c_ast_filename))
 
 	return TranslationUnit{C.clang_createTranslationUnit(i.c, c_ast_filename)}
+}
+
+// An indexing action/session, to be applied to one or multiple translation units. \param CIdx The index object with which the index action will be associated.
+func (i Index) Action_create() IndexAction {
+	return IndexAction{C.clang_IndexAction_create(i.c)}
 }

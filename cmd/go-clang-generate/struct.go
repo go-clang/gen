@@ -48,6 +48,8 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 
 			var method string
 
+			var fName string
+
 			if typ.PointerLevel == 2 || typ.IsArray {
 				sizeMember := ""
 
@@ -68,23 +70,42 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 				}
 
 				method = generateFunctionSliceReturn(f)
+				fName = f.Name
 
 			} else if typ.PointerLevel < 2 {
 
 				f := generateFunction(cursor.DisplayName(), cname, comment, cursor.DisplayName(), typ)
 
 				method = generateFunctionStructMemberGetter(f)
+				fName = f.Name
 
 			} else {
 				panic("Three pointers")
 			}
 
-			s.Methods = append(s.Methods, method)
+			if !containsMethod(s.Methods, fName) {
+				s.Methods = append(s.Methods, method)
+			}
 		}
 
 		return clang.CVR_Continue
 	})
 	return s
+}
+
+func containsMethod(methods []string, fName string) bool {
+	idx := -1
+	for i, mem := range methods {
+		if strings.Contains(mem, fName+"()") {
+			idx = i
+		}
+	}
+
+	if idx != -1 {
+		return true
+	}
+
+	return false
 }
 
 func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
