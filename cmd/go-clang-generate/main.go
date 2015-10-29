@@ -226,11 +226,44 @@ func main() {
 		}
 	}
 
+	clangIndexHeaderFilepath := "./clang-c/Index.h"
+
+	/*
+		Hide all "void *" fields of structs by replacing the type with "uintptr_t".
+
+		To paraphrase the original go-clang source code:
+			Not hiding these fields confuses the Go GC during garbage collection and
+			pointer scanning, making it think the heap/stack has been somehow corrupted.
+
+		I do not know how the original author debugged this, but one thing: Thank you!
+	*/
+	findStructsRe := regexp.MustCompile(`(?s)struct[\s\w]+{.+?}`)
+	f, err := ioutil.ReadFile(clangIndexHeaderFilepath)
+	if err != nil {
+		exitWithFatal("Cannot read Index.h", nil)
+	}
+	voidPointerReplacements := map[string]string{}
+	findVoidPointerRe := regexp.MustCompile(`(?:const\s+)?void\s*\*\s*(\w+(\[\d+\])?;)`)
+	for _, s := range findStructsRe.FindAll(f, -1) {
+		s2 := findVoidPointerRe.ReplaceAll(s, []byte("uintptr_t $1"))
+		if len(s) != len(s2) {
+			voidPointerReplacements[string(s)] = string(s2)
+		}
+	}
+	fs := string(f)
+	for s, r := range voidPointerReplacements {
+		fs = strings.Replace(fs, s, r, -1)
+	}
+	fs = "#include <stdint.h>\n\n" + fs
+	err = ioutil.WriteFile(clangIndexHeaderFilepath, []byte(fs), 0700)
+	if err != nil {
+		exitWithFatal("Cannot write Index.h", nil)
+	}
+
 	// Parse clang-c's Index.h to analyse everything we need to know
 	idx := clang.NewIndex(0, 1)
 	defer idx.Dispose()
 
-	clangIndexHeaderFilepath := "./clang-c/Index.h"
 	tu := idx.Parse(clangIndexHeaderFilepath, []string{
 		"-I", ".", // Include current folder
 		"-I", "/usr/local/lib/clang/3.4.2/include/",
