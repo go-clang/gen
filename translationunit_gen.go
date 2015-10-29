@@ -52,6 +52,14 @@ func (tu TranslationUnit) DiagnosticSetFromTU() DiagnosticSet {
 	return DiagnosticSet{C.clang_getDiagnosticSetFromTU(tu.c)}
 }
 
+// Get the original translation unit source file name.
+func (tu TranslationUnit) Spelling() string {
+	o := cxstring{C.clang_getTranslationUnitSpelling(tu.c)}
+	defer o.Dispose()
+
+	return o.String()
+}
+
 // Returns the set of flags that is suitable for saving a translation unit. The set of flags returned provide options for \c clang_saveTranslationUnit() by default. The returned flag set contains an unspecified set of options that save translation units with the most commonly-requested data.
 func (tu TranslationUnit) DefaultSaveOptions() uint16 {
 	return uint16(C.clang_defaultSaveOptions(tu.c))
@@ -78,6 +86,11 @@ func (tu TranslationUnit) DefaultReparseOptions() uint16 {
 // Return the memory usage of a translation unit. This object should be released with clang_disposeCXTUResourceUsage().
 func (tu TranslationUnit) TUResourceUsage() TUResourceUsage {
 	return TUResourceUsage{C.clang_getCXTUResourceUsage(tu.c)}
+}
+
+// Retrieve the cursor that represents the given translation unit. The translation unit cursor can be used to start traversing the various declarations within the given translation unit.
+func (tu TranslationUnit) TranslationUnitCursor() Cursor {
+	return Cursor{C.clang_getTranslationUnitCursor(tu.c)}
 }
 
 // Map a source location to the cursor that describes the entity at that location in the source code. clang_getCursor() maps an arbitrary source location within a translation unit down to the most specific cursor that describes the entity at that location. For example, given an expression \c x + y, invoking clang_getCursor() with a source location pointing to "x" will return the cursor for "x"; similarly for "y". If the cursor points anywhere between "x" or "y" (e.g., on the + or the whitespace around it), clang_getCursor() will return a cursor referring to the "+" expression. \returns a cursor representing the entity at the given source location, or a NULL cursor if no such entity can be found.

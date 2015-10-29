@@ -74,12 +74,13 @@ func addFunction(f *Function, fname string, fnamePrefix string, rt Receiver) boo
 func deleteMethod(methods []string, fName string) []string {
 	idx := -1
 	for i, mem := range methods {
-		if strings.Contains(mem, fName+"()") {
+		if strings.Contains(mem, ") "+fName+"()") {
 			idx = i
 		}
 	}
 
 	if idx != -1 {
+		fmt.Println(fName)
 		methods = append(methods[:idx], methods[idx+1:]...)
 	}
 

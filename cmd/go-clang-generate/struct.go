@@ -96,7 +96,7 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 func containsMethod(methods []string, fName string) bool {
 	idx := -1
 	for i, mem := range methods {
-		if strings.Contains(mem, fName+"()") {
+		if strings.Contains(mem, ") "+fName+"()") {
 			idx = i
 		}
 	}
