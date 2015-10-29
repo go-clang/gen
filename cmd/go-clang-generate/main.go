@@ -221,7 +221,8 @@ func main() {
 	clangIndexHeaderFilepath := "./clang-c/Index.h"
 	tu := idx.Parse(clangIndexHeaderFilepath, []string{
 		"-I", ".", // Include current folder
-		"-I", "/usr/include/clang/3.6.2/include/", // Include clang headers TODO make this generic
+		"-I", "/usr/local/lib/clang/3.4.2/include/",
+		"-I", "/usr/include/clang/3.6.2/include/",
 	}, nil, 0)
 	defer tu.Dispose()
 
