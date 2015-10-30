@@ -3,6 +3,10 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import (
+	"fmt"
+)
+
 // Categorizes how memory is being used by a translation unit.
 type TUResourceUsageKind uint32
 
@@ -30,4 +34,44 @@ const (
 // Returns the human-readable null-terminated C string that represents the name of the memory category. This string should never be freed.
 func (turuk TUResourceUsageKind) TUResourceUsageName() string {
 	return C.GoString(C.clang_getTUResourceUsageName(C.enum_CXTUResourceUsageKind(turuk)))
+}
+
+func (turuk TUResourceUsageKind) Spelling() string {
+	switch turuk {
+	case TUResourceUsage_AST /*TUResourceUsage_MEMORY_IN_BYTES_BEGIN*/ /*TUResourceUsage_First*/ :
+		return "TUResourceUsage=AST, MEMORY_IN_BYTES_BEGIN, First"
+	case TUResourceUsage_Identifiers:
+		return "TUResourceUsage=Identifiers"
+	case TUResourceUsage_Selectors:
+		return "TUResourceUsage=Selectors"
+	case TUResourceUsage_GlobalCompletionResults:
+		return "TUResourceUsage=GlobalCompletionResults"
+	case TUResourceUsage_SourceManagerContentCache:
+		return "TUResourceUsage=SourceManagerContentCache"
+	case TUResourceUsage_AST_SideTables:
+		return "TUResourceUsage=AST_SideTables"
+	case TUResourceUsage_SourceManager_Membuffer_Malloc:
+		return "TUResourceUsage=SourceManager_Membuffer_Malloc"
+	case TUResourceUsage_SourceManager_Membuffer_MMap:
+		return "TUResourceUsage=SourceManager_Membuffer_MMap"
+	case TUResourceUsage_ExternalASTSource_Membuffer_Malloc:
+		return "TUResourceUsage=ExternalASTSource_Membuffer_Malloc"
+	case TUResourceUsage_ExternalASTSource_Membuffer_MMap:
+		return "TUResourceUsage=ExternalASTSource_Membuffer_MMap"
+	case TUResourceUsage_Preprocessor:
+		return "TUResourceUsage=Preprocessor"
+	case TUResourceUsage_PreprocessingRecord:
+		return "TUResourceUsage=PreprocessingRecord"
+	case TUResourceUsage_SourceManager_DataStructures:
+		return "TUResourceUsage=SourceManager_DataStructures"
+	case TUResourceUsage_Preprocessor_HeaderSearch /*TUResourceUsage_MEMORY_IN_BYTES_END*/ /*TUResourceUsage_Last*/ :
+		return "TUResourceUsage=Preprocessor_HeaderSearch, MEMORY_IN_BYTES_END, Last"
+
+	}
+
+	return fmt.Sprintf("TUResourceUsageKind unkown %d", int(turuk))
+}
+
+func (turuk TUResourceUsageKind) String() string {
+	return turuk.Spelling()
 }

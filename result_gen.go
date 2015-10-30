@@ -3,6 +3,10 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import (
+	"fmt"
+)
+
 type Result uint32
 
 const (
@@ -13,3 +17,21 @@ const (
 	// The function was terminated by a callback (e.g. it returned CXVisit_Break)
 	Result_VisitBreak = C.CXResult_VisitBreak
 )
+
+func (r Result) Spelling() string {
+	switch r {
+	case Result_Success:
+		return "Result=Success"
+	case Result_Invalid:
+		return "Result=Invalid"
+	case Result_VisitBreak:
+		return "Result=VisitBreak"
+
+	}
+
+	return fmt.Sprintf("Result unkown %d", int(r))
+}
+
+func (r Result) String() string {
+	return r.Spelling()
+}

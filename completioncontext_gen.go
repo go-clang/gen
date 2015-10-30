@@ -3,6 +3,10 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import (
+	"fmt"
+)
+
 // Bits that represent the context under which completion is occurring. The enumerators in this enumeration may be bitwise-OR'd together if multiple contexts are occurring simultaneously.
 type CompletionContext uint32
 
@@ -56,3 +60,63 @@ const (
 	// The current context is unknown, so set all contexts.
 	CompletionContext_Unknown = C.CXCompletionContext_Unknown
 )
+
+func (cc CompletionContext) Spelling() string {
+	switch cc {
+	case CompletionContext_Unexposed:
+		return "CompletionContext=Unexposed"
+	case CompletionContext_AnyType:
+		return "CompletionContext=AnyType"
+	case CompletionContext_AnyValue:
+		return "CompletionContext=AnyValue"
+	case CompletionContext_ObjCObjectValue:
+		return "CompletionContext=ObjCObjectValue"
+	case CompletionContext_ObjCSelectorValue:
+		return "CompletionContext=ObjCSelectorValue"
+	case CompletionContext_CXXClassTypeValue:
+		return "CompletionContext=CXXClassTypeValue"
+	case CompletionContext_DotMemberAccess:
+		return "CompletionContext=DotMemberAccess"
+	case CompletionContext_ArrowMemberAccess:
+		return "CompletionContext=ArrowMemberAccess"
+	case CompletionContext_ObjCPropertyAccess:
+		return "CompletionContext=ObjCPropertyAccess"
+	case CompletionContext_EnumTag:
+		return "CompletionContext=EnumTag"
+	case CompletionContext_UnionTag:
+		return "CompletionContext=UnionTag"
+	case CompletionContext_StructTag:
+		return "CompletionContext=StructTag"
+	case CompletionContext_ClassTag:
+		return "CompletionContext=ClassTag"
+	case CompletionContext_Namespace:
+		return "CompletionContext=Namespace"
+	case CompletionContext_NestedNameSpecifier:
+		return "CompletionContext=NestedNameSpecifier"
+	case CompletionContext_ObjCInterface:
+		return "CompletionContext=ObjCInterface"
+	case CompletionContext_ObjCProtocol:
+		return "CompletionContext=ObjCProtocol"
+	case CompletionContext_ObjCCategory:
+		return "CompletionContext=ObjCCategory"
+	case CompletionContext_ObjCInstanceMessage:
+		return "CompletionContext=ObjCInstanceMessage"
+	case CompletionContext_ObjCClassMessage:
+		return "CompletionContext=ObjCClassMessage"
+	case CompletionContext_ObjCSelectorName:
+		return "CompletionContext=ObjCSelectorName"
+	case CompletionContext_MacroName:
+		return "CompletionContext=MacroName"
+	case CompletionContext_NaturalLanguage:
+		return "CompletionContext=NaturalLanguage"
+	case CompletionContext_Unknown:
+		return "CompletionContext=Unknown"
+
+	}
+
+	return fmt.Sprintf("CompletionContext unkown %d", int(cc))
+}
+
+func (cc CompletionContext) String() string {
+	return cc.Spelling()
+}

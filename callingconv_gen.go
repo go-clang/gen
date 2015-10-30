@@ -3,6 +3,10 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import (
+	"fmt"
+)
+
 // Describes the calling convention of a function type
 type CallingConv uint32
 
@@ -22,3 +26,43 @@ const (
 	CallingConv_Invalid                  = C.CXCallingConv_Invalid
 	CallingConv_Unexposed                = C.CXCallingConv_Unexposed
 )
+
+func (cc CallingConv) Spelling() string {
+	switch cc {
+	case CallingConv_Default:
+		return "CallingConv=Default"
+	case CallingConv_C:
+		return "CallingConv=C"
+	case CallingConv_X86StdCall:
+		return "CallingConv=X86StdCall"
+	case CallingConv_X86FastCall:
+		return "CallingConv=X86FastCall"
+	case CallingConv_X86ThisCall:
+		return "CallingConv=X86ThisCall"
+	case CallingConv_X86Pascal:
+		return "CallingConv=X86Pascal"
+	case CallingConv_AAPCS:
+		return "CallingConv=AAPCS"
+	case CallingConv_AAPCS_VFP:
+		return "CallingConv=AAPCS_VFP"
+	case CallingConv_PnaclCall:
+		return "CallingConv=PnaclCall"
+	case CallingConv_IntelOclBicc:
+		return "CallingConv=IntelOclBicc"
+	case CallingConv_X86_64Win64:
+		return "CallingConv=X86_64Win64"
+	case CallingConv_X86_64SysV:
+		return "CallingConv=X86_64SysV"
+	case CallingConv_Invalid:
+		return "CallingConv=Invalid"
+	case CallingConv_Unexposed:
+		return "CallingConv=Unexposed"
+
+	}
+
+	return fmt.Sprintf("CallingConv unkown %d", int(cc))
+}
+
+func (cc CallingConv) String() string {
+	return cc.Spelling()
+}

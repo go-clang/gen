@@ -3,6 +3,10 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import (
+	"fmt"
+)
+
 type NameRefFlags uint32
 
 const (
@@ -22,3 +26,21 @@ const (
 	 */
 	NameRange_WantSinglePiece = C.CXNameRange_WantSinglePiece
 )
+
+func (nrf NameRefFlags) Spelling() string {
+	switch nrf {
+	case NameRange_WantQualifier:
+		return "NameRange=WantQualifier"
+	case NameRange_WantTemplateArgs:
+		return "NameRange=WantTemplateArgs"
+	case NameRange_WantSinglePiece:
+		return "NameRange=WantSinglePiece"
+
+	}
+
+	return fmt.Sprintf("NameRefFlags unkown %d", int(nrf))
+}
+
+func (nrf NameRefFlags) String() string {
+	return nrf.Spelling()
+}

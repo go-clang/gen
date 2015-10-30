@@ -3,6 +3,10 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import (
+	"fmt"
+)
+
 // Flags that control the creation of translation units. The enumerators in this enumeration type are meant to be bitwise ORed together to specify which options should be used when constructing the translation unit.
 type TranslationUnit_Flags uint32
 
@@ -26,3 +30,33 @@ const (
 	// Used to indicate that brief documentation comments should be included into the set of code completions returned from this translation unit.
 	TranslationUnit_IncludeBriefCommentsInCodeCompletion = C.CXTranslationUnit_IncludeBriefCommentsInCodeCompletion
 )
+
+func (tuf TranslationUnit_Flags) Spelling() string {
+	switch tuf {
+	case TranslationUnit_None:
+		return "TranslationUnit=None"
+	case TranslationUnit_DetailedPreprocessingRecord:
+		return "TranslationUnit=DetailedPreprocessingRecord"
+	case TranslationUnit_Incomplete:
+		return "TranslationUnit=Incomplete"
+	case TranslationUnit_PrecompiledPreamble:
+		return "TranslationUnit=PrecompiledPreamble"
+	case TranslationUnit_CacheCompletionResults:
+		return "TranslationUnit=CacheCompletionResults"
+	case TranslationUnit_ForSerialization:
+		return "TranslationUnit=ForSerialization"
+	case TranslationUnit_CXXChainedPCH:
+		return "TranslationUnit=CXXChainedPCH"
+	case TranslationUnit_SkipFunctionBodies:
+		return "TranslationUnit=SkipFunctionBodies"
+	case TranslationUnit_IncludeBriefCommentsInCodeCompletion:
+		return "TranslationUnit=IncludeBriefCommentsInCodeCompletion"
+
+	}
+
+	return fmt.Sprintf("TranslationUnit_Flags unkown %d", int(tuf))
+}
+
+func (tuf TranslationUnit_Flags) String() string {
+	return tuf.Spelling()
+}

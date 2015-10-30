@@ -116,3 +116,7 @@ func (tk TypeKind) Spelling() string {
 
 	return o.String()
 }
+
+func (tk TypeKind) String() string {
+	return tk.Spelling()
+}

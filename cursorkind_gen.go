@@ -533,3 +533,7 @@ func (ck CursorKind) Spelling() string {
 
 	return o.String()
 }
+
+func (ck CursorKind) String() string {
+	return ck.Spelling()
+}

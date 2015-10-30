@@ -3,6 +3,10 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import (
+	"fmt"
+)
+
 // Options to control the display of diagnostics. The values in this enum are meant to be combined to customize the behavior of \c clang_formatDiagnostic().
 type DiagnosticDisplayOptions uint32
 
@@ -32,3 +36,27 @@ const (
 	// Display the category name associated with this diagnostic, if any. The category name is displayed within brackets after the diagnostic text. This option corresponds to the clang flag \c -fdiagnostics-show-category=name.
 	Diagnostic_DisplayCategoryName = C.CXDiagnostic_DisplayCategoryName
 )
+
+func (ddo DiagnosticDisplayOptions) Spelling() string {
+	switch ddo {
+	case Diagnostic_DisplaySourceLocation:
+		return "Diagnostic=DisplaySourceLocation"
+	case Diagnostic_DisplayColumn:
+		return "Diagnostic=DisplayColumn"
+	case Diagnostic_DisplaySourceRanges:
+		return "Diagnostic=DisplaySourceRanges"
+	case Diagnostic_DisplayOption:
+		return "Diagnostic=DisplayOption"
+	case Diagnostic_DisplayCategoryId:
+		return "Diagnostic=DisplayCategoryId"
+	case Diagnostic_DisplayCategoryName:
+		return "Diagnostic=DisplayCategoryName"
+
+	}
+
+	return fmt.Sprintf("DiagnosticDisplayOptions unkown %d", int(ddo))
+}
+
+func (ddo DiagnosticDisplayOptions) String() string {
+	return ddo.Spelling()
+}

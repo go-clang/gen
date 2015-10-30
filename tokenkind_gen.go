@@ -3,6 +3,10 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import (
+	"fmt"
+)
+
 // Describes a kind of token.
 type TokenKind uint32
 
@@ -18,3 +22,25 @@ const (
 	// A comment.
 	Token_Comment = C.CXToken_Comment
 )
+
+func (tk TokenKind) Spelling() string {
+	switch tk {
+	case Token_Punctuation:
+		return "Token=Punctuation"
+	case Token_Keyword:
+		return "Token=Keyword"
+	case Token_Identifier:
+		return "Token=Identifier"
+	case Token_Literal:
+		return "Token=Literal"
+	case Token_Comment:
+		return "Token=Comment"
+
+	}
+
+	return fmt.Sprintf("TokenKind unkown %d", int(tk))
+}
+
+func (tk TokenKind) String() string {
+	return tk.Spelling()
+}

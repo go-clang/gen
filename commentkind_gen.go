@@ -3,6 +3,10 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import (
+	"fmt"
+)
+
 // Describes the type of the comment AST node (\c CXComment). A comment node can be considered block content (e. g., paragraph), inline content (plain text) or neither (the root AST node).
 type CommentKind uint32
 
@@ -34,3 +38,41 @@ const (
 	// A full comment attached to a declaration, contains block content.
 	Comment_FullComment = C.CXComment_FullComment
 )
+
+func (ck CommentKind) Spelling() string {
+	switch ck {
+	case Comment_Null:
+		return "Comment=Null"
+	case Comment_Text:
+		return "Comment=Text"
+	case Comment_InlineCommand:
+		return "Comment=InlineCommand"
+	case Comment_HTMLStartTag:
+		return "Comment=HTMLStartTag"
+	case Comment_HTMLEndTag:
+		return "Comment=HTMLEndTag"
+	case Comment_Paragraph:
+		return "Comment=Paragraph"
+	case Comment_BlockCommand:
+		return "Comment=BlockCommand"
+	case Comment_ParamCommand:
+		return "Comment=ParamCommand"
+	case Comment_TParamCommand:
+		return "Comment=TParamCommand"
+	case Comment_VerbatimBlockCommand:
+		return "Comment=VerbatimBlockCommand"
+	case Comment_VerbatimBlockLine:
+		return "Comment=VerbatimBlockLine"
+	case Comment_VerbatimLine:
+		return "Comment=VerbatimLine"
+	case Comment_FullComment:
+		return "Comment=FullComment"
+
+	}
+
+	return fmt.Sprintf("CommentKind unkown %d", int(ck))
+}
+
+func (ck CommentKind) String() string {
+	return ck.Spelling()
+}
