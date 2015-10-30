@@ -177,7 +177,7 @@ func generateASTFunction(f *Function) string {
 			}
 		}
 		if typ.Name != "" {
-			if typ.Name == GoUInt8 {
+			if typ.PointerLevel > 0 && typ.CName == CSChar {
 				f.Type = &ast.Ident{
 					Name: "string",
 				}
@@ -340,7 +340,7 @@ func generateASTFunction(f *Function) string {
 				var loopStatements []ast.Stmt
 
 				// Handle our good old friend the const char * differently...
-				if p.Type.Name == GoUInt8 {
+				if p.Type.CName == CSChar {
 					loopStatements = append(loopStatements, &ast.AssignStmt{
 						Lhs: []ast.Expr{
 							&ast.Ident{
@@ -524,7 +524,7 @@ func generateASTFunction(f *Function) string {
 				}
 			} else if p.Type.Primitive != "" {
 				// Handle Go type to C type conversions
-				if p.Type.Primitive == "const char *" {
+				if p.Type.PointerLevel == 1 && p.Type.CName == CSChar {
 					goToCTypeConversions = true
 
 					addAssignment(
@@ -634,7 +634,7 @@ func generateASTFunction(f *Function) string {
 						doZero(),
 					),
 				})
-			} else if f.ReturnType.Name == "string" {
+			} else if f.ReturnType.CName == CSChar && f.ReturnType.PointerLevel == 1 {
 				// If this is a normal const char * C type there is not so much to do
 				addReturnItem(doCCast(
 					"GoString",
@@ -738,7 +738,7 @@ type FunctionSliceReturn struct {
 
 var templateGenerateReturnSlice = template.Must(template.New("go-clang-generate-slice").Parse(`{{$.Comment}}
 func ({{$.Receiver.Name}} {{$.Receiver.Type.Name}}) {{$.Name}}() []{{if eq $.ArrayDimensions 2 }}*{{end}}{{$.ElementType}} {
-	sc := []{{if eq $.ArrayDimensions 2 }}*{{end}}{{$.ElementType}}{} 
+	sc := []{{if eq $.ArrayDimensions 2 }}*{{end}}{{$.ElementType}}{}
 
 	length := {{if ne $.ArraySize -1}}{{$.ArraySize}}{{else}}int({{$.Receiver.Name}}.c.{{$.SizeMember}}){{end}}
 	goslice := (*[1 << 30]{{if or (eq $.ArrayDimensions 2) (eq $.ElementType "unsafe.Pointer")}}*{{end}}C.{{$.CElementType}})(unsafe.Pointer(&{{$.Receiver.Name}}.c.{{$.Member}}))[:length:length]
@@ -769,7 +769,7 @@ func generateFunction(name, cname, comment, member string, typ Type) *Function {
 	if typ.IsPrimitive {
 		typ.Primitive = typ.Name
 	}
-	if (strings.HasPrefix(name, "has") || strings.HasPrefix(name, "is")) && typ.Name == GoInt32 {
+	if (strings.HasPrefix(name, "has") || strings.HasPrefix(name, "is")) && typ.Name == GoInt16 {
 		typ.Name = GoBool
 	}
 

@@ -12,8 +12,8 @@ type Cursor struct {
 	c C.CXCursor
 }
 
-func (c Cursor) Xdata() int32 {
-	value := int32(c.c.xdata)
+func (c Cursor) Xdata() int16 {
+	value := int16(c.c.xdata)
 	return value
 }
 

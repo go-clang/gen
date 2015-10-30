@@ -57,10 +57,6 @@ func trimCommonFName(fname string, rt Receiver) string {
 func addFunction(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 	fname = upperFirstCharacter(fname)
 
-	if !hasHandleablePointers(f.Parameters) {
-		return false
-	}
-
 	if e, ok := lookupEnum[rt.Type.Name]; ok {
 		f.Name = fnamePrefix + fname
 
@@ -101,10 +97,6 @@ func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool 
 	// TODO this is a big HACK. Figure out how we can trim receiver names while still not having two "Cursor" methods for TranslationUnit
 	if f.CName == "clang_getTranslationUnitCursor" {
 		fname = "TranslationUnitCursor"
-	}
-
-	if !hasHandleablePointers(f.Parameters) {
-		return false
 	}
 
 	if e, ok := lookupEnum[rt.Type.Name]; ok {
@@ -254,7 +246,9 @@ func main() {
 	for s, r := range voidPointerReplacements {
 		fs = strings.Replace(fs, s, r, -1)
 	}
-	fs = "#include <stdint.h>\n\n" + fs
+	if incl := "#include <stdint.h>"; !strings.HasPrefix(fs, incl) {
+		fs = "#include <stdint.h>\n\n" + fs
+	}
 	err = ioutil.WriteFile(clangIndexHeaderFilepath, []byte(fs), 0700)
 	if err != nil {
 		exitWithFatal("Cannot write Index.h", nil)
@@ -398,7 +392,10 @@ func main() {
 			}
 			if e, ok := lookupEnum[p.Type.Name]; ok {
 				p.CName = e.Receiver.CName
-				p.Type = e.Receiver.Type
+				// TODO remove the receiver... and copy only names here to preserve the original pointers and so
+				p.Type.Name = e.Receiver.Type.Name
+				p.Type.CName = e.Receiver.Type.CName
+				p.Type.Primitive = e.Receiver.Type.Primitive
 			} else if _, ok := lookupStruct[p.Type.Name]; ok {
 			}
 
@@ -412,26 +409,19 @@ func main() {
 				for j := range f.Parameters {
 					pa := &f.Parameters[j]
 
-					// TODO we handle only incoming array pointers for now
-					if pa.Type.PointerLevel != 1 && pa.Type.CName != "const char *const *" {
-						continue
-					}
-
 					if pa.Name == paName {
-						p.Type.LengthOfSlice = pa.Name
-						pa.Type.IsSlice = true
 
 						// TODO remove this when getType cane handle this kind of conversion
-						switch pa.Type.CName {
-						case "const char *const *":
-							pa.Type.Name = GoUInt8
-							pa.Type.Primitive = "char"
-						case "struct CXUnsavedFile *":
+						if pa.Type.Name == "struct CXUnsavedFile" || pa.Type.Name == "UnsavedFile" {
 							pa.Type.Name = "UnsavedFile"
 							pa.Type.Primitive = "struct_CXUnsavedFile"
-						default:
-							panic(pa.Type.CName)
+						} else if pa.Type.CName == CSChar && pa.Type.PointerLevel == 2 {
+						} else {
+							break
 						}
+
+						p.Type.LengthOfSlice = pa.Name
+						pa.Type.IsSlice = true
 
 						break
 					}
@@ -462,44 +452,59 @@ func main() {
 			}
 		}
 
-		added := addBasicMethods(f, fname, "", rt)
+		// Check upfront if we can handle a function
+		found := false
 
-		if !added {
-			if s := strings.Split(f.Name, "_"); len(s) == 2 {
-				if s[0] == rt.Type.Name {
-					rtc := rt
-					rtc.Name = s[0]
+		for _, p := range f.Parameters {
+			// These pointers are ok
+			if p.Type.PointerLevel == 1 && (p.Type.CName == CSChar || p.Type.Name == "UnsavedFile") {
+				continue
+			}
+			// Return arguments are always ok since we mark them earlier
+			if p.Type.IsReturnArgument {
+				continue
+			}
+			// We whiteflag slices
+			if p.Type.IsSlice {
+				continue
+			}
 
-					added = addBasicMethods(f, s[1], "", rtc)
-				} else {
-					added = addBasicMethods(f, strings.Join(s[1:], ""), s[0]+"_", rt)
-				}
+			if (!isEnumOrStruct(p.Type.Name) && p.Type.Primitive == "") || p.Type.PointerLevel != 0 {
+				found = true
+
+				break
 			}
 		}
 
-		if !added {
-			if len(f.Parameters) == 0 {
-				if !added {
+		if f.ReturnType.PointerLevel > 0 && !(f.ReturnType.PointerLevel == 1 && f.ReturnType.CName == CSChar) { // TODO implement to return slices
+			found = true
+		}
+
+		// If we find a heuristic to add the function, add it!
+		added := false
+
+		if !found {
+			added = addBasicMethods(f, fname, "", rt)
+
+			if !added {
+				if s := strings.Split(f.Name, "_"); len(s) == 2 {
+					if s[0] == rt.Type.Name {
+						rtc := rt
+						rtc.Name = s[0]
+
+						added = addBasicMethods(f, s[1], "", rtc)
+					} else {
+						added = addBasicMethods(f, strings.Join(s[1:], ""), s[0]+"_", rt)
+					}
+				}
+			}
+
+			if !added {
+				if len(f.Parameters) == 0 {
 					clangFile.Functions = append(clangFile.Functions, generateASTFunction(f))
 
 					added = true
-				}
-			} else if isEnumOrStruct(f.ReturnType.Name) || f.ReturnType.Primitive != "" {
-				found := false
-
-				for _, p := range f.Parameters {
-					if !isEnumOrStruct(p.Type.Name) && p.Type.Primitive == "" {
-						found = true
-
-						break
-					}
-				}
-
-				if f.ReturnType.PointerLevel > 0 { // TODO implement to return slices
-					found = true
-				}
-
-				if !found {
+				} else if isEnumOrStruct(f.ReturnType.Name) || f.ReturnType.Primitive != "" {
 					fname = trimCommonFName(fname, rt)
 
 					added = addMethod(f, fname, "", rt)
@@ -516,11 +521,9 @@ func main() {
 						added = addFunction(f, fname, "", rtc)
 					}
 					if !added {
-						if hasHandleablePointers(f.Parameters) {
-							clangFile.Functions = append(clangFile.Functions, generateASTFunction(f))
+						clangFile.Functions = append(clangFile.Functions, generateASTFunction(f))
 
-							added = true
-						}
+						added = true
 					}
 				}
 			}
@@ -554,20 +557,6 @@ func main() {
 
 		exitWithFatal("Gofmt failed", err)
 	}
-}
-
-func hasHandleablePointers(params []FunctionParameter) bool {
-	for _, p := range params {
-		if p.Type.IsSlice && (p.Type.PointerLevel == 1 || (p.Type.PointerLevel == 2 && p.Type.CName == "const char *const *")) { // TODO we can handle currently only ingoing array pointers
-			continue
-		}
-
-		if p.Type.PointerLevel > 0 && !p.Type.IsReturnArgument {
-			return false
-		}
-	}
-
-	return true
 }
 
 func printFunctionDetails(f *Function) {

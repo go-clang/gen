@@ -39,9 +39,13 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 
 			comment := cleanDoxygenComment(cursor.RawCommentText())
 
-			if typ.PointerLevel >= 1 && typ.Name == "void" {
+			if (typ.PointerLevel >= 1 && typ.Name == "void") || typ.CName == "uintptr_t" {
+				typ.CName = "void"
 				typ.Name = GoPointer
-				typ.PointerLevel--
+				if typ.PointerLevel >= 1 {
+					typ.PointerLevel--
+				}
+				typ.IsPrimitive = true
 
 				s.Imports["unsafe"] = struct{}{}
 			}
