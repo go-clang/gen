@@ -80,7 +80,6 @@ func deleteMethod(methods []string, fName string) []string {
 	}
 
 	if idx != -1 {
-		fmt.Println(fName)
 		methods = append(methods[:idx], methods[idx+1:]...)
 	}
 
