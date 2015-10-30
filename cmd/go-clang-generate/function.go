@@ -260,7 +260,13 @@ func generateASTFunction(f *Function) string {
 				hasDeclaration = true
 
 				// Declare the slice
-				var sliceType ast.Expr = doCType(p.Type.Primitive)
+				var sliceType ast.Expr
+
+				if p.Type.PointerLevel > 0 && p.Type.CName == CSChar {
+					sliceType = doCType("char")
+				} else {
+					sliceType = doCType(p.Type.Primitive)
+				}
 
 				for i := 1; i < p.Type.PointerLevel; i++ {
 					sliceType = &ast.StarExpr{
