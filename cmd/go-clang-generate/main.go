@@ -80,7 +80,6 @@ func deleteMethod(methods []string, fName string) []string {
 	}
 
 	if idx != -1 {
-		fmt.Println(fName)
 		methods = append(methods[:idx], methods[idx+1:]...)
 	}
 
@@ -472,7 +471,9 @@ func main() {
 		}
 	}
 
-	if _, _, err = execToBuffer("gofmt", "-w", "./"); err != nil { // TODO do this before saving the files using go/fmt
+	if out, _, err := execToBuffer("gofmt", "-w", "./"); err != nil { // TODO do this before saving the files using go/fmt
+		fmt.Printf("gofmt:\n%s\n", out)
+
 		exitWithFatal("Gofmt failed", err)
 	}
 }

@@ -1,3 +1,4 @@
+package clang
 
 /**
  * \brief A string that describes the platform for which this structure

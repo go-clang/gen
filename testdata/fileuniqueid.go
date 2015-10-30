@@ -1,3 +1,5 @@
+package clang
+
 /**
  * \brief Retrieve the unique ID for the given \c file.
  *
