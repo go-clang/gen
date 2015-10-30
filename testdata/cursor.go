@@ -1,3 +1,4 @@
+package clang
 
 /**
  * \brief Determine the availability of the entity that this cursor refers to
