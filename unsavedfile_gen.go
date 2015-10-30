@@ -7,3 +7,21 @@ import "C"
 type UnsavedFile struct {
 	c C.struct_CXUnsavedFile
 }
+
+// The file whose contents have not yet been saved. This file must already exist in the file system.
+func (uf UnsavedFile) Filename() *int8 {
+	value := int8(*uf.c.Filename)
+	return &value
+}
+
+// A buffer containing the unsaved contents of this file.
+func (uf UnsavedFile) Contents() *int8 {
+	value := int8(*uf.c.Contents)
+	return &value
+}
+
+// The length of the unsaved contents of this buffer.
+func (uf UnsavedFile) Length() uint32 {
+	value := uint32(uf.c.Length)
+	return value
+}

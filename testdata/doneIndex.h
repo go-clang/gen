@@ -25,36 +25,6 @@ struct CXUnsavedFile {
   unsigned long Length;
 };
 
-/**
- * \brief Describes a version number of the form major.minor.subminor.
- */
-typedef struct CXVersion {
-  /**
-   * \brief The major version number, e.g., the '10' in '10.7.3'. A negative
-   * value indicates that there is no version number at all.
-   */
-  int Major;
-  /**
-   * \brief The minor version number, e.g., the '7' in '10.7.3'. This value
-   * will be negative if no minor version number was provided, e.g., for
-   * version '10'.
-   */
-  int Minor;
-  /**
-   * \brief The subminor version number, e.g., the '3' in '10.7.3'. This value
-   * will be negative if no minor or subminor version number was provided,
-   * e.g., in version '10' or '10.7'.
-   */
-  int Subminor;
-} CXVersion;
-
-/**
- * \brief Uniquely identifies a CXFile, that refers to the same underlying file,
- * across an indexing session.
- */
-typedef struct {
-  unsigned long long data[3];
-} CXFileUniqueID;
 
 /**
  * \brief Retrieve the unique ID for the given \c file.
@@ -79,29 +49,6 @@ int clang_getFileUniqueID(CXFile file, CXFileUniqueID *outID);
 CXFile clang_getFile(CXTranslationUnit tu,
                                     const char *file_name);
 
-/**
- * \brief Identifies a specific source location within a translation
- * unit.
- *
- * Use clang_getExpansionLocation() or clang_getSpellingLocation()
- * to map a source location to a particular file, line, and column.
- */
-typedef struct {
-  const void *ptr_data[2];
-  unsigned int_data;
-} CXSourceLocation;
-
-/**
- * \brief Identifies a half-open character range in the source code.
- *
- * Use clang_getRangeStart() and clang_getRangeEnd() to retrieve the
- * starting and end locations from a source range, respectively.
- */
-typedef struct {
-  const void *ptr_data[2];
-  unsigned begin_int_data;
-  unsigned end_int_data;
-} CXSourceRange;
 
 /**
  * \brief Retrieve the file, line, column, and offset represented by
@@ -478,98 +425,9 @@ int clang_reparseTranslationUnit(CXTranslationUnit TU,
                                           struct CXUnsavedFile *unsaved_files,
                                                 unsigned options);
 
-typedef struct CXTUResourceUsageEntry {
-  /* \brief The memory usage category. */
-  enum CXTUResourceUsageKind kind;
-  /* \brief Amount of resources used.
-      The units will depend on the resource kind. */
-  unsigned long amount;
-} CXTUResourceUsageEntry;
 
-/**
-  * \brief The memory usage of a CXTranslationUnit, broken into categories.
-  */
-typedef struct CXTUResourceUsage {
-  /* \brief Private data member, used for queries. */
-  void *data;
 
-  /* \brief The number of entries in the 'entries' array. */
-  unsigned numEntries;
 
-  /* \brief An array of key-value pairs, representing the breakdown of memory
-            usage. */
-  CXTUResourceUsageEntry *entries;
-
-} CXTUResourceUsage;
-
-/**
- * \brief A cursor representing some element in the abstract syntax tree for
- * a translation unit.
- *
- * The cursor abstraction unifies the different kinds of entities in a
- * program--declaration, statements, expressions, references to declarations,
- * etc.--under a single "cursor" abstraction with a common set of operations.
- * Common operation for a cursor include: getting the physical location in
- * a source file where the cursor points, getting the name associated with a
- * cursor, and retrieving cursors for any child nodes of a particular cursor.
- *
- * Cursors can be produced in two specific ways.
- * clang_getTranslationUnitCursor() produces a cursor for a translation unit,
- * from which one can use clang_visitChildren() to explore the rest of the
- * translation unit. clang_getCursor() maps from a physical source location
- * to the entity that resides at that location, allowing one to map from the
- * source code into the AST.
- */
-typedef struct {
-  enum CXCursorKind kind;
-  int xdata;
-  const void *data[3];
-} CXCursor;
-
-/**
- * \brief A comment AST node.
- */
-typedef struct {
-  const void *ASTNode;
-  CXTranslationUnit TranslationUnit;
-} CXComment;
-
-/**
- * Describes the availability of a given entity on a particular platform, e.g.,
- * a particular class might only be available on Mac OS 10.7 or newer.
- */
-typedef struct CXPlatformAvailability {
-  /**
-   * \brief A string that describes the platform for which this structure
-   * provides availability information.
-   *
-   * Possible values are "ios" or "macosx".
-   */
-  CXString Platform;
-  /**
-   * \brief The version number in which this entity was introduced.
-   */
-  CXVersion Introduced;
-  /**
-   * \brief The version number in which this entity was deprecated (but is
-   * still available).
-   */
-  CXVersion Deprecated;
-  /**
-   * \brief The version number in which this entity was obsoleted, and therefore
-   * is no longer available.
-   */
-  CXVersion Obsoleted;
-  /**
-   * \brief Whether the entity is unconditionally unavailable on this platform.
-   */
-  int Unavailable;
-  /**
-   * \brief An optional message to provide to a user of this API, e.g., to
-   * suggest replacement APIs.
-   */
-  CXString Message;
-} CXPlatformAvailability;
 
 /**
  * \brief Determine the availability of the entity that this cursor refers to
@@ -676,15 +534,6 @@ void clang_getOverriddenCursors(CXCursor cursor,
 void clang_disposeOverriddenCursors(CXCursor *overridden);
 
 /**
- * \brief The type of an element in the abstract syntax tree.
- *
- */
-typedef struct {
-  enum CXTypeKind kind;
-  void *data[2];
-} CXType;
-
-/**
  * \brief Visitor invoked for each cursor found by a traversal.
  *
  * This visitor function will be invoked for each cursor found by
@@ -748,14 +597,6 @@ unsigned clang_visitChildrenWithBlock(CXCursor parent,
                                       CXCursorVisitorBlock block);
 #  endif
 #endif
-
-/**
- * \brief Describes a single preprocessing token.
- */
-typedef struct {
-  unsigned int_data[4];
-  void *ptr_data;
-} CXToken;
 
 /**
  * \brief Tokenize the source code described by the given range into raw
@@ -829,28 +670,6 @@ void clang_enableStackTraces(void);
 void clang_executeOnThread(void (*fn)(void*), void *user_data,
                                           unsigned stack_size);
 
-/**
- * \brief A single result of code completion.
- */
-typedef struct {
-  /**
-   * \brief The kind of entity that this completion refers to.
-   *
-   * The cursor kind will be a macro, keyword, or a declaration (one of the
-   * *Decl cursor kinds), describing the entity that the completion is
-   * referring to.
-   *
-   * \todo In the future, we would like to provide a full cursor, to allow
-   * the client to extract additional information from declaration.
-   */
-  enum CXCursorKind CursorKind;
-
-  /**
-   * \brief The code-completion string that describes how to insert this
-   * code-completion result into the editing buffer.
-   */
-  CXCompletionString CompletionString;
-} CXCompletionResult;
 
 /**
  * \brief Retrieve the parent context of the given completion string.
@@ -871,26 +690,6 @@ typedef struct {
 CXString
 clang_getCompletionParent(CXCompletionString completion_string,
                           enum CXCursorKind *kind);
-
-/**
- * \brief Contains the results of code-completion.
- *
- * This data structure contains the results of code completion, as
- * produced by \c clang_codeCompleteAt(). Its contents must be freed by
- * \c clang_disposeCodeCompleteResults.
- */
-typedef struct {
-  /**
-   * \brief The code-completion results.
-   */
-  CXCompletionResult *Results;
-
-  /**
-   * \brief The number of code-completion results stored in the
-   * \c Results array.
-   */
-  unsigned NumResults;
-} CXCodeCompleteResults;
 
 /**
  * \brief Returns a default set of code-completion options that can be
@@ -1120,10 +919,6 @@ CXRemapping clang_getRemappingsFromFileList(const char **filePaths,
 void clang_remap_getFilenames(CXRemapping, unsigned index,
                                      CXString *original, CXString *transformed);
 
-typedef struct {
-  void *context;
-  enum CXVisitorResult (*visit)(void *context, CXCursor, CXSourceRange);
-} CXCursorAndRangeVisitor;
 
 typedef enum {
   /**
@@ -1156,197 +951,6 @@ CXResult clang_findIncludesInFileWithBlock(CXTranslationUnit, CXFile,
 
 #  endif
 #endif
-
-/**
- * \brief Source location passed to index callbacks.
- */
-typedef struct {
-  void *ptr_data[2];
-  unsigned int_data;
-} CXIdxLoc;
-
-/**
- * \brief Data for ppIncludedFile callback.
- */
-typedef struct {
-  /**
-   * \brief Location of '#' in the \#include/\#import directive.
-   */
-  CXIdxLoc hashLoc;
-  /**
-   * \brief Filename as written in the \#include/\#import directive.
-   */
-  const char *filename;
-  /**
-   * \brief The actual file that the \#include/\#import directive resolved to.
-   */
-  CXFile file;
-  int isImport;
-  int isAngled;
-  /**
-   * \brief Non-zero if the directive was automatically turned into a module
-   * import.
-   */
-  int isModuleImport;
-} CXIdxIncludedFileInfo;
-
-/**
- * \brief Data for IndexerCallbacks#importedASTFile.
- */
-typedef struct {
-  /**
-   * \brief Top level AST file containing the imported PCH, module or submodule.
-   */
-  CXFile file;
-  /**
-   * \brief The imported module or NULL if the AST file is a PCH.
-   */
-  CXModule module;
-  /**
-   * \brief Location where the file is imported. Applicable only for modules.
-   */
-  CXIdxLoc loc;
-  /**
-   * \brief Non-zero if an inclusion directive was automatically turned into
-   * a module import. Applicable only for modules.
-   */
-  int isImplicit;
-
-} CXIdxImportedASTFileInfo;
-
-typedef struct {
-  CXIdxAttrKind kind;
-  CXCursor cursor;
-  CXIdxLoc loc;
-} CXIdxAttrInfo;
-
-typedef struct {
-  CXIdxEntityKind kind;
-  CXIdxEntityCXXTemplateKind templateKind;
-  CXIdxEntityLanguage lang;
-  const char *name;
-  const char *USR;
-  CXCursor cursor;
-  const CXIdxAttrInfo *const *attributes;
-  unsigned numAttributes;
-} CXIdxEntityInfo;
-
-typedef struct {
-  CXCursor cursor;
-} CXIdxContainerInfo;
-
-typedef struct {
-  const CXIdxAttrInfo *attrInfo;
-  const CXIdxEntityInfo *objcClass;
-  CXCursor classCursor;
-  CXIdxLoc classLoc;
-} CXIdxIBOutletCollectionAttrInfo;
-
-typedef struct {
-  const CXIdxEntityInfo *entityInfo;
-  CXCursor cursor;
-  CXIdxLoc loc;
-  const CXIdxContainerInfo *semanticContainer;
-  /**
-   * \brief Generally same as #semanticContainer but can be different in
-   * cases like out-of-line C++ member functions.
-   */
-  const CXIdxContainerInfo *lexicalContainer;
-  int isRedeclaration;
-  int isDefinition;
-  int isContainer;
-  const CXIdxContainerInfo *declAsContainer;
-  /**
-   * \brief Whether the declaration exists in code or was created implicitly
-   * by the compiler, e.g. implicit objc methods for properties.
-   */
-  int isImplicit;
-  const CXIdxAttrInfo *const *attributes;
-  unsigned numAttributes;
-
-  unsigned flags;
-
-} CXIdxDeclInfo;
-
-typedef struct {
-  const CXIdxDeclInfo *declInfo;
-  CXIdxObjCContainerKind kind;
-} CXIdxObjCContainerDeclInfo;
-
-typedef struct {
-  const CXIdxEntityInfo *base;
-  CXCursor cursor;
-  CXIdxLoc loc;
-} CXIdxBaseClassInfo;
-
-typedef struct {
-  const CXIdxEntityInfo *protocol;
-  CXCursor cursor;
-  CXIdxLoc loc;
-} CXIdxObjCProtocolRefInfo;
-
-typedef struct {
-  const CXIdxObjCProtocolRefInfo *const *protocols;
-  unsigned numProtocols;
-} CXIdxObjCProtocolRefListInfo;
-
-typedef struct {
-  const CXIdxObjCContainerDeclInfo *containerInfo;
-  const CXIdxBaseClassInfo *superInfo;
-  const CXIdxObjCProtocolRefListInfo *protocols;
-} CXIdxObjCInterfaceDeclInfo;
-
-typedef struct {
-  const CXIdxObjCContainerDeclInfo *containerInfo;
-  const CXIdxEntityInfo *objcClass;
-  CXCursor classCursor;
-  CXIdxLoc classLoc;
-  const CXIdxObjCProtocolRefListInfo *protocols;
-} CXIdxObjCCategoryDeclInfo;
-
-typedef struct {
-  const CXIdxDeclInfo *declInfo;
-  const CXIdxEntityInfo *getter;
-  const CXIdxEntityInfo *setter;
-} CXIdxObjCPropertyDeclInfo;
-
-typedef struct {
-  const CXIdxDeclInfo *declInfo;
-  const CXIdxBaseClassInfo *const *bases;
-  unsigned numBases;
-} CXIdxCXXClassDeclInfo;
-
-/**
- * \brief Data for IndexerCallbacks#indexEntityReference.
- */
-typedef struct {
-  CXIdxEntityRefKind kind;
-  /**
-   * \brief Reference cursor.
-   */
-  CXCursor cursor;
-  CXIdxLoc loc;
-  /**
-   * \brief The entity that gets referenced.
-   */
-  const CXIdxEntityInfo *referencedEntity;
-  /**
-   * \brief Immediate "parent" of the reference. For example:
-   *
-   * \code
-   * Foo *var;
-   * \endcode
-   *
-   * The parent of reference of type 'Foo' is the variable 'var'.
-   * For references inside statement bodies of functions/methods,
-   * the parentEntity will be the function/method.
-   */
-  const CXIdxEntityInfo *parentEntity;
-  /**
-   * \brief Lexical container context of the reference.
-   */
-  const CXIdxContainerInfo *container;
-} CXIdxEntityRefInfo;
 
 /**
  * \brief A group of callbacks used by #clang_indexSourceFile and

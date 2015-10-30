@@ -1,10 +1,5 @@
 package clang
 
-// Token is a single preprocessing token.
-type Token struct {
-	c C.CXToken
-}
-
 /**
  * \brief Tokenize the source code described by the given range into raw
  * lexical tokens.

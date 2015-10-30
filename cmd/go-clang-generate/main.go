@@ -61,12 +61,30 @@ func addFunction(f *Function, fname string, fnamePrefix string, rt Receiver) boo
 	} else if s, ok := lookupStruct[rt.Type.Name]; ok {
 		f.Name = fnamePrefix + fname
 
-		s.Methods = append(s.Methods, generateASTFunction(f))
+		fStr := generateASTFunction(f)
+		s.Methods = deleteMethod(s.Methods, fname)
+		s.Methods = append(s.Methods, fStr)
 
 		return true
 	}
 
 	return false
+}
+
+func deleteMethod(methods []string, fName string) []string {
+	idx := -1
+	for i, mem := range methods {
+		if strings.Contains(mem, ") "+fName+"()") {
+			idx = i
+		}
+	}
+
+	if idx != -1 {
+		fmt.Println(fName)
+		methods = append(methods[:idx], methods[idx+1:]...)
+	}
+
+	return methods
 }
 
 func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
@@ -90,7 +108,9 @@ func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool 
 		f.Receiver = s.Receiver
 		f.Receiver.Type = rt.Type
 
-		s.Methods = append(s.Methods, generateASTFunction(f))
+		fStr := generateASTFunction(f)
+		s.Methods = deleteMethod(s.Methods, fname)
+		s.Methods = append(s.Methods, fStr)
 
 		return true
 	}
@@ -201,7 +221,8 @@ func main() {
 	clangIndexHeaderFilepath := "./clang-c/Index.h"
 	tu := idx.Parse(clangIndexHeaderFilepath, []string{
 		"-I", ".", // Include current folder
-		"-I", "/usr/local/lib/clang/3.4.2/include/", // Include clang headers TODO make this generic
+		"-I", "/usr/local/lib/clang/3.4.2/include/",
+		"-I", "/usr/include/clang/3.6.2/include/",
 	}, nil, 0)
 	defer tu.Dispose()
 
@@ -371,6 +392,7 @@ func main() {
 				}
 			}
 		}
+
 		if !added {
 			if len(f.Parameters) == 1 && (f.ReturnType.Name == "int" || f.ReturnType.Name == "unsigned int" || f.ReturnType.Name == "long long" || f.ReturnType.Name == "unsigned long long") && isEnumOrStruct(f.Parameters[0].Type.Name) {
 				fname = trimCommonFName(fname, rt)

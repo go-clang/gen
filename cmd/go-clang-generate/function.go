@@ -483,8 +483,9 @@ func generateASTFunction(f *Function) string {
 }
 
 var templateGenerateStructMemberGetter = template.Must(template.New("go-clang-generate-function-getter").Parse(`{{$.Comment}}
-func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() {{if $.Type.PointerLevel}}*{{end}}{{if $.ReturnType.Primitive}}{{$.ReturnType.Primitive}}{{else}}{{$.ReturnType}}{{end}} {
-	return {{if $.Type.PointerLevel}}&{{end}}{{if $.ReturnType.Primitive}}{{$.ReturnType.Primitive}}{{else}}{{$.ReturnType}}{{end}}{{if $.ReturnType.Primitive}}({{if $.Type.PointerLevel}}*{{end}}{{$.Receiver}}.c.{{$.Member}}){{else}}{{"{"}}{{if $.Type.PointerLevel}}*{{end}}{{$.Receiver}}.c.{{$.Member}}{{"}"}}{{end}}
+func ({{$.Receiver.Name}} {{$.Receiver.Type.Name}}) {{$.Name}}() {{if ge $.ReturnType.PointerLevel 1}}*{{end}}{{$.ReturnType.Name}} {
+	value := {{if eq $.ReturnType.Name "bool"}}{{$.Receiver.Name}}.c.{{$.Member}}{{else}}{{$.ReturnType.Name}}{{if $.ReturnType.IsPrimitive}}({{if ge $.ReturnType.PointerLevel 1}}*{{end}}{{$.Receiver.Name}}.c.{{$.Member}}){{else}}{{"{"}}{{if ge $.ReturnType.PointerLevel 1}}*{{end}}{{$.Receiver.Name}}.c.{{$.Member}}{{"}"}}{{end}}{{end}}
+	return {{if eq $.ReturnType.Name "bool"}}value != C.int(0){{else}}{{if ge $.ReturnType.PointerLevel 1}}&{{end}}value{{end}}
 }
 `))
 
@@ -500,21 +501,24 @@ func generateFunctionStructMemberGetter(f *Function) string {
 type FunctionSliceReturn struct {
 	Function
 
+	SizeMember string
+
+	CElementType    string
 	ElementType     string
 	IsPrimitive     bool
 	ArrayDimensions int
+	ArraySize       int64
 }
 
 var templateGenerateReturnSlice = template.Must(template.New("go-clang-generate-slice").Parse(`{{$.Comment}}
-func ({{$.Receiver}} {{$.ReceiverType}}) {{$.Name}}() []{{if eq $.ArrayDimensions 2 }}*{{end}}{{$.ElementType}} {
-	sc := []{{$.ElementType}}{}
-	{{if eq $.ArrayDimensions 2 }}
-	length := int(C.sizeof({{$.Receiver}}.c.{{$.Member}}[0])) / int(sizeof({{$.Receiver}}.c.{{$.Member}}[0][0]))
-	{{else}}
-	length := int(sizeof({{$.Receiver}}.c.{{$.Member}}))
-	{{end}}
+func ({{$.Receiver.Name}} {{$.Receiver.Type.Name}}) {{$.Name}}() []{{if eq $.ArrayDimensions 2 }}*{{end}}{{$.ElementType}} {
+	sc := []{{if eq $.ArrayDimensions 2 }}*{{end}}{{$.ElementType}}{} 
+
+	length := {{if ne $.ArraySize -1}}{{$.ArraySize}}{{else}}int({{$.Receiver.Name}}.c.{{$.SizeMember}}){{end}}
+	goslice := (*[1 << 30]{{if or (eq $.ArrayDimensions 2) (eq $.ElementType "unsafe.Pointer")}}*{{end}}C.{{$.CElementType}})(unsafe.Pointer(&{{$.Receiver.Name}}.c.{{$.Member}}))[:length:length]
+
 	for is := 0; is < length; is++ {
-		sc = append(sc, {{if eq $.ArrayDimensions 2}}&{{$.ElementType}}{{else}}{{$.ElementType}}{{end}}{{if $.IsPrimitive}}({{$.Receiver}}.c.{{$.Member}}[is])){{else}}{"{"}{{$.Receiver}}.c.{{$.Member}}[is]){{"}"}}{{end}}
+		sc = append(sc, {{if eq $.ArrayDimensions 2}}&{{end}}{{$.ElementType}}{{if $.IsPrimitive}}({{if eq $.ArrayDimensions 2}}*{{end}}goslice[is]){{else}}{{"{"}}{{if eq $.ArrayDimensions 2}}*{{end}}goslice[is]{{"}"}}{{end}})
 	}
 
 	return sc
@@ -536,13 +540,11 @@ func generateFunction(name, cname, comment, member string, typ Type) *Function {
 	receiverName := receiverName(receiverType)
 	functionName := upperFirstCharacter(name)
 
-	rType := ""
-	rTypePrimitive := ""
-
 	if typ.IsPrimitive {
-		rTypePrimitive = typ.Name
-	} else {
-		rType = typ.Name
+		typ.Primitive = typ.Name
+	}
+	if (strings.HasPrefix(name, "has") || strings.HasPrefix(name, "is")) && typ.Name == GoInt32 {
+		typ.Name = GoBool
 	}
 
 	f := &Function{
@@ -552,14 +554,7 @@ func generateFunction(name, cname, comment, member string, typ Type) *Function {
 
 		Parameters: []FunctionParameter{},
 
-		ReturnType: Type{
-			Name:      rType,
-			Primitive: rTypePrimitive,
-
-			PointerLevel:  typ.PointerLevel,
-			IsEnumLiteral: typ.IsEnumLiteral,
-		},
-
+		ReturnType: typ,
 		Receiver: Receiver{
 			Name: receiverName,
 			Type: Type{

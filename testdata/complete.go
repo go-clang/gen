@@ -62,34 +62,12 @@ func (cc CompletionChunk) String() string {
 }
 
 /**
- * \brief A single result of code completion.
- */
-type CompletionResult struct {
-	/**
-	 * \brief The kind of entity that this completion refers to.
-	 *
-	 * The cursor kind will be a macro, keyword, or a declaration (one of the
-	 * *Decl cursor kinds), describing the entity that the completion is
-	 * referring to.
-	 *
-	 * \todo In the future, we would like to provide a full cursor, to allow
-	 * the client to extract additional information from declaration.
-	 */
-	CursorKind CursorKind
-	/**
-	 * \brief The code-completion string that describes how to insert this
-	 * code-completion result into the editing buffer.
-	 */
-	CompletionString CompletionString
-}
-
-/**
- * \brief Contains the results of code-completion.
- *
- * This data structure contains the results of code completion, as
- * produced by \c clang_codeCompleteAt(). Its contents must be freed by
- * \c clang_disposeCodeCompleteResults.
- */
+- * \brief Contains the results of code-completion.
+- *
+- * This data structure contains the results of code completion, as
+- * produced by \c clang_codeCompleteAt(). Its contents must be freed by
+- * \c clang_disposeCodeCompleteResults.
+- */
 type CodeCompleteResults struct {
 	c *C.CXCodeCompleteResults
 }
