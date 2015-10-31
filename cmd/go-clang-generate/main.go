@@ -166,7 +166,7 @@ func main() {
 		exitWithFatal("Cannot determine LLVM version", err)
 	}
 
-	matchLLVMVersion := regexp.MustCompile(`^(\d+)\.(\d+)\.(\d+)`).FindSubmatch(rawLLVMVersion)
+	matchLLVMVersion := regexp.MustCompile(`^(\d+)\.(\d+)(?:\.(\d+))?`).FindSubmatch(rawLLVMVersion)
 	if matchLLVMVersion == nil {
 		exitWithFatal("Cannot parse LLVM version", nil)
 	}

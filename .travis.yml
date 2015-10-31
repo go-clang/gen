@@ -1,0 +1,52 @@
+language: go
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - clang-3.4
+      - libclang1-3.4
+      - libclang-3.4-dev
+
+install:
+  - sudo ln -s /usr/lib/x86_64-linux-gnu/libclang.so.1 /usr/lib/x86_64-linux-gnu/libclang.so
+  - sudo ldconfig
+
+  # Install dependencies
+  - CGO_CFLAGS="-I`llvm-config --includedir`" CGO_LDFLAGS="-L`llvm-config --libdir`" go get -u github.com/sbinet/go-clang/...
+  - go get -u github.com/termie/go-shutil/...
+
+  # Install linting tools
+  - go get -u golang.org/x/tools/cmd/vet/...
+  - go get -u github.com/golang/lint/...
+  - go get -u github.com/kisielk/errcheck/...
+
+  # Install code coverage tools
+  - go get -u golang.org/x/tools/cmd/cover/...
+  - go get -u github.com/onsi/ginkgo/ginkgo/...
+  - go get -u github.com/modocache/gover/...
+  - go get -u github.com/mattn/goveralls/...
+
+  # Build all test imports
+  - CGO_CFLAGS="-I`llvm-config --includedir`" CGO_LDFLAGS="-L`llvm-config --libdir`" go test -i ./...
+
+script:
+  # Install the project
+  - make install
+
+  # Linting
+  - make lint
+
+  # Do tests and code coverage
+  - ginkgo -r -cover -skipPackage="testdata"
+  - gover
+  - if [ "$TRAVIS_SECURE_ENV_VARS" = "true" ]; then goveralls -coverprofile=gover.coverprofile -service=travis-ci -repotoken $COVERALLS_TOKEN; fi
+
+  # Make sure that everything generated really builds
+  - make generate
+  - make install
+
+env:
+  # Coveralls.io
+  secure: "CpykVeovpEr/z1RdDJ8GFammwq3hUIXXNj51Qp7aemPEOcZlbkI+1ChmeDwqDhBa++06ixwNN7RRPG2Jo+3L1jc053ugtWxlQzfFUZKeyTlCHWS48Xq+VfMIxAaa4Bc3cbQGF3EZgSAPJ7GqrtMlJmCIgGW02VHO+rUX/UOoCFyJ9ToRfoMALr7Mr83Uwhzy9Sgx2dMEXCgNfboWH30jGTKhLUbtCBcMg45NK+EGKI/VQThCTRGtTFTtIT3JdhB53M+P8WvKVLv04VFT5xJrlHg6pToL+cRDXb7GbHaYeaZH+gOPEhBL2r+BrHcsgJVRH6YtrV12x5dUX+ltgJuuPOk514q28GQHNM36mCJ22Yf8QQx49hb8fXHmyufA+3BDvpG2GrN9JD0VlsWPi6TlElWoF8nU/Lbk53te5+6ACopvXkAPJpZsIyRw+pLNEpIyrE72qzQGTCc+2a71leVidG75Q+4X26dtoKE4v10NkyxCgM7rbmaV2m/QytefErOS15vNrRAnO/Xiurp/ZwSbCbFm+1CUs0cLIL46VmnlN+A/lOqZpbZyp32a/jb/pTHqEBira/rQ4F1lTMeBl8S0Ebq6f/qUezMSso9dPGujlcaSM8Mi4Z907L8P3TkTqptofS9OO+Og1hIc45/JURm4xsSE3TrhjYY9qVmhbPK10Ro="
