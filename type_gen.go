@@ -17,19 +17,6 @@ func (t Type) Kind() TypeKind {
 	return value
 }
 
-func (t Type) Data() []unsafe.Pointer {
-	sc := []unsafe.Pointer{}
-
-	length := 2
-	goslice := (*[1 << 30]*C.void)(unsafe.Pointer(&t.c.data))[:length:length]
-
-	for is := 0; is < length; is++ {
-		sc = append(sc, unsafe.Pointer(goslice[is]))
-	}
-
-	return sc
-}
-
 // Pretty-print the underlying type using the rules of the language of the translation unit from which it came. If the type is invalid, an empty string is returned.
 func (t Type) Spelling() string {
 	o := cxstring{C.clang_getTypeSpelling(t.c)}
