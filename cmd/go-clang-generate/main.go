@@ -503,6 +503,8 @@ func main() {
 
 			if !added {
 				if len(f.Parameters) == 0 {
+					f.Name = upperFirstCharacter(f.Name)
+
 					clangFile.Functions = append(clangFile.Functions, generateASTFunction(f))
 
 					added = true
