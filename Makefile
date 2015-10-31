@@ -13,9 +13,7 @@ generate:
 install:
 	CGO_CFLAGS="-I`llvm-config --includedir`" CGO_LDFLAGS="-L`llvm-config --libdir`" go install ./...
 lint: install
-	errcheck ./... 2>&1 | grep --invert-match -P "(_gen.go|/testdata/)" || true
-	golint ./... 2>&1 | grep --invert-match -P "(_gen.go|/testdata/|_string.go:)" || true
-	go tool vet -all=true -v=true $(ROOT_DIR)/ 2>&1 | grep --invert-match -P "(_gen.go|/testdata/|Checking file|\%p of wrong type|can't check non-constant format)" || true
+	scripts/lint.sh
 test:
 	CGO_CFLAGS="-I`llvm-config --includedir`" CGO_LDFLAGS="-L`llvm-config --libdir`" go test -timeout 60s -race ./...
 test-verbose:

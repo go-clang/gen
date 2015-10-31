@@ -6,6 +6,7 @@ import (
 	"github.com/sbinet/go-clang"
 )
 
+// Defines all available Go types
 const (
 	GoByte      = "byte"
 	GoInt8      = "int8"
@@ -21,7 +22,10 @@ const (
 	GoBool      = "bool"
 	GoInterface = "interface"
 	GoPointer   = "unsafe.Pointer"
+)
 
+// Defines all available C types
+const (
 	CChar      = "char"
 	CSChar     = "schar"
 	CUChar     = "uchar"
@@ -37,6 +41,7 @@ const (
 	CDouble    = "double"
 )
 
+// Type represents a generation type
 type Type struct {
 	CName   string
 	CGoName string

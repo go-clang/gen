@@ -9,6 +9,7 @@ import (
 	"github.com/sbinet/go-clang"
 )
 
+// Enum represents a generation enum
 type Enum struct {
 	Name           string
 	CName          string
@@ -24,6 +25,7 @@ type Enum struct {
 	Methods []string
 }
 
+// Enumerator represents a generation enum item
 type Enumerator struct {
 	Name    string
 	CName   string
