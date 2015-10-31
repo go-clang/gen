@@ -1,5 +1,6 @@
 package phoenix
 
+/* TODO
 import (
 	"strings"
 	"testing"
@@ -7,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-/*
 func TestDiagnostics(t *testing.T) {
 	idx := NewIndex(0, 0)
 	defer idx.Dispose()
