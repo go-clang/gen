@@ -13,7 +13,7 @@ func defaultDiagnosticDisplayOptions() uint16 {
 }
 
 // Retrieve the name of a particular diagnostic category. This is now deprecated. Use clang_getDiagnosticCategoryText() instead. \param Category A diagnostic category number, as returned by \c clang_getDiagnosticCategory(). \returns The name of the given diagnostic category.
-func getDiagnosticCategoryName(Category uint16) string {
+func GetDiagnosticCategoryName(Category uint16) string {
 	o := cxstring{C.clang_getDiagnosticCategoryName(C.uint(Category))}
 	defer o.Dispose()
 
@@ -26,7 +26,7 @@ func defaultEditingTranslationUnitOptions() uint16 {
 }
 
 // Construct a USR for a specified Objective-C class.
-func constructUSR_ObjCClass(class_name string) string {
+func ConstructUSR_ObjCClass(class_name string) string {
 	c_class_name := C.CString(class_name)
 	defer C.free(unsafe.Pointer(c_class_name))
 
@@ -37,7 +37,7 @@ func constructUSR_ObjCClass(class_name string) string {
 }
 
 // Construct a USR for a specified Objective-C category.
-func constructUSR_ObjCCategory(class_name string, category_name string) string {
+func ConstructUSR_ObjCCategory(class_name string, category_name string) string {
 	c_class_name := C.CString(class_name)
 	defer C.free(unsafe.Pointer(c_class_name))
 	c_category_name := C.CString(category_name)
@@ -50,7 +50,7 @@ func constructUSR_ObjCCategory(class_name string, category_name string) string {
 }
 
 // Construct a USR for a specified Objective-C protocol.
-func constructUSR_ObjCProtocol(protocol_name string) string {
+func ConstructUSR_ObjCProtocol(protocol_name string) string {
 	c_protocol_name := C.CString(protocol_name)
 	defer C.free(unsafe.Pointer(c_protocol_name))
 
@@ -61,7 +61,7 @@ func constructUSR_ObjCProtocol(protocol_name string) string {
 }
 
 // Construct a USR for a specified Objective-C instance variable and the USR for its containing class.
-func constructUSR_ObjCIvar(name string, classUSR cxstring) string {
+func ConstructUSR_ObjCIvar(name string, classUSR cxstring) string {
 	c_name := C.CString(name)
 	defer C.free(unsafe.Pointer(c_name))
 
@@ -72,7 +72,7 @@ func constructUSR_ObjCIvar(name string, classUSR cxstring) string {
 }
 
 // Construct a USR for a specified Objective-C method and the USR for its containing class.
-func constructUSR_ObjCMethod(name string, isInstanceMethod uint16, classUSR cxstring) string {
+func ConstructUSR_ObjCMethod(name string, isInstanceMethod uint16, classUSR cxstring) string {
 	c_name := C.CString(name)
 	defer C.free(unsafe.Pointer(c_name))
 
@@ -83,7 +83,7 @@ func constructUSR_ObjCMethod(name string, isInstanceMethod uint16, classUSR cxst
 }
 
 // Construct a USR for a specified Objective-C property and the USR for its containing class.
-func constructUSR_ObjCProperty(property string, classUSR cxstring) string {
+func ConstructUSR_ObjCProperty(property string, classUSR cxstring) string {
 	c_property := C.CString(property)
 	defer C.free(unsafe.Pointer(c_property))
 
@@ -111,6 +111,6 @@ func getClangVersion() string {
 }
 
 // Enable/disable crash recovery. \param isEnabled Flag to indicate if crash recovery is enabled. A non-zero value enables crash recovery, while 0 disables it.
-func toggleCrashRecovery(isEnabled uint16) {
+func ToggleCrashRecovery(isEnabled uint16) {
 	C.clang_toggleCrashRecovery(C.uint(isEnabled))
 }
