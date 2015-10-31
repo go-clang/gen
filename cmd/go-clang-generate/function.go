@@ -11,6 +11,7 @@ import (
 	"github.com/sbinet/go-clang"
 )
 
+// Function represents a generation function
 type Function struct {
 	Name    string
 	CName   string
@@ -24,6 +25,7 @@ type Function struct {
 	Member string
 }
 
+// FunctionParameter represents a generation function parameter
 type FunctionParameter struct {
 	Name  string
 	CName string
@@ -730,6 +732,7 @@ func generateFunctionStructMemberGetter(f *Function) string {
 	return b.String()
 }
 
+// FunctionSliceReturn TODO refactor
 type FunctionSliceReturn struct {
 	Function
 

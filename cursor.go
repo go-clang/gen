@@ -6,7 +6,8 @@ import (
 	"unsafe"
 )
 
-/**
+/* CursorVisitor does the following.
+ *
  * \brief Visitor invoked for each cursor found by a traversal.
  *
  * This visitor function will be invoked for each cursor found by
@@ -21,6 +22,7 @@ import (
 type CursorVisitor func(cursor, parent Cursor) (status ChildVisitResult)
 
 //export GoClangCursorVisitor
+// GoClangCursorVisitor calls the cursor visitor
 func GoClangCursorVisitor(cursor C.CXCursor, parent C.CXCursor, cfct unsafe.Pointer) (status ChildVisitResult) {
 	fct := *(*CursorVisitor)(cfct)
 
@@ -33,7 +35,8 @@ func GoClangCursorVisitor(cursor C.CXCursor, parent C.CXCursor, cfct unsafe.Poin
 // Explained by rsc in https://golang.org/issue/9125
 var forceEscapeVisitor *CursorVisitor
 
-/**
+/* Visitor does the following.
+ *
  * \brief Visit the children of a particular cursor.
  *
  * This function visits all the direct children of the given cursor,

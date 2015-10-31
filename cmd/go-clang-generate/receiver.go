@@ -4,6 +4,7 @@ import (
 	"unicode"
 )
 
+// Receiver TODO refactor
 type Receiver struct {
 	Name  string
 	CName string

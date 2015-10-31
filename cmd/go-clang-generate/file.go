@@ -7,6 +7,7 @@ import (
 	"text/template"
 )
 
+// File represents a generation file
 type File struct {
 	Name string
 

@@ -9,6 +9,7 @@ import (
 	"github.com/sbinet/go-clang"
 )
 
+// FunctionParameter represents a generation struct
 type Struct struct {
 	Name           string
 	CName          string

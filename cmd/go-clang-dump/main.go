@@ -13,7 +13,7 @@ import (
 	"github.com/zimmski/go-clang-phoenix"
 )
 
-var fname *string = flag.String("fname", "", "the file to analyze")
+var fname = flag.String("fname", "", "the file to analyze")
 
 func main() {
 	fmt.Printf(":: go-clang-dump...\n")
@@ -46,8 +46,7 @@ func main() {
 	fmt.Printf("cursor: %s\n", cursor.Spelling())
 	fmt.Printf("cursor-kind: %s\n", cursor.Kind().Spelling())
 
-	tu_fname := tu.File(*fname).Name()
-	fmt.Printf("tu-fname: %s\n", tu_fname)
+	fmt.Printf("tu-fname: %s\n", tu.File(*fname).Name())
 
 	fct := func(cursor, parent phoenix.Cursor) phoenix.ChildVisitResult {
 		if cursor.IsNull() {
