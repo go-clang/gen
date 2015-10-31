@@ -33,8 +33,8 @@ func (pa PlatformAvailability) Obsoleted() Version {
 }
 
 // Whether the entity is unconditionally unavailable on this platform.
-func (pa PlatformAvailability) Unavailable() int32 {
-	value := int32(pa.c.Unavailable)
+func (pa PlatformAvailability) Unavailable() int16 {
+	value := int16(pa.c.Unavailable)
 	return value
 }
 

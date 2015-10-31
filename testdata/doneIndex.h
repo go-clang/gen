@@ -27,16 +27,6 @@ struct CXUnsavedFile {
 
 
 /**
- * \brief Retrieve the unique ID for the given \c file.
- *
- * \param file the file to get the ID for.
- * \param outID stores the returned CXFileUniqueID.
- * \returns If there was a failure getting the unique ID, returns non-zero,
- * otherwise returns 0.
-*/
-int clang_getFileUniqueID(CXFile file, CXFileUniqueID *outID);
-
-/**
  * \brief Retrieve a file handle within the given translation unit.
  *
  * \param tu the translation unit
@@ -48,151 +38,6 @@ int clang_getFileUniqueID(CXFile file, CXFileUniqueID *outID);
  */
 CXFile clang_getFile(CXTranslationUnit tu,
                                     const char *file_name);
-
-
-/**
- * \brief Retrieve the file, line, column, and offset represented by
- * the given source location.
- *
- * If the location refers into a macro expansion, retrieves the
- * location of the macro expansion.
- *
- * \param location the location within a source file that will be decomposed
- * into its parts.
- *
- * \param file [out] if non-NULL, will be set to the file to which the given
- * source location points.
- *
- * \param line [out] if non-NULL, will be set to the line to which the given
- * source location points.
- *
- * \param column [out] if non-NULL, will be set to the column to which the given
- * source location points.
- *
- * \param offset [out] if non-NULL, will be set to the offset into the
- * buffer to which the given source location points.
- */
-void clang_getExpansionLocation(CXSourceLocation location,
-                                               CXFile *file,
-                                               unsigned *line,
-                                               unsigned *column,
-                                               unsigned *offset);
-
-/**
- * \brief Retrieve the file, line, column, and offset represented by
- * the given source location, as specified in a # line directive.
- *
- * Example: given the following source code in a file somefile.c
- *
- * \code
- * #123 "dummy.c" 1
- *
- * static int func(void)
- * {
- *     return 0;
- * }
- * \endcode
- *
- * the location information returned by this function would be
- *
- * File: dummy.c Line: 124 Column: 12
- *
- * whereas clang_getExpansionLocation would have returned
- *
- * File: somefile.c Line: 3 Column: 12
- *
- * \param location the location within a source file that will be decomposed
- * into its parts.
- *
- * \param filename [out] if non-NULL, will be set to the filename of the
- * source location. Note that filenames returned will be for "virtual" files,
- * which don't necessarily exist on the machine running clang - e.g. when
- * parsing preprocessed output obtained from a different environment. If
- * a non-NULL value is passed in, remember to dispose of the returned value
- * using \c clang_disposeString() once you've finished with it. For an invalid
- * source location, an empty string is returned.
- *
- * \param line [out] if non-NULL, will be set to the line number of the
- * source location. For an invalid source location, zero is returned.
- *
- * \param column [out] if non-NULL, will be set to the column number of the
- * source location. For an invalid source location, zero is returned.
- */
-void clang_getPresumedLocation(CXSourceLocation location,
-                                              CXString *filename,
-                                              unsigned *line,
-                                              unsigned *column);
-
-/**
- * \brief Legacy API to retrieve the file, line, column, and offset represented
- * by the given source location.
- *
- * This interface has been replaced by the newer interface
- * #clang_getExpansionLocation(). See that interface's documentation for
- * details.
- */
-void clang_getInstantiationLocation(CXSourceLocation location,
-                                                   CXFile *file,
-                                                   unsigned *line,
-                                                   unsigned *column,
-                                                   unsigned *offset);
-
-/**
- * \brief Retrieve the file, line, column, and offset represented by
- * the given source location.
- *
- * If the location refers into a macro instantiation, return where the
- * location was originally spelled in the source file.
- *
- * \param location the location within a source file that will be decomposed
- * into its parts.
- *
- * \param file [out] if non-NULL, will be set to the file to which the given
- * source location points.
- *
- * \param line [out] if non-NULL, will be set to the line to which the given
- * source location points.
- *
- * \param column [out] if non-NULL, will be set to the column to which the given
- * source location points.
- *
- * \param offset [out] if non-NULL, will be set to the offset into the
- * buffer to which the given source location points.
- */
-void clang_getSpellingLocation(CXSourceLocation location,
-                                              CXFile *file,
-                                              unsigned *line,
-                                              unsigned *column,
-                                              unsigned *offset);
-
-/**
- * \brief Retrieve the file, line, column, and offset represented by
- * the given source location.
- *
- * If the location refers into a macro expansion, return where the macro was
- * expanded or where the macro argument was written, if the location points at
- * a macro argument.
- *
- * \param location the location within a source file that will be decomposed
- * into its parts.
- *
- * \param file [out] if non-NULL, will be set to the file to which the given
- * source location points.
- *
- * \param line [out] if non-NULL, will be set to the line to which the given
- * source location points.
- *
- * \param column [out] if non-NULL, will be set to the column to which the given
- * source location points.
- *
- * \param offset [out] if non-NULL, will be set to the offset into the
- * buffer to which the given source location points.
- */
-void clang_getFileLocation(CXSourceLocation location,
-                                          CXFile *file,
-                                          unsigned *line,
-                                          unsigned *column,
-                                          unsigned *offset);
 
 /**
  * \brief Deserialize a set of diagnostics from a Clang diagnostics bitcode
@@ -210,30 +55,6 @@ void clang_getFileLocation(CXSourceLocation location,
 CXDiagnosticSet clang_loadDiagnostics(const char *file,
                                                   enum CXLoadDiag_Error *error,
                                                   CXString *errorString);
-
-/**
- * \brief Retrieve the set of display options most similar to the
- * default behavior of the clang compiler.
- *
- * \returns A set of display options suitable for use with \c
- * clang_formatDiagnostic().
- */
-unsigned clang_defaultDiagnosticDisplayOptions(void);
-
-/**
- * \brief Retrieve the name of the command-line option that enabled this
- * diagnostic.
- *
- * \param Diag The diagnostic to be queried.
- *
- * \param Disable If non-NULL, will be set to the option that disables this
- * diagnostic (if any).
- *
- * \returns A string that contains the command-line option used to enable this
- * warning, such as "-Wconversion" or "-pedantic".
- */
-CXString clang_getDiagnosticOption(CXDiagnostic Diag,
-                                                  CXString *Disable);
 
 /**
  * \brief Retrieve the replacement information for a given fix-it.
@@ -317,20 +138,6 @@ CXTranslationUnit clang_createTranslationUnitFromSourceFile(
                                    const char * const *clang_command_line_args,
                                          unsigned num_unsaved_files,
                                          struct CXUnsavedFile *unsaved_files);
-
-/**
- * \brief Returns the set of flags that is suitable for parsing a translation
- * unit that is being edited.
- *
- * The set of flags returned provide options for \c clang_parseTranslationUnit()
- * to indicate that the translation unit is likely to be reparsed many times,
- * either explicitly (via \c clang_reparseTranslationUnit()) or implicitly
- * (e.g., by code completion (\c clang_codeCompletionAt())). The returned flag
- * set contains an unspecified set of optimizations (e.g., the precompiled
- * preamble) geared toward improving the performance of these routines. The
- * set of optimizations enabled may change from one version to the next.
- */
-unsigned clang_defaultEditingTranslationUnitOptions(void);
 
 /**
  * \brief Parse the given source file and the translation unit corresponding
@@ -424,7 +231,6 @@ int clang_reparseTranslationUnit(CXTranslationUnit TU,
                                                 unsigned num_unsaved_files,
                                           struct CXUnsavedFile *unsaved_files,
                                                 unsigned options);
-
 
 
 
@@ -574,6 +380,7 @@ typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor,
 unsigned clang_visitChildren(CXCursor parent,
                                             CXCursorVisitor visitor,
                                             CXClientData client_data);
+
 #ifdef __has_feature
 #  if __has_feature(blocks)
 /**
@@ -666,7 +473,6 @@ void clang_getDefinitionSpellingAndExtent(CXCursor,
                                           unsigned *startColumn,
                                           unsigned *endLine,
                                           unsigned *endColumn);
-void clang_enableStackTraces(void);
 void clang_executeOnThread(void (*fn)(void*), void *user_data,
                                           unsigned stack_size);
 
@@ -696,6 +502,7 @@ clang_getCompletionParent(CXCompletionString completion_string,
  * passed to\c clang_codeCompleteAt().
  */
 unsigned clang_defaultCodeCompleteOptions(void);
+
 
 /**
  * \brief Perform code completion at a given location in a translation unit.
@@ -863,12 +670,6 @@ CXString clang_codeCompleteGetContainerUSR(CXCodeCompleteResults *Results);
  */
 CXString clang_codeCompleteGetObjCSelector(CXCodeCompleteResults *Results);
 
-/**
- * \brief Return a version string, suitable for showing to a user, but not
- *        intended to be parsed (the format is not guaranteed to be stable).
- */
-CXString clang_getClangVersion(void);
-
  /**
   * \brief Visitor invoked for each file in a translation unit
   *        (used with clang_getInclusions()).
@@ -907,7 +708,6 @@ void clang_getInclusions(CXTranslationUnit tu,
  */
 CXRemapping clang_getRemappingsFromFileList(const char **filePaths,
                                             unsigned numFiles);
-
 /**
  * \brief Get the original and the associated filename from the remapping.
  *
@@ -918,7 +718,6 @@ CXRemapping clang_getRemappingsFromFileList(const char **filePaths,
  */
 void clang_remap_getFilenames(CXRemapping, unsigned index,
                                      CXString *original, CXString *transformed);
-
 
 typedef enum {
   /**
@@ -1112,19 +911,4 @@ int clang_indexTranslationUnit(CXIndexAction,
                                               unsigned index_callbacks_size,
                                               unsigned index_options,
                                               CXTranslationUnit);
-
-/**
- * \brief Retrieve the CXIdxFile, file, line, column, and offset represented by
- * the given CXIdxLoc.
- *
- * If the location refers into a macro expansion, retrieves the
- * location of the macro expansion and if it refers into a macro argument
- * retrieves the location of the argument.
- */
-void clang_indexLoc_getFileLocation(CXIdxLoc loc,
-                                                   CXIdxClientFile *indexFile,
-                                                   CXFile *file,
-                                                   unsigned *line,
-                                                   unsigned *column,
-                                                   unsigned *offset);
 

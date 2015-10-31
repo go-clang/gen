@@ -17,19 +17,6 @@ func (t Type) Kind() TypeKind {
 	return value
 }
 
-func (t Type) Data() []unsafe.Pointer {
-	sc := []unsafe.Pointer{}
-
-	length := 2
-	goslice := (*[1 << 30]*C.void)(unsafe.Pointer(&t.c.data))[:length:length]
-
-	for is := 0; is < length; is++ {
-		sc = append(sc, unsafe.Pointer(goslice[is]))
-	}
-
-	return sc
-}
-
 // Pretty-print the underlying type using the rules of the language of the translation unit from which it came. If the type is invalid, an empty string is returned.
 func (t Type) Spelling() string {
 	o := cxstring{C.clang_getTypeSpelling(t.c)}
@@ -92,8 +79,8 @@ func (t Type) ResultType() Type {
 }
 
 // Retrieve the number of non-variadic arguments associated with a function type. If a non-function type is passed in, -1 is returned.
-func (t Type) NumArgTypes() uint16 {
-	return uint16(C.clang_getNumArgTypes(t.c))
+func (t Type) NumArgTypes() int16 {
+	return int16(C.clang_getNumArgTypes(t.c))
 }
 
 // Retrieve the type of an argument of a function type. If a non-function type is passed in or the function does not have enough parameters, an invalid type is returned.

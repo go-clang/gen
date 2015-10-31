@@ -159,19 +159,3 @@ func (cmd CompileCommand) GetArg(idx int) string {
 	defer c_str.Dispose()
 	return c_str.String()
 }
-
-// /**
-//  * \brief Get the number of source mappings for the compiler invocation.
-//  */
-// func (cmd CompileCommand) GetNumMappedSources() int {
-// 	return int(C.clang_CompileCommand_getNumMappedSources(cmd.c))
-// }
-
-// /**
-//  * \brief Get the I'th mapped source path for the compiler invocation.
-//  */
-// func (cmd CompileCommand) GetMappedSourcePath(idx int) string {
-// 	c_str := cxstring{C.clang_CompileCommand_getMappedSourcePath(cmd.c, C.unsigned(idx))}
-// 	defer c_str.Dispose()
-// 	return c_str.String()
-// }

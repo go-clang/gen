@@ -20,7 +20,12 @@ var structs []*Struct
 
 var lookupEnum = map[string]*Enum{}
 var lookupNonTypedefs = map[string]string{}
-var lookupStruct = map[string]*Struct{}
+var lookupStruct = map[string]*Struct{
+	"cxstring": &Struct{
+		Name:  "cxstring",
+		CName: "CXString",
+	},
+}
 
 func trimCommonFName(fname string, rt Receiver) string {
 	fname = strings.TrimPrefix(fname, "create")
@@ -28,9 +33,9 @@ func trimCommonFName(fname string, rt Receiver) string {
 
 	fname = trimClangPrefix(fname)
 
-	if fn := strings.TrimPrefix(fname, rt.Type.Name+"_"); len(fn) != len(fname) {
+	if fn := strings.TrimPrefix(fname, rt.Type.GoName+"_"); len(fn) != len(fname) {
 		fname = fn
-	} else if fn := strings.TrimPrefix(fname, rt.Type.Name); len(fn) != len(fname) {
+	} else if fn := strings.TrimPrefix(fname, rt.Type.GoName); len(fn) != len(fname) {
 		fname = fn
 	} else if fn := strings.TrimSuffix(fname, rt.CName); len(fn) != len(fname) {
 		fname = fn
@@ -43,7 +48,7 @@ func trimCommonFName(fname string, rt Receiver) string {
 
 	// If the function name is empty at this point, it is a constructor
 	if fname == "" {
-		fname = rt.Type.Name
+		fname = rt.Type.GoName
 	}
 
 	return fname
@@ -52,13 +57,13 @@ func trimCommonFName(fname string, rt Receiver) string {
 func addFunction(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 	fname = upperFirstCharacter(fname)
 
-	if e, ok := lookupEnum[rt.Type.Name]; ok {
+	if e, ok := lookupEnum[rt.Type.GoName]; ok {
 		f.Name = fnamePrefix + fname
 
 		e.Methods = append(e.Methods, generateASTFunction(f))
 
 		return true
-	} else if s, ok := lookupStruct[rt.Type.Name]; ok {
+	} else if s, ok := lookupStruct[rt.Type.GoName]; ok && s.CName != "CXString" {
 		f.Name = fnamePrefix + fname
 
 		fStr := generateASTFunction(f)
@@ -94,7 +99,7 @@ func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool 
 		fname = "TranslationUnitCursor"
 	}
 
-	if e, ok := lookupEnum[rt.Type.Name]; ok {
+	if e, ok := lookupEnum[rt.Type.GoName]; ok {
 		f.Name = fnamePrefix + fname
 		f.Receiver = e.Receiver
 		f.Receiver.Type = rt.Type
@@ -102,7 +107,7 @@ func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool 
 		e.Methods = append(e.Methods, generateASTFunction(f))
 
 		return true
-	} else if s, ok := lookupStruct[rt.Type.Name]; ok {
+	} else if s, ok := lookupStruct[rt.Type.GoName]; ok && s.CName != "CXString" {
 		f.Name = fnamePrefix + fname
 		f.Receiver = s.Receiver
 		f.Receiver.Type = rt.Type
@@ -118,7 +123,7 @@ func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool 
 }
 
 func addBasicMethods(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
-	if len(f.Parameters) == 0 && isEnumOrStruct(f.ReturnType.Name) {
+	if len(f.Parameters) == 0 && isEnumOrStruct(f.ReturnType.GoName) {
 		fname = trimCommonFName(fname, rt)
 		if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
 			fname = "New" + fname
@@ -126,18 +131,18 @@ func addBasicMethods(f *Function, fname string, fnamePrefix string, rt Receiver)
 
 		return addMethod(f, fname, fnamePrefix, rt)
 	} else if (fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3]))) {
-		f.ReturnType.Name = "bool"
+		f.ReturnType.GoName = "bool"
 
 		return addMethod(f, fname, fnamePrefix, rt)
-	} else if len(f.Parameters) == 1 && isEnumOrStruct(f.Parameters[0].Type.Name) && strings.HasPrefix(fname, "dispose") && f.ReturnType.Name == "void" {
+	} else if len(f.Parameters) == 1 && isEnumOrStruct(f.Parameters[0].Type.GoName) && strings.HasPrefix(fname, "dispose") && f.ReturnType.GoName == "void" {
 		fname = "Dispose"
 
 		return addMethod(f, fname, fnamePrefix, rt)
-	} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && isEnumOrStruct(f.Parameters[0].Type.Name) && f.Parameters[0].Type == f.Parameters[1].Type {
-		f.Parameters[0].Name = receiverName(f.Parameters[0].Type.Name)
+	} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && isEnumOrStruct(f.Parameters[0].Type.GoName) && f.Parameters[0].Type == f.Parameters[1].Type {
+		f.Parameters[0].Name = receiverName(f.Parameters[0].Type.GoName)
 		f.Parameters[1].Name = f.Parameters[0].Name + "2"
 
-		f.ReturnType.Name = "bool"
+		f.ReturnType.GoName = "bool"
 
 		return addMethod(f, fname, fnamePrefix, rt)
 	}
@@ -213,11 +218,46 @@ func main() {
 		}
 	}
 
+	clangIndexHeaderFilepath := "./clang-c/Index.h"
+
+	/*
+		Hide all "void *" fields of structs by replacing the type with "uintptr_t".
+
+		To paraphrase the original go-clang source code:
+			Not hiding these fields confuses the Go GC during garbage collection and
+			pointer scanning, making it think the heap/stack has been somehow corrupted.
+
+		I do not know how the original author debugged this, but one thing: Thank you!
+	*/
+	findStructsRe := regexp.MustCompile(`(?s)struct[\s\w]+{.+?}`)
+	f, err := ioutil.ReadFile(clangIndexHeaderFilepath)
+	if err != nil {
+		exitWithFatal("Cannot read Index.h", nil)
+	}
+	voidPointerReplacements := map[string]string{}
+	findVoidPointerRe := regexp.MustCompile(`(?:const\s+)?void\s*\*\s*(\w+(\[\d+\])?;)`)
+	for _, s := range findStructsRe.FindAll(f, -1) {
+		s2 := findVoidPointerRe.ReplaceAll(s, []byte("uintptr_t $1"))
+		if len(s) != len(s2) {
+			voidPointerReplacements[string(s)] = string(s2)
+		}
+	}
+	fs := string(f)
+	for s, r := range voidPointerReplacements {
+		fs = strings.Replace(fs, s, r, -1)
+	}
+	if incl := "#include <stdint.h>"; !strings.HasPrefix(fs, incl) {
+		fs = "#include <stdint.h>\n\n" + fs
+	}
+	err = ioutil.WriteFile(clangIndexHeaderFilepath, []byte(fs), 0700)
+	if err != nil {
+		exitWithFatal("Cannot write Index.h", nil)
+	}
+
 	// Parse clang-c's Index.h to analyse everything we need to know
 	idx := clang.NewIndex(0, 1)
 	defer idx.Dispose()
 
-	clangIndexHeaderFilepath := "./clang-c/Index.h"
 	tu := idx.Parse(clangIndexHeaderFilepath, []string{
 		"-I", ".", // Include current folder
 		"-I", "/usr/local/lib/clang/3.4.2/include/",
@@ -237,6 +277,18 @@ func main() {
 			exitWithFatal("Diagnostic fatal in Index.h", errors.New(diag.Spelling()))
 		}
 	}
+
+	/*
+		TODO mark the enum
+			typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor, CXCursor parent, CXClientData client_data);
+		as manually implemented
+	*/
+
+	/*
+		TODO mark the function
+			unsigned clang_visitChildren(CXCursor parent, CXCursorVisitor visitor, CXClientData client_data);
+		as manually implemented
+	*/
 
 	cursor := tu.ToCursor()
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
@@ -331,104 +383,135 @@ func main() {
 	for _, f := range functions {
 		fname := f.Name
 
+		// Prepare the parameters
 		for i := range f.Parameters {
 			p := &f.Parameters[i]
 
-			if n, ok := lookupNonTypedefs[p.Type.Name]; ok {
-				p.Type.Name = n
+			if n, ok := lookupNonTypedefs[p.Type.CGoName]; ok {
+				p.Type.GoName = n
 			}
-			if e, ok := lookupEnum[p.Type.Name]; ok {
+			if e, ok := lookupEnum[p.Type.GoName]; ok {
 				p.CName = e.Receiver.CName
-				p.Type = e.Receiver.Type
-			} else if _, ok := lookupStruct[p.Type.Name]; ok {
-			} else {
-				if goType, primitiveType := goAndTypePrimitive(p.Type.Name); goType != "" {
-					p.Type.Name = goType
-					p.Type.Primitive = primitiveType
-				}
+				// TODO remove the receiver... and copy only names here to preserve the original pointers and so
+				p.Type.GoName = e.Receiver.Type.GoName
+				p.Type.CGoName = e.Receiver.Type.CGoName
+				p.Type.CGoName = e.Receiver.Type.CGoName
+			} else if _, ok := lookupStruct[p.Type.GoName]; ok {
 			}
-		}
 
-		if n, ok := lookupNonTypedefs[f.ReturnType.Name]; ok {
-			f.ReturnType.Name = n
-		}
-		if e, ok := lookupEnum[f.ReturnType.Name]; ok {
-			f.ReturnType.Primitive = e.Receiver.Type.Primitive
-		} else if _, ok := lookupStruct[f.ReturnType.Name]; ok {
-		}
-		if goType, primitiveType := goAndTypePrimitive(f.ReturnType.Name); goType != "" {
-			f.ReturnType.Name = goType
-			f.ReturnType.Primitive = primitiveType
-		}
-		if f.ReturnType.Name == "cxstring" {
-			f.ReturnType.Name = "string"
-		}
-
-		var rt Receiver
-		if len(f.Parameters) > 0 {
-			rt.Name = receiverName(f.Parameters[0].Type.Name)
-			rt.CName = f.Parameters[0].CName
-			rt.Type = f.Parameters[0].Type
-		} else {
-			if e, ok := lookupEnum[f.ReturnType.Name]; ok {
-				rt.Type = e.Receiver.Type
-			} else if s, ok := lookupStruct[f.ReturnType.Name]; ok {
-				rt.Type.Name = s.Name
+			// TODO happy hack, whiteflag types that are return arguments
+			if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == GoUInt16) {
+				p.Type.IsReturnArgument = true
 			}
-		}
 
-		added := addBasicMethods(f, fname, "", rt)
+			// TODO happy hack, if this is an array length parameter we need to find its partner
+			if paName := strings.TrimPrefix(p.Name, "num_"); len(paName) != len(p.Name) {
+				for j := range f.Parameters {
+					pa := &f.Parameters[j]
 
-		if !added {
-			if s := strings.Split(f.Name, "_"); len(s) == 2 {
-				if s[0] == rt.Type.Name {
-					rtc := rt
-					rtc.Name = s[0]
+					if pa.Name == paName {
 
-					added = addBasicMethods(f, s[1], "", rtc)
-				} else {
-					added = addBasicMethods(f, strings.Join(s[1:], ""), s[0]+"_", rt)
-				}
-			}
-		}
+						// TODO remove this when getType cane handle this kind of conversion
+						if pa.Type.GoName == "struct CXUnsavedFile" || pa.Type.GoName == "UnsavedFile" {
+							pa.Type.GoName = "UnsavedFile"
+							pa.Type.CGoName = "struct_CXUnsavedFile"
+						} else if pa.Type.CGoName == CSChar && pa.Type.PointerLevel == 2 {
+						} else if pa.Type.GoName == "CompletionResult" || pa.Type.GoName == "Token" {
+							pa.Type.CGoName = "struct_CX" + pa.Type.GoName
+						} else {
+							break
+						}
 
-		if !added {
-			if len(f.Parameters) == 1 && (f.ReturnType.Name == "int" || f.ReturnType.Name == "unsigned int" || f.ReturnType.Name == "long long" || f.ReturnType.Name == "unsigned long long") && isEnumOrStruct(f.Parameters[0].Type.Name) {
-				fname = trimCommonFName(fname, rt)
-
-				f.ReturnType.Primitive = f.ReturnType.Name
-				switch f.ReturnType.Name { // TODO refactor to use getTypeConversion(...) somehow, maybe do the conversion during the create of a Function instance
-				case "int":
-					f.ReturnType.Name = "uint16"
-				case "unsigned int":
-					f.ReturnType.Name = "uint16"
-				case "long long":
-					f.ReturnType.Name = "int64"
-				case "unsigned long long":
-					f.ReturnType.Name = "uint64"
-				}
-
-				added = addMethod(f, fname, "", rt)
-			}
-		}
-
-		if !added {
-			if len(f.Parameters) > 0 && (isEnumOrStruct(f.ReturnType.Name) || f.ReturnType.Primitive != "") {
-				found := false
-				for _, p := range f.Parameters {
-					if !isEnumOrStruct(p.Type.Name) && p.Type.Primitive == "" {
-						found = true
+						p.Type.LengthOfSlice = pa.Name
+						pa.Type.IsSlice = true
 
 						break
 					}
 				}
+			}
+		}
 
-				if !found {
+		// Prepare the return argument
+		if n, ok := lookupNonTypedefs[f.ReturnType.CGoName]; ok {
+			f.ReturnType.GoName = n
+		}
+		if e, ok := lookupEnum[f.ReturnType.GoName]; ok {
+			f.ReturnType.CGoName = e.Receiver.Type.CGoName
+		} else if _, ok := lookupStruct[f.ReturnType.GoName]; ok {
+		}
+
+		// Prepare the receiver
+		var rt Receiver
+		if len(f.Parameters) > 0 {
+			rt.Name = receiverName(f.Parameters[0].Type.GoName)
+			rt.CName = f.Parameters[0].CName
+			rt.Type = f.Parameters[0].Type
+		} else {
+			if e, ok := lookupEnum[f.ReturnType.GoName]; ok {
+				rt.Type = e.Receiver.Type
+			} else if s, ok := lookupStruct[f.ReturnType.GoName]; ok {
+				rt.Type.GoName = s.Name
+			}
+		}
+
+		// Check upfront if we can handle a function
+		found := false
+
+		for _, p := range f.Parameters {
+			// These pointers are ok
+			if p.Type.PointerLevel == 1 && (p.Type.CGoName == CSChar || p.Type.GoName == "UnsavedFile") {
+				continue
+			}
+			// Return arguments are always ok since we mark them earlier
+			if p.Type.IsReturnArgument {
+				continue
+			}
+			// We whiteflag slices
+			if p.Type.IsSlice {
+				continue
+			}
+
+			if (!isEnumOrStruct(p.Type.GoName) && !p.Type.IsPrimitive) || p.Type.PointerLevel != 0 {
+				found = true
+
+				break
+			}
+		}
+
+		if f.ReturnType.PointerLevel > 0 && !(f.ReturnType.PointerLevel == 1 && f.ReturnType.CGoName == CSChar) { // TODO implement to return slices
+			found = true
+		}
+
+		// If we find a heuristic to add the function, add it!
+		added := false
+
+		if !found {
+			added = addBasicMethods(f, fname, "", rt)
+
+			if !added {
+				if s := strings.Split(f.Name, "_"); len(s) == 2 {
+					if s[0] == rt.Type.GoName {
+						rtc := rt
+						rtc.Name = s[0]
+
+						added = addBasicMethods(f, s[1], "", rtc)
+					} else {
+						added = addBasicMethods(f, strings.Join(s[1:], ""), s[0]+"_", rt)
+					}
+				}
+			}
+
+			if !added {
+				if len(f.Parameters) == 0 {
+					clangFile.Functions = append(clangFile.Functions, generateASTFunction(f))
+
+					added = true
+				} else if isEnumOrStruct(f.ReturnType.GoName) || f.ReturnType.IsPrimitive {
 					fname = trimCommonFName(fname, rt)
 
 					added = addMethod(f, fname, "", rt)
 
-					if !added && isEnumOrStruct(f.ReturnType.Name) {
+					if !added && isEnumOrStruct(f.ReturnType.GoName) {
 						fname = trimCommonFName(fname, rt)
 						if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
 							fname = "New" + fname
@@ -478,25 +561,6 @@ func main() {
 	}
 }
 
-func goAndTypePrimitive(typ string) (string, string) {
-	switch typ {
-	case "int":
-		return "uint16", "int"
-	case "unsigned int":
-		return "uint16", "uint"
-	case "long long":
-		return "int64", "longlong"
-	case "unsigned long long":
-		return "uint64", "ulonglong"
-	case "void":
-		return "void", "void"
-	case "time_t":
-		return "time.Time", "time_t"
-	case "const char *":
-		return "string", "const char *"
-	case "String":
-		return "cxstring", "cxstring"
-	}
-
-	return "", ""
+func printFunctionDetails(f *Function) {
+	fmt.Printf("@@ %s %#v %#v\n", f.CName, f.ReturnType, f.Parameters)
 }

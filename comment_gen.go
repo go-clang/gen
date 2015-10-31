@@ -3,18 +3,9 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
-import (
-	"unsafe"
-)
-
 // A comment AST node.
 type Comment struct {
 	c C.CXComment
-}
-
-func (c Comment) ASTNode() unsafe.Pointer {
-	value := unsafe.Pointer(c.c.ASTNode)
-	return value
 }
 
 func (c Comment) TranslationUnit() TranslationUnit {

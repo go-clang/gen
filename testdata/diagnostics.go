@@ -20,26 +20,6 @@ func (d Diagnostics) Dispose() {
 }
 
 /**
- * \brief Retrieve the name of the command-line option that enabled this
- * diagnostic.
- *
- * \param Diag The diagnostic to be queried.
- *
- * \param Disable If non-NULL, will be set to the option that disables this
- * diagnostic (if any).
- *
- * \returns A string that contains the command-line option used to enable this
- * warning, such as "-Wconversion" or "-pedantic".
- */
-func (d Diagnostic) Option() (enable, disable string) {
-	var c_disable cxstring
-	cx := cxstring{C.clang_getDiagnosticOption(d.c, &c_disable.c)}
-	defer cx.Dispose()
-	defer c_disable.Dispose()
-	return cx.String(), c_disable.String()
-}
-
-/**
  * \brief Retrieve a source range associated with the diagnostic.
  *
  * A diagnostic's source ranges highlight important elements in the source
@@ -102,15 +82,4 @@ func (d Diagnostic) FixIts() (ret []FixIt) {
 
 func (d Diagnostic) String() string {
 	return d.Format(DefaultDiagnosticDisplayOptions())
-}
-
-/**
- * \brief Retrieve the set of display options most similar to the
- * default behavior of the clang compiler.
- *
- * \returns A set of display options suitable for use with \c
- * clang_displayDiagnostic().
- */
-func DefaultDiagnosticDisplayOptions() DiagnosticDisplayOptions {
-	return DiagnosticDisplayOptions(C.clang_defaultDiagnosticDisplayOptions())
 }

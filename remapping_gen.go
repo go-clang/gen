@@ -25,6 +25,18 @@ func (r Remapping) Remap_getNumFiles() uint16 {
 	return uint16(C.clang_remap_getNumFiles(r.c))
 }
 
+// Get the original and the associated filename from the remapping. \param original If non-NULL, will be set to the original filename. \param transformed If non-NULL, will be set to the filename that the original is associated with.
+func (r Remapping) Remap_getFilenames(index uint16) (string, string) {
+	var original cxstring
+	defer original.Dispose()
+	var transformed cxstring
+	defer transformed.Dispose()
+
+	C.clang_remap_getFilenames(r.c, C.uint(index), &original.c, &transformed.c)
+
+	return original.String(), transformed.String()
+}
+
 // Dispose the remapping.
 func (r Remapping) remap_Dispose() {
 	C.clang_remap_dispose(r.c)

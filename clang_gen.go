@@ -7,12 +7,22 @@ import (
 	"unsafe"
 )
 
+// Retrieve the set of display options most similar to the default behavior of the clang compiler. \returns A set of display options suitable for use with \c clang_formatDiagnostic().
+func defaultDiagnosticDisplayOptions() uint16 {
+	return uint16(C.clang_defaultDiagnosticDisplayOptions())
+}
+
 // Retrieve the name of a particular diagnostic category. This is now deprecated. Use clang_getDiagnosticCategoryText() instead. \param Category A diagnostic category number, as returned by \c clang_getDiagnosticCategory(). \returns The name of the given diagnostic category.
 func getDiagnosticCategoryName(Category uint16) string {
 	o := cxstring{C.clang_getDiagnosticCategoryName(C.uint(Category))}
 	defer o.Dispose()
 
 	return o.String()
+}
+
+// Returns the set of flags that is suitable for parsing a translation unit that is being edited. The set of flags returned provide options for \c clang_parseTranslationUnit() to indicate that the translation unit is likely to be reparsed many times, either explicitly (via \c clang_reparseTranslationUnit()) or implicitly (e.g., by code completion (\c clang_codeCompletionAt())). The returned flag set contains an unspecified set of optimizations (e.g., the precompiled preamble) geared toward improving the performance of these routines. The set of optimizations enabled may change from one version to the next.
+func defaultEditingTranslationUnitOptions() uint16 {
+	return uint16(C.clang_defaultEditingTranslationUnitOptions())
 }
 
 // Construct a USR for a specified Objective-C class.
@@ -78,6 +88,23 @@ func constructUSR_ObjCProperty(property string, classUSR cxstring) string {
 	defer C.free(unsafe.Pointer(c_property))
 
 	o := cxstring{C.clang_constructUSR_ObjCProperty(c_property, classUSR.c)}
+	defer o.Dispose()
+
+	return o.String()
+}
+
+func enableStackTraces() {
+	C.clang_enableStackTraces()
+}
+
+// Returns a default set of code-completion options that can be passed to\c clang_codeCompleteAt().
+func defaultCodeCompleteOptions() uint16 {
+	return uint16(C.clang_defaultCodeCompleteOptions())
+}
+
+// Return a version string, suitable for showing to a user, but not intended to be parsed (the format is not guaranteed to be stable).
+func getClangVersion() string {
+	o := cxstring{C.clang_getClangVersion()}
 	defer o.Dispose()
 
 	return o.String()

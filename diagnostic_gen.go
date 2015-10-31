@@ -44,6 +44,17 @@ func (d Diagnostic) Spelling() string {
 	return o.String()
 }
 
+// Retrieve the name of the command-line option that enabled this diagnostic. \param Diag The diagnostic to be queried. \param Disable If non-NULL, will be set to the option that disables this diagnostic (if any). \returns A string that contains the command-line option used to enable this warning, such as "-Wconversion" or "-pedantic".
+func (d Diagnostic) Option() (string, string) {
+	var Disable cxstring
+	defer Disable.Dispose()
+
+	o := cxstring{C.clang_getDiagnosticOption(d.c, &Disable.c)}
+	defer o.Dispose()
+
+	return Disable.String(), o.String()
+}
+
 // Retrieve the category number for this diagnostic. Diagnostics can be categorized into groups along with other, related diagnostics (e.g., diagnostics under the same warning flag). This routine retrieves the category number for the given diagnostic. \returns The number of the category that contains this diagnostic, or zero if this diagnostic is uncategorized.
 func (d Diagnostic) Category() uint16 {
 	return uint16(C.clang_getDiagnosticCategory(d.c))
