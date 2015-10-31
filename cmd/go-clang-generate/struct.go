@@ -39,7 +39,7 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 
 			comment := cleanDoxygenComment(cursor.RawCommentText())
 
-			if (typ.PointerLevel >= 1 && typ.Name == "void") || typ.CName == "uintptr_t" {
+			if (typ.PointerLevel >= 1 && typ.GoName == "void") || typ.CGoName == "uintptr_t" {
 				/*typ.CName = "void"
 				typ.Name = GoPointer
 				if typ.PointerLevel >= 1 {
@@ -68,8 +68,8 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 
 					SizeMember: sizeMember,
 
-					CElementType:    typ.CName,
-					ElementType:     typ.Name,
+					CElementType:    typ.CGoName,
+					ElementType:     typ.GoName,
 					IsPrimitive:     typ.IsPrimitive,
 					ArrayDimensions: typ.PointerLevel,
 					ArraySize:       typ.ArraySize,

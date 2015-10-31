@@ -62,7 +62,7 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 		p.Type = typ
 
 		if p.Name == "" {
-			p.Name = receiverName(p.Type.Name)
+			p.Name = receiverName(p.Type.GoName)
 		}
 
 		f.Parameters = append(f.Parameters, p)
@@ -176,14 +176,14 @@ func generateASTFunction(f *Function) string {
 				},
 			}
 		}
-		if typ.Name != "" {
-			if typ.PointerLevel > 0 && typ.CName == CSChar {
+		if typ.GoName != "" {
+			if typ.PointerLevel > 0 && typ.CGoName == CSChar {
 				f.Type = &ast.Ident{
 					Name: "string",
 				}
 			} else {
 				f.Type = &ast.Ident{
-					Name: typ.Name,
+					Name: typ.GoName,
 				}
 			}
 
@@ -262,10 +262,10 @@ func generateASTFunction(f *Function) string {
 				// Declare the slice
 				var sliceType ast.Expr
 
-				if p.Type.PointerLevel > 0 && p.Type.CName == CSChar {
+				if p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar {
 					sliceType = doCType("char")
 				} else {
-					sliceType = doCType(p.Type.Primitive)
+					sliceType = doCType(p.Type.CGoName)
 				}
 
 				for i := 1; i < p.Type.PointerLevel; i++ {
@@ -346,7 +346,7 @@ func generateASTFunction(f *Function) string {
 				var loopStatements []ast.Stmt
 
 				// Handle our good old friend the const char * differently...
-				if p.Type.CName == CSChar {
+				if p.Type.CGoName == CSChar {
 					loopStatements = append(loopStatements, &ast.AssignStmt{
 						Lhs: []ast.Expr{
 							&ast.Ident{
@@ -446,23 +446,23 @@ func generateASTFunction(f *Function) string {
 
 				// Add the return type to the function return arguments
 				var retType string
-				if p.Type.Name == "cxstring" {
+				if p.Type.GoName == "cxstring" {
 					retType = "string"
 				} else {
-					retType = p.Type.Name
+					retType = p.Type.GoName
 				}
 
 				addReturnType("", Type{
-					Name: retType,
+					GoName: retType,
 				})
 
 				// Declare the return argument's variable
 				var varType ast.Expr
-				if p.Type.Primitive != "" {
-					varType = doCType(p.Type.Primitive)
+				if p.Type.IsPrimitive {
+					varType = doCType(p.Type.CGoName)
 				} else {
 					varType = &ast.Ident{
-						Name: p.Type.Name,
+						Name: p.Type.GoName,
 					}
 				}
 				if p.Type.IsSlice {
@@ -486,20 +486,20 @@ func generateASTFunction(f *Function) string {
 						},
 					},
 				})
-				if p.Type.Name == "cxstring" {
+				if p.Type.GoName == "cxstring" {
 					addDefer(doCall(p.Name, "Dispose"))
 				}
 
 				// Add the return argument to the return statement
-				if p.Type.Primitive != "" {
+				if p.Type.IsPrimitive {
 					addReturnItem(doCast(
-						p.Type.Name,
+						p.Type.GoName,
 						&ast.Ident{
 							Name: p.Name,
 						},
 					))
 				} else {
-					if p.Type.Name == "cxstring" {
+					if p.Type.GoName == "cxstring" {
 						addReturnItem(doCall(p.Name, "String"))
 					} else {
 						addReturnItem(&ast.Ident{
@@ -528,9 +528,9 @@ func generateASTFunction(f *Function) string {
 				pf = &ast.Ident{
 					Name: "cp_" + p.Name,
 				}
-			} else if p.Type.Primitive != "" {
+			} else if p.Type.IsPrimitive {
 				// Handle Go type to C type conversions
-				if p.Type.PointerLevel == 1 && p.Type.CName == CSChar {
+				if p.Type.PointerLevel == 1 && p.Type.CGoName == CSChar {
 					goToCTypeConversions = true
 
 					addAssignment(
@@ -556,7 +556,7 @@ func generateASTFunction(f *Function) string {
 					pf = &ast.Ident{
 						Name: "c_" + p.Name,
 					}
-				} else if p.Type.Primitive == "cxstring" { // TODO try to get cxstring and "String" completely out of this function since it is just a struct which can be handled by the struct code
+				} else if p.Type.CGoName == "cxstring" { // TODO try to get cxstring and "String" completely out of this function since it is just a struct which can be handled by the struct code
 					pf = accessMember(p.Name, "c")
 				} else {
 					if p.Type.IsReturnArgument {
@@ -566,7 +566,7 @@ func generateASTFunction(f *Function) string {
 						}
 					} else if p.Type.LengthOfSlice != "" {
 						pf = doCCast(
-							p.Type.Primitive,
+							p.Type.CGoName,
 							doCast(
 								"len",
 								&ast.Ident{
@@ -576,7 +576,7 @@ func generateASTFunction(f *Function) string {
 						)
 					} else {
 						pf = doCCast(
-							p.Type.Primitive,
+							p.Type.CGoName,
 							&ast.Ident{
 								Name: p.Name,
 							},
@@ -603,8 +603,8 @@ func generateASTFunction(f *Function) string {
 	}
 
 	// Check if we need to add a return
-	if f.ReturnType.Name != "void" || hasReturnArguments {
-		if f.ReturnType.Name == "cxstring" {
+	if f.ReturnType.GoName != "void" || hasReturnArguments {
+		if f.ReturnType.GoName == "cxstring" {
 			// Do the C function call and save the result into the new variable "o" while transforming it into a cxstring
 			addAssignmentToO(doCompose("cxstring", call))
 			addDefer(doCall("o", "Dispose"))
@@ -615,16 +615,16 @@ func generateASTFunction(f *Function) string {
 
 			// Change the return type to "string"
 			addReturnType("", Type{
-				Name: "string",
+				GoName: "string",
 			})
 		} else {
-			if f.ReturnType.Name != "void" {
+			if f.ReturnType.GoName != "void" {
 				// Add the function return type
 				addReturnType("", f.ReturnType)
 			}
 
 			// Do we need to convert the return of the C function into a boolean?
-			if f.ReturnType.Name == "bool" && f.ReturnType.Primitive != "" {
+			if f.ReturnType.GoName == "bool" {
 				// Do the C function call and save the result into the new variable "o"
 				addAssignmentToO(call)
 				addEmptyLine()
@@ -636,24 +636,24 @@ func generateASTFunction(f *Function) string {
 					},
 					Op: token.NEQ,
 					Y: doCCast(
-						f.ReturnType.Primitive,
+						f.ReturnType.CGoName,
 						doZero(),
 					),
 				})
-			} else if f.ReturnType.CName == CSChar && f.ReturnType.PointerLevel == 1 {
+			} else if f.ReturnType.CGoName == CSChar && f.ReturnType.PointerLevel == 1 {
 				// If this is a normal const char * C type there is not so much to do
 				addReturnItem(doCCast(
 					"GoString",
 					call,
 				))
-			} else if f.ReturnType.Name == "time.Time" {
+			} else if f.ReturnType.GoName == "time.Time" {
 				addReturnItem(doCall(
 					"time",
 					"Unix",
 					doCast("int64", call),
 					doZero(),
 				))
-			} else if f.ReturnType.Name == "void" {
+			} else if f.ReturnType.GoName == "void" {
 				// Handle the case where the C function has no return argument but parameters that are return arguments
 
 				// Do the C function call
@@ -665,10 +665,10 @@ func generateASTFunction(f *Function) string {
 				var convCall ast.Expr
 
 				// Structs are literals, everything else is a cast
-				if f.ReturnType.Primitive == "" {
-					convCall = doCompose(f.ReturnType.Name, call)
+				if !f.ReturnType.IsPrimitive {
+					convCall = doCompose(f.ReturnType.GoName, call)
 				} else {
-					convCall = doCast(f.ReturnType.Name, call)
+					convCall = doCast(f.ReturnType.GoName, call)
 				}
 
 				if hasReturnArguments {
@@ -715,9 +715,9 @@ func generateASTFunction(f *Function) string {
 }
 
 var templateGenerateStructMemberGetter = template.Must(template.New("go-clang-generate-function-getter").Parse(`{{$.Comment}}
-func ({{$.Receiver.Name}} {{$.Receiver.Type.Name}}) {{$.Name}}() {{if ge $.ReturnType.PointerLevel 1}}*{{end}}{{$.ReturnType.Name}} {
-	value := {{if eq $.ReturnType.Name "bool"}}{{$.Receiver.Name}}.c.{{$.Member}}{{else}}{{$.ReturnType.Name}}{{if $.ReturnType.IsPrimitive}}({{if ge $.ReturnType.PointerLevel 1}}*{{end}}{{$.Receiver.Name}}.c.{{$.Member}}){{else}}{{"{"}}{{if ge $.ReturnType.PointerLevel 1}}*{{end}}{{$.Receiver.Name}}.c.{{$.Member}}{{"}"}}{{end}}{{end}}
-	return {{if eq $.ReturnType.Name "bool"}}value != C.int(0){{else}}{{if ge $.ReturnType.PointerLevel 1}}&{{end}}value{{end}}
+func ({{$.Receiver.Name}} {{$.Receiver.Type.GoName}}) {{$.Name}}() {{if ge $.ReturnType.PointerLevel 1}}*{{end}}{{$.ReturnType.GoName}} {
+	value := {{if eq $.ReturnType.GoName "bool"}}{{$.Receiver.Name}}.c.{{$.Member}}{{else}}{{$.ReturnType.GoName}}{{if $.ReturnType.IsPrimitive}}({{if ge $.ReturnType.PointerLevel 1}}*{{end}}{{$.Receiver.Name}}.c.{{$.Member}}){{else}}{{"{"}}{{if ge $.ReturnType.PointerLevel 1}}*{{end}}{{$.Receiver.Name}}.c.{{$.Member}}{{"}"}}{{end}}{{end}}
+	return {{if eq $.ReturnType.GoName "bool"}}value != C.int(0){{else}}{{if ge $.ReturnType.PointerLevel 1}}&{{end}}value{{end}}
 }
 `))
 
@@ -743,7 +743,7 @@ type FunctionSliceReturn struct {
 }
 
 var templateGenerateReturnSlice = template.Must(template.New("go-clang-generate-slice").Parse(`{{$.Comment}}
-func ({{$.Receiver.Name}} {{$.Receiver.Type.Name}}) {{$.Name}}() []{{if eq $.ArrayDimensions 2 }}*{{end}}{{$.ElementType}} {
+func ({{$.Receiver.Name}} {{$.Receiver.Type.GoName}}) {{$.Name}}() []{{if eq $.ArrayDimensions 2 }}*{{end}}{{$.ElementType}} {
 	sc := []{{if eq $.ArrayDimensions 2 }}*{{end}}{{$.ElementType}}{}
 
 	length := {{if ne $.ArraySize -1}}{{$.ArraySize}}{{else}}int({{$.Receiver.Name}}.c.{{$.SizeMember}}){{end}}
@@ -773,10 +773,10 @@ func generateFunction(name, cname, comment, member string, typ Type) *Function {
 	functionName := upperFirstCharacter(name)
 
 	if typ.IsPrimitive {
-		typ.Primitive = typ.Name
+		typ.CGoName = typ.GoName
 	}
-	if (strings.HasPrefix(name, "has") || strings.HasPrefix(name, "is")) && typ.Name == GoInt16 {
-		typ.Name = GoBool
+	if (strings.HasPrefix(name, "has") || strings.HasPrefix(name, "is")) && typ.GoName == GoInt16 {
+		typ.GoName = GoBool
 	}
 
 	f := &Function{
@@ -790,7 +790,7 @@ func generateFunction(name, cname, comment, member string, typ Type) *Function {
 		Receiver: Receiver{
 			Name: receiverName,
 			Type: Type{
-				Name: receiverType,
+				GoName: receiverType,
 			},
 		},
 

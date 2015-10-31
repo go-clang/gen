@@ -22,27 +22,25 @@ const (
 	GoInterface = "interface"
 	GoPointer   = "unsafe.Pointer"
 
-	CChar      = "char"      // byte
-	CSChar     = "schar"     // int8
-	CUChar     = "uchar"     // uint8
-	CShort     = "short"     // int16
-	CUShort    = "ushort"    // uint16
-	CInt       = "int"       // int
-	CUInt      = "uint"      // uint32
-	CLongInt   = "long"      // int32 or int64
-	CULongInt  = "ulong"     // uint32 or uint64
-	CLongLong  = "longlong"  // int64
-	CULongLong = "ulonglong" // uint64
-	CFloat     = "float"     // float32
-	CDouble    = "double"    // float64
-
+	CChar      = "char"
+	CSChar     = "schar"
+	CUChar     = "uchar"
+	CShort     = "short"
+	CUShort    = "ushort"
+	CInt       = "int"
+	CUInt      = "uint"
+	CLongInt   = "long"
+	CULongInt  = "ulong"
+	CLongLong  = "longlong"
+	CULongLong = "ulonglong"
+	CFloat     = "float"
+	CDouble    = "double"
 )
 
 type Type struct {
-	Original  string
-	Name      string
-	CName     string
-	Primitive string
+	CName   string
+	CGoName string
+	GoName  string
 
 	PointerLevel      int
 	IsPrimitive       bool
@@ -57,8 +55,7 @@ type Type struct {
 
 func getType(cType clang.Type) (Type, error) {
 	typ := Type{
-		CName:    cType.TypeSpelling(),
-		Original: cType.TypeSpelling(),
+		CName: cType.TypeSpelling(),
 
 		PointerLevel:      0,
 		IsPrimitive:       true,
@@ -70,85 +67,76 @@ func getType(cType clang.Type) (Type, error) {
 
 	switch cType.Kind() {
 	case clang.TK_Char_S:
-		typ.CName = CSChar
-		typ.Name = GoInt8
-		typ.Primitive = "schar"
+		typ.CGoName = CSChar
+		typ.GoName = GoInt8
 	case clang.TK_Char_U:
-		typ.CName = CUChar
-		typ.Name = GoUInt8
-		typ.Primitive = "uchar"
+		typ.CGoName = CUChar
+		typ.GoName = GoUInt8
 	case clang.TK_Int:
-		typ.CName = CInt
-		typ.Name = GoInt16
-		typ.Primitive = "int"
+		typ.CGoName = CInt
+		typ.GoName = GoInt16
 	case clang.TK_Short:
-		typ.CName = CShort
-		typ.Name = GoInt16
-		typ.Primitive = "int"
+		typ.CGoName = CShort
+		typ.GoName = GoInt16
 	case clang.TK_UShort:
-		typ.CName = CUShort
-		typ.Name = GoUInt16
-		typ.Primitive = "uint"
+		typ.CGoName = CUShort
+		typ.GoName = GoUInt16
 	case clang.TK_UInt:
-		typ.CName = CUInt
-		typ.Name = GoUInt16
-		typ.Primitive = "uint"
+		typ.CGoName = CUInt
+		typ.GoName = GoUInt16
 	case clang.TK_Long:
-		typ.CName = CLongInt
-		typ.Name = GoInt32
-		typ.Primitive = "long"
+		typ.CGoName = CLongInt
+		typ.GoName = GoInt32
 	case clang.TK_ULong:
-		typ.CName = CULongInt
-		typ.Name = GoUInt32
-		typ.Primitive = "ulong"
+		typ.CGoName = CULongInt
+		typ.GoName = GoUInt32
 	case clang.TK_LongLong:
-		typ.CName = CLongLong
-		typ.Name = GoInt64
-		typ.Primitive = "longlong"
+		typ.CGoName = CLongLong
+		typ.GoName = GoInt64
 	case clang.TK_ULongLong:
-		typ.CName = CULongLong
-		typ.Name = GoUInt64
-		typ.Primitive = "ulonglong"
+		typ.CGoName = CULongLong
+		typ.GoName = GoUInt64
 	case clang.TK_Float:
-		typ.CName = CFloat
-		typ.Name = GoFloat32
-		typ.Primitive = "float"
+		typ.CGoName = CFloat
+		typ.GoName = GoFloat32
 	case clang.TK_Double:
-		typ.CName = CDouble
-		typ.Name = GoFloat64
-		typ.Primitive = "double"
+		typ.CGoName = CDouble
+		typ.GoName = GoFloat64
 	case clang.TK_Bool:
-		typ.Name = GoBool
+		typ.GoName = GoBool
 	case clang.TK_Void:
-		typ.CName = "void"
-		typ.Name = "void"
-		typ.Primitive = "void"
+		// TODO Does not exist in Go
+		typ.CGoName = "void"
+		typ.GoName = "void"
 	case clang.TK_ConstantArray:
 		subTyp, err := getType(cType.ArrayElementType())
 		if err != nil {
 			return Type{}, err
 		}
 
-		typ.CName = subTyp.CName
-		typ.Name = subTyp.Name
-		typ.Primitive = subTyp.Primitive
+		typ.CGoName = subTyp.CGoName
+		typ.GoName = subTyp.GoName
+		typ.CGoName = subTyp.CGoName
 		typ.PointerLevel += subTyp.PointerLevel
 		typ.IsArray = true
 		typ.ArraySize = cType.ArraySize()
 	case clang.TK_Typedef:
+		typ.IsPrimitive = false
+
 		typeStr := cType.TypeSpelling()
 		if typeStr == "CXString" {
 			typeStr = "cxstring"
 		} else if typeStr == "time_t" {
-			typ.Primitive = typeStr
+			typ.CGoName = typeStr
 			typeStr = "time.Time"
+
+			typ.IsPrimitive = true
 		} else {
 			typeStr = trimClangPrefix(cType.Declaration().Type().TypeSpelling())
 		}
 
-		typ.CName = cType.Declaration().Type().TypeSpelling()
-		typ.Name = typeStr
-		typ.IsPrimitive = false
+		typ.CGoName = cType.Declaration().Type().TypeSpelling()
+		typ.GoName = typeStr
 
 		if cType.CanonicalType().Kind() == clang.TK_Enum {
 			typ.IsEnumLiteral = true
@@ -166,21 +154,21 @@ func getType(cType clang.Type) (Type, error) {
 			return Type{}, err
 		}
 
-		typ.CName = subTyp.CName
-		typ.Name = subTyp.Name
-		typ.Primitive = subTyp.Primitive
+		typ.CGoName = subTyp.CGoName
+		typ.GoName = subTyp.GoName
+		typ.CGoName = subTyp.CGoName
 		typ.PointerLevel += subTyp.PointerLevel
 		typ.IsPrimitive = subTyp.IsPrimitive
 	case clang.TK_Record:
-		typ.CName = cType.Declaration().Type().TypeSpelling()
-		typ.Name = trimClangPrefix(typ.CName)
+		typ.CGoName = cType.Declaration().Type().TypeSpelling()
+		typ.GoName = trimClangPrefix(typ.CGoName)
 		typ.IsPrimitive = false
 	case clang.TK_FunctionProto:
 		typ.IsFunctionPointer = true
-		typ.CName = cType.Declaration().Type().TypeSpelling()
-		typ.Name = trimClangPrefix(typ.CName)
+		typ.CGoName = cType.Declaration().Type().TypeSpelling()
+		typ.GoName = trimClangPrefix(typ.CGoName)
 	case clang.TK_Enum:
-		typ.Name = trimClangPrefix(cType.Declaration().DisplayName())
+		typ.GoName = trimClangPrefix(cType.Declaration().DisplayName())
 		typ.IsEnumLiteral = true
 		typ.IsPrimitive = true
 	case clang.TK_Unexposed: // there is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013
@@ -189,9 +177,9 @@ func getType(cType clang.Type) (Type, error) {
 			return Type{}, err
 		}
 
-		typ.CName = subTyp.CName
-		typ.Name = subTyp.Name
-		typ.Primitive = subTyp.Primitive
+		typ.CGoName = subTyp.CGoName
+		typ.GoName = subTyp.GoName
+		typ.CGoName = subTyp.CGoName
 		typ.PointerLevel += subTyp.PointerLevel
 		typ.IsPrimitive = subTyp.IsPrimitive
 	default:

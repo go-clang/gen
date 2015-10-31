@@ -43,12 +43,12 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 
 	e.Name = trimClangPrefix(e.CName)
 	e.Receiver.Name = receiverName(e.Name)
-	e.Receiver.Type.Name = e.Name
-	e.Receiver.Type.CName = e.CName
+	e.Receiver.Type.GoName = e.Name
+	e.Receiver.Type.CGoName = e.CName
 	if cnameIsTypeDef {
-		e.Receiver.Type.Primitive = e.CName
+		e.Receiver.Type.CGoName = e.CName
 	} else {
-		e.Receiver.Type.Primitive = "enum_" + e.CName
+		e.Receiver.Type.CGoName = "enum_" + e.CName
 	}
 
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
