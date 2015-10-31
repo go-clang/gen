@@ -1,30 +1,29 @@
-package clang_test
+package phoenix
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/sbinet/go-clang"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestCompleteAt(t *testing.T) {
-	idx := clang.NewIndex(0, 0)
+/* TODO
+func TestCompletion(t *testing.T) {
+	idx := NewIndex(0, 0)
 	defer idx.Dispose()
-	tu := idx.Parse("visitorwrap.c", nil, nil, 0)
-	if !tu.IsValid() {
-		t.Fatal("TranslationUnit is not valid")
-	}
+
+	tu := idx.ParseTranslationUnit("cursor.c", nil, nil, 0)
+	assert.True(t, tu.IsValid())
 	defer tu.Dispose()
 
-	const lineno = 10 // ie: call to clang_visitChildren
-	res := tu.CompleteAt("visitorwrap.c", lineno, 16, nil, 0)
-	if !res.IsValid() {
-		t.Fatal("CompleteResults are not valid")
-	}
+	res := tu.CompleteAt("cursor.c", 10, 16, nil, 0)
+	assert.True(t, res.IsValid())
 	defer res.Dispose()
+
 	if n := len(res.Results()); n < 10 {
 		t.Errorf("Expected more results than %d", n)
 	}
+
 	t.Logf("%+v", res)
 	for _, r := range res.Results() {
 		t.Logf("%+v", r)
@@ -35,6 +34,7 @@ func TestCompleteAt(t *testing.T) {
 
 	diags := res.Diagnostics()
 	defer diags.Dispose()
+
 	ok := false
 	for _, d := range diags {
 		if strings.Contains(d.Spelling(), "_cgo_export.h") {
@@ -42,7 +42,6 @@ func TestCompleteAt(t *testing.T) {
 		}
 		t.Log(d.Severity(), d.Spelling())
 	}
-	if !ok {
-		t.Errorf("Expected to find a diagnostic regarding _cgo_export.h")
-	}
+	assert.True(t, ok)
 }
+*/
