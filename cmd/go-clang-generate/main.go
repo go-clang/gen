@@ -55,16 +55,16 @@ func trimCommonFName(fname string, rt Receiver) string {
 }
 
 func addFunction(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
-	fname = upperFirstCharacter(fname)
+	fname = upperFirstCharacter(fnamePrefix + upperFirstCharacter(fname))
 
 	if e, ok := lookupEnum[rt.Type.GoName]; ok {
-		f.Name = fnamePrefix + fname
+		f.Name = fname
 
 		e.Methods = append(e.Methods, generateASTFunction(f))
 
 		return true
 	} else if s, ok := lookupStruct[rt.Type.GoName]; ok && s.CName != "CXString" {
-		f.Name = fnamePrefix + fname
+		f.Name = fname
 
 		fStr := generateASTFunction(f)
 		s.Methods = deleteMethod(s.Methods, fname)
@@ -92,15 +92,15 @@ func deleteMethod(methods []string, fName string) []string {
 }
 
 func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
-	fname = upperFirstCharacter(fname)
-
 	// TODO this is a big HACK. Figure out how we can trim receiver names while still not having two "Cursor" methods for TranslationUnit
 	if f.CName == "clang_getTranslationUnitCursor" {
 		fname = "TranslationUnitCursor"
 	}
 
+	fname = upperFirstCharacter(fnamePrefix + upperFirstCharacter(fname))
+
 	if e, ok := lookupEnum[rt.Type.GoName]; ok {
-		f.Name = fnamePrefix + fname
+		f.Name = fname
 		f.Receiver = e.Receiver
 		f.Receiver.Type = rt.Type
 
@@ -108,7 +108,7 @@ func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool 
 
 		return true
 	} else if s, ok := lookupStruct[rt.Type.GoName]; ok && s.CName != "CXString" {
-		f.Name = fnamePrefix + fname
+		f.Name = fname
 		f.Receiver = s.Receiver
 		f.Receiver.Type = rt.Type
 
@@ -523,6 +523,8 @@ func main() {
 						added = addFunction(f, fname, "", rtc)
 					}
 					if !added {
+						f.Name = upperFirstCharacter(f.Name)
+
 						clangFile.Functions = append(clangFile.Functions, generateASTFunction(f))
 
 						added = true

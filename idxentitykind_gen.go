@@ -35,7 +35,7 @@ const (
 	IdxEntity_CXXInterface                        = C.CXIdxEntity_CXXInterface
 )
 
-func (iek IdxEntityKind) index_IsEntityObjCContainerKind() bool {
+func (iek IdxEntityKind) Index_IsEntityObjCContainerKind() bool {
 	o := C.clang_index_isEntityObjCContainerKind(C.CXIdxEntityKind(iek))
 
 	return o != C.int(0)

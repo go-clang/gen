@@ -38,6 +38,6 @@ func (r Remapping) Remap_getFilenames(index uint16) (string, string) {
 }
 
 // Dispose the remapping.
-func (r Remapping) remap_Dispose() {
+func (r Remapping) Remap_Dispose() {
 	C.clang_remap_dispose(r.c)
 }
