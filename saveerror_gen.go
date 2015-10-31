@@ -3,6 +3,10 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import (
+	"fmt"
+)
+
 // Describes the kind of error that occurred (if any) in a call to \c clang_saveTranslationUnit().
 type SaveError int32
 
@@ -16,3 +20,27 @@ const (
 	// Indicates that the translation unit to be saved was somehow invalid (e.g., NULL).
 	SaveError_InvalidTU = C.CXSaveError_InvalidTU
 )
+
+func (se SaveError) Spelling() string {
+	switch se {
+	case SaveError_None:
+		return "SaveError=None"
+	case SaveError_Unknown:
+		return "SaveError=Unknown"
+	case SaveError_TranslationErrors:
+		return "SaveError=TranslationErrors"
+	case SaveError_InvalidTU:
+		return "SaveError=InvalidTU"
+
+	}
+
+	return fmt.Sprintf("SaveError unkown %d", int(se))
+}
+
+func (se SaveError) String() string {
+	return se.Spelling()
+}
+
+func (se SaveError) Error() string {
+	return se.Spelling()
+}

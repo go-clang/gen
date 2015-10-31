@@ -3,6 +3,10 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import (
+	"fmt"
+)
+
 type IndexOptFlags uint32
 
 const (
@@ -19,3 +23,27 @@ const (
 	// Skip a function/method body that was already parsed during an indexing session assosiated with a \c CXIndexAction object. Bodies in system headers are always skipped.
 	IndexOpt_SkipParsedBodiesInSession = C.CXIndexOpt_SkipParsedBodiesInSession
 )
+
+func (iof IndexOptFlags) Spelling() string {
+	switch iof {
+	case IndexOpt_None:
+		return "IndexOpt=None"
+	case IndexOpt_SuppressRedundantRefs:
+		return "IndexOpt=SuppressRedundantRefs"
+	case IndexOpt_IndexFunctionLocalSymbols:
+		return "IndexOpt=IndexFunctionLocalSymbols"
+	case IndexOpt_IndexImplicitTemplateInstantiations:
+		return "IndexOpt=IndexImplicitTemplateInstantiations"
+	case IndexOpt_SuppressWarnings:
+		return "IndexOpt=SuppressWarnings"
+	case IndexOpt_SkipParsedBodiesInSession:
+		return "IndexOpt=SkipParsedBodiesInSession"
+
+	}
+
+	return fmt.Sprintf("IndexOptFlags unkown %d", int(iof))
+}
+
+func (iof IndexOptFlags) String() string {
+	return iof.Spelling()
+}

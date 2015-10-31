@@ -3,6 +3,10 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import (
+	"fmt"
+)
+
 // Describes a single piece of text within a code-completion string. Each "chunk" within a code-completion string (\c CXCompletionString) is either a piece of text with a specific "kind" that describes how that text should be interpreted by the client or is another completion string.
 type CompletionChunkKind uint32
 
@@ -100,3 +104,57 @@ const (
 	// Vertical space ('\n'), after which it is generally a good idea to perform indentation.
 	CompletionChunk_VerticalSpace = C.CXCompletionChunk_VerticalSpace
 )
+
+func (cck CompletionChunkKind) Spelling() string {
+	switch cck {
+	case CompletionChunk_Optional:
+		return "CompletionChunk=Optional"
+	case CompletionChunk_TypedText:
+		return "CompletionChunk=TypedText"
+	case CompletionChunk_Text:
+		return "CompletionChunk=Text"
+	case CompletionChunk_Placeholder:
+		return "CompletionChunk=Placeholder"
+	case CompletionChunk_Informative:
+		return "CompletionChunk=Informative"
+	case CompletionChunk_CurrentParameter:
+		return "CompletionChunk=CurrentParameter"
+	case CompletionChunk_LeftParen:
+		return "CompletionChunk=LeftParen"
+	case CompletionChunk_RightParen:
+		return "CompletionChunk=RightParen"
+	case CompletionChunk_LeftBracket:
+		return "CompletionChunk=LeftBracket"
+	case CompletionChunk_RightBracket:
+		return "CompletionChunk=RightBracket"
+	case CompletionChunk_LeftBrace:
+		return "CompletionChunk=LeftBrace"
+	case CompletionChunk_RightBrace:
+		return "CompletionChunk=RightBrace"
+	case CompletionChunk_LeftAngle:
+		return "CompletionChunk=LeftAngle"
+	case CompletionChunk_RightAngle:
+		return "CompletionChunk=RightAngle"
+	case CompletionChunk_Comma:
+		return "CompletionChunk=Comma"
+	case CompletionChunk_ResultType:
+		return "CompletionChunk=ResultType"
+	case CompletionChunk_Colon:
+		return "CompletionChunk=Colon"
+	case CompletionChunk_SemiColon:
+		return "CompletionChunk=SemiColon"
+	case CompletionChunk_Equal:
+		return "CompletionChunk=Equal"
+	case CompletionChunk_HorizontalSpace:
+		return "CompletionChunk=HorizontalSpace"
+	case CompletionChunk_VerticalSpace:
+		return "CompletionChunk=VerticalSpace"
+
+	}
+
+	return fmt.Sprintf("CompletionChunkKind unkown %d", int(cck))
+}
+
+func (cck CompletionChunkKind) String() string {
+	return cck.Spelling()
+}

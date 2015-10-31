@@ -3,6 +3,10 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import (
+	"fmt"
+)
+
 // Describe the linkage of the entity referred to by a cursor.
 type LinkageKind uint32
 
@@ -18,3 +22,25 @@ const (
 	// This is the linkage for entities with true, external linkage.
 	Linkage_External = C.CXLinkage_External
 )
+
+func (lk LinkageKind) Spelling() string {
+	switch lk {
+	case Linkage_Invalid:
+		return "Linkage=Invalid"
+	case Linkage_NoLinkage:
+		return "Linkage=NoLinkage"
+	case Linkage_Internal:
+		return "Linkage=Internal"
+	case Linkage_UniqueExternal:
+		return "Linkage=UniqueExternal"
+	case Linkage_External:
+		return "Linkage=External"
+
+	}
+
+	return fmt.Sprintf("LinkageKind unkown %d", int(lk))
+}
+
+func (lk LinkageKind) String() string {
+	return lk.Spelling()
+}

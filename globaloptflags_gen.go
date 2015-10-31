@@ -3,6 +3,10 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import (
+	"fmt"
+)
+
 type GlobalOptFlags uint32
 
 const (
@@ -15,3 +19,23 @@ const (
 	// Used to indicate that all threads that libclang creates should use background priority.
 	GlobalOpt_ThreadBackgroundPriorityForAll = C.CXGlobalOpt_ThreadBackgroundPriorityForAll
 )
+
+func (gof GlobalOptFlags) Spelling() string {
+	switch gof {
+	case GlobalOpt_None:
+		return "GlobalOpt=None"
+	case GlobalOpt_ThreadBackgroundPriorityForIndexing:
+		return "GlobalOpt=ThreadBackgroundPriorityForIndexing"
+	case GlobalOpt_ThreadBackgroundPriorityForEditing:
+		return "GlobalOpt=ThreadBackgroundPriorityForEditing"
+	case GlobalOpt_ThreadBackgroundPriorityForAll:
+		return "GlobalOpt=ThreadBackgroundPriorityForAll"
+
+	}
+
+	return fmt.Sprintf("GlobalOptFlags unkown %d", int(gof))
+}
+
+func (gof GlobalOptFlags) String() string {
+	return gof.Spelling()
+}

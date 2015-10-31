@@ -3,6 +3,10 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import (
+	"fmt"
+)
+
 // Describes the severity of a particular diagnostic.
 type DiagnosticSeverity uint32
 
@@ -18,3 +22,25 @@ const (
 	// This diagnostic indicates that the code is ill-formed such that future parser recovery is unlikely to produce useful results.
 	Diagnostic_Fatal = C.CXDiagnostic_Fatal
 )
+
+func (ds DiagnosticSeverity) Spelling() string {
+	switch ds {
+	case Diagnostic_Ignored:
+		return "Diagnostic=Ignored"
+	case Diagnostic_Note:
+		return "Diagnostic=Note"
+	case Diagnostic_Warning:
+		return "Diagnostic=Warning"
+	case Diagnostic_Error:
+		return "Diagnostic=Error"
+	case Diagnostic_Fatal:
+		return "Diagnostic=Fatal"
+
+	}
+
+	return fmt.Sprintf("DiagnosticSeverity unkown %d", int(ds))
+}
+
+func (ds DiagnosticSeverity) String() string {
+	return ds.Spelling()
+}
