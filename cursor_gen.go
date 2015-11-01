@@ -483,6 +483,21 @@ func (c Cursor) ReferenceNameRange(NameFlags uint16, PieceIndex uint16) SourceRa
 	return SourceRange{C.clang_getCursorReferenceNameRange(c.c, C.uint(NameFlags), C.uint(PieceIndex))}
 }
 
+func (c Cursor) DefinitionSpellingAndExtent() (string, string, uint16, uint16, uint16, uint16) {
+	var startBuf *C.char
+	defer C.free(unsafe.Pointer(startBuf))
+	var endBuf *C.char
+	defer C.free(unsafe.Pointer(endBuf))
+	var startLine C.uint
+	var startColumn C.uint
+	var endLine C.uint
+	var endColumn C.uint
+
+	C.clang_getDefinitionSpellingAndExtent(c.c, &startBuf, &endBuf, &startLine, &startColumn, &endLine, &endColumn)
+
+	return C.GoString(startBuf), C.GoString(endBuf), uint16(startLine), uint16(startColumn), uint16(endLine), uint16(endColumn)
+}
+
 // Retrieve a completion string for an arbitrary declaration or macro definition cursor. \param cursor The cursor to query. \returns A non-context-sensitive completion string for declaration and macro definition cursors, or NULL for other kinds of cursors.
 func (c Cursor) CompletionString() CompletionString {
 	return CompletionString{C.clang_getCursorCompletionString(c.c)}

@@ -1,14 +1,4 @@
 
-/* for debug/testing */
-void clang_getDefinitionSpellingAndExtent(CXCursor,
-                                          const char **startBuf,
-                                          const char **endBuf,
-                                          unsigned *startLine,
-                                          unsigned *startColumn,
-                                          unsigned *endLine,
-                                          unsigned *endColumn);
-
-
 /**
  * \brief Retrieve the parent context of the given completion string.
  *
@@ -134,19 +124,6 @@ typedef void (*CXInclusionVisitor)(CXFile included_file,
 void clang_getInclusions(CXTranslationUnit tu,
                                         CXInclusionVisitor visitor,
                                         CXClientData client_data);
-
-/**
- * \brief Retrieve a remapping.
- *
- * \param filePaths pointer to an array of file paths containing remapping info.
- *
- * \param numFiles number of file paths.
- *
- * \returns the requested remapping. This remapping must be freed
- * via a call to \c clang_remap_dispose(). Can return NULL if an error occurred.
- */
-CXRemapping clang_getRemappingsFromFileList(const char **filePaths,
-                                            unsigned numFiles);
 
 /**
  * \brief A group of callbacks used by #clang_indexSourceFile and

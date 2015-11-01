@@ -576,7 +576,11 @@ func generateASTFunction(f *Function) string {
 
 				// Declare the return argument's variable
 				var varType ast.Expr
-				if p.Type.IsPrimitive {
+				if p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar {
+					varType = &ast.StarExpr{
+						X: doCType("char"),
+					}
+				} else if p.Type.IsPrimitive {
 					varType = doCType(p.Type.CGoName)
 				} else {
 					varType = &ast.Ident{
@@ -606,11 +610,31 @@ func generateASTFunction(f *Function) string {
 				})
 				if p.Type.GoName == "cxstring" {
 					addDefer(doCall(p.Name, "Dispose"))
+				} else if p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar {
+					addDefer(doCCast(
+						"free",
+						doCall(
+							"unsafe",
+							"Pointer",
+							&ast.Ident{
+								Name: p.Name,
+							},
+						),
+					))
 				}
 
 				if p.Type.LengthOfSlice == "" {
 					// Add the return argument to the return statement
-					if p.Type.IsPrimitive {
+					if p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar {
+						addReturnItem(doCCast(
+							"GoString",
+							&ast.Ident{
+								Name: p.Name,
+							},
+						))
+					} else if p.Type.GoName == "cxstring" {
+						addReturnItem(doCall(p.Name, "String"))
+					} else if p.Type.IsPrimitive {
 						addReturnItem(doCast(
 							p.Type.GoName,
 							&ast.Ident{
@@ -618,13 +642,9 @@ func generateASTFunction(f *Function) string {
 							},
 						))
 					} else {
-						if p.Type.GoName == "cxstring" {
-							addReturnItem(doCall(p.Name, "String"))
-						} else {
-							addReturnItem(&ast.Ident{
-								Name: p.Name,
-							})
-						}
+						addReturnItem(&ast.Ident{
+							Name: p.Name,
+						})
 					}
 				}
 

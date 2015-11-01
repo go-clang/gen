@@ -20,6 +20,22 @@ func NewRemappings(path string) Remapping {
 	return Remapping{C.clang_getRemappings(c_path)}
 }
 
+// Retrieve a remapping. \param filePaths pointer to an array of file paths containing remapping info. \param numFiles number of file paths. \returns the requested remapping. This remapping must be freed via a call to \c clang_remap_dispose(). Can return NULL if an error occurred.
+func NewRemappingsFromFileList(filePaths []string) Remapping {
+	ca_filePaths := make([]*C.char, len(filePaths))
+	var cp_filePaths **C.char
+	if len(filePaths) > 0 {
+		cp_filePaths = &ca_filePaths[0]
+	}
+	for i := range filePaths {
+		ci_str := C.CString(filePaths[i])
+		defer C.free(unsafe.Pointer(ci_str))
+		ca_filePaths[i] = ci_str
+	}
+
+	return Remapping{C.clang_getRemappingsFromFileList(cp_filePaths, C.uint(len(filePaths)))}
+}
+
 // Determine the number of remappings.
 func (r Remapping) Remap_getNumFiles() uint16 {
 	return uint16(C.clang_remap_getNumFiles(r.c))

@@ -450,6 +450,17 @@ func (h *headerFile) handleHeaderFile() {
 			} else if _, ok := h.lookupStruct[p.Type.GoName]; ok {
 			}
 
+			if f.CName == "clang_getRemappingsFromFileList" {
+				switch p.Name {
+				case "filePaths":
+					p.Type.IsSlice = true
+				case "numFiles":
+					p.Type.LengthOfSlice = "filePaths"
+				}
+
+				continue
+			}
+
 			// TODO happy hack, whiteflag types that are return arguments
 			if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == GoInt16 || p.Type.GoName == GoUInt16 || p.Type.GoName == "CompilationDatabase_Error" || p.Type.GoName == "PlatformAvailability" || p.Type.GoName == "SourceRange" || p.Type.GoName == "LoadDiag_Error") {
 				p.Type.IsReturnArgument = true
@@ -499,6 +510,13 @@ func (h *headerFile) handleHeaderFile() {
 						break
 					}
 				}
+			}
+		}
+		for i := range f.Parameters {
+			p := &f.Parameters[i]
+
+			if p.Type.CGoName == CSChar && p.Type.PointerLevel == 2 && !p.Type.IsSlice {
+				p.Type.IsReturnArgument = true
 			}
 		}
 
