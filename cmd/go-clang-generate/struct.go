@@ -9,7 +9,7 @@ import (
 	"github.com/sbinet/go-clang"
 )
 
-// FunctionParameter represents a generation struct
+// Struct represents a generation struct
 type Struct struct {
 	HeaderFile string
 

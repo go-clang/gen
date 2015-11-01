@@ -158,10 +158,14 @@ func generateEnumStringMethods(e *Enum) {
 		}
 	}
 	if !hasString {
-		generateEnumMethod(e, templateGenerateEnumString)
+		if err := generateEnumMethod(e, templateGenerateEnumString); err != nil {
+			panic(err)
+		}
 	}
 	if strings.HasSuffix(e.Name, "Error") && !hasError {
-		generateEnumMethod(e, templateGenerateEnumError)
+		if err := generateEnumMethod(e, templateGenerateEnumError); err != nil {
+			panic(err)
+		}
 	}
 }
 
