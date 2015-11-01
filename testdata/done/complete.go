@@ -32,36 +32,6 @@ func (cs CompletionString) CompletionParent() string {
 }
 
 /**
- * \brief Retrieve the annotation associated with the given completion string.
- *
- * \param completion_string the completion string to query.
- *
- * \param annotation_number the 0-based index of the annotation of the
- * completion string.
- *
- * \returns annotation string associated with the completion at index
- * \c annotation_number, or a NULL string if that annotation is not available.
- */
-
-func (cs CompletionString) Chunks() (ret []CompletionChunk) {
-	ret = make([]CompletionChunk, C.clang_getNumCompletionChunks(cs.c))
-	for i := range ret {
-		ret[i].cs = cs.c
-		ret[i].number = C.uint(i)
-	}
-	return
-}
-
-type CompletionChunk struct {
-	cs     C.CXCompletionString
-	number C.uint
-}
-
-func (cc CompletionChunk) String() string {
-	return fmt.Sprintf("%s %s", cc.Kind(), cc.Text())
-}
-
-/**
 - * \brief Contains the results of code-completion.
 - *
 - * This data structure contains the results of code completion, as
@@ -70,10 +40,6 @@ func (cc CompletionChunk) String() string {
 - */
 type CodeCompleteResults struct {
 	c *C.CXCodeCompleteResults
-}
-
-func (ccr CodeCompleteResults) IsValid() bool {
-	return ccr.c != nil
 }
 
 // TODO(): is there a better way to handle this?
@@ -101,21 +67,4 @@ func (ccr CodeCompleteResults) Sort() {
  */
 func (ccr CodeCompleteResults) Dispose() {
 	C.clang_disposeCodeCompleteResults(ccr.c)
-}
-
-/**
- * \brief Retrieve a diagnostic associated with the given code completion.
- *
- * \param Results the code completion results to query.
- * \param Index the zero-based diagnostic number to retrieve.
- *
- * \returns the requested diagnostic. This diagnostic must be freed
- * via a call to \c clang_disposeDiagnostic().
- */
-func (ccr CodeCompleteResults) Diagnostics() (ret Diagnostics) {
-	ret = make(Diagnostics, C.clang_codeCompleteGetNumDiagnostics(ccr.c))
-	for i := range ret {
-		ret[i].c = C.clang_codeCompleteGetDiagnostic(ccr.c, C.uint(i))
-	}
-	return
 }

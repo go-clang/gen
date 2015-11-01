@@ -3,43 +3,6 @@ package clang
 // #include "go-clang.h"
 import "C"
 
-/**
- * \brief A single diagnostic, containing the diagnostic's severity,
- * location, text, source ranges, and fix-it hints.
- */
-type Diagnostic struct {
-	c C.CXDiagnostic
-}
-
-type Diagnostics []Diagnostic
-
-func (d Diagnostics) Dispose() {
-	for _, di := range d {
-		di.Dispose()
-	}
-}
-
-/**
- * \brief Retrieve a source range associated with the diagnostic.
- *
- * A diagnostic's source ranges highlight important elements in the source
- * code. On the command line, Clang displays source ranges by
- * underlining them with '~' characters.
- *
- * \param Diagnostic the diagnostic whose range is being extracted.
- *
- * \param Range the zero-based index specifying which range to
- *
- * \returns the requested source range.
- */
-func (d Diagnostic) Ranges() (ret []SourceRange) {
-	ret = make([]SourceRange, C.clang_getDiagnosticNumRanges(d.c))
-	for i := range ret {
-		ret[i].c = C.clang_getDiagnosticRange(d.c, C.uint(i))
-	}
-	return
-}
-
 type FixIt struct {
 	Data             string
 	ReplacementRange SourceRange
@@ -78,8 +41,4 @@ func (d Diagnostic) FixIts() (ret []FixIt) {
 		ret[i].Data = cx.String()
 	}
 	return
-}
-
-func (d Diagnostic) String() string {
-	return d.Format(DefaultDiagnosticDisplayOptions())
 }

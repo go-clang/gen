@@ -130,18 +130,9 @@ func (c Cursor) OverriddenCursors() (o OverriddenCursors) {
 	return o
 }
 
-type OverriddenCursors struct {
-	c *C.CXCursor
-	n C.uint
-}
-
 // Dispose frees the set of overridden cursors
 func (c OverriddenCursors) Dispose() {
 	C.clang_disposeOverriddenCursors(c.c)
-}
-
-func (c OverriddenCursors) Len() int {
-	return int(c.n)
 }
 
 func (c OverriddenCursors) At(i int) Cursor {
