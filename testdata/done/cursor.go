@@ -129,10 +129,3 @@ func (c Cursor) OverriddenCursors() (o OverriddenCursors) {
 func (c OverriddenCursors) Dispose() {
 	C.clang_disposeOverriddenCursors(c.c)
 }
-
-func (c OverriddenCursors) At(i int) Cursor {
-	if i >= int(c.n) {
-		panic("clang: index out of range")
-	}
-	return Cursor{C._go_clang_ocursor_at(c.c, C.int(i))}
-}
