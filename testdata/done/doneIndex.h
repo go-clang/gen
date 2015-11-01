@@ -1,11 +1,5 @@
 
 /**
- * \brief Free the memory associated with a \c CXPlatformAvailability structure.
- */
-void
-clang_disposeCXPlatformAvailability(CXPlatformAvailability *availability);
-
-/**
  * \brief Determine the set of methods that are overridden by the given
  * method.
  *

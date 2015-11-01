@@ -483,7 +483,6 @@ func (h *headerFile) handleHeaderFile() {
 							pa.Type.CGoName = "struct_CXUnsavedFile"
 						} else if pa.Type.CGoName == CSChar && pa.Type.PointerLevel == 2 {
 						} else if pa.Type.GoName == "CompletionResult" {
-						} else if pa.Type.GoName == "PlatformAvailability" {
 						} else if pa.Type.GoName == "Token" {
 						} else {
 							break
