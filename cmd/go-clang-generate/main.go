@@ -439,7 +439,7 @@ func (h *headerFile) handleHeaderFile() {
 			}
 
 			// TODO happy hack, whiteflag types that are return arguments
-			if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == GoUInt16) {
+			if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == GoUInt16 || p.Type.GoName == "CompilationDatabase_Error") {
 				p.Type.IsReturnArgument = true
 			}
 

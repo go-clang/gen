@@ -13,6 +13,18 @@ type CompilationDatabase struct {
 	c C.CXCompilationDatabase
 }
 
+// Creates a compilation database from the database found in directory buildDir. For example, CMake can output a compile_commands.json which can be used to build the database. It must be freed by \c clang_CompilationDatabase_dispose.
+func CompilationDatabase_fromDirectory(BuildDir string) (CompilationDatabase_Error, CompilationDatabase) {
+	var ErrorCode C.CXCompilationDatabase_Error
+
+	c_BuildDir := C.CString(BuildDir)
+	defer C.free(unsafe.Pointer(c_BuildDir))
+
+	o := CompilationDatabase{C.clang_CompilationDatabase_fromDirectory(c_BuildDir, &ErrorCode)}
+
+	return CompilationDatabase_Error(ErrorCode), o
+}
+
 // Free the given compilation database
 func (cd CompilationDatabase) Dispose() {
 	C.clang_CompilationDatabase_dispose(cd.c)
