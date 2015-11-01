@@ -154,6 +154,9 @@ type {{$.Name}} struct {
 func generateStruct(s *Struct) error {
 	// TODO remove this hack
 	for _, m := range s.Methods {
+		if strings.Contains(m, "reflect.") {
+			s.Imports["reflect"] = struct{}{}
+		}
 		if strings.Contains(m, "time.Time") {
 			s.Imports["time"] = struct{}{}
 		}

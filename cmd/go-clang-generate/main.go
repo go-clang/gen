@@ -454,6 +454,9 @@ func (h *headerFile) handleHeaderFile() {
 			if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == GoUInt16 || p.Type.GoName == "CompilationDatabase_Error" || p.Type.GoName == "PlatformAvailability" || p.Type.GoName == "SourceRange" || p.Type.GoName == "LoadDiag_Error") {
 				p.Type.IsReturnArgument = true
 			}
+			if p.Type.PointerLevel == 2 && p.Type.GoName == "Token" {
+				p.Type.IsReturnArgument = true
+			}
 
 			// TODO happy hack, if this is an array length parameter we need to find its partner
 			var paName string
@@ -468,10 +471,6 @@ func (h *headerFile) handleHeaderFile() {
 					pa := &f.Parameters[j]
 
 					if pa.Name == paName {
-						if f.CName == "clang_tokenize" { // TODO let's not handle slice return arguments for now
-							break
-						}
-
 						// TODO remove this when getType cane handle this kind of conversion
 						if pa.Type.GoName == "struct CXUnsavedFile" || pa.Type.GoName == "UnsavedFile" {
 							pa.Type.GoName = "UnsavedFile"
@@ -485,6 +484,10 @@ func (h *headerFile) handleHeaderFile() {
 
 						p.Type.LengthOfSlice = pa.Name
 						pa.Type.IsSlice = true
+
+						if pa.Type.IsReturnArgument {
+							p.Type.IsReturnArgument = true
+						}
 
 						break
 					}

@@ -1,37 +1,6 @@
 package clang
 
 /**
- * \brief Tokenize the source code described by the given range into raw
- * lexical tokens.
- *
- * \param TU the translation unit whose text is being tokenized.
- *
- * \param Range the source range in which text should be tokenized. All of the
- * tokens produced by tokenization will fall within this source range,
- *
- * \param Tokens this pointer will be set to point to the array of tokens
- * that occur within the given source range. The returned pointer must be
- * freed with clang_disposeTokens() before the translation unit is destroyed.
- *
- * \param NumTokens will be set to the number of tokens in the \c *Tokens
- * array.
- *
- */
-func Tokenize(tu TranslationUnit, src SourceRange) Tokens {
-	tokens := Tokens{}
-	tokens.tu = tu.c
-	C.clang_tokenize(tu.c, src.c, &tokens.c, &tokens.n)
-	return tokens
-}
-
-// an array of tokens
-type Tokens struct {
-	tu C.CXTranslationUnit
-	c  *C.CXToken
-	n  C.uint
-}
-
-/**
  * \brief Annotate the given set of tokens by providing cursors for each token
  * that can be mapped to a specific entity within the abstract syntax tree.
  *

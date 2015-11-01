@@ -4,6 +4,7 @@ package phoenix
 import "C"
 
 import (
+	"reflect"
 	"unsafe"
 )
 
@@ -138,6 +139,22 @@ func (tu TranslationUnit) TokenLocation(t Token) SourceLocation {
 // Retrieve a source range that covers the given token.
 func (tu TranslationUnit) TokenExtent(t Token) SourceRange {
 	return SourceRange{C.clang_getTokenExtent(tu.c, t.c)}
+}
+
+// Tokenize the source code described by the given range into raw lexical tokens. \param TU the translation unit whose text is being tokenized. \param Range the source range in which text should be tokenized. All of the tokens produced by tokenization will fall within this source range, \param Tokens this pointer will be set to point to the array of tokens that occur within the given source range. The returned pointer must be freed with clang_disposeTokens() before the translation unit is destroyed. \param NumTokens will be set to the number of tokens in the \c *Tokens array.
+func (tu TranslationUnit) Tokenize(Range SourceRange) []Token {
+	var cp_Tokens *C.CXToken
+	var Tokens []Token
+	var NumTokens C.uint
+
+	C.clang_tokenize(tu.c, Range.c, &cp_Tokens, &NumTokens)
+
+	gos_Tokens := (*reflect.SliceHeader)(unsafe.Pointer(&Tokens))
+	gos_Tokens.Cap = int(NumTokens)
+	gos_Tokens.Len = int(NumTokens)
+	gos_Tokens.Data = uintptr(unsafe.Pointer(cp_Tokens))
+
+	return Tokens
 }
 
 // Free the given set of tokens.

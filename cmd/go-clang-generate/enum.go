@@ -112,6 +112,9 @@ const (
 func generateEnum(e *Enum) error {
 	// TODO remove this hack
 	for _, m := range e.Methods {
+		if strings.Contains(m, "reflect.") {
+			e.Imports["reflect"] = struct{}{}
+		}
 		if strings.Contains(m, "time.Time") {
 			e.Imports["time"] = struct{}{}
 		}
