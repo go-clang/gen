@@ -25,60 +25,6 @@ void clang_getInclusions(CXTranslationUnit tu,
                                         CXInclusionVisitor visitor,
                                         CXClientData client_data);
 
-/**
- * \brief A group of callbacks used by #clang_indexSourceFile and
- * #clang_indexTranslationUnit.
- */
-typedef struct {
-  /**
-   * \brief Called periodically to check whether indexing should be aborted.
-   * Should return 0 to continue, and non-zero to abort.
-   */
-  int (*abortQuery)(CXClientData client_data, void *reserved);
-
-  /**
-   * \brief Called at the end of indexing; passes the complete diagnostic set.
-   */
-  void (*diagnostic)(CXClientData client_data,
-                     CXDiagnosticSet, void *reserved);
-
-  CXIdxClientFile (*enteredMainFile)(CXClientData client_data,
-                                     CXFile mainFile, void *reserved);
-
-  /**
-   * \brief Called when a file gets \#included/\#imported.
-   */
-  CXIdxClientFile (*ppIncludedFile)(CXClientData client_data,
-                                    const CXIdxIncludedFileInfo *);
-
-  /**
-   * \brief Called when a AST file (PCH or module) gets imported.
-   *
-   * AST files will not get indexed (there will not be callbacks to index all
-   * the entities in an AST file). The recommended action is that, if the AST
-   * file is not already indexed, to initiate a new indexing job specific to
-   * the AST file.
-   */
-  CXIdxClientASTFile (*importedASTFile)(CXClientData client_data,
-                                        const CXIdxImportedASTFileInfo *);
-
-  /**
-   * \brief Called at the beginning of indexing a translation unit.
-   */
-  CXIdxClientContainer (*startedTranslationUnit)(CXClientData client_data,
-                                                 void *reserved);
-
-  void (*indexDeclaration)(CXClientData client_data,
-                           const CXIdxDeclInfo *);
-
-  /**
-   * \brief Called to index a reference of an entity.
-   */
-  void (*indexEntityReference)(CXClientData client_data,
-                               const CXIdxEntityRefInfo *);
-
-} IndexerCallbacks;
-
 const CXIdxObjCContainerDeclInfo *
 clang_index_getObjCContainerDeclInfo(const CXIdxDeclInfo *);
 
