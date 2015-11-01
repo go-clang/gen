@@ -193,6 +193,12 @@ func generateASTFunction(f *Function) string {
 				f.Type = &ast.ArrayType{
 					Elt: f.Type,
 				}
+			} else if typ.PointerLevel > 0 && typ.CGoName != CSChar && !typ.IsReturnArgument {
+				for i := 0; i < typ.PointerLevel; i++ {
+					f.Type = &ast.StarExpr{
+						X: f.Type,
+					}
+				}
 			}
 		}
 
@@ -775,6 +781,22 @@ func generateASTFunction(f *Function) string {
 					X: call,
 				})
 				addEmptyLine()
+			} else if f.ReturnType.PointerLevel > 0 {
+				// Do the C function call and save the result into the new variable "o"
+				addAssignmentToO(&ast.StarExpr{
+					X: call,
+				})
+				addEmptyLine()
+
+				addReturnItem(&ast.UnaryExpr{
+					Op: token.AND,
+					X: doCompose(
+						f.ReturnType.GoName,
+						&ast.Ident{
+							Name: "o",
+						},
+					),
+				})
 			} else {
 				var convCall ast.Expr
 

@@ -171,6 +171,25 @@ func (tu TranslationUnit) DisposeTokens(Tokens []Token) {
 	C.clang_disposeTokens(tu.c, cp_Tokens, C.uint(len(Tokens)))
 }
 
+// Perform code completion at a given location in a translation unit. This function performs code completion at a particular file, line, and column within source code, providing results that suggest potential code snippets based on the context of the completion. The basic model for code completion is that Clang will parse a complete source file, performing syntax checking up to the location where code-completion has been requested. At that point, a special code-completion token is passed to the parser, which recognizes this token and determines, based on the current location in the C/Objective-C/C++ grammar and the state of semantic analysis, what completions to provide. These completions are returned via a new \c CXCodeCompleteResults structure. Code completion itself is meant to be triggered by the client when the user types punctuation characters or whitespace, at which point the code-completion location will coincide with the cursor. For example, if \c p is a pointer, code-completion might be triggered after the "-" and then after the ">" in \c p->. When the code-completion location is afer the ">", the completion results will provide, e.g., the members of the struct that "p" points to. The client is responsible for placing the cursor at the beginning of the token currently being typed, then filtering the results based on the contents of the token. For example, when code-completing for the expression \c p->get, the client should provide the location just after the ">" (e.g., pointing at the "g") to this code-completion hook. Then, the client can filter the results based on the current token text ("get"), only showing those results that start with "get". The intent of this interface is to separate the relatively high-latency acquisition of code-completion results from the filtering of results on a per-character basis, which must have a lower latency. \param TU The translation unit in which code-completion should occur. The source files for this translation unit need not be completely up-to-date (and the contents of those source files may be overridden via \p unsaved_files). Cursors referring into the translation unit may be invalidated by this invocation. \param complete_filename The name of the source file where code completion should be performed. This filename may be any file included in the translation unit. \param complete_line The line at which code-completion should occur. \param complete_column The column at which code-completion should occur. Note that the column should point just after the syntactic construct that initiated code completion, and not in the middle of a lexical token. \param unsaved_files the Tiles that have not yet been saved to disk but may be required for parsing or code completion, including the contents of those files. The contents and name of these files (as specified by CXUnsavedFile) are copied when necessary, so the client only needs to guarantee their validity until the call to this function returns. \param num_unsaved_files The number of unsaved file entries in \p unsaved_files. \param options Extra options that control the behavior of code completion, expressed as a bitwise OR of the enumerators of the CXCodeComplete_Flags enumeration. The \c clang_defaultCodeCompleteOptions() function returns a default set of code-completion options. \returns If successful, a new \c CXCodeCompleteResults structure containing code-completion results, which should eventually be freed with \c clang_disposeCodeCompleteResults(). If code completion fails, returns NULL.
+func (tu TranslationUnit) CodeCompleteAt(complete_filename string, complete_line uint16, complete_column uint16, unsaved_files []UnsavedFile, options uint16) *CodeCompleteResults {
+	ca_unsaved_files := make([]C.struct_CXUnsavedFile, len(unsaved_files))
+	var cp_unsaved_files *C.struct_CXUnsavedFile
+	if len(unsaved_files) > 0 {
+		cp_unsaved_files = &ca_unsaved_files[0]
+	}
+	for i := range unsaved_files {
+		ca_unsaved_files[i] = unsaved_files[i].c
+	}
+
+	c_complete_filename := C.CString(complete_filename)
+	defer C.free(unsafe.Pointer(c_complete_filename))
+
+	o := *C.clang_codeCompleteAt(tu.c, c_complete_filename, C.uint(complete_line), C.uint(complete_column), cp_unsaved_files, C.uint(len(unsaved_files)), C.uint(options))
+
+	return &CodeCompleteResults{o}
+}
+
 // Find #import/#include directives in a specific file. \param TU translation unit containing the file to query. \param file to search for #import/#include directives. \param visitor callback that will receive pairs of CXCursor/CXSourceRange for each directive found. \returns one of the CXResult enumerators.
 func (tu TranslationUnit) FindIncludesInFile(file File, visitor CursorAndRangeVisitor) Result {
 	return Result(C.clang_findIncludesInFile(tu.c, file.c, visitor.c))

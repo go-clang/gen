@@ -545,11 +545,15 @@ func (h *headerFile) handleHeaderFile() {
 			if (!h.isEnumOrStruct(p.Type.GoName) && !p.Type.IsPrimitive) || p.Type.PointerLevel != 0 {
 				found = true
 
+				fmt.Printf("Cannot handle parameter %s -> %#v\n", f.CName, p)
+
 				break
 			}
 		}
 
-		if f.ReturnType.PointerLevel > 0 && !(f.ReturnType.PointerLevel == 1 && f.ReturnType.CGoName == CSChar) { // TODO implement to return slices
+		if !f.ReturnType.IsSlice && f.ReturnType.PointerLevel > 0 && !(f.ReturnType.PointerLevel == 1 && f.ReturnType.CGoName == CSChar) && f.CName != "clang_codeCompleteAt" { // TODO implement to return slices
+			fmt.Printf("Cannot handle return argument %s -> %#v\n", f.CName, f.ReturnType)
+
 			found = true
 		}
 
