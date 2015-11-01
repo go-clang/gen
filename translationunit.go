@@ -28,3 +28,7 @@ func (tu TranslationUnit) AnnotateTokens(Tokens []Token) []Cursor {
 
 	return cursors
 }
+
+func (tu TranslationUnit) IsValid() bool {
+	return tu.c != nil
+}
