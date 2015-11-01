@@ -89,10 +89,6 @@ func (tu TranslationUnit) CompleteAt(complete_filename string, complete_line, co
 	return CodeCompleteResults{cr}
 }
 
-func (tu TranslationUnit) IsValid() bool {
-	return tu.c != nil
-}
-
 /**
  * \brief Retrieve a diagnostic associated with the given translation unit.
  *

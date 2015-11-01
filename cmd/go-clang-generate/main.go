@@ -211,6 +211,7 @@ func main() {
 
 	fmt.Printf("Will generate go-clang for LLVM version %d.%d in current directory\n", llvmVersion.Major, llvmVersion.Minor)
 
+	// TODO reenable
 	/*// Copy the Clang-C include directory into the current directory
 	_ = os.RemoveAll("./clang-c/")
 	if err := shutil.CopyTree(clangCIncludeDir, "./clang-c/", nil); err != nil {
