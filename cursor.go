@@ -6,6 +6,30 @@ import (
 	"unsafe"
 )
 
+// Determine the availability of the entity that this cursor refers to on any platforms for which availability information is known. \param cursor The cursor to query. \param always_deprecated If non-NULL, will be set to indicate whether the entity is deprecated on all platforms. \param deprecated_message If non-NULL, will be set to the message text provided along with the unconditional deprecation of this entity. The client is responsible for deallocating this string. \param always_unavailable If non-NULL, will be set to indicate whether the entity is unavailable on all platforms. \param unavailable_message If non-NULL, will be set to the message text provided along with the unconditional unavailability of this entity. The client is responsible for deallocating this string. \param availability If non-NULL, an array of CXPlatformAvailability instances that will be populated with platform availability information, up to either the number of platforms for which availability information is available (as returned by this function) or \c availability_size, whichever is smaller. \param availability_size The number of elements available in the \c availability array. \returns The number of platforms (N) for which availability information is available (which is unrelated to \c availability_size). Note that the client is responsible for calling \c clang_disposeCXPlatformAvailability to free each of the platform-availability structures returned. There are \c min(N, availability_size) such structures.
+func (c Cursor) PlatformAvailability(availabilitySize int) (always_deprecated bool, deprecated_msg string, always_unavailable bool, unavailable_msg string, availability []PlatformAvailability) {
+	var c_always_deprecated C.int
+	var c_deprecated_message cxstring
+	defer c_deprecated_message.Dispose()
+	var c_always_unavailable C.int
+	var c_unavailable_message cxstring
+	defer c_unavailable_message.Dispose()
+	var cp_availability = make([]C.CXPlatformAvailability, availabilitySize)
+
+	nn := int(C.clang_getCursorPlatformAvailability(c.c, &c_always_deprecated, &c_deprecated_message.c, &c_always_unavailable, &c_unavailable_message.c, &cp_availability[0], C.int(len(cp_availability))))
+
+	if nn > availabilitySize {
+		nn = availabilitySize
+	}
+
+	availability = make([]PlatformAvailability, nn)
+	for i := 0; i < nn; i++ {
+		availability[i] = PlatformAvailability{cp_availability[i]}
+	}
+
+	return c_always_deprecated != 0, c_deprecated_message.String(), c_always_unavailable != 0, c_unavailable_message.String(), availability
+}
+
 // CursorVisitor does the following.
 /**
  * \brief Visitor invoked for each cursor found by a traversal.

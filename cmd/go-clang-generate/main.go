@@ -420,7 +420,7 @@ func (h *headerFile) handleHeaderFile() {
 			continue
 		}
 		// Some functions are simply manually implemented
-		if f.CName == "clang_visitChildren" {
+		if f.CName == "clang_getCursorPlatformAvailability" || f.CName == "clang_visitChildren" {
 			fmt.Printf("Ignore function %q because it is manually implemented\n", f.CName)
 
 			continue
@@ -451,7 +451,7 @@ func (h *headerFile) handleHeaderFile() {
 			}
 
 			// TODO happy hack, whiteflag types that are return arguments
-			if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == GoUInt16 || p.Type.GoName == "CompilationDatabase_Error" || p.Type.GoName == "PlatformAvailability" || p.Type.GoName == "SourceRange" || p.Type.GoName == "LoadDiag_Error") {
+			if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == GoInt16 || p.Type.GoName == GoUInt16 || p.Type.GoName == "CompilationDatabase_Error" || p.Type.GoName == "PlatformAvailability" || p.Type.GoName == "SourceRange" || p.Type.GoName == "LoadDiag_Error") {
 				p.Type.IsReturnArgument = true
 			}
 			if p.Type.PointerLevel == 2 && p.Type.GoName == "Token" {
@@ -468,6 +468,8 @@ func (h *headerFile) handleHeaderFile() {
 				paName = pan
 			} else if pan := strings.TrimPrefix(p.Name, "Num"); len(pan) != len(p.Name) && unicode.IsUpper(rune(pan[0])) {
 				paName = pan
+			} else if pan := strings.TrimSuffix(p.Name, "_size"); len(pan) != len(p.Name) {
+				paName = pan
 			}
 
 			if paName != "" {
@@ -481,6 +483,7 @@ func (h *headerFile) handleHeaderFile() {
 							pa.Type.CGoName = "struct_CXUnsavedFile"
 						} else if pa.Type.CGoName == CSChar && pa.Type.PointerLevel == 2 {
 						} else if pa.Type.GoName == "CompletionResult" {
+						} else if pa.Type.GoName == "PlatformAvailability" {
 						} else if pa.Type.GoName == "Token" {
 						} else {
 							break
@@ -489,7 +492,7 @@ func (h *headerFile) handleHeaderFile() {
 						p.Type.LengthOfSlice = pa.Name
 						pa.Type.IsSlice = true
 
-						if pa.Type.IsReturnArgument {
+						if pa.Type.IsReturnArgument && p.Type.PointerLevel > 0 {
 							p.Type.IsReturnArgument = true
 						}
 
