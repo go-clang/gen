@@ -9,6 +9,8 @@ import (
 
 // File represents a generation file
 type File struct {
+	HeaderFile string
+
 	Name string
 
 	Imports map[string]struct{}
@@ -18,7 +20,8 @@ type File struct {
 
 var templateGenerateFile = template.Must(template.New("go-clang-generate-file").Parse(`package phoenix
 
-// #include "go-clang.h"
+{{if $.HeaderFile}}// #include "{{$.HeaderFile}}"
+{{end}}// #include "go-clang.h"
 import "C"
 {{if $.Imports}}
 import (

@@ -14,17 +14,31 @@ import (
 	// "github.com/termie/go-shutil"
 )
 
-var enums []*Enum
-var functions []*Function
-var structs []*Struct
+type headerFile struct {
+	name string
 
-var lookupEnum = map[string]*Enum{}
-var lookupNonTypedefs = map[string]string{}
-var lookupStruct = map[string]*Struct{
-	"cxstring": &Struct{
-		Name:  "cxstring",
-		CName: "CXString",
-	},
+	enums     []*Enum
+	functions []*Function
+	structs   []*Struct
+
+	lookupEnum        map[string]*Enum
+	lookupNonTypedefs map[string]string
+	lookupStruct      map[string]*Struct
+}
+
+func newHeaderFile(name string) *headerFile {
+	return &headerFile{
+		name: name,
+
+		lookupEnum:        map[string]*Enum{},
+		lookupNonTypedefs: map[string]string{},
+		lookupStruct: map[string]*Struct{
+			"cxstring": &Struct{
+				Name:  "cxstring",
+				CName: "CXString",
+			},
+		},
+	}
 }
 
 func trimCommonFName(fname string, rt Receiver) string {
@@ -54,16 +68,16 @@ func trimCommonFName(fname string, rt Receiver) string {
 	return fname
 }
 
-func addFunction(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
+func (h *headerFile) addFunction(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 	fname = upperFirstCharacter(fnamePrefix + upperFirstCharacter(fname))
 
-	if e, ok := lookupEnum[rt.Type.GoName]; ok {
+	if e, ok := h.lookupEnum[rt.Type.GoName]; ok {
 		f.Name = fname
 
 		e.Methods = append(e.Methods, generateASTFunction(f))
 
 		return true
-	} else if s, ok := lookupStruct[rt.Type.GoName]; ok && s.CName != "CXString" {
+	} else if s, ok := h.lookupStruct[rt.Type.GoName]; ok && s.CName != "CXString" {
 		f.Name = fname
 
 		fStr := generateASTFunction(f)
@@ -91,7 +105,7 @@ func deleteMethod(methods []string, fName string) []string {
 	return methods
 }
 
-func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
+func (h *headerFile) addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 	// TODO this is a big HACK. Figure out how we can trim receiver names while still not having two "Cursor" methods for TranslationUnit
 	if f.CName == "clang_getTranslationUnitCursor" {
 		fname = "TranslationUnitCursor"
@@ -99,7 +113,7 @@ func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool 
 
 	fname = upperFirstCharacter(fnamePrefix + upperFirstCharacter(fname))
 
-	if e, ok := lookupEnum[rt.Type.GoName]; ok {
+	if e, ok := h.lookupEnum[rt.Type.GoName]; ok {
 		f.Name = fname
 		f.Receiver = e.Receiver
 		f.Receiver.Type = rt.Type
@@ -107,7 +121,7 @@ func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool 
 		e.Methods = append(e.Methods, generateASTFunction(f))
 
 		return true
-	} else if s, ok := lookupStruct[rt.Type.GoName]; ok && s.CName != "CXString" {
+	} else if s, ok := h.lookupStruct[rt.Type.GoName]; ok && s.CName != "CXString" {
 		f.Name = fname
 		f.Receiver = s.Receiver
 		f.Receiver.Type = rt.Type
@@ -122,38 +136,38 @@ func addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool 
 	return false
 }
 
-func addBasicMethods(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
-	if len(f.Parameters) == 0 && isEnumOrStruct(f.ReturnType.GoName) {
+func (h *headerFile) addBasicMethods(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
+	if len(f.Parameters) == 0 && h.isEnumOrStruct(f.ReturnType.GoName) {
 		fname = trimCommonFName(fname, rt)
 		if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
 			fname = "New" + fname
 		}
 
-		return addMethod(f, fname, fnamePrefix, rt)
+		return h.addMethod(f, fname, fnamePrefix, rt)
 	} else if (fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3]))) {
 		f.ReturnType.GoName = "bool"
 
-		return addMethod(f, fname, fnamePrefix, rt)
-	} else if len(f.Parameters) == 1 && isEnumOrStruct(f.Parameters[0].Type.GoName) && strings.HasPrefix(fname, "dispose") && f.ReturnType.GoName == "void" {
+		return h.addMethod(f, fname, fnamePrefix, rt)
+	} else if len(f.Parameters) == 1 && h.isEnumOrStruct(f.Parameters[0].Type.GoName) && strings.HasPrefix(fname, "dispose") && f.ReturnType.GoName == "void" {
 		fname = "Dispose"
 
-		return addMethod(f, fname, fnamePrefix, rt)
-	} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && isEnumOrStruct(f.Parameters[0].Type.GoName) && f.Parameters[0].Type == f.Parameters[1].Type {
+		return h.addMethod(f, fname, fnamePrefix, rt)
+	} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && h.isEnumOrStruct(f.Parameters[0].Type.GoName) && f.Parameters[0].Type == f.Parameters[1].Type {
 		f.Parameters[0].Name = receiverName(f.Parameters[0].Type.GoName)
 		f.Parameters[1].Name = f.Parameters[0].Name + "2"
 
 		f.ReturnType.GoName = "bool"
 
-		return addMethod(f, fname, fnamePrefix, rt)
+		return h.addMethod(f, fname, fnamePrefix, rt)
 	}
 
 	return false
 }
 
-func isEnumOrStruct(name string) bool {
-	if _, ok := lookupEnum[name]; ok {
+func (h *headerFile) isEnumOrStruct(name string) bool {
+	if _, ok := h.lookupEnum[name]; ok {
 		return true
-	} else if _, ok := lookupStruct[name]; ok {
+	} else if _, ok := h.lookupStruct[name]; ok {
 		return true
 	}
 
@@ -218,8 +232,27 @@ func main() {
 		}
 	}
 
-	clangIndexHeaderFilepath := "./clang-c/Index.h"
+	clangCDirectory := "./clang-c/"
+	headers, err := ioutil.ReadDir(clangCDirectory)
+	if err != nil {
+		exitWithFatal("Cannot list clang-c directory", err)
+	}
+	for _, h := range headers {
+		if h.IsDir() {
+			continue
+		}
 
+		newHeaderFile(clangCDirectory + h.Name()).handleHeaderFile()
+	}
+
+	if out, _, err := execToBuffer("gofmt", "-w", "./"); err != nil { // TODO do this before saving the files using go/fmt
+		fmt.Printf("gofmt:\n%s\n", out)
+
+		exitWithFatal("Gofmt failed", err)
+	}
+}
+
+func (h *headerFile) handleHeaderFile() {
 	/*
 		Hide all "void *" fields of structs by replacing the type with "uintptr_t".
 
@@ -230,7 +263,7 @@ func main() {
 		I do not know how the original author debugged this, but one thing: Thank you!
 	*/
 	findStructsRe := regexp.MustCompile(`(?s)struct[\s\w]+{.+?}`)
-	f, err := ioutil.ReadFile(clangIndexHeaderFilepath)
+	f, err := ioutil.ReadFile(h.name)
 	if err != nil {
 		exitWithFatal("Cannot read Index.h", nil)
 	}
@@ -249,7 +282,7 @@ func main() {
 	if incl := "#include <stdint.h>"; !strings.HasPrefix(fs, incl) {
 		fs = "#include <stdint.h>\n\n" + fs
 	}
-	err = ioutil.WriteFile(clangIndexHeaderFilepath, []byte(fs), 0700)
+	err = ioutil.WriteFile(h.name, []byte(fs), 0700)
 	if err != nil {
 		exitWithFatal("Cannot write Index.h", nil)
 	}
@@ -258,7 +291,7 @@ func main() {
 	idx := clang.NewIndex(0, 1)
 	defer idx.Dispose()
 
-	tu := idx.Parse(clangIndexHeaderFilepath, []string{
+	tu := idx.Parse(h.name, []string{
 		"-I", ".", // Include current folder
 		"-I", "/usr/local/lib/clang/3.4.2/include/",
 		"-I", "/usr/include/clang/3.6.2/include/",
@@ -294,7 +327,7 @@ func main() {
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		// Only handle code of the current file
 		sourceFile, _, _, _ := cursor.Location().GetFileLocation()
-		if sourceFile.Name() != clangIndexHeaderFilepath {
+		if sourceFile.Name() != h.name {
 			return clang.CVR_Continue
 		}
 
@@ -314,15 +347,15 @@ func main() {
 
 			e := handleEnumCursor(cursor, cname, cnameIsTypeDef)
 
-			lookupEnum[e.Name] = e
-			lookupNonTypedefs["enum "+e.CName] = e.Name
-			lookupEnum[e.CName] = e
+			h.lookupEnum[e.Name] = e
+			h.lookupNonTypedefs["enum "+e.CName] = e.Name
+			h.lookupEnum[e.CName] = e
 
-			enums = append(enums, e)
+			h.enums = append(h.enums, e)
 		case clang.CK_FunctionDecl:
 			f := handleFunctionCursor(cursor)
 			if f != nil {
-				functions = append(functions, f)
+				h.functions = append(h.functions, f)
 			}
 		case clang.CK_StructDecl:
 			if cname == "" {
@@ -331,31 +364,31 @@ func main() {
 
 			s := handleStructCursor(cursor, cname, cnameIsTypeDef)
 
-			lookupStruct[s.Name] = s
-			lookupNonTypedefs["struct "+s.CName] = s.Name
-			lookupStruct[s.CName] = s
+			h.lookupStruct[s.Name] = s
+			h.lookupNonTypedefs["struct "+s.CName] = s.Name
+			h.lookupStruct[s.CName] = s
 
-			structs = append(structs, s)
+			h.structs = append(h.structs, s)
 		case clang.CK_TypedefDecl:
 			underlyingType := cursor.TypedefDeclUnderlyingType().TypeSpelling()
 			underlyingStructType := strings.TrimSuffix(strings.TrimPrefix(underlyingType, "struct "), " *")
 
-			if s, ok := lookupStruct[underlyingStructType]; ok && !s.CNameIsTypeDef && strings.HasPrefix(underlyingType, "struct "+s.CName) {
+			if s, ok := h.lookupStruct[underlyingStructType]; ok && !s.CNameIsTypeDef && strings.HasPrefix(underlyingType, "struct "+s.CName) {
 				// Sometimes the typedef is not a parent of the struct but a sibling TODO find out if this is a bug?
 
 				sn := handleVoidStructCursor(cursor, cname, true)
 
-				lookupStruct[sn.Name] = sn
-				lookupNonTypedefs["struct "+sn.CName] = sn.Name
-				lookupStruct[sn.CName] = sn
+				h.lookupStruct[sn.Name] = sn
+				h.lookupNonTypedefs["struct "+sn.CName] = sn.Name
+				h.lookupStruct[sn.CName] = sn
 
 				// Update the lookups for the old struct
-				lookupStruct[s.Name] = sn
-				lookupStruct[s.CName] = sn
+				h.lookupStruct[s.Name] = sn
+				h.lookupStruct[s.CName] = sn
 
-				for i, si := range structs {
+				for i, si := range h.structs {
 					if si == s {
-						structs[i] = sn
+						h.structs[i] = sn
 
 						break
 					}
@@ -363,11 +396,11 @@ func main() {
 			} else if underlyingType == "void *" {
 				s := handleVoidStructCursor(cursor, cname, true)
 
-				lookupStruct[s.Name] = s
-				lookupNonTypedefs["struct "+s.CName] = s.Name
-				lookupStruct[s.CName] = s
+				h.lookupStruct[s.Name] = s
+				h.lookupNonTypedefs["struct "+s.CName] = s.Name
+				h.lookupStruct[s.CName] = s
 
-				structs = append(structs, s)
+				h.structs = append(h.structs, s)
 			}
 		}
 
@@ -380,23 +413,28 @@ func main() {
 		Imports: map[string]struct{}{},
 	}
 
-	for _, f := range functions {
+	for _, f := range h.functions {
+		// Some functions are not compiled in (TODO only 3.4) the library see https://lists.launchpad.net/desktop-packages/msg75835.html for a never resolved bug report
+		if f.CName == "clang_CompileCommand_getMappedSourceContent" || f.CName == "clang_CompileCommand_getMappedSourcePath" || f.CName == "clang_CompileCommand_getNumMappedSources" {
+			continue
+		}
+
 		fname := f.Name
 
 		// Prepare the parameters
 		for i := range f.Parameters {
 			p := &f.Parameters[i]
 
-			if n, ok := lookupNonTypedefs[p.Type.CGoName]; ok {
+			if n, ok := h.lookupNonTypedefs[p.Type.CGoName]; ok {
 				p.Type.GoName = n
 			}
-			if e, ok := lookupEnum[p.Type.GoName]; ok {
+			if e, ok := h.lookupEnum[p.Type.GoName]; ok {
 				p.CName = e.Receiver.CName
 				// TODO remove the receiver... and copy only names here to preserve the original pointers and so
 				p.Type.GoName = e.Receiver.Type.GoName
 				p.Type.CGoName = e.Receiver.Type.CGoName
 				p.Type.CGoName = e.Receiver.Type.CGoName
-			} else if _, ok := lookupStruct[p.Type.GoName]; ok {
+			} else if _, ok := h.lookupStruct[p.Type.GoName]; ok {
 			}
 
 			// TODO happy hack, whiteflag types that are return arguments
@@ -432,12 +470,12 @@ func main() {
 		}
 
 		// Prepare the return argument
-		if n, ok := lookupNonTypedefs[f.ReturnType.CGoName]; ok {
+		if n, ok := h.lookupNonTypedefs[f.ReturnType.CGoName]; ok {
 			f.ReturnType.GoName = n
 		}
-		if e, ok := lookupEnum[f.ReturnType.GoName]; ok {
+		if e, ok := h.lookupEnum[f.ReturnType.GoName]; ok {
 			f.ReturnType.CGoName = e.Receiver.Type.CGoName
-		} else if _, ok := lookupStruct[f.ReturnType.GoName]; ok {
+		} else if _, ok := h.lookupStruct[f.ReturnType.GoName]; ok {
 		}
 
 		// Prepare the receiver
@@ -447,9 +485,9 @@ func main() {
 			rt.CName = f.Parameters[0].CName
 			rt.Type = f.Parameters[0].Type
 		} else {
-			if e, ok := lookupEnum[f.ReturnType.GoName]; ok {
+			if e, ok := h.lookupEnum[f.ReturnType.GoName]; ok {
 				rt.Type = e.Receiver.Type
-			} else if s, ok := lookupStruct[f.ReturnType.GoName]; ok {
+			} else if s, ok := h.lookupStruct[f.ReturnType.GoName]; ok {
 				rt.Type.GoName = s.Name
 			}
 		}
@@ -471,7 +509,7 @@ func main() {
 				continue
 			}
 
-			if (!isEnumOrStruct(p.Type.GoName) && !p.Type.IsPrimitive) || p.Type.PointerLevel != 0 {
+			if (!h.isEnumOrStruct(p.Type.GoName) && !p.Type.IsPrimitive) || p.Type.PointerLevel != 0 {
 				found = true
 
 				break
@@ -486,7 +524,7 @@ func main() {
 		added := false
 
 		if !found {
-			added = addBasicMethods(f, fname, "", rt)
+			added = h.addBasicMethods(f, fname, "", rt)
 
 			if !added {
 				if s := strings.Split(f.Name, "_"); len(s) == 2 {
@@ -494,9 +532,9 @@ func main() {
 						rtc := rt
 						rtc.Name = s[0]
 
-						added = addBasicMethods(f, s[1], "", rtc)
+						added = h.addBasicMethods(f, s[1], "", rtc)
 					} else {
-						added = addBasicMethods(f, strings.Join(s[1:], ""), s[0]+"_", rt)
+						added = h.addBasicMethods(f, strings.Join(s[1:], ""), s[0]+"_", rt)
 					}
 				}
 			}
@@ -508,12 +546,12 @@ func main() {
 					clangFile.Functions = append(clangFile.Functions, generateASTFunction(f))
 
 					added = true
-				} else if isEnumOrStruct(f.ReturnType.GoName) || f.ReturnType.IsPrimitive {
+				} else if h.isEnumOrStruct(f.ReturnType.GoName) || f.ReturnType.IsPrimitive {
 					fname = trimCommonFName(fname, rt)
 
-					added = addMethod(f, fname, "", rt)
+					added = h.addMethod(f, fname, "", rt)
 
-					if !added && isEnumOrStruct(f.ReturnType.GoName) {
+					if !added && h.isEnumOrStruct(f.ReturnType.GoName) {
 						fname = trimCommonFName(fname, rt)
 						if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
 							fname = "New" + fname
@@ -522,7 +560,7 @@ func main() {
 						rtc := rt
 						rtc.Type = f.ReturnType
 
-						added = addFunction(f, fname, "", rtc)
+						added = h.addFunction(f, fname, "", rtc)
 					}
 					if !added {
 						f.Name = upperFirstCharacter(f.Name)
@@ -540,28 +578,34 @@ func main() {
 		}
 	}
 
-	for _, e := range enums {
+	for _, e := range h.enums {
+		if h.name != "./clang-c/Index.h" {
+			e.HeaderFile = h.name
+		}
+
 		if err := generateEnum(e); err != nil {
 			exitWithFatal("Cannot generate enum", err)
 		}
 	}
 
-	for _, s := range structs {
+	for _, s := range h.structs {
+		if h.name != "./clang-c/Index.h" {
+			s.HeaderFile = h.name
+		}
+
 		if err := generateStruct(s); err != nil {
 			exitWithFatal("Cannot generate struct", err)
 		}
 	}
 
 	if len(clangFile.Functions) > 0 {
+		if h.name != "./clang-c/Index.h" {
+			clangFile.HeaderFile = h.name
+		}
+
 		if err := generateFile(clangFile); err != nil {
 			exitWithFatal("Cannot generate clang file", err)
 		}
-	}
-
-	if out, _, err := execToBuffer("gofmt", "-w", "./"); err != nil { // TODO do this before saving the files using go/fmt
-		fmt.Printf("gofmt:\n%s\n", out)
-
-		exitWithFatal("Gofmt failed", err)
 	}
 }
 

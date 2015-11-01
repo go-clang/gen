@@ -1,5 +1,5 @@
-#ifndef _GO_CLANG
-#define _GO_CLANG
+#ifndef GO_CLANG
+#define GO_CLANG
 
 #include <stdlib.h>
 
@@ -10,6 +10,6 @@
 #define CINDEX_VERSION_MINOR 20
 */
 
-unsigned _go_clang_visit_children(CXCursor c, void *fct);
+unsigned go_clang_visit_children(CXCursor c, void *fct);
 
 #endif

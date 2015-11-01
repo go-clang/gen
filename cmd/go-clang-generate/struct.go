@@ -9,8 +9,10 @@ import (
 	"github.com/sbinet/go-clang"
 )
 
-// FunctionParameter represents a generation struct
+// Struct represents a generation struct
 type Struct struct {
+	HeaderFile string
+
 	Name           string
 	CName          string
 	CNameIsTypeDef bool
@@ -132,7 +134,8 @@ func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bo
 
 var templateGenerateStruct = template.Must(template.New("go-clang-generate-struct").Parse(`package phoenix
 
-// #include "go-clang.h"
+{{if $.HeaderFile}}// #include "{{$.HeaderFile}}"
+{{end}}// #include "go-clang.h"
 import "C"
 {{if $.Imports}}
 import (
