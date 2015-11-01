@@ -454,7 +454,7 @@ func (h *headerFile) handleHeaderFile() {
 			if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == GoInt16 || p.Type.GoName == GoUInt16 || p.Type.GoName == "CompilationDatabase_Error" || p.Type.GoName == "PlatformAvailability" || p.Type.GoName == "SourceRange" || p.Type.GoName == "LoadDiag_Error") {
 				p.Type.IsReturnArgument = true
 			}
-			if p.Type.PointerLevel == 2 && p.Type.GoName == "Token" {
+			if p.Type.PointerLevel == 2 && (p.Type.GoName == "Token" || p.Type.GoName == "Cursor") {
 				p.Type.IsReturnArgument = true
 			}
 
@@ -484,6 +484,7 @@ func (h *headerFile) handleHeaderFile() {
 						} else if pa.Type.CGoName == CSChar && pa.Type.PointerLevel == 2 {
 						} else if pa.Type.GoName == "CompletionResult" {
 						} else if pa.Type.GoName == "Token" {
+						} else if pa.Type.GoName == "Cursor" {
 						} else {
 							break
 						}

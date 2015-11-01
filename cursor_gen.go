@@ -3,6 +3,11 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
+import (
+	"reflect"
+	"unsafe"
+)
+
 // A cursor representing some element in the abstract syntax tree for a translation unit. The cursor abstraction unifies the different kinds of entities in a program--declaration, statements, expressions, references to declarations, etc.--under a single "cursor" abstraction with a common set of operations. Common operation for a cursor include: getting the physical location in a source file where the cursor points, getting the name associated with a cursor, and retrieving cursors for any child nodes of a particular cursor. Cursors can be produced in two specific ways. clang_getTranslationUnitCursor() produces a cursor for a translation unit, from which one can use clang_visitChildren() to explore the rest of the translation unit. clang_getCursor() maps from a physical source location to the entity that resides at that location, allowing one to map from the source code into the AST.
 type Cursor struct {
 	c C.CXCursor
@@ -135,6 +140,22 @@ func (c Cursor) SemanticParent() Cursor {
  */
 func (c Cursor) LexicalParent() Cursor {
 	return Cursor{C.clang_getCursorLexicalParent(c.c)}
+}
+
+// Determine the set of methods that are overridden by the given method. In both Objective-C and C++, a method (aka virtual member function, in C++) can override a virtual method in a base class. For Objective-C, a method is said to override any method in the class's base class, its protocols, or its categories' protocols, that has the same selector and is of the same kind (class or instance). If no such method exists, the search continues to the class's superclass, its protocols, and its categories, and so on. A method from an Objective-C implementation is considered to override the same methods as its corresponding method in the interface. For C++, a virtual member function overrides any virtual member function with the same signature that occurs in its base classes. With multiple inheritance, a virtual member function can override several virtual member functions coming from different base classes. In all cases, this function determines the immediate overridden method, rather than all of the overridden methods. For example, if a method is originally declared in a class A, then overridden in B (which in inherits from A) and also in C (which inherited from B), then the only overridden method returned from this function when invoked on C's method will be B's method. The client may then invoke this function again, given the previously-found overridden methods, to map out the complete method-override set. \param cursor A cursor representing an Objective-C or C++ method. This routine will compute the set of methods that this method overrides. \param overridden A pointer whose pointee will be replaced with a pointer to an array of cursors, representing the set of overridden methods. If there are no overridden methods, the pointee will be set to NULL. The pointee must be freed via a call to \c clang_disposeOverriddenCursors(). \param num_overridden A pointer to the number of overridden functions, will be set to the number of overridden functions in the array pointed to by \p overridden.
+func (c Cursor) OverriddenCursors() []Cursor {
+	var cp_overridden *C.CXCursor
+	var overridden []Cursor
+	var num_overridden C.uint
+
+	C.clang_getOverriddenCursors(c.c, &cp_overridden, &num_overridden)
+
+	gos_overridden := (*reflect.SliceHeader)(unsafe.Pointer(&overridden))
+	gos_overridden.Cap = int(num_overridden)
+	gos_overridden.Len = int(num_overridden)
+	gos_overridden.Data = uintptr(unsafe.Pointer(cp_overridden))
+
+	return overridden
 }
 
 // Free the set of overridden cursors returned by \c clang_getOverriddenCursors().
