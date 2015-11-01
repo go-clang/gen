@@ -178,6 +178,12 @@ func (h *headerFile) isEnumOrStruct(name string) bool {
 	return false
 }
 
+type LLVMVersion struct {
+	Major    int
+	Minor    int
+	Subminor int
+}
+
 func main() {
 	rawLLVMVersion, _, err := execToBuffer("llvm-config", "--version")
 	if err != nil {
@@ -189,11 +195,7 @@ func main() {
 		exitWithFatal("Cannot parse LLVM version", nil)
 	}
 
-	var llvmVersion struct {
-		Major    int
-		Minor    int
-		Subminor int
-	}
+	var llvmVersion LLVMVersion
 
 	llvmVersion.Major, _ = strconv.Atoi(string(matchLLVMVersion[1]))
 	llvmVersion.Minor, _ = strconv.Atoi(string(matchLLVMVersion[2]))
@@ -212,6 +214,26 @@ func main() {
 	}
 
 	fmt.Println("Clang-C include directory", clangCIncludeDir)
+
+	clangArguments := []string{
+		"-I", ".", // Include current folder
+	}
+
+	for _, d := range []string{
+		"/usr/local/lib/clang",
+		"/usr/include/clang",
+	} {
+		for _, di := range []string{
+			d + fmt.Sprintf("/%d.%d.%d/include", llvmVersion.Major, llvmVersion.Minor, llvmVersion.Subminor),
+			d + fmt.Sprintf("/%d.%d/include", llvmVersion.Major, llvmVersion.Minor),
+		} {
+			if dirExists(di) == nil {
+				clangArguments = append(clangArguments, "-I", di)
+			}
+		}
+	}
+
+	fmt.Printf("Using clang arguments: %v\n", clangArguments)
 
 	fmt.Printf("Will generate go-clang for LLVM version %d.%d in current directory\n", llvmVersion.Major, llvmVersion.Minor)
 
@@ -247,7 +269,7 @@ func main() {
 			continue
 		}
 
-		newHeaderFile(clangCDirectory + h.Name()).handleHeaderFile()
+		newHeaderFile(clangCDirectory + h.Name()).handleHeaderFile(clangArguments)
 	}
 
 	if out, _, err := execToBuffer("gofmt", "-w", "./"); err != nil { // TODO do this before saving the files using go/fmt
@@ -257,7 +279,7 @@ func main() {
 	}
 }
 
-func (h *headerFile) handleHeaderFile() {
+func (h *headerFile) handleHeaderFile(clangArguments []string) {
 	/*
 		Hide all "void *" fields of structs by replacing the type with "uintptr_t".
 
@@ -296,11 +318,7 @@ func (h *headerFile) handleHeaderFile() {
 	idx := clang.NewIndex(0, 1)
 	defer idx.Dispose()
 
-	tu := idx.Parse(h.name, []string{
-		"-I", ".", // Include current folder
-		"-I", "/usr/local/lib/clang/3.4.2/include/",
-		"-I", "/usr/include/clang/3.6.2/include/",
-	}, nil, 0)
+	tu := idx.Parse(h.name, clangArguments, nil, 0)
 	defer tu.Dispose()
 
 	if !tu.IsValid() {
@@ -431,6 +449,7 @@ func (h *headerFile) handleHeaderFile() {
 				typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor, CXCursor parent, CXClientData client_data);
 			as manually implemented
 		*/
+		// TODO report other enums like callbacks that they are not implemented
 
 		fname := f.Name
 
