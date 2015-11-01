@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 /*===-- clang-c/Platform.h - C Index platform decls   -------------*- C -*-===*\
 |*                                                                            *|
 |*                     The LLVM Compiler Infrastructure                       *|

@@ -12,6 +12,8 @@ import (
 
 // Enum represents a generation enum
 type Enum struct {
+	HeaderFile string
+
 	Name           string
 	CName          string
 	CNameIsTypeDef bool
@@ -85,7 +87,8 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 
 var templateGenerateEnum = template.Must(template.New("go-clang-generate-enum").Parse(`package phoenix
 
-// #include "go-clang.h"
+{{if $.HeaderFile}}// #include "{{$.HeaderFile}}"
+{{end}}// #include "go-clang.h"
 import "C"
 {{if $.Imports}}
 import (

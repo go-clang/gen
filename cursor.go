@@ -61,7 +61,7 @@ var forceEscapeVisitor *CursorVisitor
 func (c Cursor) Visit(visitor CursorVisitor) bool {
 	forceEscapeVisitor = &visitor
 
-	o := C._go_clang_visit_children(c.c, unsafe.Pointer(&visitor))
+	o := C.go_clang_visit_children(c.c, unsafe.Pointer(&visitor))
 
 	return o == C.uint(0)
 }
