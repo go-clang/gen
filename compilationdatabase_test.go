@@ -1,25 +1,19 @@
-package clang_test
+package phoenix
 
 import (
 	"testing"
-
-	clang "github.com/sbinet/go-clang"
 )
 
 func TestCompilationDatabaseError(t *testing.T) {
-	_, err := clang.NewCompilationDatabase("testdata-not-there")
-	if err == nil {
-		t.Fatalf("expected an error")
-	}
-
-	if err.(clang.CompilationDatabaseError) != clang.CompilationDatabase_CanNotLoadDatabase {
-		t.Fatalf("expected %v", clang.CompilationDatabase_CanNotLoadDatabase)
+	err, _ := CompilationDatabase_fromDirectory("testdata-not-there")
+	if err != CompilationDatabase_CanNotLoadDatabase {
+		t.Fatalf("expected %v", CompilationDatabase_CanNotLoadDatabase)
 	}
 }
 
 func TestCompilationDatabase(t *testing.T) {
-	db, err := clang.NewCompilationDatabase("testdata")
-	if err != nil {
+	err, db := CompilationDatabase_fromDirectory("testdata")
+	if err != CompilationDatabase_NoError {
 		t.Fatalf("error loading compilation database: %v", err)
 	}
 	defer db.Dispose()
@@ -48,18 +42,18 @@ func TestCompilationDatabase(t *testing.T) {
 		},
 	}
 
-	cmds := db.GetAllCompileCommands()
-	if cmds.GetSize() != len(table) {
-		t.Errorf("expected #cmds=%d. got=%d", len(table), cmds.GetSize())
+	cmds := db.AllCompileCommands()
+	if int(cmds.Size()) != len(table) {
+		t.Errorf("expected #cmds=%d. got=%d", len(table), cmds.Size())
 	}
 
-	for i := 0; i < cmds.GetSize(); i++ {
-		cmd := cmds.GetCommand(i)
-		if cmd.GetDirectory() != table[i].directory {
-			t.Errorf("expected dir=%q. got=%q", table[i].directory, cmd.GetDirectory())
+	for i := 0; i < int(cmds.Size()); i++ {
+		cmd := cmds.Command(uint16(i))
+		if cmd.Directory() != table[i].directory {
+			t.Errorf("expected dir=%q. got=%q", table[i].directory, cmd.Directory())
 		}
 
-		nargs := cmd.GetNumArgs()
+		nargs := int(cmd.NumArgs())
 		if nargs != len(table[i].args) {
 			t.Errorf("expected #args=%d. got=%d", len(table[i].args), nargs)
 		}
@@ -67,7 +61,7 @@ func TestCompilationDatabase(t *testing.T) {
 			nargs = len(table[i].args)
 		}
 		for j := 0; j < nargs; j++ {
-			arg := cmd.GetArg(j)
+			arg := cmd.Arg(uint16(j))
 			if arg != table[i].args[j] {
 				t.Errorf("expected arg[%d]=%q. got=%q", j, table[i].args[j], arg)
 			}
