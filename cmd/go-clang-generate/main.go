@@ -548,7 +548,7 @@ func (h *headerFile) handleHeaderFile() {
 
 		for _, p := range f.Parameters {
 			// These pointers are ok
-			if p.Type.PointerLevel == 1 && (p.Type.CGoName == CSChar || p.Type.GoName == "UnsavedFile" || p.Type.GoName == "CodeCompleteResults" || p.Type.GoName == "CursorKind" || p.Type.GoName == "IdxContainerInfo" || p.Type.GoName == "IdxDeclInfo" || p.Type.GoName == "IndexerCallbacks" || p.Type.GoName == "TranslationUnit" || p.Type.GoName == "IdxEntityInfo") {
+			if p.Type.PointerLevel == 1 && (p.Type.CGoName == CSChar || p.Type.GoName == "UnsavedFile" || p.Type.GoName == "CodeCompleteResults" || p.Type.GoName == "CursorKind" || p.Type.GoName == "IdxContainerInfo" || p.Type.GoName == "IdxDeclInfo" || p.Type.GoName == "IndexerCallbacks" || p.Type.GoName == "TranslationUnit" || p.Type.GoName == "IdxEntityInfo" || p.Type.GoName == "IdxAttrInfo") {
 				continue
 			}
 			// Return arguments are always ok since we mark them earlier
@@ -569,7 +569,7 @@ func (h *headerFile) handleHeaderFile() {
 			}
 		}
 
-		if !f.ReturnType.IsSlice && f.ReturnType.PointerLevel > 0 && !(f.ReturnType.PointerLevel == 1 && f.ReturnType.CGoName == CSChar) && f.CName != "clang_codeCompleteAt" { // TODO implement to return slices
+		if !f.ReturnType.IsSlice && f.ReturnType.PointerLevel > 0 && !(f.ReturnType.PointerLevel == 1 && f.ReturnType.CGoName == CSChar) && f.CName != "clang_codeCompleteAt" && f.ReturnType.GoName != "IdxCXXClassDeclInfo" && f.ReturnType.GoName != "IdxIBOutletCollectionAttrInfo" && f.ReturnType.GoName != "IdxObjCPropertyDeclInfo" && f.ReturnType.GoName != "IdxObjCProtocolRefListInfo" && f.ReturnType.GoName != "IdxObjCCategoryDeclInfo" && f.ReturnType.GoName != "IdxObjCInterfaceDeclInfo" && f.ReturnType.GoName != "IdxObjCContainerDeclInfo" { // TODO implement to return slices and references returns
 			fmt.Printf("Cannot handle return argument %s -> %#v\n", f.CName, f.ReturnType)
 
 			found = true

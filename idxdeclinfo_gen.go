@@ -85,3 +85,39 @@ func (idi IdxDeclInfo) Flags() uint16 {
 	value := uint16(idi.c.flags)
 	return value
 }
+
+func (idi *IdxDeclInfo) Index_getObjCContainerDeclInfo() *IdxObjCContainerDeclInfo {
+	o := *C.clang_index_getObjCContainerDeclInfo(&idi.c)
+
+	return &IdxObjCContainerDeclInfo{o}
+}
+
+func (idi *IdxDeclInfo) Index_getObjCInterfaceDeclInfo() *IdxObjCInterfaceDeclInfo {
+	o := *C.clang_index_getObjCInterfaceDeclInfo(&idi.c)
+
+	return &IdxObjCInterfaceDeclInfo{o}
+}
+
+func (idi *IdxDeclInfo) Index_getObjCCategoryDeclInfo() *IdxObjCCategoryDeclInfo {
+	o := *C.clang_index_getObjCCategoryDeclInfo(&idi.c)
+
+	return &IdxObjCCategoryDeclInfo{o}
+}
+
+func (idi *IdxDeclInfo) Index_getObjCProtocolRefListInfo() *IdxObjCProtocolRefListInfo {
+	o := *C.clang_index_getObjCProtocolRefListInfo(&idi.c)
+
+	return &IdxObjCProtocolRefListInfo{o}
+}
+
+func (idi *IdxDeclInfo) Index_getObjCPropertyDeclInfo() *IdxObjCPropertyDeclInfo {
+	o := *C.clang_index_getObjCPropertyDeclInfo(&idi.c)
+
+	return &IdxObjCPropertyDeclInfo{o}
+}
+
+func (idi *IdxDeclInfo) Index_getCXXClassDeclInfo() *IdxCXXClassDeclInfo {
+	o := *C.clang_index_getCXXClassDeclInfo(&idi.c)
+
+	return &IdxCXXClassDeclInfo{o}
+}
