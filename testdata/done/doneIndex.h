@@ -1,25 +1,5 @@
 
 /**
- * \brief Deserialize a set of diagnostics from a Clang diagnostics bitcode
- * file.
- *
- * \param file The name of the file to deserialize.
- * \param error A pointer to a enum value recording if there was a problem
- *        deserializing the diagnostics.
- * \param errorString A pointer to a CXString for recording the error string
- *        if the file was not successfully loaded.
- *
- * \returns A loaded CXDiagnosticSet if successful, and NULL otherwise.  These
- * diagnostics should be released using clang_disposeDiagnosticSet().
- */
-CXDiagnosticSet clang_loadDiagnostics(const char *file,
-                                                  enum CXLoadDiag_Error *error,
-                                                  CXString *errorString);
-
-
-
-
-/**
  * \brief Determine the availability of the entity that this cursor refers to
  * on any platforms for which availability information is known.
  *
