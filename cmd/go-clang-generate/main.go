@@ -190,14 +190,14 @@ func main() {
 	}
 
 	var llvmVersion struct {
-		Major int
-		Minor int
-		Patch int // TODO rename to Subminor
+		Major    int
+		Minor    int
+		Subminor int
 	}
 
 	llvmVersion.Major, _ = strconv.Atoi(string(matchLLVMVersion[1]))
 	llvmVersion.Minor, _ = strconv.Atoi(string(matchLLVMVersion[2]))
-	llvmVersion.Patch, _ = strconv.Atoi(string(matchLLVMVersion[3]))
+	llvmVersion.Subminor, _ = strconv.Atoi(string(matchLLVMVersion[3]))
 
 	fmt.Println("Found LLVM version", string(matchLLVMVersion[0]))
 
