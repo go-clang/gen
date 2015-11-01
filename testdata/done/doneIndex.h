@@ -272,12 +272,6 @@ void clang_annotateTokens(CXTranslationUnit TU,
                                          CXToken *Tokens, unsigned NumTokens,
                                          CXCursor *Cursors);
 
-/**
- * \brief Free the given set of tokens.
- */
-void clang_disposeTokens(CXTranslationUnit TU,
-                                        CXToken *Tokens, unsigned NumTokens);
-
 /* for debug/testing */
 void clang_getDefinitionSpellingAndExtent(CXCursor,
                                           const char **startBuf,
@@ -392,16 +386,6 @@ CXCodeCompleteResults *clang_codeCompleteAt(CXTranslationUnit TU,
                                             struct CXUnsavedFile *unsaved_files,
                                             unsigned num_unsaved_files,
                                             unsigned options);
-
-/**
- * \brief Sort the code-completion results in case-insensitive alphabetical
- * order.
- *
- * \param Results The set of results to sort.
- * \param NumResults The number of results in \p Results.
- */
-void clang_sortCodeCompletionResults(CXCompletionResult *Results,
-                                     unsigned NumResults);
 
 /**
  * \brief Free the given set of code-completion results.

@@ -73,12 +73,3 @@ func (t Tokens) Annotate() []Cursor {
 	}
 	return cursors
 }
-
-/**
- * \brief Free the given set of tokens.
- */
-func (t Tokens) Dispose() {
-	C.clang_disposeTokens(t.tu, t.c, t.n)
-}
-
-// EOF

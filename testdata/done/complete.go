@@ -52,17 +52,6 @@ func (ccr CodeCompleteResults) Results() (ret []CompletionResult) {
 }
 
 /**
- * \brief Sort the code-completion results in case-insensitive alphabetical
- * order.
- *
- * \param Results The set of results to sort.
- * \param NumResults The number of results in \p Results.
- */
-func (ccr CodeCompleteResults) Sort() {
-	C.clang_sortCodeCompletionResults(ccr.c.Results, ccr.c.NumResults)
-}
-
-/**
  * \brief Free the given set of code-completion results.
  */
 func (ccr CodeCompleteResults) Dispose() {

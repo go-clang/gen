@@ -140,6 +140,20 @@ func (tu TranslationUnit) TokenExtent(t Token) SourceRange {
 	return SourceRange{C.clang_getTokenExtent(tu.c, t.c)}
 }
 
+// Free the given set of tokens.
+func (tu TranslationUnit) DisposeTokens(Tokens []Token) {
+	ca_Tokens := make([]C.CXToken, len(Tokens))
+	var cp_Tokens *C.CXToken
+	if len(Tokens) > 0 {
+		cp_Tokens = &ca_Tokens[0]
+	}
+	for i := range Tokens {
+		ca_Tokens[i] = Tokens[i].c
+	}
+
+	C.clang_disposeTokens(tu.c, cp_Tokens, C.uint(len(Tokens)))
+}
+
 // Find #import/#include directives in a specific file. \param TU translation unit containing the file to query. \param file to search for #import/#include directives. \param visitor callback that will receive pairs of CXCursor/CXSourceRange for each directive found. \returns one of the CXResult enumerators.
 func (tu TranslationUnit) FindIncludesInFile(file File, visitor CursorAndRangeVisitor) Result {
 	return Result(C.clang_findIncludesInFile(tu.c, file.c, visitor.c))

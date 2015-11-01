@@ -19,3 +19,17 @@ func (cr CompletionResult) CompletionString() CompletionString {
 	value := CompletionString{cr.c.CompletionString}
 	return value
 }
+
+// Sort the code-completion results in case-insensitive alphabetical order. \param Results The set of results to sort. \param NumResults The number of results in \p Results.
+func SortCodeCompletion(Results []CompletionResult) {
+	ca_Results := make([]C.CXCompletionResult, len(Results))
+	var cp_Results *C.CXCompletionResult
+	if len(Results) > 0 {
+		cp_Results = &ca_Results[0]
+	}
+	for i := range Results {
+		ca_Results[i] = Results[i].c
+	}
+
+	C.clang_sortCodeCompletionResults(cp_Results, C.uint(len(Results)))
+}

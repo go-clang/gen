@@ -126,6 +126,10 @@ func (h *headerFile) addMethod(f *Function, fname string, fnamePrefix string, rt
 		f.Receiver = s.Receiver
 		f.Receiver.Type = rt.Type
 
+		if f.Receiver.Type.IsSlice {
+			f.Receiver = Receiver{}
+		}
+
 		fStr := generateASTFunction(f)
 		s.Methods = deleteMethod(s.Methods, fname)
 		s.Methods = append(s.Methods, fStr)
@@ -415,7 +419,7 @@ func (h *headerFile) handleHeaderFile() {
 	}
 
 	for _, f := range h.functions {
-		// Some functions are not compiled in (TODO only 3.4) the library see https://lists.launchpad.net/desktop-packages/msg75835.html for a never resolved bug report
+		// Some functions are not compiled in (TODO only 3.4?) the library see https://lists.launchpad.net/desktop-packages/msg75835.html for a never resolved bug report
 		if f.CName == "clang_CompileCommand_getMappedSourceContent" || f.CName == "clang_CompileCommand_getMappedSourcePath" || f.CName == "clang_CompileCommand_getNumMappedSources" {
 			continue
 		}
@@ -444,19 +448,29 @@ func (h *headerFile) handleHeaderFile() {
 			}
 
 			// TODO happy hack, if this is an array length parameter we need to find its partner
-			if paName := strings.TrimPrefix(p.Name, "num_"); len(paName) != len(p.Name) {
+			var paName string
+			if pan := strings.TrimPrefix(p.Name, "num_"); len(pan) != len(p.Name) {
+				paName = pan
+			} else if pan := strings.TrimPrefix(p.Name, "Num"); len(pan) != len(p.Name) && unicode.IsUpper(rune(pan[0])) {
+				paName = pan
+			}
+
+			if paName != "" {
 				for j := range f.Parameters {
 					pa := &f.Parameters[j]
 
 					if pa.Name == paName {
+						if f.CName == "clang_tokenize" { // TODO let's not handle slice return arguments for now
+							break
+						}
 
 						// TODO remove this when getType cane handle this kind of conversion
 						if pa.Type.GoName == "struct CXUnsavedFile" || pa.Type.GoName == "UnsavedFile" {
 							pa.Type.GoName = "UnsavedFile"
 							pa.Type.CGoName = "struct_CXUnsavedFile"
 						} else if pa.Type.CGoName == CSChar && pa.Type.PointerLevel == 2 {
-						} else if pa.Type.GoName == "CompletionResult" || pa.Type.GoName == "Token" {
-							pa.Type.CGoName = "struct_CX" + pa.Type.GoName
+						} else if pa.Type.GoName == "CompletionResult" {
+						} else if pa.Type.GoName == "Token" {
 						} else {
 							break
 						}
