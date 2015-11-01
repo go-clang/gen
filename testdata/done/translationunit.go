@@ -88,20 +88,3 @@ func (tu TranslationUnit) CompleteAt(complete_filename string, complete_line, co
 	cr := C.clang_codeCompleteAt(tu.c, cfname, C.uint(complete_line), C.uint(complete_column), c_us.ptr(), C.uint(len(c_us)), C.uint(options))
 	return CodeCompleteResults{cr}
 }
-
-/**
- * \brief Retrieve a diagnostic associated with the given translation unit.
- *
- * \param Unit the translation unit to query.
- * \param Index the zero-based diagnostic number to retrieve.
- *
- * \returns the requested diagnostic. This diagnostic must be freed
- * via a call to \c clang_disposeDiagnostic().
- */
-func (tu TranslationUnit) Diagnostics() (ret Diagnostics) {
-	ret = make(Diagnostics, C.clang_getNumDiagnostics(tu.c))
-	for i := range ret {
-		ret[i].c = C.clang_getDiagnostic(tu.c, C.uint(i))
-	}
-	return
-}

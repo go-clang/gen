@@ -153,48 +153,6 @@ void clang_getOverriddenCursors(CXCursor cursor,
 void clang_disposeOverriddenCursors(CXCursor *overridden);
 
 /**
- * \brief Visitor invoked for each cursor found by a traversal.
- *
- * This visitor function will be invoked for each cursor found by
- * clang_visitCursorChildren(). Its first argument is the cursor being
- * visited, its second argument is the parent visitor for that cursor,
- * and its third argument is the client data provided to
- * clang_visitCursorChildren().
- *
- * The visitor should return one of the \c CXChildVisitResult values
- * to direct clang_visitCursorChildren().
- */
-typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor,
-                                                   CXCursor parent,
-                                                   CXClientData client_data);
-
-/**
- * \brief Visit the children of a particular cursor.
- *
- * This function visits all the direct children of the given cursor,
- * invoking the given \p visitor function with the cursors of each
- * visited child. The traversal may be recursive, if the visitor returns
- * \c CXChildVisit_Recurse. The traversal may also be ended prematurely, if
- * the visitor returns \c CXChildVisit_Break.
- *
- * \param parent the cursor whose child may be visited. All kinds of
- * cursors can be visited, including invalid cursors (which, by
- * definition, have no children).
- *
- * \param visitor the visitor function that will be invoked for each
- * child of \p parent.
- *
- * \param client_data pointer data supplied by the client, which will
- * be passed to the visitor each time it is invoked.
- *
- * \returns a non-zero value if the traversal was terminated
- * prematurely by the visitor returning \c CXChildVisit_Break.
- */
-unsigned clang_visitChildren(CXCursor parent,
-                                            CXCursorVisitor visitor,
-                                            CXClientData client_data);
-
-/**
  * \brief Tokenize the source code described by the given range into raw
  * lexical tokens.
  *
