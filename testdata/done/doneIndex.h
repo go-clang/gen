@@ -47,20 +47,6 @@ const CXIdxCXXClassDeclInfo *
 clang_index_getCXXClassDeclInfo(const CXIdxDeclInfo *);
 
 /**
- * \brief For retrieving a custom CXIdxClientContainer attached to a
- * container.
- */
-CXIdxClientContainer
-clang_index_getClientContainer(const CXIdxContainerInfo *);
-
-/**
- * \brief For setting a custom CXIdxClientContainer attached to a
- * container.
- */
-void
-clang_index_setClientContainer(const CXIdxContainerInfo *,CXIdxClientContainer);
-
-/**
  * \brief For retrieving a custom CXIdxClientEntity attached to an entity.
  */
 CXIdxClientEntity
