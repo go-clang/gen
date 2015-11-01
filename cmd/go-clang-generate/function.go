@@ -649,17 +649,10 @@ func generateASTFunction(f *Function) string {
 				}
 
 				continue
-			} else if p.Type.PointerLevel > 0 && p.Type.CGoName != CSChar {
+			} else if p.Type.PointerLevel > 0 && p.Type.IsPrimitive && p.Type.CGoName != CSChar {
 				hasDeclaration = true
 
-				var varType ast.Expr
-				if p.Type.IsPrimitive {
-					varType = doCType(p.Type.CGoName)
-				} else {
-					varType = &ast.Ident{
-						Name: p.Type.GoName,
-					}
-				}
+				var varType = doCType(p.Type.CGoName)
 
 				addStatement(&ast.DeclStmt{
 					Decl: &ast.GenDecl{

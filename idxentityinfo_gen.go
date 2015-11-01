@@ -58,3 +58,13 @@ func (iei IdxEntityInfo) NumAttributes() uint16 {
 	value := uint16(iei.c.numAttributes)
 	return value
 }
+
+// For retrieving a custom CXIdxClientEntity attached to an entity.
+func (iei *IdxEntityInfo) Index_getClientEntity() IdxClientEntity {
+	return IdxClientEntity{C.clang_index_getClientEntity(&iei.c)}
+}
+
+// For setting a custom CXIdxClientEntity attached to an entity.
+func (iei *IdxEntityInfo) Index_setClientEntity(ice IdxClientEntity) {
+	C.clang_index_setClientEntity(&iei.c, ice.c)
+}
