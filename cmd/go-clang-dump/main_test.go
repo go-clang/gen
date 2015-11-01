@@ -5,11 +5,9 @@ import (
 	"testing"
 )
 
-func TestClangDump(t *testing.T) {
+func TestGoClangDump(t *testing.T) {
 	for _, fname := range []string{
-		"../testdata/hello.c",
-		"../testdata/struct.c",
-		"../visitorwrap.c",
+		"../../testdata/basicparsing.c",
 	} {
 		cmd := exec.Command("go-clang-dump", "-fname", fname)
 		err := cmd.Run()
