@@ -414,7 +414,7 @@ func (h *headerFile) handleHeaderFile() {
 			continue
 		}
 		// Some functions can not be handled automatically by us
-		if f.CName == "clang_executeOnThread" {
+		if f.CName == "clang_executeOnThread" || f.CName == "clang_getInclusions" {
 			fmt.Printf("Ignore function %q because it cannot be handled automatically\n", f.CName)
 
 			continue
