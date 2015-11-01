@@ -77,11 +77,6 @@ func (c Cursor) PlatformAvailability(availability []PlatformAvailability) (alway
 	return
 }
 
-// CursorSet is a fast container representing a set of Cursors.
-type CursorSet struct {
-	c C.CXCursorSet
-}
-
 /**
  * \brief Determine the set of methods that are overridden by the given
  * method.

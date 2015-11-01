@@ -43,3 +43,8 @@ func (pa PlatformAvailability) Message() cxstring {
 	value := cxstring{pa.c.Message}
 	return value
 }
+
+// Free the memory associated with a \c CXPlatformAvailability structure.
+func (pa PlatformAvailability) Dispose() {
+	C.clang_disposeCXPlatformAvailability(&pa.c)
+}
