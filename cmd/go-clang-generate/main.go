@@ -548,7 +548,7 @@ func (h *headerFile) handleHeaderFile() {
 
 		for _, p := range f.Parameters {
 			// These pointers are ok
-			if p.Type.PointerLevel == 1 && (p.Type.CGoName == CSChar || p.Type.GoName == "UnsavedFile") {
+			if p.Type.PointerLevel == 1 && (p.Type.CGoName == CSChar || p.Type.GoName == "UnsavedFile" || p.Type.GoName == "CodeCompleteResults") {
 				continue
 			}
 			// Return arguments are always ok since we mark them earlier

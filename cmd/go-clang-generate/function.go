@@ -725,6 +725,13 @@ func generateASTFunction(f *Function) string {
 				}
 			} else {
 				pf = accessMember(p.Name, "c")
+
+				if p.Type.PointerLevel > 0 && !p.Type.IsReturnArgument {
+					pf = &ast.UnaryExpr{
+						Op: token.AND,
+						X:  pf,
+					}
+				}
 			}
 
 			if p.Type.IsReturnArgument {

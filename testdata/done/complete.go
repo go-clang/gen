@@ -30,10 +30,3 @@ func (cs CompletionString) CompletionParent() string {
 	defer o.Dispose()
 	return o.String()
 }
-
-/**
- * \brief Free the given set of code-completion results.
- */
-func (ccr CodeCompleteResults) Dispose() {
-	C.clang_disposeCodeCompleteResults(ccr.c)
-}
