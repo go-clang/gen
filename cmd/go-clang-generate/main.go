@@ -316,18 +316,6 @@ func (h *headerFile) handleHeaderFile() {
 		}
 	}
 
-	/*
-		TODO mark the enum
-			typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor, CXCursor parent, CXClientData client_data);
-		as manually implemented
-	*/
-
-	/*
-		TODO mark the function
-			unsigned clang_visitChildren(CXCursor parent, CXCursorVisitor visitor, CXClientData client_data);
-		as manually implemented
-	*/
-
 	cursor := tu.ToCursor()
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		// Only handle code of the current file
@@ -431,6 +419,18 @@ func (h *headerFile) handleHeaderFile() {
 
 			continue
 		}
+		// Some functions are simply manually implemented
+		if f.CName == "clang_visitChildren" {
+			fmt.Printf("Ignore function %q because it is manually implemented\n", f.CName)
+
+			continue
+		}
+
+		/*
+			TODO mark the enum
+				typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor, CXCursor parent, CXClientData client_data);
+			as manually implemented
+		*/
 
 		fname := f.Name
 
