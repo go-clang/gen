@@ -458,6 +458,10 @@ func (h *headerFile) handleHeaderFile() {
 				p.Type.IsReturnArgument = true
 			}
 
+			if f.CName == "clang_disposeOverriddenCursors" && p.Name == "overridden" {
+				p.Type.IsSlice = true
+			}
+
 			// TODO happy hack, if this is an array length parameter we need to find its partner
 			var paName string
 			if pan := strings.TrimPrefix(p.Name, "num_"); len(pan) != len(p.Name) {

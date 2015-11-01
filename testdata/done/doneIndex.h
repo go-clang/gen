@@ -98,12 +98,6 @@ void clang_getOverriddenCursors(CXCursor cursor,
                                                unsigned *num_overridden);
 
 /**
- * \brief Free the set of overridden cursors returned by \c
- * clang_getOverriddenCursors().
- */
-void clang_disposeOverriddenCursors(CXCursor *overridden);
-
-/**
  * \brief Annotate the given set of tokens by providing cursors for each token
  * that can be mapped to a specific entity within the abstract syntax tree.
  *

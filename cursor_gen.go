@@ -137,6 +137,20 @@ func (c Cursor) LexicalParent() Cursor {
 	return Cursor{C.clang_getCursorLexicalParent(c.c)}
 }
 
+// Free the set of overridden cursors returned by \c clang_getOverriddenCursors().
+func Dispose(overridden []Cursor) {
+	ca_overridden := make([]C.CXCursor, len(overridden))
+	var cp_overridden *C.CXCursor
+	if len(overridden) > 0 {
+		cp_overridden = &ca_overridden[0]
+	}
+	for i := range overridden {
+		ca_overridden[i] = overridden[i].c
+	}
+
+	C.clang_disposeOverriddenCursors(cp_overridden)
+}
+
 // Retrieve the file that is included by the given inclusion directive cursor.
 func (c Cursor) IncludedFile() File {
 	return File{C.clang_getIncludedFile(c.c)}

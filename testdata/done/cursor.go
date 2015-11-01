@@ -124,8 +124,3 @@ func (c Cursor) OverriddenCursors() (o OverriddenCursors) {
 
 	return o
 }
-
-// Dispose frees the set of overridden cursors
-func (c OverriddenCursors) Dispose() {
-	C.clang_disposeOverriddenCursors(c.c)
-}
