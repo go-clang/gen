@@ -649,6 +649,68 @@ func generateASTFunction(f *Function) string {
 				}
 
 				continue
+			} else if p.Type.PointerLevel > 0 && p.Type.CGoName != CSChar {
+				hasDeclaration = true
+
+				var varType ast.Expr
+				if p.Type.IsPrimitive {
+					varType = doCType(p.Type.CGoName)
+				} else {
+					varType = &ast.Ident{
+						Name: p.Type.GoName,
+					}
+				}
+
+				addStatement(&ast.DeclStmt{
+					Decl: &ast.GenDecl{
+						Tok: token.VAR,
+						Specs: []ast.Spec{
+							&ast.ValueSpec{
+								Names: []*ast.Ident{
+									&ast.Ident{
+										Name: "cp_" + p.Name,
+									},
+								},
+								Type: varType,
+							},
+						},
+					},
+				})
+				addStatement(&ast.IfStmt{
+					Cond: &ast.BinaryExpr{
+						X: &ast.Ident{
+							Name: p.Name,
+						},
+						Op: token.NEQ,
+						Y: &ast.Ident{
+							Name: "nil",
+						},
+					},
+					Body: &ast.BlockStmt{
+						List: []ast.Stmt{
+							&ast.AssignStmt{
+								Lhs: []ast.Expr{
+									&ast.Ident{
+										Name: "cp_" + p.Name,
+									},
+								},
+								Tok: token.ASSIGN,
+								Rhs: []ast.Expr{
+									&ast.CallExpr{
+										Fun: varType,
+										Args: []ast.Expr{
+											&ast.StarExpr{
+												X: &ast.Ident{
+													Name: p.Name,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				})
 			}
 
 			astFunc.Type.Params.List = append(astFunc.Type.Params.List, doField(p.Name, p.Type))
@@ -714,6 +776,13 @@ func generateASTFunction(f *Function) string {
 								},
 							),
 						)
+					} else if p.Type.PointerLevel > 0 {
+						pf = &ast.UnaryExpr{
+							Op: token.AND,
+							X: &ast.Ident{
+								Name: "cp_" + p.Name,
+							},
+						}
 					} else {
 						pf = doCCast(
 							p.Type.CGoName,

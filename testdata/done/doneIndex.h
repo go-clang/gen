@@ -1,24 +1,4 @@
 
-/**
- * \brief Retrieve the parent context of the given completion string.
- *
- * The parent context of a completion string is the semantic parent of
- * the declaration (if any) that the code completion represents. For example,
- * a code completion for an Objective-C method would have the method's class
- * or protocol as its context.
- *
- * \param completion_string The code completion string whose parent is
- * being queried.
- *
- * \param kind DEPRECATED: always set to CXCursor_NotImplemented if non-NULL.
- *
- * \returns The name of the completion parent, e.g., "NSObject" if
- * the completion string represents a method in the NSObject class.
- */
-CXString
-clang_getCompletionParent(CXCompletionString completion_string,
-                          enum CXCursorKind *kind);
-
  /**
   * \brief Visitor invoked for each file in a translation unit
   *        (used with clang_getInclusions()).
