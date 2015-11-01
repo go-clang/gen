@@ -409,7 +409,7 @@ func (h *headerFile) handleHeaderFile() {
 	for _, f := range h.functions {
 		// Some functions are not compiled in (TODO only 3.4?) the library see https://lists.launchpad.net/desktop-packages/msg75835.html for a never resolved bug report
 		if f.CName == "clang_CompileCommand_getMappedSourceContent" || f.CName == "clang_CompileCommand_getMappedSourcePath" || f.CName == "clang_CompileCommand_getNumMappedSources" {
-			fmt.Printf("Ignore function %q because it is not compiled within libclang\n", f.CName)
+			fmt.Printf("Ignore function %q because it is not compiled within libClang\n", f.CName)
 
 			continue
 		}
@@ -451,7 +451,7 @@ func (h *headerFile) handleHeaderFile() {
 			}
 
 			// TODO happy hack, whiteflag types that are return arguments
-			if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == GoUInt16 || p.Type.GoName == "CompilationDatabase_Error" || p.Type.GoName == "PlatformAvailability") {
+			if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == GoUInt16 || p.Type.GoName == "CompilationDatabase_Error" || p.Type.GoName == "PlatformAvailability" || p.Type.GoName == "SourceRange") {
 				p.Type.IsReturnArgument = true
 			}
 
