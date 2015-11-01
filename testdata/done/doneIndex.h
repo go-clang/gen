@@ -194,30 +194,6 @@ unsigned clang_visitChildren(CXCursor parent,
                                             CXCursorVisitor visitor,
                                             CXClientData client_data);
 
-#ifdef __has_feature
-#  if __has_feature(blocks)
-/**
- * \brief Visitor invoked for each cursor found by a traversal.
- *
- * This visitor block will be invoked for each cursor found by
- * clang_visitChildrenWithBlock(). Its first argument is the cursor being
- * visited, its second argument is the parent visitor for that cursor.
- *
- * The visitor should return one of the \c CXChildVisitResult values
- * to direct clang_visitChildrenWithBlock().
- */
-typedef enum CXChildVisitResult
-     (^CXCursorVisitorBlock)(CXCursor cursor, CXCursor parent);
-
-/**
- * Visits the children of a cursor using the specified block.  Behaves
- * identically to clang_visitChildren() in all other respects.
- */
-unsigned clang_visitChildrenWithBlock(CXCursor parent,
-                                      CXCursorVisitorBlock block);
-#  endif
-#endif
-
 /**
  * \brief Tokenize the source code described by the given range into raw
  * lexical tokens.
@@ -280,8 +256,6 @@ void clang_getDefinitionSpellingAndExtent(CXCursor,
                                           unsigned *startColumn,
                                           unsigned *endLine,
                                           unsigned *endColumn);
-void clang_executeOnThread(void (*fn)(void*), void *user_data,
-                                          unsigned stack_size);
 
 
 /**
@@ -303,12 +277,6 @@ void clang_executeOnThread(void (*fn)(void*), void *user_data,
 CXString
 clang_getCompletionParent(CXCompletionString completion_string,
                           enum CXCursorKind *kind);
-
-/**
- * \brief Returns a default set of code-completion options that can be
- * passed to\c clang_codeCompleteAt().
- */
-unsigned clang_defaultCodeCompleteOptions(void);
 
 
 /**
@@ -505,21 +473,6 @@ void clang_getInclusions(CXTranslationUnit tu,
  */
 CXRemapping clang_getRemappingsFromFileList(const char **filePaths,
                                             unsigned numFiles);
-
-#ifdef __has_feature
-#  if __has_feature(blocks)
-
-typedef enum CXVisitorResult
-    (^CXCursorAndRangeVisitorBlock)(CXCursor, CXSourceRange);
-
-CXResult clang_findReferencesInFileWithBlock(CXCursor, CXFile,
-                                             CXCursorAndRangeVisitorBlock);
-
-CXResult clang_findIncludesInFileWithBlock(CXTranslationUnit, CXFile,
-                                           CXCursorAndRangeVisitorBlock);
-
-#  endif
-#endif
 
 /**
  * \brief A group of callbacks used by #clang_indexSourceFile and
