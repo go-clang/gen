@@ -32,26 +32,6 @@ func (cs CompletionString) CompletionParent() string {
 }
 
 /**
-- * \brief Contains the results of code-completion.
-- *
-- * This data structure contains the results of code completion, as
-- * produced by \c clang_codeCompleteAt(). Its contents must be freed by
-- * \c clang_disposeCodeCompleteResults.
-- */
-type CodeCompleteResults struct {
-	c *C.CXCodeCompleteResults
-}
-
-// TODO(): is there a better way to handle this?
-func (ccr CodeCompleteResults) Results() (ret []CompletionResult) {
-	header := (*reflect.SliceHeader)((unsafe.Pointer(&ret)))
-	header.Cap = int(ccr.c.NumResults)
-	header.Len = int(ccr.c.NumResults)
-	header.Data = uintptr(unsafe.Pointer(ccr.c.Results))
-	return
-}
-
-/**
  * \brief Free the given set of code-completion results.
  */
 func (ccr CodeCompleteResults) Dispose() {

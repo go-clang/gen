@@ -420,7 +420,7 @@ func (h *headerFile) handleHeaderFile() {
 			continue
 		}
 		// Some functions are simply manually implemented
-		if f.CName == "clang_getCursorPlatformAvailability" || f.CName == "clang_visitChildren" {
+		if f.CName == "clang_annotateTokens" || f.CName == "clang_getCursorPlatformAvailability" || f.CName == "clang_visitChildren" {
 			fmt.Printf("Ignore function %q because it is manually implemented\n", f.CName)
 
 			continue
