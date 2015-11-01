@@ -35,7 +35,7 @@ func GoClangCursorVisitor(cursor C.CXCursor, parent C.CXCursor, cfct unsafe.Poin
 // Explained by rsc in https://golang.org/issue/9125
 var forceEscapeVisitor *CursorVisitor
 
-// Visitor does the following.
+// Visit does the following.
 /**
  * \brief Visit the children of a particular cursor.
  *
