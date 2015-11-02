@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"fmt"
-)
+import "fmt"
 
 /*
 	Describes a single piece of text within a code-completion string.

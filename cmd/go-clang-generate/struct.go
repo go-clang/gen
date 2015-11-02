@@ -1,10 +1,7 @@
 package main
 
 import (
-	"bytes"
-	"io/ioutil"
 	"strings"
-	"text/template"
 
 	"github.com/sbinet/go-clang"
 )
@@ -18,8 +15,6 @@ type Struct struct {
 	CNameIsTypeDef bool
 	Receiver       Receiver
 	Comment        string
-
-	Imports map[string]struct{}
 
 	Methods []string
 }
@@ -48,9 +43,7 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 				if typ.PointerLevel >= 1 {
 					typ.PointerLevel--
 				}
-				typ.IsPrimitive = true
-
-				s.Imports["unsafe"] = struct{}{}*/
+				typ.IsPrimitive = true*/
 
 				break
 			}
@@ -122,8 +115,6 @@ func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bo
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
 		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
-
-		Imports: map[string]struct{}{},
 	}
 
 	s.Name = trimClangPrefix(s.CName)
@@ -132,43 +123,9 @@ func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bo
 	return &s
 }
 
-var templateGenerateStruct = template.Must(template.New("go-clang-generate-struct").Parse(`package phoenix
-
-{{if $.HeaderFile}}// #include "{{$.HeaderFile}}"
-{{end}}// #include "go-clang.h"
-import "C"
-{{if $.Imports}}
-import (
-{{range $import, $empty := $.Imports}}	"{{$import}}"
-{{end}}){{end}}
-
-{{$.Comment}}
-type {{$.Name}} struct {
-	c C.{{if not $.CNameIsTypeDef}}struct_{{end}}{{$.CName}}
-}
-{{range $i, $m := $.Methods}}
-{{$m}}
-{{end}}
-`))
-
 func generateStruct(s *Struct) error {
-	// TODO remove this hack
-	for _, m := range s.Methods {
-		if strings.Contains(m, "reflect.") {
-			s.Imports["reflect"] = struct{}{}
-		}
-		if strings.Contains(m, "time.Time") {
-			s.Imports["time"] = struct{}{}
-		}
-		if strings.Contains(m, "unsafe.") {
-			s.Imports["unsafe"] = struct{}{}
-		}
-	}
+	f := NewFile(strings.ToLower(s.Name))
+	f.Structs = append(f.Structs, s)
 
-	var b bytes.Buffer
-	if err := templateGenerateStruct.Execute(&b, s); err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile(strings.ToLower(s.Name)+"_gen.go", b.Bytes(), 0600)
+	return f.Generate()
 }

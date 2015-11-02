@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"unsafe"
-)
+import "unsafe"
 
 /*
 	Retrieve the set of display options most similar to the

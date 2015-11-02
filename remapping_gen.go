@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"unsafe"
-)
+import "unsafe"
 
 // A remapping of original source files and their translated files.
 type Remapping struct {

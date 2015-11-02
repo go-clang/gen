@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"fmt"
-)
+import "fmt"
 
 /*
 	Bits that represent the context under which completion is occurring.

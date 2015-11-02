@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"fmt"
-)
+import "fmt"
 
 // Represents the C++ access control level to a base class for a cursor with kind CX_CXXBaseSpecifier.
 type AccessSpecifier uint32

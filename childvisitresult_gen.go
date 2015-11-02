@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"fmt"
-)
+import "fmt"
 
 /*
 	Describes how the traversal of the children of a particular

@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"fmt"
-)
+import "fmt"
 
 // Data for IndexerCallbacks#indexEntityReference.
 type IdxEntityRefKind uint32

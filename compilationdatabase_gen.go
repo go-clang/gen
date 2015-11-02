@@ -3,10 +3,7 @@ package phoenix
 // #include "./clang-c/CXCompilationDatabase.h"
 // #include "go-clang.h"
 import "C"
-
-import (
-	"unsafe"
-)
+import "unsafe"
 
 /*
 	A compilation database holds all information used to compile files in a

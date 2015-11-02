@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"fmt"
-)
+import "fmt"
 
 // Describes parameter passing direction for \Parameter or \\arg command.
 type CommentParamPassDirection uint32

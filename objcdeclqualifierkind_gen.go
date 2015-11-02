@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"fmt"
-)
+import "fmt"
 
 // 'Qualifiers' written next to the return and parameter types in ObjC method declarations.
 type ObjCDeclQualifierKind uint32

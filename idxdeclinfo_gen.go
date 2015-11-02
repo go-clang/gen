@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"unsafe"
-)
+import "unsafe"
 
 type IdxDeclInfo struct {
 	c C.CXIdxDeclInfo

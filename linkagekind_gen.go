@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"fmt"
-)
+import "fmt"
 
 // Describe the linkage of the entity referred to by a cursor.
 type LinkageKind uint32

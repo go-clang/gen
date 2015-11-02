@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"fmt"
-)
+import "fmt"
 
 // Describes the type of the comment AST node (CXComment). A comment node can be considered block content (e. g., paragraph), inline content (plain text) or neither (the root AST node).
 type CommentKind uint32

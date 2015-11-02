@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"fmt"
-)
+import "fmt"
 
 // The most appropriate rendering mode for an inline command, chosen on command semantics in Doxygen.
 type CommentInlineCommandRenderKind uint32

@@ -271,12 +271,6 @@ func main() {
 
 		newHeaderFile(clangCDirectory + h.Name()).handleHeaderFile(clangArguments)
 	}
-
-	if out, _, err := execToBuffer("gofmt", "-w", "./"); err != nil { // TODO do this before saving the files using go/fmt
-		fmt.Printf("gofmt:\n%s\n", out)
-
-		exitWithFatal("Gofmt failed", err)
-	}
 }
 
 func (h *headerFile) handleHeaderFile(clangArguments []string) {
@@ -418,11 +412,7 @@ func (h *headerFile) handleHeaderFile(clangArguments []string) {
 		return clang.CVR_Recurse
 	})
 
-	clangFile := &File{
-		Name: "clang",
-
-		Imports: map[string]struct{}{},
-	}
+	clangFile := NewFile("clang")
 
 	for _, f := range h.functions {
 		// Some functions are not compiled in (TODO only 3.4?) the library see https://lists.launchpad.net/desktop-packages/msg75835.html for a never resolved bug report
@@ -674,10 +664,10 @@ func (h *headerFile) handleHeaderFile(clangArguments []string) {
 
 	if len(clangFile.Functions) > 0 {
 		if h.name != "./clang-c/Index.h" {
-			clangFile.HeaderFile = h.name
+			clangFile.HeaderFiles[h.name] = struct{}{}
 		}
 
-		if err := generateFile(clangFile); err != nil {
+		if err := clangFile.Generate(); err != nil {
 			exitWithFatal("Cannot generate clang file", err)
 		}
 	}

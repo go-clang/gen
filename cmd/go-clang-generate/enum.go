@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"strings"
 	"text/template"
 
@@ -20,8 +19,6 @@ type Enum struct {
 	Receiver       Receiver
 	Comment        string
 	UnderlyingType string
-
-	Imports map[string]struct{}
 
 	Items []Enumerator
 
@@ -41,8 +38,6 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
 		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
-
-		Imports: map[string]struct{}{},
 
 		Items: []Enumerator{},
 	}
@@ -106,52 +101,13 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 	return &e
 }
 
-var templateGenerateEnum = template.Must(template.New("go-clang-generate-enum").Parse(`package phoenix
-
-{{if $.HeaderFile}}// #include "{{$.HeaderFile}}"
-{{end}}// #include "go-clang.h"
-import "C"
-{{if $.Imports}}
-import (
-{{range $import, $empty := $.Imports}}	"{{$import}}"
-{{end}}){{end}}
-
-{{$.Comment}}
-type {{$.Name}} {{$.UnderlyingType}}
-
-const (
-{{range $i, $e := .Items}}	{{if $e.Comment}}{{$e.Comment}}
-	{{end}}{{$e.Name}}{{if eq $i 0}} {{$.Name}}{{end}} = C.{{$e.CName}}
-{{end}}
-)
-
-{{range $i, $m := $.Methods}}
-{{$m}}
-{{end}}
-`))
-
 func generateEnum(e *Enum) error {
-	// TODO remove this hack
-	for _, m := range e.Methods {
-		if strings.Contains(m, "reflect.") {
-			e.Imports["reflect"] = struct{}{}
-		}
-		if strings.Contains(m, "time.Time") {
-			e.Imports["time"] = struct{}{}
-		}
-		if strings.Contains(m, "unsafe.") {
-			e.Imports["unsafe"] = struct{}{}
-		}
-	}
-
 	generateEnumStringMethods(e)
 
-	var b bytes.Buffer
-	if err := templateGenerateEnum.Execute(&b, e); err != nil {
-		return err
-	}
+	f := NewFile(strings.ToLower(e.Name))
+	f.Enums = append(f.Enums, e)
 
-	return ioutil.WriteFile(strings.ToLower(e.Name)+"_gen.go", b.Bytes(), 0600)
+	return f.Generate()
 }
 
 func generateEnumStringMethods(e *Enum) {
@@ -194,8 +150,6 @@ func generateEnumStringMethods(e *Enum) {
 func generateEnumSpellingMethod(e *Enum, tmpl *template.Template) error {
 	var b bytes.Buffer
 	var err error
-
-	e.Imports["fmt"] = struct{}{}
 
 	type Case struct {
 		CaseStr   []string

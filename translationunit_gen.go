@@ -2,7 +2,6 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
 import (
 	"reflect"
 	"unsafe"

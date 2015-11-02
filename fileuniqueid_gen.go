@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"unsafe"
-)
+import "unsafe"
 
 // Uniquely identifies a CXFile, that refers to the same underlying file, across an indexing session.
 type FileUniqueID struct {

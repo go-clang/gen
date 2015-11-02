@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"fmt"
-)
+import "fmt"
 
 // Property attributes for a CXCursor_ObjCPropertyDecl.
 type ObjCPropertyAttrKind uint32
