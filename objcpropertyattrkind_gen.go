@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-// Property attributes for a \c CXCursor_ObjCPropertyDecl.
+// Property attributes for a CXCursor_ObjCPropertyDecl.
 type ObjCPropertyAttrKind uint32
 
 const (

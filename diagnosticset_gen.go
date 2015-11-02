@@ -17,12 +17,32 @@ func (ds DiagnosticSet) NumDiagnosticsInSet() uint16 {
 	return uint16(C.clang_getNumDiagnosticsInSet(ds.c))
 }
 
-// Retrieve a diagnostic associated with the given CXDiagnosticSet. \param Diags the CXDiagnosticSet to query. \param Index the zero-based diagnostic number to retrieve. \returns the requested diagnostic. This diagnostic must be freed via a call to \c clang_disposeDiagnostic().
+/*
+	Retrieve a diagnostic associated with the given CXDiagnosticSet.
+
+	Parameter Diags the CXDiagnosticSet to query.
+	Parameter Index the zero-based diagnostic number to retrieve.
+
+	Returns the requested diagnostic. This diagnostic must be freed
+	via a call to clang_disposeDiagnostic().
+*/
 func (ds DiagnosticSet) DiagnosticInSet(index uint16) Diagnostic {
 	return Diagnostic{C.clang_getDiagnosticInSet(ds.c, C.uint(index))}
 }
 
-// Deserialize a set of diagnostics from a Clang diagnostics bitcode file. \param file The name of the file to deserialize. \param error A pointer to a enum value recording if there was a problem deserializing the diagnostics. \param errorString A pointer to a CXString for recording the error string if the file was not successfully loaded. \returns A loaded CXDiagnosticSet if successful, and NULL otherwise. These diagnostics should be released using clang_disposeDiagnosticSet().
+/*
+	Deserialize a set of diagnostics from a Clang diagnostics bitcode
+	file.
+
+	Parameter file The name of the file to deserialize.
+	Parameter error A pointer to a enum value recording if there was a problem
+	deserializing the diagnostics.
+	Parameter errorString A pointer to a CXString for recording the error string
+	if the file was not successfully loaded.
+
+	Returns A loaded CXDiagnosticSet if successful, and NULL otherwise. These
+	diagnostics should be released using clang_disposeDiagnosticSet().
+*/
 func LoadDiagnostics(file string) (LoadDiag_Error, string, DiagnosticSet) {
 	var error C.enum_CXLoadDiag_Error
 	var errorString cxstring

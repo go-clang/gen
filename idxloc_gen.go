@@ -13,7 +13,14 @@ func (il IdxLoc) Int_data() uint16 {
 	return value
 }
 
-// Retrieve the CXIdxFile, file, line, column, and offset represented by the given CXIdxLoc. If the location refers into a macro expansion, retrieves the location of the macro expansion and if it refers into a macro argument retrieves the location of the argument.
+/*
+	Retrieve the CXIdxFile, file, line, column, and offset represented by
+	the given CXIdxLoc.
+
+	If the location refers into a macro expansion, retrieves the
+	location of the macro expansion and if it refers into a macro argument
+	retrieves the location of the argument.
+*/
 func (il IdxLoc) IndexLoc_getFileLocation() (IdxClientFile, File, uint16, uint16, uint16) {
 	var indexFile IdxClientFile
 	var file File

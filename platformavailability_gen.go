@@ -8,7 +8,12 @@ type PlatformAvailability struct {
 	c C.CXPlatformAvailability
 }
 
-// A string that describes the platform for which this structure provides availability information. Possible values are "ios" or "macosx".
+/*
+	A string that describes the platform for which this structure
+	provides availability information.
+
+	Possible values are "ios" or "macosx".
+*/
 func (pa PlatformAvailability) Platform() cxstring {
 	value := cxstring{pa.c.Platform}
 	return value
@@ -44,7 +49,7 @@ func (pa PlatformAvailability) Message() cxstring {
 	return value
 }
 
-// Free the memory associated with a \c CXPlatformAvailability structure.
+// Free the memory associated with a CXPlatformAvailability structure.
 func (pa PlatformAvailability) Dispose() {
 	C.clang_disposeCXPlatformAvailability(&pa.c)
 }

@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-// Describes the kind of error that occurred (if any) in a call to \c clang_loadDiagnostics.
+// Describes the kind of error that occurred (if any) in a call to clang_loadDiagnostics.
 type LoadDiag_Error int32
 
 const (

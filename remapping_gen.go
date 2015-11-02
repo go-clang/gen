@@ -12,7 +12,14 @@ type Remapping struct {
 	c C.CXRemapping
 }
 
-// Retrieve a remapping. \param path the path that contains metadata about remappings. \returns the requested remapping. This remapping must be freed via a call to \c clang_remap_dispose(). Can return NULL if an error occurred.
+/*
+	Retrieve a remapping.
+
+	Parameter path the path that contains metadata about remappings.
+
+	Returns the requested remapping. This remapping must be freed
+	via a call to clang_remap_dispose(). Can return NULL if an error occurred.
+*/
 func NewRemappings(path string) Remapping {
 	c_path := C.CString(path)
 	defer C.free(unsafe.Pointer(c_path))
@@ -20,7 +27,16 @@ func NewRemappings(path string) Remapping {
 	return Remapping{C.clang_getRemappings(c_path)}
 }
 
-// Retrieve a remapping. \param filePaths pointer to an array of file paths containing remapping info. \param numFiles number of file paths. \returns the requested remapping. This remapping must be freed via a call to \c clang_remap_dispose(). Can return NULL if an error occurred.
+/*
+	Retrieve a remapping.
+
+	Parameter filePaths pointer to an array of file paths containing remapping info.
+
+	Parameter numFiles number of file paths.
+
+	Returns the requested remapping. This remapping must be freed
+	via a call to clang_remap_dispose(). Can return NULL if an error occurred.
+*/
 func NewRemappingsFromFileList(filePaths []string) Remapping {
 	ca_filePaths := make([]*C.char, len(filePaths))
 	var cp_filePaths **C.char
@@ -41,7 +57,14 @@ func (r Remapping) Remap_getNumFiles() uint16 {
 	return uint16(C.clang_remap_getNumFiles(r.c))
 }
 
-// Get the original and the associated filename from the remapping. \param original If non-NULL, will be set to the original filename. \param transformed If non-NULL, will be set to the filename that the original is associated with.
+/*
+	Get the original and the associated filename from the remapping.
+
+	Parameter original If non-NULL, will be set to the original filename.
+
+	Parameter transformed If non-NULL, will be set to the filename that the original
+	is associated with.
+*/
 func (r Remapping) Remap_getFilenames(index uint16) (string, string) {
 	var original cxstring
 	defer original.Dispose()

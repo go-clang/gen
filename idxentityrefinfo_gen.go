@@ -31,16 +31,16 @@ func (ieri IdxEntityRefInfo) ReferencedEntity() *IdxEntityInfo {
 }
 
 /*
- * \brief Immediate "parent" of the reference. For example:
- *
- * \code
- * Foo *var;
- * \endcode
- *
- * The parent of reference of type 'Foo' is the variable 'var'.
- * For references inside statement bodies of functions/methods,
- * the parentEntity will be the function/method.
- */
+	Immediate "parent" of the reference. For example:
+
+	\code
+	Foo *var;
+	\endcode
+
+	The parent of reference of type 'Foo' is the variable 'var'.
+	For references inside statement bodies of functions/methods,
+	the parentEntity will be the function/method.
+*/
 func (ieri IdxEntityRefInfo) ParentEntity() *IdxEntityInfo {
 	value := IdxEntityInfo{*ieri.c.parentEntity}
 	return &value

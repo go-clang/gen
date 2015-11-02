@@ -7,7 +7,14 @@ import (
 	"fmt"
 )
 
-// List the possible error codes for \c clang_Type_getSizeOf, \c clang_Type_getAlignOf, \c clang_Type_getOffsetOf and \c clang_Cursor_getOffsetOf. A value of this enumeration type can be returned if the target type is not a valid argument to sizeof, alignof or offsetof.
+/*
+	List the possible error codes for clang_Type_getSizeOf,
+	clang_Type_getAlignOf, clang_Type_getOffsetOf and
+	clang_Cursor_getOffsetOf.
+
+	A value of this enumeration type can be returned if the target type is not
+	a valid argument to sizeof, alignof or offsetof.
+*/
 type TypeLayoutError int32
 
 const (

@@ -7,7 +7,13 @@ import (
 	"fmt"
 )
 
-// Flags that can be passed to \c clang_codeCompleteAt() to modify its behavior. The enumerators in this enumeration can be bitwise-OR'd together to provide multiple options to \c clang_codeCompleteAt().
+/*
+	Flags that can be passed to clang_codeCompleteAt() to
+	modify its behavior.
+
+	The enumerators in this enumeration can be bitwise-OR'd together to
+	provide multiple options to clang_codeCompleteAt().
+*/
 type CodeComplete_Flags uint32
 
 const (

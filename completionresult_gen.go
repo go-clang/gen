@@ -8,7 +8,16 @@ type CompletionResult struct {
 	c C.CXCompletionResult
 }
 
-// The kind of entity that this completion refers to. The cursor kind will be a macro, keyword, or a declaration (one of the *Decl cursor kinds), describing the entity that the completion is referring to. \todo In the future, we would like to provide a full cursor, to allow the client to extract additional information from declaration.
+/*
+	The kind of entity that this completion refers to.
+
+	The cursor kind will be a macro, keyword, or a declaration (one of the
+	*Decl cursor kinds), describing the entity that the completion is
+	referring to.
+
+	\todo In the future, we would like to provide a full cursor, to allow
+	the client to extract additional information from declaration.
+*/
 func (cr CompletionResult) CursorKind() CursorKind {
 	value := CursorKind(cr.c.CursorKind)
 	return value
@@ -20,7 +29,13 @@ func (cr CompletionResult) CompletionString() CompletionString {
 	return value
 }
 
-// Sort the code-completion results in case-insensitive alphabetical order. \param Results The set of results to sort. \param NumResults The number of results in \p Results.
+/*
+	Sort the code-completion results in case-insensitive alphabetical
+	order.
+
+	Parameter Results The set of results to sort.
+	Parameter NumResults The number of results in \p Results.
+*/
 func SortCodeCompletion(results []CompletionResult) {
 	ca_results := make([]C.CXCompletionResult, len(results))
 	var cp_results *C.CXCompletionResult
