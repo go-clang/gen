@@ -11,22 +11,22 @@ import (
 type AccessSpecifier uint32
 
 const (
-	InvalidAccessSpecifier AccessSpecifier = C.CX_CXXInvalidAccessSpecifier
-	Public                                 = C.CX_CXXPublic
-	Protected                              = C.CX_CXXProtected
-	Private                                = C.CX_CXXPrivate
+	AccessSpecifier_Invalid   AccessSpecifier = C.CX_CXXInvalidAccessSpecifier
+	AccessSpecifier_Public                    = C.CX_CXXPublic
+	AccessSpecifier_Protected                 = C.CX_CXXProtected
+	AccessSpecifier_Private                   = C.CX_CXXPrivate
 )
 
 func (as AccessSpecifier) Spelling() string {
 	switch as {
-	case InvalidAccessSpecifier:
-		return "InvalidAccessSpecifier"
-	case Public:
-		return "Public"
-	case Protected:
-		return "Protected"
-	case Private:
-		return "Private"
+	case AccessSpecifier_Invalid:
+		return "AccessSpecifier=Invalid"
+	case AccessSpecifier_Public:
+		return "AccessSpecifier=Public"
+	case AccessSpecifier_Protected:
+		return "AccessSpecifier=Protected"
+	case AccessSpecifier_Private:
+		return "AccessSpecifier=Private"
 
 	}
 

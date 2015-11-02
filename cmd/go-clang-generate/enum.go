@@ -48,6 +48,7 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 	}
 
 	e.Name = trimClangPrefix(e.CName)
+
 	e.Receiver.Name = receiverName(e.Name)
 	e.Receiver.Type.GoName = e.Name
 	e.Receiver.Type.CGoName = e.CName
@@ -56,6 +57,10 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 	} else {
 		e.Receiver.Type.CGoName = "enum_" + e.CName
 	}
+
+	enumNamePrefix := e.Name
+	enumNamePrefix = strings.TrimSuffix(enumNamePrefix, "Kind")
+	enumNamePrefix = strings.SplitN(enumNamePrefix, "_", 2)[0]
 
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {
@@ -66,7 +71,23 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 				Value:   cursor.EnumConstantDeclValue(),
 			}
 			ei.Name = trimClangPrefix(ei.CName)
-			// TODO remove underlines to make the names more Go idiomatic e.g. "C.CXComment_InlineCommand" should be "CommentInlineCommand"
+
+			// Check if the first item has an enum prefix
+			if len(e.Items) == 0 {
+				eis := strings.SplitN(ei.Name, "_", 2)
+				if len(eis) == 2 {
+					enumNamePrefix = ""
+				}
+			}
+
+			// Add the enum prefix to the item
+			if enumNamePrefix != "" {
+				ei.Name = strings.TrimSuffix(ei.Name, enumNamePrefix)
+
+				if !strings.HasPrefix(ei.Name, enumNamePrefix) {
+					ei.Name = enumNamePrefix + "_" + ei.Name
+				}
+			}
 
 			e.Items = append(e.Items, ei)
 		default:
