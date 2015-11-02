@@ -7,7 +7,6 @@ import (
 	"fmt"
 )
 
-// \defgroup CINDEX_HIGH Higher level API functions @{
 type VisitorResult uint32
 
 const (

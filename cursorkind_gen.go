@@ -526,7 +526,6 @@ func (ck CursorKind) IsUnexposed() bool {
 	return o != C.uint(0)
 }
 
-// \defgroup CINDEX_DEBUG Debugging facilities These routines are used for testing and debugging, only, and should not be relied upon. @{
 func (ck CursorKind) Spelling() string {
 	o := cxstring{C.clang_getCursorKindSpelling(C.enum_CXCursorKind(ck))}
 	defer o.Dispose()

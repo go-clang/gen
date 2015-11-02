@@ -36,6 +36,11 @@ func cleanDoxygenComment(comment string) string {
 		return comment
 	}
 
+	// This might be a bug in the parsing by clang. The nearest comment is added to an item as its comment even tough it is not directly the item's comment
+	if strings.HasPrefix(comment, "\\defgroup") {
+		return ""
+	}
+
 	return "// " + comment
 }
 
