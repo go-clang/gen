@@ -138,11 +138,11 @@ func (t Type) SizeOf() int64 {
 }
 
 // Return the offset of a field named S in a record of type T in bits as it would be returned by __offsetof__ as per C++11[18.2p4] If the cursor is not a record field declaration, CXTypeLayoutError_Invalid is returned. If the field's type declaration is an incomplete type, CXTypeLayoutError_Incomplete is returned. If the field's type declaration is a dependent type, CXTypeLayoutError_Dependent is returned. If the field's name S is not found, CXTypeLayoutError_InvalidFieldName is returned.
-func (t Type) OffsetOf(S string) int64 {
-	c_S := C.CString(S)
-	defer C.free(unsafe.Pointer(c_S))
+func (t Type) OffsetOf(s string) int64 {
+	c_s := C.CString(s)
+	defer C.free(unsafe.Pointer(c_s))
 
-	return int64(C.clang_Type_getOffsetOf(t.c, c_S))
+	return int64(C.clang_Type_getOffsetOf(t.c, c_s))
 }
 
 // Retrieve the ref-qualifier kind of a function or method. The ref-qualifier is returned for C++ functions or methods. For other types or non-C++ declarations, CXRefQualifier_None is returned.

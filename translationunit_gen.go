@@ -21,11 +21,11 @@ func (tu TranslationUnit) IsFileMultipleIncludeGuarded(file File) bool {
 }
 
 // Retrieve a file handle within the given translation unit. \param tu the translation unit \param file_name the name of the file. \returns the file handle for the named file in the translation unit \p tu, or a NULL file handle if the file was not a part of this translation unit.
-func (tu TranslationUnit) File(file_name string) File {
-	c_file_name := C.CString(file_name)
-	defer C.free(unsafe.Pointer(c_file_name))
+func (tu TranslationUnit) File(fileName string) File {
+	c_fileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(c_fileName))
 
-	return File{C.clang_getFile(tu.c, c_file_name)}
+	return File{C.clang_getFile(tu.c, c_fileName)}
 }
 
 // Retrieves the source location associated with a given file/line/column in a particular translation unit.
@@ -44,8 +44,8 @@ func (tu TranslationUnit) NumDiagnostics() uint16 {
 }
 
 // Retrieve a diagnostic associated with the given translation unit. \param Unit the translation unit to query. \param Index the zero-based diagnostic number to retrieve. \returns the requested diagnostic. This diagnostic must be freed via a call to \c clang_disposeDiagnostic().
-func (tu TranslationUnit) Diagnostic(Index uint16) Diagnostic {
-	return Diagnostic{C.clang_getDiagnostic(tu.c, C.uint(Index))}
+func (tu TranslationUnit) Diagnostic(index uint16) Diagnostic {
+	return Diagnostic{C.clang_getDiagnostic(tu.c, C.uint(index))}
 }
 
 // Retrieve the complete set of diagnostics associated with a translation unit. \param Unit the translation unit to query.
@@ -67,11 +67,11 @@ func (tu TranslationUnit) DefaultSaveOptions() uint16 {
 }
 
 // Saves a translation unit into a serialized representation of that translation unit on disk. Any translation unit that was parsed without error can be saved into a file. The translation unit can then be deserialized into a new \c CXTranslationUnit with \c clang_createTranslationUnit() or, if it is an incomplete translation unit that corresponds to a header, used as a precompiled header when parsing other translation units. \param TU The translation unit to save. \param FileName The file to which the translation unit will be saved. \param options A bitmask of options that affects how the translation unit is saved. This should be a bitwise OR of the CXSaveTranslationUnit_XXX flags. \returns A value that will match one of the enumerators of the CXSaveError enumeration. Zero (CXSaveError_None) indicates that the translation unit was saved successfully, while a non-zero value indicates that a problem occurred.
-func (tu TranslationUnit) SaveTranslationUnit(FileName string, options uint16) int16 {
-	c_FileName := C.CString(FileName)
-	defer C.free(unsafe.Pointer(c_FileName))
+func (tu TranslationUnit) SaveTranslationUnit(fileName string, options uint16) int16 {
+	c_fileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(c_fileName))
 
-	return int16(C.clang_saveTranslationUnit(tu.c, c_FileName, C.uint(options)))
+	return int16(C.clang_saveTranslationUnit(tu.c, c_fileName, C.uint(options)))
 }
 
 // Destroy the specified CXTranslationUnit object.
@@ -85,17 +85,17 @@ func (tu TranslationUnit) DefaultReparseOptions() uint16 {
 }
 
 // Reparse the source files that produced this translation unit. This routine can be used to re-parse the source files that originally created the given translation unit, for example because those source files have changed (either on disk or as passed via \p unsaved_files). The source code will be reparsed with the same command-line options as it was originally parsed. Reparsing a translation unit invalidates all cursors and source locations that refer into that translation unit. This makes reparsing a translation unit semantically equivalent to destroying the translation unit and then creating a new translation unit with the same command-line arguments. However, it may be more efficient to reparse a translation unit using this routine. \param TU The translation unit whose contents will be re-parsed. The translation unit must originally have been built with \c clang_createTranslationUnitFromSourceFile(). \param num_unsaved_files The number of unsaved file entries in \p unsaved_files. \param unsaved_files The files that have not yet been saved to disk but may be required for parsing, including the contents of those files. The contents and name of these files (as specified by CXUnsavedFile) are copied when necessary, so the client only needs to guarantee their validity until the call to this function returns. \param options A bitset of options composed of the flags in CXReparse_Flags. The function \c clang_defaultReparseOptions() produces a default set of options recommended for most uses, based on the translation unit. \returns 0 if the sources could be reparsed. A non-zero value will be returned if reparsing was impossible, such that the translation unit is invalid. In such cases, the only valid call for \p TU is \c clang_disposeTranslationUnit(TU).
-func (tu TranslationUnit) ReparseTranslationUnit(unsaved_files []UnsavedFile, options uint16) int16 {
-	ca_unsaved_files := make([]C.struct_CXUnsavedFile, len(unsaved_files))
-	var cp_unsaved_files *C.struct_CXUnsavedFile
-	if len(unsaved_files) > 0 {
-		cp_unsaved_files = &ca_unsaved_files[0]
+func (tu TranslationUnit) ReparseTranslationUnit(unsavedFiles []UnsavedFile, options uint16) int16 {
+	ca_unsavedFiles := make([]C.struct_CXUnsavedFile, len(unsavedFiles))
+	var cp_unsavedFiles *C.struct_CXUnsavedFile
+	if len(unsavedFiles) > 0 {
+		cp_unsavedFiles = &ca_unsavedFiles[0]
 	}
-	for i := range unsaved_files {
-		ca_unsaved_files[i] = unsaved_files[i].c
+	for i := range unsavedFiles {
+		ca_unsavedFiles[i] = unsavedFiles[i].c
 	}
 
-	return int16(C.clang_reparseTranslationUnit(tu.c, C.uint(len(unsaved_files)), cp_unsaved_files, C.uint(options)))
+	return int16(C.clang_reparseTranslationUnit(tu.c, C.uint(len(unsavedFiles)), cp_unsavedFiles, C.uint(options)))
 }
 
 // Return the memory usage of a translation unit. This object should be released with clang_disposeCXTUResourceUsage().
@@ -114,13 +114,13 @@ func (tu TranslationUnit) Cursor(sl SourceLocation) Cursor {
 }
 
 // \param Module a module object. \returns the number of top level headers associated with this module.
-func (tu TranslationUnit) Module_getNumTopLevelHeaders(Module Module) uint16 {
-	return uint16(C.clang_Module_getNumTopLevelHeaders(tu.c, Module.c))
+func (tu TranslationUnit) Module_getNumTopLevelHeaders(module Module) uint16 {
+	return uint16(C.clang_Module_getNumTopLevelHeaders(tu.c, module.c))
 }
 
 // \param Module a module object. \param Index top level header index (zero-based). \returns the specified top level header associated with the module.
-func (tu TranslationUnit) Module_getTopLevelHeader(Module Module, Index uint16) File {
-	return File{C.clang_Module_getTopLevelHeader(tu.c, Module.c, C.uint(Index))}
+func (tu TranslationUnit) Module_getTopLevelHeader(module Module, index uint16) File {
+	return File{C.clang_Module_getTopLevelHeader(tu.c, module.c, C.uint(index))}
 }
 
 // Determine the spelling of the given token. The spelling of a token is the textual representation of that token, e.g., the text of an identifier or keyword.
@@ -142,50 +142,50 @@ func (tu TranslationUnit) TokenExtent(t Token) SourceRange {
 }
 
 // Tokenize the source code described by the given range into raw lexical tokens. \param TU the translation unit whose text is being tokenized. \param Range the source range in which text should be tokenized. All of the tokens produced by tokenization will fall within this source range, \param Tokens this pointer will be set to point to the array of tokens that occur within the given source range. The returned pointer must be freed with clang_disposeTokens() before the translation unit is destroyed. \param NumTokens will be set to the number of tokens in the \c *Tokens array.
-func (tu TranslationUnit) Tokenize(Range SourceRange) []Token {
-	var cp_Tokens *C.CXToken
-	var Tokens []Token
-	var NumTokens C.uint
+func (tu TranslationUnit) Tokenize(r SourceRange) []Token {
+	var cp_tokens *C.CXToken
+	var tokens []Token
+	var numTokens C.uint
 
-	C.clang_tokenize(tu.c, Range.c, &cp_Tokens, &NumTokens)
+	C.clang_tokenize(tu.c, r.c, &cp_tokens, &numTokens)
 
-	gos_Tokens := (*reflect.SliceHeader)(unsafe.Pointer(&Tokens))
-	gos_Tokens.Cap = int(NumTokens)
-	gos_Tokens.Len = int(NumTokens)
-	gos_Tokens.Data = uintptr(unsafe.Pointer(cp_Tokens))
+	gos_tokens := (*reflect.SliceHeader)(unsafe.Pointer(&tokens))
+	gos_tokens.Cap = int(numTokens)
+	gos_tokens.Len = int(numTokens)
+	gos_tokens.Data = uintptr(unsafe.Pointer(cp_tokens))
 
-	return Tokens
+	return tokens
 }
 
 // Free the given set of tokens.
-func (tu TranslationUnit) DisposeTokens(Tokens []Token) {
-	ca_Tokens := make([]C.CXToken, len(Tokens))
-	var cp_Tokens *C.CXToken
-	if len(Tokens) > 0 {
-		cp_Tokens = &ca_Tokens[0]
+func (tu TranslationUnit) DisposeTokens(tokens []Token) {
+	ca_tokens := make([]C.CXToken, len(tokens))
+	var cp_tokens *C.CXToken
+	if len(tokens) > 0 {
+		cp_tokens = &ca_tokens[0]
 	}
-	for i := range Tokens {
-		ca_Tokens[i] = Tokens[i].c
+	for i := range tokens {
+		ca_tokens[i] = tokens[i].c
 	}
 
-	C.clang_disposeTokens(tu.c, cp_Tokens, C.uint(len(Tokens)))
+	C.clang_disposeTokens(tu.c, cp_tokens, C.uint(len(tokens)))
 }
 
 // Perform code completion at a given location in a translation unit. This function performs code completion at a particular file, line, and column within source code, providing results that suggest potential code snippets based on the context of the completion. The basic model for code completion is that Clang will parse a complete source file, performing syntax checking up to the location where code-completion has been requested. At that point, a special code-completion token is passed to the parser, which recognizes this token and determines, based on the current location in the C/Objective-C/C++ grammar and the state of semantic analysis, what completions to provide. These completions are returned via a new \c CXCodeCompleteResults structure. Code completion itself is meant to be triggered by the client when the user types punctuation characters or whitespace, at which point the code-completion location will coincide with the cursor. For example, if \c p is a pointer, code-completion might be triggered after the "-" and then after the ">" in \c p->. When the code-completion location is afer the ">", the completion results will provide, e.g., the members of the struct that "p" points to. The client is responsible for placing the cursor at the beginning of the token currently being typed, then filtering the results based on the contents of the token. For example, when code-completing for the expression \c p->get, the client should provide the location just after the ">" (e.g., pointing at the "g") to this code-completion hook. Then, the client can filter the results based on the current token text ("get"), only showing those results that start with "get". The intent of this interface is to separate the relatively high-latency acquisition of code-completion results from the filtering of results on a per-character basis, which must have a lower latency. \param TU The translation unit in which code-completion should occur. The source files for this translation unit need not be completely up-to-date (and the contents of those source files may be overridden via \p unsaved_files). Cursors referring into the translation unit may be invalidated by this invocation. \param complete_filename The name of the source file where code completion should be performed. This filename may be any file included in the translation unit. \param complete_line The line at which code-completion should occur. \param complete_column The column at which code-completion should occur. Note that the column should point just after the syntactic construct that initiated code completion, and not in the middle of a lexical token. \param unsaved_files the Tiles that have not yet been saved to disk but may be required for parsing or code completion, including the contents of those files. The contents and name of these files (as specified by CXUnsavedFile) are copied when necessary, so the client only needs to guarantee their validity until the call to this function returns. \param num_unsaved_files The number of unsaved file entries in \p unsaved_files. \param options Extra options that control the behavior of code completion, expressed as a bitwise OR of the enumerators of the CXCodeComplete_Flags enumeration. The \c clang_defaultCodeCompleteOptions() function returns a default set of code-completion options. \returns If successful, a new \c CXCodeCompleteResults structure containing code-completion results, which should eventually be freed with \c clang_disposeCodeCompleteResults(). If code completion fails, returns NULL.
-func (tu TranslationUnit) CodeCompleteAt(complete_filename string, complete_line uint16, complete_column uint16, unsaved_files []UnsavedFile, options uint16) *CodeCompleteResults {
-	ca_unsaved_files := make([]C.struct_CXUnsavedFile, len(unsaved_files))
-	var cp_unsaved_files *C.struct_CXUnsavedFile
-	if len(unsaved_files) > 0 {
-		cp_unsaved_files = &ca_unsaved_files[0]
+func (tu TranslationUnit) CodeCompleteAt(completeFilename string, completeLine uint16, completeColumn uint16, unsavedFiles []UnsavedFile, options uint16) *CodeCompleteResults {
+	ca_unsavedFiles := make([]C.struct_CXUnsavedFile, len(unsavedFiles))
+	var cp_unsavedFiles *C.struct_CXUnsavedFile
+	if len(unsavedFiles) > 0 {
+		cp_unsavedFiles = &ca_unsavedFiles[0]
 	}
-	for i := range unsaved_files {
-		ca_unsaved_files[i] = unsaved_files[i].c
+	for i := range unsavedFiles {
+		ca_unsavedFiles[i] = unsavedFiles[i].c
 	}
 
-	c_complete_filename := C.CString(complete_filename)
-	defer C.free(unsafe.Pointer(c_complete_filename))
+	c_completeFilename := C.CString(completeFilename)
+	defer C.free(unsafe.Pointer(c_completeFilename))
 
-	o := *C.clang_codeCompleteAt(tu.c, c_complete_filename, C.uint(complete_line), C.uint(complete_column), cp_unsaved_files, C.uint(len(unsaved_files)), C.uint(options))
+	o := *C.clang_codeCompleteAt(tu.c, c_completeFilename, C.uint(completeLine), C.uint(completeColumn), cp_unsavedFiles, C.uint(len(unsavedFiles)), C.uint(options))
 
 	return &CodeCompleteResults{o}
 }

@@ -9,21 +9,21 @@ type CompletionString struct {
 }
 
 // Determine the kind of a particular chunk within a completion string. \param completion_string the completion string to query. \param chunk_number the 0-based index of the chunk in the completion string. \returns the kind of the chunk at the index \c chunk_number.
-func (cs CompletionString) CompletionChunkKind(chunk_number uint16) CompletionChunkKind {
-	return CompletionChunkKind(C.clang_getCompletionChunkKind(cs.c, C.uint(chunk_number)))
+func (cs CompletionString) CompletionChunkKind(chunkNumber uint16) CompletionChunkKind {
+	return CompletionChunkKind(C.clang_getCompletionChunkKind(cs.c, C.uint(chunkNumber)))
 }
 
 // Retrieve the text associated with a particular chunk within a completion string. \param completion_string the completion string to query. \param chunk_number the 0-based index of the chunk in the completion string. \returns the text associated with the chunk at index \c chunk_number.
-func (cs CompletionString) CompletionChunkText(chunk_number uint16) string {
-	o := cxstring{C.clang_getCompletionChunkText(cs.c, C.uint(chunk_number))}
+func (cs CompletionString) CompletionChunkText(chunkNumber uint16) string {
+	o := cxstring{C.clang_getCompletionChunkText(cs.c, C.uint(chunkNumber))}
 	defer o.Dispose()
 
 	return o.String()
 }
 
 // Retrieve the completion string associated with a particular chunk within a completion string. \param completion_string the completion string to query. \param chunk_number the 0-based index of the chunk in the completion string. \returns the completion string associated with the chunk at index \c chunk_number.
-func (cs CompletionString) CompletionChunkCompletionString(chunk_number uint16) CompletionString {
-	return CompletionString{C.clang_getCompletionChunkCompletionString(cs.c, C.uint(chunk_number))}
+func (cs CompletionString) CompletionChunkCompletionString(chunkNumber uint16) CompletionString {
+	return CompletionString{C.clang_getCompletionChunkCompletionString(cs.c, C.uint(chunkNumber))}
 }
 
 // Retrieve the number of chunks in the given code-completion string.
@@ -47,8 +47,8 @@ func (cs CompletionString) CompletionNumAnnotations() uint16 {
 }
 
 // Retrieve the annotation associated with the given completion string. \param completion_string the completion string to query. \param annotation_number the 0-based index of the annotation of the completion string. \returns annotation string associated with the completion at index \c annotation_number, or a NULL string if that annotation is not available.
-func (cs CompletionString) CompletionAnnotation(annotation_number uint16) string {
-	o := cxstring{C.clang_getCompletionAnnotation(cs.c, C.uint(annotation_number))}
+func (cs CompletionString) CompletionAnnotation(annotationNumber uint16) string {
+	o := cxstring{C.clang_getCompletionAnnotation(cs.c, C.uint(annotationNumber))}
 	defer o.Dispose()
 
 	return o.String()

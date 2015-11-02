@@ -31,8 +31,8 @@ func (ccr *CodeCompleteResults) CodeCompleteGetNumDiagnostics() uint16 {
 }
 
 // Retrieve a diagnostic associated with the given code completion. \param Results the code completion results to query. \param Index the zero-based diagnostic number to retrieve. \returns the requested diagnostic. This diagnostic must be freed via a call to \c clang_disposeDiagnostic().
-func (ccr *CodeCompleteResults) CodeCompleteGetDiagnostic(Index uint16) Diagnostic {
-	return Diagnostic{C.clang_codeCompleteGetDiagnostic(&ccr.c, C.uint(Index))}
+func (ccr *CodeCompleteResults) CodeCompleteGetDiagnostic(index uint16) Diagnostic {
+	return Diagnostic{C.clang_codeCompleteGetDiagnostic(&ccr.c, C.uint(index))}
 }
 
 // Determines what compeltions are appropriate for the context the given code completion. \param Results the code completion results to query \returns the kinds of completions that are appropriate for use along with the given code completion results.
@@ -42,11 +42,11 @@ func (ccr *CodeCompleteResults) CodeCompleteGetContexts() uint64 {
 
 // Returns the cursor kind for the container for the current code completion context. The container is only guaranteed to be set for contexts where a container exists (i.e. member accesses or Objective-C message sends); if there is not a container, this function will return CXCursor_InvalidCode. \param Results the code completion results to query \param IsIncomplete on return, this value will be false if Clang has complete information about the container. If Clang does not have complete information, this value will be true. \returns the container kind, or CXCursor_InvalidCode if there is not a container
 func (ccr *CodeCompleteResults) CodeCompleteGetContainerKind() (uint16, CursorKind) {
-	var IsIncomplete C.uint
+	var isIncomplete C.uint
 
-	o := CursorKind(C.clang_codeCompleteGetContainerKind(&ccr.c, &IsIncomplete))
+	o := CursorKind(C.clang_codeCompleteGetContainerKind(&ccr.c, &isIncomplete))
 
-	return uint16(IsIncomplete), o
+	return uint16(isIncomplete), o
 }
 
 // Returns the USR for the container for the current code completion context. If there is not a container for the current context, this function will return the empty string. \param Results the code completion results to query \returns the USR for the container

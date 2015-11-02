@@ -32,6 +32,10 @@ type FunctionParameter struct {
 	Type  Type
 }
 
+var keywordReplacements = map[string]string{
+	"range": "r",
+}
+
 func handleFunctionCursor(cursor clang.Cursor) *Function {
 	f := Function{
 		CName:   cursor.Spelling(),
@@ -56,15 +60,24 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 			CName: param.DisplayName(),
 		}
 
-		p.Name = p.CName
 		typ, err := getType(param.Type())
 		if err != nil {
 			panic(err)
 		}
 		p.Type = typ
 
+		p.Name = p.CName
 		if p.Name == "" {
 			p.Name = receiverName(p.Type.GoName)
+		} else {
+			pns := strings.Split(p.Name, "_")
+			for i := range pns {
+				pns[i] = upperFirstCharacter(pns[i])
+			}
+			p.Name = lowerFirstCharacter(strings.Join(pns, ""))
+		}
+		if r, ok := keywordReplacements[p.Name]; ok {
+			p.Name = r
 		}
 
 		f.Parameters = append(f.Parameters, p)

@@ -20,6 +20,6 @@ func (cc CompileCommands) Size() uint16 {
 }
 
 // Get the I'th CompileCommand for a file Note : 0 <= i < clang_CompileCommands_getSize(CXCompileCommands)
-func (cc CompileCommands) Command(I uint16) CompileCommand {
-	return CompileCommand{C.clang_CompileCommands_getCommand(cc.c, C.uint(I))}
+func (cc CompileCommands) Command(i uint16) CompileCommand {
+	return CompileCommand{C.clang_CompileCommands_getCommand(cc.c, C.uint(i))}
 }

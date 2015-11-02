@@ -24,8 +24,8 @@ func (c Comment) NumChildren() uint16 {
 }
 
 // \param Comment AST node of any kind. \param ChildIdx child index (zero-based). \returns the specified child of the AST node.
-func (c Comment) Child(ChildIdx uint16) Comment {
-	return Comment{C.clang_Comment_getChild(c.c, C.uint(ChildIdx))}
+func (c Comment) Child(childIdx uint16) Comment {
+	return Comment{C.clang_Comment_getChild(c.c, C.uint(childIdx))}
 }
 
 // A \c CXComment_Paragraph node is considered whitespace if it contains only \c CXComment_Text nodes that are empty or whitespace. Other AST nodes (except \c CXComment_Paragraph and \c CXComment_Text) are never considered whitespace. \returns non-zero if \c Comment is whitespace.
@@ -69,8 +69,8 @@ func (c Comment) InlineCommandComment_getNumArgs() uint16 {
 }
 
 // \param Comment a \c CXComment_InlineCommand AST node. \param ArgIdx argument index (zero-based). \returns text of the specified argument.
-func (c Comment) InlineCommandComment_getArgText(ArgIdx uint16) string {
-	o := cxstring{C.clang_InlineCommandComment_getArgText(c.c, C.uint(ArgIdx))}
+func (c Comment) InlineCommandComment_getArgText(argIdx uint16) string {
+	o := cxstring{C.clang_InlineCommandComment_getArgText(c.c, C.uint(argIdx))}
 	defer o.Dispose()
 
 	return o.String()
@@ -97,16 +97,16 @@ func (c Comment) HTMLStartTag_getNumAttrs() uint16 {
 }
 
 // \param Comment a \c CXComment_HTMLStartTag AST node. \param AttrIdx attribute index (zero-based). \returns name of the specified attribute.
-func (c Comment) HTMLStartTag_getAttrName(AttrIdx uint16) string {
-	o := cxstring{C.clang_HTMLStartTag_getAttrName(c.c, C.uint(AttrIdx))}
+func (c Comment) HTMLStartTag_getAttrName(attrIdx uint16) string {
+	o := cxstring{C.clang_HTMLStartTag_getAttrName(c.c, C.uint(attrIdx))}
 	defer o.Dispose()
 
 	return o.String()
 }
 
 // \param Comment a \c CXComment_HTMLStartTag AST node. \param AttrIdx attribute index (zero-based). \returns value of the specified attribute.
-func (c Comment) HTMLStartTag_getAttrValue(AttrIdx uint16) string {
-	o := cxstring{C.clang_HTMLStartTag_getAttrValue(c.c, C.uint(AttrIdx))}
+func (c Comment) HTMLStartTag_getAttrValue(attrIdx uint16) string {
+	o := cxstring{C.clang_HTMLStartTag_getAttrValue(c.c, C.uint(attrIdx))}
 	defer o.Dispose()
 
 	return o.String()
@@ -126,8 +126,8 @@ func (c Comment) BlockCommandComment_getNumArgs() uint16 {
 }
 
 // \param Comment a \c CXComment_BlockCommand AST node. \param ArgIdx argument index (zero-based). \returns text of the specified word-like argument.
-func (c Comment) BlockCommandComment_getArgText(ArgIdx uint16) string {
-	o := cxstring{C.clang_BlockCommandComment_getArgText(c.c, C.uint(ArgIdx))}
+func (c Comment) BlockCommandComment_getArgText(argIdx uint16) string {
+	o := cxstring{C.clang_BlockCommandComment_getArgText(c.c, C.uint(argIdx))}
 	defer o.Dispose()
 
 	return o.String()
@@ -191,8 +191,8 @@ func (c Comment) TParamCommandComment_getDepth() uint16 {
 }
 
 // \param Comment a \c CXComment_TParamCommand AST node. \returns zero-based parameter index in the template parameter list at a given nesting depth. For example, \verbatim template<typename C, template<typename T> class TT> void test(TT<int> aaa); \endverbatim for C and TT nesting depth is 0, so we can ask for index at depth 0: at depth 0 C's index is 0, TT's index is 1. For T nesting depth is 1, so we can ask for index at depth 0 and 1: at depth 0 T's index is 1 (same as TT's), at depth 1 T's index is 0.
-func (c Comment) TParamCommandComment_getIndex(Depth uint16) uint16 {
-	return uint16(C.clang_TParamCommandComment_getIndex(c.c, C.uint(Depth)))
+func (c Comment) TParamCommandComment_getIndex(depth uint16) uint16 {
+	return uint16(C.clang_TParamCommandComment_getIndex(c.c, C.uint(depth)))
 }
 
 // \param Comment a \c CXComment_VerbatimBlockLine AST node. \returns text contained in the AST node.

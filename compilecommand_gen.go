@@ -23,8 +23,8 @@ func (cc CompileCommand) NumArgs() uint16 {
 }
 
 // Get the I'th argument value in the compiler invocations Invariant : - argument 0 is the compiler executable
-func (cc CompileCommand) Arg(I uint16) string {
-	o := cxstring{C.clang_CompileCommand_getArg(cc.c, C.uint(I))}
+func (cc CompileCommand) Arg(i uint16) string {
+	o := cxstring{C.clang_CompileCommand_getArg(cc.c, C.uint(i))}
 	defer o.Dispose()
 
 	return o.String()

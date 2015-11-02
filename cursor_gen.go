@@ -146,13 +146,13 @@ func (c Cursor) LexicalParent() Cursor {
 func (c Cursor) OverriddenCursors() []Cursor {
 	var cp_overridden *C.CXCursor
 	var overridden []Cursor
-	var num_overridden C.uint
+	var numOverridden C.uint
 
-	C.clang_getOverriddenCursors(c.c, &cp_overridden, &num_overridden)
+	C.clang_getOverriddenCursors(c.c, &cp_overridden, &numOverridden)
 
 	gos_overridden := (*reflect.SliceHeader)(unsafe.Pointer(&overridden))
-	gos_overridden.Cap = int(num_overridden)
-	gos_overridden.Len = int(num_overridden)
+	gos_overridden.Cap = int(numOverridden)
+	gos_overridden.Len = int(numOverridden)
 	gos_overridden.Data = uintptr(unsafe.Pointer(cp_overridden))
 
 	return overridden
@@ -479,8 +479,8 @@ func (c Cursor) SpecializedCursorTemplate() Cursor {
 }
 
 // Given a cursor that references something else, return the source range covering that reference. \param C A cursor pointing to a member reference, a declaration reference, or an operator call. \param NameFlags A bitset with three independent flags: CXNameRange_WantQualifier, CXNameRange_WantTemplateArgs, and CXNameRange_WantSinglePiece. \param PieceIndex For contiguous names or when passing the flag CXNameRange_WantSinglePiece, only one piece with index 0 is available. When the CXNameRange_WantSinglePiece flag is not passed for a non-contiguous names, this index can be used to retrieve the individual pieces of the name. See also CXNameRange_WantSinglePiece. \returns The piece of the name pointed to by the given cursor. If there is no name, or if the PieceIndex is out-of-range, a null-cursor will be returned.
-func (c Cursor) ReferenceNameRange(NameFlags uint16, PieceIndex uint16) SourceRange {
-	return SourceRange{C.clang_getCursorReferenceNameRange(c.c, C.uint(NameFlags), C.uint(PieceIndex))}
+func (c Cursor) ReferenceNameRange(nameFlags uint16, pieceIndex uint16) SourceRange {
+	return SourceRange{C.clang_getCursorReferenceNameRange(c.c, C.uint(nameFlags), C.uint(pieceIndex))}
 }
 
 func (c Cursor) DefinitionSpellingAndExtent() (string, string, uint16, uint16, uint16, uint16) {

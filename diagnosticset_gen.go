@@ -18,8 +18,8 @@ func (ds DiagnosticSet) NumDiagnosticsInSet() uint16 {
 }
 
 // Retrieve a diagnostic associated with the given CXDiagnosticSet. \param Diags the CXDiagnosticSet to query. \param Index the zero-based diagnostic number to retrieve. \returns the requested diagnostic. This diagnostic must be freed via a call to \c clang_disposeDiagnostic().
-func (ds DiagnosticSet) DiagnosticInSet(Index uint16) Diagnostic {
-	return Diagnostic{C.clang_getDiagnosticInSet(ds.c, C.uint(Index))}
+func (ds DiagnosticSet) DiagnosticInSet(index uint16) Diagnostic {
+	return Diagnostic{C.clang_getDiagnosticInSet(ds.c, C.uint(index))}
 }
 
 // Deserialize a set of diagnostics from a Clang diagnostics bitcode file. \param file The name of the file to deserialize. \param error A pointer to a enum value recording if there was a problem deserializing the diagnostics. \param errorString A pointer to a CXString for recording the error string if the file was not successfully loaded. \returns A loaded CXDiagnosticSet if successful, and NULL otherwise. These diagnostics should be released using clang_disposeDiagnosticSet().

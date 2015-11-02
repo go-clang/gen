@@ -14,15 +14,15 @@ type CompilationDatabase struct {
 }
 
 // Creates a compilation database from the database found in directory buildDir. For example, CMake can output a compile_commands.json which can be used to build the database. It must be freed by \c clang_CompilationDatabase_dispose.
-func CompilationDatabase_fromDirectory(BuildDir string) (CompilationDatabase_Error, CompilationDatabase) {
-	var ErrorCode C.CXCompilationDatabase_Error
+func CompilationDatabase_fromDirectory(buildDir string) (CompilationDatabase_Error, CompilationDatabase) {
+	var errorCode C.CXCompilationDatabase_Error
 
-	c_BuildDir := C.CString(BuildDir)
-	defer C.free(unsafe.Pointer(c_BuildDir))
+	c_buildDir := C.CString(buildDir)
+	defer C.free(unsafe.Pointer(c_buildDir))
 
-	o := CompilationDatabase{C.clang_CompilationDatabase_fromDirectory(c_BuildDir, &ErrorCode)}
+	o := CompilationDatabase{C.clang_CompilationDatabase_fromDirectory(c_buildDir, &errorCode)}
 
-	return CompilationDatabase_Error(ErrorCode), o
+	return CompilationDatabase_Error(errorCode), o
 }
 
 // Free the given compilation database
@@ -31,11 +31,11 @@ func (cd CompilationDatabase) Dispose() {
 }
 
 // Find the compile commands used for a file. The compile commands must be freed by \c clang_CompileCommands_dispose.
-func (cd CompilationDatabase) CompileCommands(CompleteFileName string) CompileCommands {
-	c_CompleteFileName := C.CString(CompleteFileName)
-	defer C.free(unsafe.Pointer(c_CompleteFileName))
+func (cd CompilationDatabase) CompileCommands(completeFileName string) CompileCommands {
+	c_completeFileName := C.CString(completeFileName)
+	defer C.free(unsafe.Pointer(c_completeFileName))
 
-	return CompileCommands{C.clang_CompilationDatabase_getCompileCommands(cd.c, c_CompleteFileName)}
+	return CompileCommands{C.clang_CompilationDatabase_getCompileCommands(cd.c, c_completeFileName)}
 }
 
 // Get all the compile commands in the given compilation database.

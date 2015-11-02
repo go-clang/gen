@@ -470,7 +470,7 @@ func (h *headerFile) handleHeaderFile(clangArguments []string) {
 			}
 
 			if f.CName == "clang_getRemappingsFromFileList" {
-				switch p.Name {
+				switch p.CName {
 				case "filePaths":
 					p.Type.IsSlice = true
 				case "numFiles":
@@ -488,25 +488,25 @@ func (h *headerFile) handleHeaderFile(clangArguments []string) {
 				p.Type.IsReturnArgument = true
 			}
 
-			if f.CName == "clang_disposeOverriddenCursors" && p.Name == "overridden" {
+			if f.CName == "clang_disposeOverriddenCursors" && p.CName == "overridden" {
 				p.Type.IsSlice = true
 			}
 
 			// TODO happy hack, if this is an array length parameter we need to find its partner
-			var paName string
-			if pan := strings.TrimPrefix(p.Name, "num_"); len(pan) != len(p.Name) {
-				paName = pan
-			} else if pan := strings.TrimPrefix(p.Name, "Num"); len(pan) != len(p.Name) && unicode.IsUpper(rune(pan[0])) {
-				paName = pan
-			} else if pan := strings.TrimSuffix(p.Name, "_size"); len(pan) != len(p.Name) {
-				paName = pan
+			var paCName string
+			if pan := strings.TrimPrefix(p.CName, "num_"); len(pan) != len(p.CName) {
+				paCName = pan
+			} else if pan := strings.TrimPrefix(p.CName, "Num"); len(pan) != len(p.CName) && unicode.IsUpper(rune(pan[0])) {
+				paCName = pan
+			} else if pan := strings.TrimSuffix(p.CName, "_size"); len(pan) != len(p.CName) {
+				paCName = pan
 			}
 
-			if paName != "" {
+			if paCName != "" {
 				for j := range f.Parameters {
 					pa := &f.Parameters[j]
 
-					if pa.Name == paName {
+					if pa.CName == paCName {
 						// TODO remove this when getType cane handle this kind of conversion
 						if pa.Type.GoName == "struct CXUnsavedFile" || pa.Type.GoName == "UnsavedFile" {
 							pa.Type.GoName = "UnsavedFile"
