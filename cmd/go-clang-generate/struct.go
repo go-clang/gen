@@ -170,7 +170,5 @@ func generateStruct(s *Struct) error {
 		return err
 	}
 
-	// TODO remove "_" from names for files here?
-
 	return ioutil.WriteFile(strings.ToLower(s.Name)+"_gen.go", b.Bytes(), 0600)
 }

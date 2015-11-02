@@ -9,8 +9,6 @@ import (
 	"unicode"
 )
 
-// TODO util.go is just an ugly name...
-
 func execToBuffer(cmd ...string) (out []byte, exitStatus int, err error) {
 	c := exec.Command(cmd[0], cmd[1:]...)
 
