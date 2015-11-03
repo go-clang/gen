@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"fmt"
-)
+import "fmt"
 
 type IndexOptFlags uint32
 
@@ -20,7 +17,7 @@ const (
 	IndexOpt_IndexImplicitTemplateInstantiations = C.CXIndexOpt_IndexImplicitTemplateInstantiations
 	// Suppress all compiler warnings when parsing for indexing.
 	IndexOpt_SuppressWarnings = C.CXIndexOpt_SuppressWarnings
-	// Skip a function/method body that was already parsed during an indexing session assosiated with a \c CXIndexAction object. Bodies in system headers are always skipped.
+	// Skip a function/method body that was already parsed during an indexing session assosiated with a CXIndexAction object. Bodies in system headers are always skipped.
 	IndexOpt_SkipParsedBodiesInSession = C.CXIndexOpt_SkipParsedBodiesInSession
 )
 

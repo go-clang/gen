@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"unsafe"
-)
+import "unsafe"
 
 // The type of an element in the abstract syntax tree.
 type Type struct {
@@ -17,7 +14,12 @@ func (t Type) Kind() TypeKind {
 	return value
 }
 
-// Pretty-print the underlying type using the rules of the language of the translation unit from which it came. If the type is invalid, an empty string is returned.
+/*
+	Pretty-print the underlying type using the rules of the
+	language of the translation unit from which it came.
+
+	If the type is invalid, an empty string is returned.
+*/
 func (t Type) Spelling() string {
 	o := cxstring{C.clang_getTypeSpelling(t.c)}
 	defer o.Dispose()
@@ -25,14 +27,26 @@ func (t Type) Spelling() string {
 	return o.String()
 }
 
-// Determine whether two CXTypes represent the same type. \returns non-zero if the CXTypes represent the same type and zero otherwise.
+/*
+	Determine whether two CXTypes represent the same type.
+
+	Returns non-zero if the CXTypes represent the same type and
+	zero otherwise.
+*/
 func (t Type) EqualTypes(t2 Type) bool {
 	o := C.clang_equalTypes(t.c, t2.c)
 
 	return o != C.uint(0)
 }
 
-// Return the canonical type for a CXType. Clang's type system explicitly models typedefs and all the ways a specific type can be represented. The canonical type is the underlying type with all the "sugar" removed. For example, if 'T' is a typedef for 'int', the canonical type for 'T' would be 'int'.
+/*
+	Return the canonical type for a CXType.
+
+	Clang's type system explicitly models typedefs and all the ways
+	a specific type can be represented. The canonical type is the underlying
+	type with all the "sugar" removed. For example, if 'T' is a typedef
+	for 'int', the canonical type for 'T' would be 'int'.
+*/
 func (t Type) CanonicalType() Type {
 	return Type{C.clang_getCanonicalType(t.c)}
 }
@@ -68,22 +82,40 @@ func (t Type) Declaration() Cursor {
 	return Cursor{C.clang_getTypeDeclaration(t.c)}
 }
 
-// Retrieve the calling convention associated with a function type. If a non-function type is passed in, CXCallingConv_Invalid is returned.
+/*
+	Retrieve the calling convention associated with a function type.
+
+	If a non-function type is passed in, CXCallingConv_Invalid is returned.
+*/
 func (t Type) FunctionTypeCallingConv() CallingConv {
 	return CallingConv(C.clang_getFunctionTypeCallingConv(t.c))
 }
 
-// Retrieve the result type associated with a function type. If a non-function type is passed in, an invalid type is returned.
+/*
+	Retrieve the result type associated with a function type.
+
+	If a non-function type is passed in, an invalid type is returned.
+*/
 func (t Type) ResultType() Type {
 	return Type{C.clang_getResultType(t.c)}
 }
 
-// Retrieve the number of non-variadic arguments associated with a function type. If a non-function type is passed in, -1 is returned.
+/*
+	Retrieve the number of non-variadic arguments associated with a
+	function type.
+
+	If a non-function type is passed in, -1 is returned.
+*/
 func (t Type) NumArgTypes() int16 {
 	return int16(C.clang_getNumArgTypes(t.c))
 }
 
-// Retrieve the type of an argument of a function type. If a non-function type is passed in or the function does not have enough parameters, an invalid type is returned.
+/*
+	Retrieve the type of an argument of a function type.
+
+	If a non-function type is passed in or the function does not have enough
+	parameters, an invalid type is returned.
+*/
 func (t Type) ArgType(i uint16) Type {
 	return Type{C.clang_getArgType(t.c, C.uint(i))}
 }
@@ -102,50 +134,108 @@ func (t Type) IsPODType() bool {
 	return o != C.uint(0)
 }
 
-// Return the element type of an array, complex, or vector type. If a type is passed in that is not an array, complex, or vector type, an invalid type is returned.
+/*
+	Return the element type of an array, complex, or vector type.
+
+	If a type is passed in that is not an array, complex, or vector type,
+	an invalid type is returned.
+*/
 func (t Type) ElementType() Type {
 	return Type{C.clang_getElementType(t.c)}
 }
 
-// Return the number of elements of an array or vector type. If a type is passed in that is not an array or vector type, -1 is returned.
+/*
+	Return the number of elements of an array or vector type.
+
+	If a type is passed in that is not an array or vector type,
+	-1 is returned.
+*/
 func (t Type) NumElements() int64 {
 	return int64(C.clang_getNumElements(t.c))
 }
 
-// Return the element type of an array type. If a non-array type is passed in, an invalid type is returned.
+/*
+	Return the element type of an array type.
+
+	If a non-array type is passed in, an invalid type is returned.
+*/
 func (t Type) ArrayElementType() Type {
 	return Type{C.clang_getArrayElementType(t.c)}
 }
 
-// Return the array size of a constant array. If a non-array type is passed in, -1 is returned.
+/*
+	Return the array size of a constant array.
+
+	If a non-array type is passed in, -1 is returned.
+*/
 func (t Type) ArraySize() int64 {
 	return int64(C.clang_getArraySize(t.c))
 }
 
-// Return the alignment of a type in bytes as per C++[expr.alignof] standard. If the type declaration is invalid, CXTypeLayoutError_Invalid is returned. If the type declaration is an incomplete type, CXTypeLayoutError_Incomplete is returned. If the type declaration is a dependent type, CXTypeLayoutError_Dependent is returned. If the type declaration is not a constant size type, CXTypeLayoutError_NotConstantSize is returned.
+/*
+	Return the alignment of a type in bytes as per C++[expr.alignof]
+	standard.
+
+	If the type declaration is invalid, CXTypeLayoutError_Invalid is returned.
+	If the type declaration is an incomplete type, CXTypeLayoutError_Incomplete
+	is returned.
+	If the type declaration is a dependent type, CXTypeLayoutError_Dependent is
+	returned.
+	If the type declaration is not a constant size type,
+	CXTypeLayoutError_NotConstantSize is returned.
+*/
 func (t Type) AlignOf() int64 {
 	return int64(C.clang_Type_getAlignOf(t.c))
 }
 
-// Return the class type of an member pointer type. If a non-member-pointer type is passed in, an invalid type is returned.
+/*
+	Return the class type of an member pointer type.
+
+	If a non-member-pointer type is passed in, an invalid type is returned.
+*/
 func (t Type) ClassType() Type {
 	return Type{C.clang_Type_getClassType(t.c)}
 }
 
-// Return the size of a type in bytes as per C++[expr.sizeof] standard. If the type declaration is invalid, CXTypeLayoutError_Invalid is returned. If the type declaration is an incomplete type, CXTypeLayoutError_Incomplete is returned. If the type declaration is a dependent type, CXTypeLayoutError_Dependent is returned.
+/*
+	Return the size of a type in bytes as per C++[expr.sizeof] standard.
+
+	If the type declaration is invalid, CXTypeLayoutError_Invalid is returned.
+	If the type declaration is an incomplete type, CXTypeLayoutError_Incomplete
+	is returned.
+	If the type declaration is a dependent type, CXTypeLayoutError_Dependent is
+	returned.
+*/
 func (t Type) SizeOf() int64 {
 	return int64(C.clang_Type_getSizeOf(t.c))
 }
 
-// Return the offset of a field named S in a record of type T in bits as it would be returned by __offsetof__ as per C++11[18.2p4] If the cursor is not a record field declaration, CXTypeLayoutError_Invalid is returned. If the field's type declaration is an incomplete type, CXTypeLayoutError_Incomplete is returned. If the field's type declaration is a dependent type, CXTypeLayoutError_Dependent is returned. If the field's name S is not found, CXTypeLayoutError_InvalidFieldName is returned.
-func (t Type) OffsetOf(S string) int64 {
-	c_S := C.CString(S)
-	defer C.free(unsafe.Pointer(c_S))
+/*
+	Return the offset of a field named S in a record of type T in bits
+	as it would be returned by __offsetof__ as per C++11[18.2p4]
 
-	return int64(C.clang_Type_getOffsetOf(t.c, c_S))
+	If the cursor is not a record field declaration, CXTypeLayoutError_Invalid
+	is returned.
+	If the field's type declaration is an incomplete type,
+	CXTypeLayoutError_Incomplete is returned.
+	If the field's type declaration is a dependent type,
+	CXTypeLayoutError_Dependent is returned.
+	If the field's name S is not found,
+	CXTypeLayoutError_InvalidFieldName is returned.
+*/
+func (t Type) OffsetOf(s string) int64 {
+	c_s := C.CString(s)
+	defer C.free(unsafe.Pointer(c_s))
+
+	return int64(C.clang_Type_getOffsetOf(t.c, c_s))
 }
 
-// Retrieve the ref-qualifier kind of a function or method. The ref-qualifier is returned for C++ functions or methods. For other types or non-C++ declarations, CXRefQualifier_None is returned.
+/*
+	Retrieve the ref-qualifier kind of a function or method.
+
+	The ref-qualifier is returned for C++ functions or methods. For other types
+	or non-C++ declarations, CXRefQualifier_None is returned.
+*/
 func (t Type) RefQualifier() RefQualifierKind {
 	return RefQualifierKind(C.clang_Type_getCXXRefQualifier(t.c))
 }

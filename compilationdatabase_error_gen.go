@@ -3,10 +3,7 @@ package phoenix
 // #include "./clang-c/CXCompilationDatabase.h"
 // #include "go-clang.h"
 import "C"
-
-import (
-	"fmt"
-)
+import "fmt"
 
 // Error codes for Compilation Database
 type CompilationDatabase_Error int32

@@ -7,7 +7,15 @@ import "C"
 type CursorKind uint32
 
 const (
-	// A declaration whose specific kind is not exposed via this interface. Unexposed declarations have the same operations as any other kind of declaration; one can extract their location information, spelling, find their definitions, etc. However, the specific kind of the declaration is not reported.
+	/*
+		A declaration whose specific kind is not exposed via this
+		interface.
+
+		Unexposed declarations have the same operations as any other kind
+		of declaration; one can extract their location information,
+		spelling, find their definitions, etc. However, the specific kind
+		of the declaration is not reported.
+	*/
 	Cursor_UnexposedDecl CursorKind = C.CXCursor_UnexposedDecl
 	// A C or C++ struct.
 	Cursor_StructDecl = C.CXCursor_StructDecl
@@ -98,36 +106,36 @@ const (
 	// An access specifier.
 	Cursor_ObjCClassRef = C.CXCursor_ObjCClassRef
 	/*
-	 * \brief A reference to a type declaration.
-	 *
-	 * A type reference occurs anywhere where a type is named but not
-	 * declared. For example, given:
-	 *
-	 * \code
-	 * typedef unsigned size_type;
-	 * size_type size;
-	 * \endcode
-	 *
-	 * The typedef is a declaration of size_type (CXCursor_TypedefDecl),
-	 * while the type of the variable "size" is referenced. The cursor
-	 * referenced by the type of size is the typedef for size_type.
-	 */
+		A reference to a type declaration.
+
+		A type reference occurs anywhere where a type is named but not
+		declared. For example, given:
+
+		\code
+		typedef unsigned size_type;
+		size_type size;
+		\endcode
+
+		The typedef is a declaration of size_type (CXCursor_TypedefDecl),
+		while the type of the variable "size" is referenced. The cursor
+		referenced by the type of size is the typedef for size_type.
+	*/
 	Cursor_TypeRef = C.CXCursor_TypeRef
 	/*
-	 * \brief A reference to a type declaration.
-	 *
-	 * A type reference occurs anywhere where a type is named but not
-	 * declared. For example, given:
-	 *
-	 * \code
-	 * typedef unsigned size_type;
-	 * size_type size;
-	 * \endcode
-	 *
-	 * The typedef is a declaration of size_type (CXCursor_TypedefDecl),
-	 * while the type of the variable "size" is referenced. The cursor
-	 * referenced by the type of size is the typedef for size_type.
-	 */
+		A reference to a type declaration.
+
+		A type reference occurs anywhere where a type is named but not
+		declared. For example, given:
+
+		\code
+		typedef unsigned size_type;
+		size_type size;
+		\endcode
+
+		The typedef is a declaration of size_type (CXCursor_TypedefDecl),
+		while the type of the variable "size" is referenced. The cursor
+		referenced by the type of size is the typedef for size_type.
+	*/
 	Cursor_CXXBaseSpecifier = C.CXCursor_CXXBaseSpecifier
 	// A reference to a class template, function template, template template parameter, or class template partial specialization.
 	Cursor_TemplateRef = C.CXCursor_TemplateRef
@@ -136,57 +144,57 @@ const (
 	// A reference to a member of a struct, union, or class that occurs in some non-expression context, e.g., a designated initializer.
 	Cursor_MemberRef = C.CXCursor_MemberRef
 	/*
-	 * \brief A reference to a labeled statement.
-	 *
-	 * This cursor kind is used to describe the jump to "start_over" in the
-	 * goto statement in the following example:
-	 *
-	 * \code
-	 *   start_over:
-	 *     ++counter;
-	 *
-	 *     goto start_over;
-	 * \endcode
-	 *
-	 * A label reference cursor refers to a label statement.
-	 */
+		A reference to a labeled statement.
+
+		This cursor kind is used to describe the jump to "start_over" in the
+		goto statement in the following example:
+
+		\code
+		start_over:
+		++counter;
+
+		goto start_over;
+		\endcode
+
+		A label reference cursor refers to a label statement.
+	*/
 	Cursor_LabelRef = C.CXCursor_LabelRef
 	/*
-	 * \brief A reference to a set of overloaded functions or function templates
-	 * that has not yet been resolved to a specific function or function template.
-	 *
-	 * An overloaded declaration reference cursor occurs in C++ templates where
-	 * a dependent name refers to a function. For example:
-	 *
-	 * \code
-	 * template<typename T> void swap(T&, T&);
-	 *
-	 * struct X { ... };
-	 * void swap(X&, X&);
-	 *
-	 * template<typename T>
-	 * void reverse(T* first, T* last) {
-	 *   while (first < last - 1) {
-	 *     swap(*first, *--last);
-	 *     ++first;
-	 *   }
-	 * }
-	 *
-	 * struct Y { };
-	 * void swap(Y&, Y&);
-	 * \endcode
-	 *
-	 * Here, the identifier "swap" is associated with an overloaded declaration
-	 * reference. In the template definition, "swap" refers to either of the two
-	 * "swap" functions declared above, so both results will be available. At
-	 * instantiation time, "swap" may also refer to other functions found via
-	 * argument-dependent lookup (e.g., the "swap" function at the end of the
-	 * example).
-	 *
-	 * The functions \c clang_getNumOverloadedDecls() and
-	 * \c clang_getOverloadedDecl() can be used to retrieve the definitions
-	 * referenced by this cursor.
-	 */
+		A reference to a set of overloaded functions or function templates
+		that has not yet been resolved to a specific function or function template.
+
+		An overloaded declaration reference cursor occurs in C++ templates where
+		a dependent name refers to a function. For example:
+
+		\code
+		template<typename T> void swap(T&, T&);
+
+		struct X { ... };
+		void swap(X&, X&);
+
+		template<typename T>
+		void reverse(T* first, T* last) {
+		while (first < last - 1) {
+		swap(*first, *--last);
+		++first;
+		}
+		}
+
+		struct Y { };
+		void swap(Y&, Y&);
+		\endcode
+
+		Here, the identifier "swap" is associated with an overloaded declaration
+		reference. In the template definition, "swap" refers to either of the two
+		"swap" functions declared above, so both results will be available. At
+		instantiation time, "swap" may also refer to other functions found via
+		argument-dependent lookup (e.g., the "swap" function at the end of the
+		example).
+
+		The functions clang_getNumOverloadedDecls() and
+		clang_getOverloadedDecl() can be used to retrieve the definitions
+		referenced by this cursor.
+	*/
 	Cursor_OverloadedDeclRef = C.CXCursor_OverloadedDeclRef
 	// A reference to a variable that occurs in some non-expression context, e.g., a C++ lambda capture list.
 	Cursor_VariableRef = C.CXCursor_VariableRef
@@ -206,7 +214,15 @@ const (
 	Cursor_LastInvalid = C.CXCursor_LastInvalid
 	// A reference to a variable that occurs in some non-expression context, e.g., a C++ lambda capture list.
 	Cursor_FirstExpr = C.CXCursor_FirstExpr
-	// An expression whose specific kind is not exposed via this interface. Unexposed expressions have the same operations as any other kind of expression; one can extract their location information, spelling, children, etc. However, the specific kind of the expression is not reported.
+	/*
+		An expression whose specific kind is not exposed via this
+		interface.
+
+		Unexposed expressions have the same operations as any other kind
+		of expression; one can extract their location information,
+		spelling, children, etc. However, the specific kind of the
+		expression is not reported.
+	*/
 	Cursor_UnexposedExpr = C.CXCursor_UnexposedExpr
 	// An expression that refers to some value declaration, such as a function, varible, or enumerator.
 	Cursor_DeclRefExpr = C.CXCursor_DeclRefExpr
@@ -214,7 +230,7 @@ const (
 	Cursor_MemberRefExpr = C.CXCursor_MemberRefExpr
 	// An expression that calls a function.
 	Cursor_CallExpr = C.CXCursor_CallExpr
-	// An expression that sends a message to an Objective-C object or class.
+	// An expression that sends a message to an Objective-C  object or class.
 	Cursor_ObjCMessageExpr = C.CXCursor_ObjCMessageExpr
 	// An expression that represents a block literal.
 	Cursor_BlockExpr = C.CXCursor_BlockExpr
@@ -228,7 +244,11 @@ const (
 	Cursor_StringLiteral = C.CXCursor_StringLiteral
 	// A character literal.
 	Cursor_CharacterLiteral = C.CXCursor_CharacterLiteral
-	// A parenthesized expression, e.g. "(1)". This AST node is only formed if full location information is requested.
+	/*
+		A parenthesized expression, e.g. "(1)".
+
+		This AST node is only formed if full location information is requested.
+	*/
 	Cursor_ParenExpr = C.CXCursor_ParenExpr
 	// This represents the unary-expression's (except sizeof and alignof).
 	Cursor_UnaryOperator = C.CXCursor_UnaryOperator
@@ -240,7 +260,12 @@ const (
 	Cursor_CompoundAssignOperator = C.CXCursor_CompoundAssignOperator
 	// The ?: ternary operator.
 	Cursor_ConditionalOperator = C.CXCursor_ConditionalOperator
-	// An explicit cast in C (C99 6.5.4) or a C-style cast in C++ (C++ [expr.cast]), which uses the syntax (Type)expr. For example: (int)f.
+	/*
+		An explicit cast in C (C99 6.5.4) or a C-style cast in C++
+		(C++ [expr.cast]), which uses the syntax (Type)expr.
+
+		For example: (int)f.
+	*/
 	Cursor_CStyleCastExpr = C.CXCursor_CStyleCastExpr
 	// [C99 6.5.2.5]
 	Cursor_CompoundLiteralExpr = C.CXCursor_CompoundLiteralExpr
@@ -252,7 +277,15 @@ const (
 	Cursor_StmtExpr = C.CXCursor_StmtExpr
 	// Represents a C11 generic selection.
 	Cursor_GenericSelectionExpr = C.CXCursor_GenericSelectionExpr
-	// Implements the GNU __null extension, which is a name for a null pointer constant that has integral type (e.g., int or long) and is the same size and alignment as a pointer. The __null extension is typically only used by system headers, which define NULL as __null in C++ rather than using 0 (which is an integer that may not match the size of a pointer).
+	/*
+		Implements the GNU __null extension, which is a name for a null
+		pointer constant that has integral type (e.g., int or long) and is the same
+		size and alignment as a pointer.
+
+		The __null extension is typically only used by system headers, which define
+		NULL as __null in C++ rather than using 0 (which is an integer that may not
+		match the size of a pointer).
+	*/
 	Cursor_GNUNullExpr = C.CXCursor_GNUNullExpr
 	// C++'s static_cast<> expression.
 	Cursor_CXXStaticCastExpr = C.CXCursor_CXXStaticCastExpr
@@ -262,14 +295,15 @@ const (
 	Cursor_CXXReinterpretCastExpr = C.CXCursor_CXXReinterpretCastExpr
 	// C++'s const_cast<> expression.
 	Cursor_CXXConstCastExpr = C.CXCursor_CXXConstCastExpr
-	/* \brief Represents an explicit C++ type conversion that uses "functional"
-	 * notion (C++ [expr.type.conv]).
-	 *
-	 * Example:
-	 * \code
-	 *   x = int(0.5);
-	 * \endcode
-	 */
+	/*
+		Represents an explicit C++ type conversion that uses "functional"
+		notion (C++ [expr.type.conv]).
+
+		Example:
+		\code
+		x = int(0.5);
+		\endcode
+	*/
 	Cursor_CXXFunctionalCastExpr = C.CXCursor_CXXFunctionalCastExpr
 	// A C++ typeid expression (C++ [expr.typeid]).
 	Cursor_CXXTypeidExpr = C.CXCursor_CXXTypeidExpr
@@ -279,7 +313,12 @@ const (
 	Cursor_CXXNullPtrLiteralExpr = C.CXCursor_CXXNullPtrLiteralExpr
 	// Represents the "this" expression in C++
 	Cursor_CXXThisExpr = C.CXCursor_CXXThisExpr
-	// [C++ 15] C++ Throw Expression. This handles 'throw' and 'throw' assignment-expression. When assignment-expression isn't present, Op will be null.
+	/*
+		[C++ 15] C++ Throw Expression.
+
+		This handles 'throw' and 'throw' assignment-expression. When
+		assignment-expression isn't present, Op will be null.
+	*/
 	Cursor_CXXThrowExpr = C.CXCursor_CXXThrowExpr
 	// A new expression for memory allocation and constructor calls, e.g: "new CXXNewExpr(foo)".
 	Cursor_CXXNewExpr = C.CXCursor_CXXNewExpr
@@ -295,38 +334,41 @@ const (
 	Cursor_ObjCSelectorExpr = C.CXCursor_ObjCSelectorExpr
 	// An Objective-C \@protocol expression.
 	Cursor_ObjCProtocolExpr = C.CXCursor_ObjCProtocolExpr
-	/* \brief An Objective-C "bridged" cast expression, which casts between
-	 * Objective-C pointers and C pointers, transferring ownership in the process.
-	 *
-	 * \code
-	 *   NSString *str = (__bridge_transfer NSString *)CFCreateString();
-	 * \endcode
-	 */
+	/*
+		An Objective-C "bridged" cast expression, which casts between
+		Objective-C pointers and C pointers, transferring ownership in the process.
+
+		\code
+		NSString *str = (__bridge_transfer NSString *)CFCreateString();
+		\endcode
+	*/
 	Cursor_ObjCBridgedCastExpr = C.CXCursor_ObjCBridgedCastExpr
-	/* \brief Represents a C++0x pack expansion that produces a sequence of
-	 * expressions.
-	 *
-	 * A pack expansion expression contains a pattern (which itself is an
-	 * expression) followed by an ellipsis. For example:
-	 *
-	 * \code
-	 * template<typename F, typename ...Types>
-	 * void forward(F f, Types &&...args) {
-	 *  f(static_cast<Types&&>(args)...);
-	 * }
-	 * \endcode
-	 */
+	/*
+		Represents a C++0x pack expansion that produces a sequence of
+		expressions.
+
+		A pack expansion expression contains a pattern (which itself is an
+		expression) followed by an ellipsis. For example:
+
+		\code
+		template<typename F, typename ...Types>
+		void forward(F f, Types &&...args) {
+		f(static_cast<Types&&>(args)...);
+		}
+		\endcode
+	*/
 	Cursor_PackExpansionExpr = C.CXCursor_PackExpansionExpr
-	/* \brief Represents an expression that computes the length of a parameter
-	 * pack.
-	 *
-	 * \code
-	 * template<typename ...Types>
-	 * struct count {
-	 *   static const unsigned value = sizeof...(Types);
-	 * };
-	 * \endcode
-	 */
+	/*
+		Represents an expression that computes the length of a parameter
+		pack.
+
+		\code
+		template<typename ...Types>
+		struct count {
+		static const unsigned value = sizeof...(Types);
+		};
+		\endcode
+	*/
 	Cursor_SizeOfPackExpr = C.CXCursor_SizeOfPackExpr
 	Cursor_LambdaExpr     = C.CXCursor_LambdaExpr
 	// Objective-c Boolean Literal.
@@ -337,21 +379,34 @@ const (
 	Cursor_LastExpr = C.CXCursor_LastExpr
 	// Represents the "self" expression in a ObjC method.
 	Cursor_FirstStmt = C.CXCursor_FirstStmt
-	// A statement whose specific kind is not exposed via this interface. Unexposed statements have the same operations as any other kind of statement; one can extract their location information, spelling, children, etc. However, the specific kind of the statement is not reported.
+	/*
+		A statement whose specific kind is not exposed via this
+		interface.
+
+		Unexposed statements have the same operations as any other kind of
+		statement; one can extract their location information, spelling,
+		children, etc. However, the specific kind of the statement is not
+		reported.
+	*/
 	Cursor_UnexposedStmt = C.CXCursor_UnexposedStmt
-	/* \brief A labelled statement in a function.
-	 *
-	 * This cursor kind is used to describe the "start_over:" label statement in
-	 * the following example:
-	 *
-	 * \code
-	 *   start_over:
-	 *     ++counter;
-	 * \endcode
-	 *
-	 */
+	/*
+		A labelled statement in a function.
+
+		This cursor kind is used to describe the "start_over:" label statement in
+		the following example:
+
+		\code
+		start_over:
+		++counter;
+		\endcode
+	*/
 	Cursor_LabelStmt = C.CXCursor_LabelStmt
-	// A group of statements like { stmt stmt }. This cursor kind is used to describe compound statements, e.g. function bodies.
+	/*
+		A group of statements like { stmt stmt }.
+
+		This cursor kind is used to describe compound statements, e.g. function
+		bodies.
+	*/
 	Cursor_CompoundStmt = C.CXCursor_CompoundStmt
 	// A case statement.
 	Cursor_CaseStmt = C.CXCursor_CaseStmt
@@ -409,7 +464,11 @@ const (
 	Cursor_SEHFinallyStmt = C.CXCursor_SEHFinallyStmt
 	// A MS inline assembly statement extension.
 	Cursor_MSAsmStmt = C.CXCursor_MSAsmStmt
-	// The null satement ";": C99 6.8.3p3. This cursor kind is used to describe the null statement.
+	/*
+		The null satement ";": C99 6.8.3p3.
+
+		This cursor kind is used to describe the null statement.
+	*/
 	Cursor_NullStmt = C.CXCursor_NullStmt
 	// Adaptor class for mixing declarations with statements and expressions.
 	Cursor_DeclStmt = C.CXCursor_DeclStmt
@@ -417,9 +476,19 @@ const (
 	Cursor_OMPParallelDirective = C.CXCursor_OMPParallelDirective
 	// OpenMP parallel directive.
 	Cursor_LastStmt = C.CXCursor_LastStmt
-	// Cursor that represents the translation unit itself. The translation unit cursor exists primarily to act as the root cursor for traversing the contents of a translation unit.
+	/*
+		Cursor that represents the translation unit itself.
+
+		The translation unit cursor exists primarily to act as the root
+		cursor for traversing the contents of a translation unit.
+	*/
 	Cursor_TranslationUnit = C.CXCursor_TranslationUnit
-	// Cursor that represents the translation unit itself. The translation unit cursor exists primarily to act as the root cursor for traversing the contents of a translation unit.
+	/*
+		Cursor that represents the translation unit itself.
+
+		The translation unit cursor exists primarily to act as the root
+		cursor for traversing the contents of a translation unit.
+	*/
 	Cursor_FirstAttr = C.CXCursor_FirstAttr
 	// An attribute whose specific kind is not exposed via this interface.
 	Cursor_UnexposedAttr = C.CXCursor_UnexposedAttr
@@ -470,7 +539,14 @@ func (ck CursorKind) IsDeclaration() bool {
 	return o != C.uint(0)
 }
 
-// Determine whether the given cursor kind represents a simple reference. Note that other kinds of cursors (such as expressions) can also refer to other cursors. Use clang_getCursorReferenced() to determine whether a particular cursor refers to another entity.
+/*
+	Determine whether the given cursor kind represents a simple
+	reference.
+
+	Note that other kinds of cursors (such as expressions) can also refer to
+	other cursors. Use clang_getCursorReferenced() to determine whether a
+	particular cursor refers to another entity.
+*/
 func (ck CursorKind) IsReference() bool {
 	o := C.clang_isReference(C.enum_CXCursorKind(ck))
 
@@ -526,7 +602,6 @@ func (ck CursorKind) IsUnexposed() bool {
 	return o != C.uint(0)
 }
 
-// \defgroup CINDEX_DEBUG Debugging facilities These routines are used for testing and debugging, only, and should not be relied upon. @{
 func (ck CursorKind) Spelling() string {
 	o := cxstring{C.clang_getCursorKindSpelling(C.enum_CXCursorKind(ck))}
 	defer o.Dispose()

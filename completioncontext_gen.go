@@ -2,12 +2,14 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
+import "fmt"
 
-import (
-	"fmt"
-)
+/*
+	Bits that represent the context under which completion is occurring.
 
-// Bits that represent the context under which completion is occurring. The enumerators in this enumeration may be bitwise-OR'd together if multiple contexts are occurring simultaneously.
+	The enumerators in this enumeration may be bitwise-OR'd together if multiple
+	contexts are occurring simultaneously.
+*/
 type CompletionContext uint32
 
 const (

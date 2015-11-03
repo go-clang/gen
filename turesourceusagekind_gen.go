@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"fmt"
-)
+import "fmt"
 
 // Categorizes how memory is being used by a translation unit.
 type TUResourceUsageKind uint32

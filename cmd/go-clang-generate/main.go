@@ -126,6 +126,10 @@ func (h *headerFile) addMethod(f *Function, fname string, fnamePrefix string, rt
 		f.Receiver = s.Receiver
 		f.Receiver.Type = rt.Type
 
+		if f.Receiver.Type.IsSlice {
+			f.Receiver = Receiver{}
+		}
+
 		fStr := generateASTFunction(f)
 		s.Methods = deleteMethod(s.Methods, fname)
 		s.Methods = append(s.Methods, fStr)
@@ -174,6 +178,12 @@ func (h *headerFile) isEnumOrStruct(name string) bool {
 	return false
 }
 
+type LLVMVersion struct {
+	Major    int
+	Minor    int
+	Subminor int
+}
+
 func main() {
 	rawLLVMVersion, _, err := execToBuffer("llvm-config", "--version")
 	if err != nil {
@@ -185,15 +195,11 @@ func main() {
 		exitWithFatal("Cannot parse LLVM version", nil)
 	}
 
-	var llvmVersion struct {
-		Major int
-		Minor int
-		Patch int // TODO rename to Subminor
-	}
+	var llvmVersion LLVMVersion
 
 	llvmVersion.Major, _ = strconv.Atoi(string(matchLLVMVersion[1]))
 	llvmVersion.Minor, _ = strconv.Atoi(string(matchLLVMVersion[2]))
-	llvmVersion.Patch, _ = strconv.Atoi(string(matchLLVMVersion[3]))
+	llvmVersion.Subminor, _ = strconv.Atoi(string(matchLLVMVersion[3]))
 
 	fmt.Println("Found LLVM version", string(matchLLVMVersion[0]))
 
@@ -209,8 +215,29 @@ func main() {
 
 	fmt.Println("Clang-C include directory", clangCIncludeDir)
 
+	clangArguments := []string{
+		"-I", ".", // Include current folder
+	}
+
+	for _, d := range []string{
+		"/usr/local/lib/clang",
+		"/usr/include/clang",
+	} {
+		for _, di := range []string{
+			d + fmt.Sprintf("/%d.%d.%d/include", llvmVersion.Major, llvmVersion.Minor, llvmVersion.Subminor),
+			d + fmt.Sprintf("/%d.%d/include", llvmVersion.Major, llvmVersion.Minor),
+		} {
+			if dirExists(di) == nil {
+				clangArguments = append(clangArguments, "-I", di)
+			}
+		}
+	}
+
+	fmt.Printf("Using clang arguments: %v\n", clangArguments)
+
 	fmt.Printf("Will generate go-clang for LLVM version %d.%d in current directory\n", llvmVersion.Major, llvmVersion.Minor)
 
+	// TODO reenable
 	/*// Copy the Clang-C include directory into the current directory
 	_ = os.RemoveAll("./clang-c/")
 	if err := shutil.CopyTree(clangCIncludeDir, "./clang-c/", nil); err != nil {
@@ -242,17 +269,11 @@ func main() {
 			continue
 		}
 
-		newHeaderFile(clangCDirectory + h.Name()).handleHeaderFile()
-	}
-
-	if out, _, err := execToBuffer("gofmt", "-w", "./"); err != nil { // TODO do this before saving the files using go/fmt
-		fmt.Printf("gofmt:\n%s\n", out)
-
-		exitWithFatal("Gofmt failed", err)
+		newHeaderFile(clangCDirectory + h.Name()).handleHeaderFile(clangArguments)
 	}
 }
 
-func (h *headerFile) handleHeaderFile() {
+func (h *headerFile) handleHeaderFile(clangArguments []string) {
 	/*
 		Hide all "void *" fields of structs by replacing the type with "uintptr_t".
 
@@ -291,11 +312,7 @@ func (h *headerFile) handleHeaderFile() {
 	idx := clang.NewIndex(0, 1)
 	defer idx.Dispose()
 
-	tu := idx.Parse(h.name, []string{
-		"-I", ".", // Include current folder
-		"-I", "/usr/local/lib/clang/3.4.2/include/",
-		"-I", "/usr/include/clang/3.6.2/include/",
-	}, nil, 0)
+	tu := idx.Parse(h.name, clangArguments, nil, 0)
 	defer tu.Dispose()
 
 	if !tu.IsValid() {
@@ -310,18 +327,6 @@ func (h *headerFile) handleHeaderFile() {
 			exitWithFatal("Diagnostic fatal in Index.h", errors.New(diag.Spelling()))
 		}
 	}
-
-	/*
-		TODO mark the enum
-			typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor, CXCursor parent, CXClientData client_data);
-		as manually implemented
-	*/
-
-	/*
-		TODO mark the function
-			unsigned clang_visitChildren(CXCursor parent, CXCursorVisitor visitor, CXClientData client_data);
-		as manually implemented
-	*/
 
 	cursor := tu.ToCursor()
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
@@ -407,17 +412,34 @@ func (h *headerFile) handleHeaderFile() {
 		return clang.CVR_Recurse
 	})
 
-	clangFile := &File{
-		Name: "clang",
-
-		Imports: map[string]struct{}{},
-	}
+	clangFile := NewFile("clang")
 
 	for _, f := range h.functions {
-		// Some functions are not compiled in (TODO only 3.4) the library see https://lists.launchpad.net/desktop-packages/msg75835.html for a never resolved bug report
+		// Some functions are not compiled in (TODO only 3.4?) the library see https://lists.launchpad.net/desktop-packages/msg75835.html for a never resolved bug report
 		if f.CName == "clang_CompileCommand_getMappedSourceContent" || f.CName == "clang_CompileCommand_getMappedSourcePath" || f.CName == "clang_CompileCommand_getNumMappedSources" {
+			fmt.Printf("Ignore function %q because it is not compiled within libClang\n", f.CName)
+
 			continue
 		}
+		// Some functions can not be handled automatically by us
+		if f.CName == "clang_executeOnThread" || f.CName == "clang_getInclusions" {
+			fmt.Printf("Ignore function %q because it cannot be handled automatically\n", f.CName)
+
+			continue
+		}
+		// Some functions are simply manually implemented
+		if f.CName == "clang_annotateTokens" || f.CName == "clang_getCursorPlatformAvailability" || f.CName == "clang_visitChildren" {
+			fmt.Printf("Ignore function %q because it is manually implemented\n", f.CName)
+
+			continue
+		}
+
+		/*
+			TODO mark the enum
+				typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor, CXCursor parent, CXClientData client_data);
+			as manually implemented
+		*/
+		// TODO report other enums like callbacks that they are not implemented
 
 		fname := f.Name
 
@@ -437,25 +459,52 @@ func (h *headerFile) handleHeaderFile() {
 			} else if _, ok := h.lookupStruct[p.Type.GoName]; ok {
 			}
 
+			if f.CName == "clang_getRemappingsFromFileList" {
+				switch p.CName {
+				case "filePaths":
+					p.Type.IsSlice = true
+				case "numFiles":
+					p.Type.LengthOfSlice = "filePaths"
+				}
+
+				continue
+			}
+
 			// TODO happy hack, whiteflag types that are return arguments
-			if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == GoUInt16) {
+			if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == GoInt16 || p.Type.GoName == GoUInt16 || p.Type.GoName == "CompilationDatabase_Error" || p.Type.GoName == "PlatformAvailability" || p.Type.GoName == "SourceRange" || p.Type.GoName == "LoadDiag_Error") {
+				p.Type.IsReturnArgument = true
+			}
+			if p.Type.PointerLevel == 2 && (p.Type.GoName == "Token" || p.Type.GoName == "Cursor") {
 				p.Type.IsReturnArgument = true
 			}
 
+			if f.CName == "clang_disposeOverriddenCursors" && p.CName == "overridden" {
+				p.Type.IsSlice = true
+			}
+
 			// TODO happy hack, if this is an array length parameter we need to find its partner
-			if paName := strings.TrimPrefix(p.Name, "num_"); len(paName) != len(p.Name) {
+			var paCName string
+			if pan := strings.TrimPrefix(p.CName, "num_"); len(pan) != len(p.CName) {
+				paCName = pan
+			} else if pan := strings.TrimPrefix(p.CName, "Num"); len(pan) != len(p.CName) && unicode.IsUpper(rune(pan[0])) {
+				paCName = pan
+			} else if pan := strings.TrimSuffix(p.CName, "_size"); len(pan) != len(p.CName) {
+				paCName = pan
+			}
+
+			if paCName != "" {
 				for j := range f.Parameters {
 					pa := &f.Parameters[j]
 
-					if pa.Name == paName {
-
+					if pa.CName == paCName {
 						// TODO remove this when getType cane handle this kind of conversion
 						if pa.Type.GoName == "struct CXUnsavedFile" || pa.Type.GoName == "UnsavedFile" {
 							pa.Type.GoName = "UnsavedFile"
 							pa.Type.CGoName = "struct_CXUnsavedFile"
 						} else if pa.Type.CGoName == CSChar && pa.Type.PointerLevel == 2 {
-						} else if pa.Type.GoName == "CompletionResult" || pa.Type.GoName == "Token" {
-							pa.Type.CGoName = "struct_CX" + pa.Type.GoName
+						} else if pa.Type.GoName == "CompletionResult" {
+						} else if pa.Type.GoName == "Token" {
+						} else if pa.Type.GoName == "Cursor" {
 						} else {
 							break
 						}
@@ -463,9 +512,20 @@ func (h *headerFile) handleHeaderFile() {
 						p.Type.LengthOfSlice = pa.Name
 						pa.Type.IsSlice = true
 
+						if pa.Type.IsReturnArgument && p.Type.PointerLevel > 0 {
+							p.Type.IsReturnArgument = true
+						}
+
 						break
 					}
 				}
+			}
+		}
+		for i := range f.Parameters {
+			p := &f.Parameters[i]
+
+			if p.Type.CGoName == CSChar && p.Type.PointerLevel == 2 && !p.Type.IsSlice {
+				p.Type.IsReturnArgument = true
 			}
 		}
 
@@ -497,7 +557,7 @@ func (h *headerFile) handleHeaderFile() {
 
 		for _, p := range f.Parameters {
 			// These pointers are ok
-			if p.Type.PointerLevel == 1 && (p.Type.CGoName == CSChar || p.Type.GoName == "UnsavedFile") {
+			if p.Type.PointerLevel == 1 && (p.Type.CGoName == CSChar || p.Type.GoName == "UnsavedFile" || p.Type.GoName == "CodeCompleteResults" || p.Type.GoName == "CursorKind" || p.Type.GoName == "IdxContainerInfo" || p.Type.GoName == "IdxDeclInfo" || p.Type.GoName == "IndexerCallbacks" || p.Type.GoName == "TranslationUnit" || p.Type.GoName == "IdxEntityInfo" || p.Type.GoName == "IdxAttrInfo") {
 				continue
 			}
 			// Return arguments are always ok since we mark them earlier
@@ -512,11 +572,15 @@ func (h *headerFile) handleHeaderFile() {
 			if (!h.isEnumOrStruct(p.Type.GoName) && !p.Type.IsPrimitive) || p.Type.PointerLevel != 0 {
 				found = true
 
+				fmt.Printf("Cannot handle parameter %s -> %#v\n", f.CName, p)
+
 				break
 			}
 		}
 
-		if f.ReturnType.PointerLevel > 0 && !(f.ReturnType.PointerLevel == 1 && f.ReturnType.CGoName == CSChar) { // TODO implement to return slices
+		if !f.ReturnType.IsSlice && f.ReturnType.PointerLevel > 0 && !(f.ReturnType.PointerLevel == 1 && f.ReturnType.CGoName == CSChar) && f.CName != "clang_codeCompleteAt" && f.ReturnType.GoName != "IdxCXXClassDeclInfo" && f.ReturnType.GoName != "IdxIBOutletCollectionAttrInfo" && f.ReturnType.GoName != "IdxObjCPropertyDeclInfo" && f.ReturnType.GoName != "IdxObjCProtocolRefListInfo" && f.ReturnType.GoName != "IdxObjCCategoryDeclInfo" && f.ReturnType.GoName != "IdxObjCInterfaceDeclInfo" && f.ReturnType.GoName != "IdxObjCContainerDeclInfo" { // TODO implement to return slices and references returns
+			fmt.Printf("Cannot handle return argument %s -> %#v\n", f.CName, f.ReturnType)
+
 			found = true
 		}
 
@@ -600,10 +664,10 @@ func (h *headerFile) handleHeaderFile() {
 
 	if len(clangFile.Functions) > 0 {
 		if h.name != "./clang-c/Index.h" {
-			clangFile.HeaderFile = h.name
+			clangFile.HeaderFiles[h.name] = struct{}{}
 		}
 
-		if err := generateFile(clangFile); err != nil {
+		if err := clangFile.Generate(); err != nil {
 			exitWithFatal("Cannot generate clang file", err)
 		}
 	}

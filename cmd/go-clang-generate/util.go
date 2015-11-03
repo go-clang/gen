@@ -9,8 +9,6 @@ import (
 	"unicode"
 )
 
-// TODO util.go is just an ugly name...
-
 func execToBuffer(cmd ...string) (out []byte, exitStatus int, err error) {
 	c := exec.Command(cmd[0], cmd[1:]...)
 
@@ -86,6 +84,14 @@ func fileExists(filepath string) error {
 	}
 
 	return nil
+}
+
+func lowerFirstCharacter(s string) string {
+	r := []rune(s)
+
+	r[0] = unicode.ToLower(r[0])
+
+	return string(r)
 }
 
 func upperFirstCharacter(s string) string {

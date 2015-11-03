@@ -3,7 +3,12 @@ package phoenix
 // #include "go-clang.h"
 import "C"
 
-// Identifies a half-open character range in the source code. Use clang_getRangeStart() and clang_getRangeEnd() to retrieve the starting and end locations from a source range, respectively.
+/*
+	Identifies a half-open character range in the source code.
+
+	Use clang_getRangeStart() and clang_getRangeEnd() to retrieve the
+	starting and end locations from a source range, respectively.
+*/
 type SourceRange struct {
 	c C.CXSourceRange
 }
@@ -23,7 +28,11 @@ func NewNullRange() SourceRange {
 	return SourceRange{C.clang_getNullRange()}
 }
 
-// Determine whether two ranges are equivalent. \returns non-zero if the ranges are the same, zero if they differ.
+/*
+	Determine whether two ranges are equivalent.
+
+	Returns non-zero if the ranges are the same, zero if they differ.
+*/
 func (sr SourceRange) EqualRanges(sr2 SourceRange) bool {
 	o := C.clang_equalRanges(sr.c, sr2.c)
 

@@ -2,10 +2,7 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-
-import (
-	"fmt"
-)
+import "fmt"
 
 // Describes the severity of a particular diagnostic.
 type DiagnosticSeverity uint32

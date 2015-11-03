@@ -3,43 +3,77 @@ package main
 import (
 	"bytes"
 	"io/ioutil"
-	"strings"
 	"text/template"
+
+	"golang.org/x/tools/imports"
 )
 
 // File represents a generation file
 type File struct {
-	HeaderFile string
-
 	Name string
 
-	Imports map[string]struct{}
+	HeaderFiles map[string]struct{}
 
 	Functions []string
+	Enums     []*Enum
+	Structs   []*Struct
+}
+
+// NewFile creates a new blank file
+func NewFile(name string) *File {
+	return &File{
+		Name: name,
+
+		HeaderFiles: map[string]struct{}{},
+	}
 }
 
 var templateGenerateFile = template.Must(template.New("go-clang-generate-file").Parse(`package phoenix
 
-{{if $.HeaderFile}}// #include "{{$.HeaderFile}}"
+{{range $h, $dunno := $.HeaderFiles}}
+// #include "{{$h}}"
 {{end}}// #include "go-clang.h"
 import "C"
-{{if $.Imports}}
-import (
-{{range $import, $empty := $.Imports}}	"{{$import}}"
-{{end}}){{end}}
+
 {{range $i, $f := $.Functions}}
 {{$f}}
 {{end}}
+
+{{range $i, $e := $.Enums}}
+{{$e.Comment}}
+type {{$e.Name}} {{$e.UnderlyingType}}
+
+const (
+{{range $i, $ei := .Items}}	{{if $ei.Comment}}{{$ei.Comment}}
+	{{end}}{{$ei.Name}}{{if eq $i 0}} {{$e.Name}}{{end}} = C.{{$ei.CName}}
+{{end}}
+)
+
+{{range $i, $m := $e.Methods}}
+{{$m}}
+{{end}}
+{{end}}
+
+{{range $i, $s := $.Structs}}
+{{$s.Comment}}
+type {{$s.Name}} struct {
+	c C.{{if not $s.CNameIsTypeDef}}struct_{{end}}{{$s.CName}}
+}
+{{range $i, $m := $s.Methods}}
+{{$m}}
+{{end}}
+{{end}}
 `))
 
-func generateFile(f *File) error {
-	// TODO remove this hack
-	for _, m := range f.Functions {
-		if strings.Contains(m, "time.Time") {
-			f.Imports["time"] = struct{}{}
+func (f *File) Generate() error {
+	for _, e := range f.Enums {
+		if e.HeaderFile != "" {
+			f.HeaderFiles[e.HeaderFile] = struct{}{}
 		}
-		if strings.Contains(m, "unsafe.") {
-			f.Imports["unsafe"] = struct{}{}
+	}
+	for _, s := range f.Structs {
+		if s.HeaderFile != "" {
+			f.HeaderFiles[s.HeaderFile] = struct{}{}
 		}
 	}
 
@@ -48,5 +82,12 @@ func generateFile(f *File) error {
 		return err
 	}
 
-	return ioutil.WriteFile(strings.ToLower(f.Name)+"_gen.go", b.Bytes(), 0600)
+	filename := f.Name + "_gen.go"
+
+	out, err := imports.Process(filename, b.Bytes(), nil)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(filename, out, 0600)
 }

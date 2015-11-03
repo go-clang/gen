@@ -48,7 +48,7 @@ func main() {
 
 	fmt.Printf("tu-fname: %s\n", tu.File(*fname).Name())
 
-	fct := func(cursor, parent phoenix.Cursor) phoenix.ChildVisitResult {
+	cursor.Visit(func(cursor, parent phoenix.Cursor) phoenix.ChildVisitResult {
 		if cursor.IsNull() {
 			fmt.Printf("cursor: <none>\n")
 
@@ -63,9 +63,7 @@ func main() {
 		}
 
 		return phoenix.ChildVisit_Continue
-	}
-
-	cursor.Visit(fct)
+	})
 
 	fmt.Printf(":: bye.\n")
 }

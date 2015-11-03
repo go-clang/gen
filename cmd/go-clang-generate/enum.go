@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"strings"
 	"text/template"
 
@@ -20,8 +19,6 @@ type Enum struct {
 	Receiver       Receiver
 	Comment        string
 	UnderlyingType string
-
-	Imports map[string]struct{}
 
 	Items []Enumerator
 
@@ -42,12 +39,11 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 		CNameIsTypeDef: cnameIsTypeDef,
 		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
 
-		Imports: map[string]struct{}{},
-
 		Items: []Enumerator{},
 	}
 
 	e.Name = trimClangPrefix(e.CName)
+
 	e.Receiver.Name = receiverName(e.Name)
 	e.Receiver.Type.GoName = e.Name
 	e.Receiver.Type.CGoName = e.CName
@@ -56,6 +52,10 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 	} else {
 		e.Receiver.Type.CGoName = "enum_" + e.CName
 	}
+
+	enumNamePrefix := e.Name
+	enumNamePrefix = strings.TrimSuffix(enumNamePrefix, "Kind")
+	enumNamePrefix = strings.SplitN(enumNamePrefix, "_", 2)[0]
 
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {
@@ -66,7 +66,23 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 				Value:   cursor.EnumConstantDeclValue(),
 			}
 			ei.Name = trimClangPrefix(ei.CName)
-			// TODO remove underlines to make the names more Go idiomatic e.g. "C.CXComment_InlineCommand" should be "CommentInlineCommand"
+
+			// Check if the first item has an enum prefix
+			if len(e.Items) == 0 {
+				eis := strings.SplitN(ei.Name, "_", 2)
+				if len(eis) == 2 {
+					enumNamePrefix = ""
+				}
+			}
+
+			// Add the enum prefix to the item
+			if enumNamePrefix != "" {
+				ei.Name = strings.TrimSuffix(ei.Name, enumNamePrefix)
+
+				if !strings.HasPrefix(ei.Name, enumNamePrefix) {
+					ei.Name = enumNamePrefix + "_" + ei.Name
+				}
+			}
 
 			e.Items = append(e.Items, ei)
 		default:
@@ -85,51 +101,13 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 	return &e
 }
 
-var templateGenerateEnum = template.Must(template.New("go-clang-generate-enum").Parse(`package phoenix
-
-{{if $.HeaderFile}}// #include "{{$.HeaderFile}}"
-{{end}}// #include "go-clang.h"
-import "C"
-{{if $.Imports}}
-import (
-{{range $import, $empty := $.Imports}}	"{{$import}}"
-{{end}}){{end}}
-
-{{$.Comment}}
-type {{$.Name}} {{$.UnderlyingType}}
-
-const (
-{{range $i, $e := .Items}}	{{if $e.Comment}}{{$e.Comment}}
-	{{end}}{{$e.Name}}{{if eq $i 0}} {{$.Name}}{{end}} = C.{{$e.CName}}
-{{end}}
-)
-
-{{range $i, $m := $.Methods}}
-{{$m}}
-{{end}}
-`))
-
 func generateEnum(e *Enum) error {
-	// TODO remove this hack
-	for _, m := range e.Methods {
-		if strings.Contains(m, "time.Time") {
-			e.Imports["time"] = struct{}{}
-		}
-		if strings.Contains(m, "unsafe.") {
-			e.Imports["unsafe"] = struct{}{}
-		}
-	}
-
 	generateEnumStringMethods(e)
 
-	var b bytes.Buffer
-	if err := templateGenerateEnum.Execute(&b, e); err != nil {
-		return err
-	}
+	f := NewFile(strings.ToLower(e.Name))
+	f.Enums = append(f.Enums, e)
 
-	// TODO remove "_" from names for files here?
-
-	return ioutil.WriteFile(strings.ToLower(e.Name)+"_gen.go", b.Bytes(), 0600)
+	return f.Generate()
 }
 
 func generateEnumStringMethods(e *Enum) {
@@ -172,8 +150,6 @@ func generateEnumStringMethods(e *Enum) {
 func generateEnumSpellingMethod(e *Enum, tmpl *template.Template) error {
 	var b bytes.Buffer
 	var err error
-
-	e.Imports["fmt"] = struct{}{}
 
 	type Case struct {
 		CaseStr   []string

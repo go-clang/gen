@@ -32,6 +32,10 @@ type FunctionParameter struct {
 	Type  Type
 }
 
+var keywordReplacements = map[string]string{
+	"range": "r",
+}
+
 func handleFunctionCursor(cursor clang.Cursor) *Function {
 	f := Function{
 		CName:   cursor.Spelling(),
@@ -56,15 +60,24 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 			CName: param.DisplayName(),
 		}
 
-		p.Name = p.CName
 		typ, err := getType(param.Type())
 		if err != nil {
 			panic(err)
 		}
 		p.Type = typ
 
+		p.Name = p.CName
 		if p.Name == "" {
 			p.Name = receiverName(p.Type.GoName)
+		} else {
+			pns := strings.Split(p.Name, "_")
+			for i := range pns {
+				pns[i] = upperFirstCharacter(pns[i])
+			}
+			p.Name = lowerFirstCharacter(strings.Join(pns, ""))
+		}
+		if r, ok := keywordReplacements[p.Name]; ok {
+			p.Name = r
 		}
 
 		f.Parameters = append(f.Parameters, p)
@@ -193,6 +206,12 @@ func generateASTFunction(f *Function) string {
 				f.Type = &ast.ArrayType{
 					Elt: f.Type,
 				}
+			} else if typ.PointerLevel > 0 && typ.CGoName != CSChar && !typ.IsReturnArgument {
+				for i := 0; i < typ.PointerLevel; i++ {
+					f.Type = &ast.StarExpr{
+						X: f.Type,
+					}
+				}
 			}
 		}
 
@@ -205,6 +224,112 @@ func generateASTFunction(f *Function) string {
 		return &ast.BasicLit{
 			Kind:  token.INT,
 			Value: "0",
+		}
+	}
+	getSliceType := func(typ Type) ast.Expr {
+		var sliceType ast.Expr
+
+		if typ.PointerLevel > 0 && typ.CGoName == CSChar {
+			sliceType = doCType("char")
+		} else {
+			sliceType = doCType(typ.CGoName)
+		}
+
+		for i := 1; i < typ.PointerLevel; i++ {
+			sliceType = &ast.StarExpr{
+				X: sliceType,
+			}
+		}
+
+		return sliceType
+	}
+
+	addCToGoConversions := func() {
+		cToGoTypeConversions := false
+
+		for _, p := range f.Parameters {
+			if p.Type.IsSlice && p.Type.IsReturnArgument {
+				cToGoTypeConversions = true
+
+				var lengthOfSlice string
+				for _, pl := range f.Parameters {
+					if pl.Type.LengthOfSlice == p.Name {
+						lengthOfSlice = pl.Name
+
+						break
+					}
+				}
+
+				addAssignment("gos_"+p.Name, &ast.CallExpr{
+					Fun: &ast.ParenExpr{
+						X: &ast.StarExpr{
+							X: accessMember("reflect", "SliceHeader"),
+						},
+					},
+					Args: []ast.Expr{
+						doCall(
+							"unsafe",
+							"Pointer",
+							&ast.UnaryExpr{
+								Op: token.AND,
+								X: &ast.Ident{
+									Name: p.Name,
+								},
+							},
+						),
+					},
+				})
+				addStatement(&ast.AssignStmt{
+					Lhs: []ast.Expr{
+						accessMember("gos_"+p.Name, "Cap"),
+					},
+					Tok: token.ASSIGN,
+					Rhs: []ast.Expr{
+						doCast(
+							"int",
+							&ast.Ident{
+								Name: lengthOfSlice,
+							},
+						),
+					},
+				})
+				addStatement(&ast.AssignStmt{
+					Lhs: []ast.Expr{
+						accessMember("gos_"+p.Name, "Len"),
+					},
+					Tok: token.ASSIGN,
+					Rhs: []ast.Expr{
+						doCast(
+							"int",
+							&ast.Ident{
+								Name: lengthOfSlice,
+							},
+						),
+					},
+				})
+				addStatement(&ast.AssignStmt{
+					Lhs: []ast.Expr{
+						accessMember("gos_"+p.Name, "Data"),
+					},
+					Tok: token.ASSIGN,
+					Rhs: []ast.Expr{
+						doCast(
+							"uintptr",
+							doCall(
+								"unsafe",
+								"Pointer",
+								&ast.Ident{
+									Name: "cp_" + p.Name,
+								},
+							),
+						),
+					},
+				})
+			}
+		}
+
+		if cToGoTypeConversions {
+			addEmptyLine()
 		}
 	}
 
@@ -254,27 +379,15 @@ func generateASTFunction(f *Function) string {
 			}
 
 			// Ingore length parameters since they will be filled by the slice itself
-			if p.Type.LengthOfSlice != "" {
+			if p.Type.LengthOfSlice != "" && !p.Type.IsReturnArgument {
 				continue
 			}
 
-			if p.Type.IsSlice { // TODO think about doing slice return arguments
+			if p.Type.IsSlice && !p.Type.IsReturnArgument {
 				hasDeclaration = true
 
 				// Declare the slice
-				var sliceType ast.Expr
-
-				if p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar {
-					sliceType = doCType("char")
-				} else {
-					sliceType = doCType(p.Type.CGoName)
-				}
-
-				for i := 1; i < p.Type.PointerLevel; i++ {
-					sliceType = &ast.StarExpr{
-						X: sliceType,
-					}
-				}
+				sliceType := getSliceType(p.Type)
 
 				addAssignment(
 					"ca_"+p.Name,
@@ -446,21 +559,41 @@ func generateASTFunction(f *Function) string {
 			} else if p.Type.IsReturnArgument {
 				hasReturnArguments = true
 
-				// Add the return type to the function return arguments
-				var retType string
-				if p.Type.GoName == "cxstring" {
-					retType = "string"
-				} else {
-					retType = p.Type.GoName
+				if p.Type.LengthOfSlice == "" {
+					// Add the return type to the function return arguments
+					retType := p.Type
+					if p.Type.GoName == "cxstring" {
+						retType.GoName = "string"
+					}
+
+					addReturnType("", retType)
 				}
 
-				addReturnType("", Type{
-					GoName: retType,
-				})
+				if p.Type.IsSlice && p.Type.IsReturnArgument {
+					addStatement(&ast.DeclStmt{
+						Decl: &ast.GenDecl{
+							Tok: token.VAR,
+							Specs: []ast.Spec{
+								&ast.ValueSpec{
+									Names: []*ast.Ident{
+										&ast.Ident{
+											Name: "cp_" + p.Name,
+										},
+									},
+									Type: getSliceType(p.Type),
+								},
+							},
+						},
+					})
+				}
 
 				// Declare the return argument's variable
 				var varType ast.Expr
-				if p.Type.IsPrimitive {
+				if p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar {
+					varType = &ast.StarExpr{
+						X: doCType("char"),
+					}
+				} else if p.Type.IsPrimitive {
 					varType = doCType(p.Type.CGoName)
 				} else {
 					varType = &ast.Ident{
@@ -490,19 +623,37 @@ func generateASTFunction(f *Function) string {
 				})
 				if p.Type.GoName == "cxstring" {
 					addDefer(doCall(p.Name, "Dispose"))
+				} else if p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar {
+					addDefer(doCCast(
+						"free",
+						doCall(
+							"unsafe",
+							"Pointer",
+							&ast.Ident{
+								Name: p.Name,
+							},
+						),
+					))
 				}
 
-				// Add the return argument to the return statement
-				if p.Type.IsPrimitive {
-					addReturnItem(doCast(
-						p.Type.GoName,
-						&ast.Ident{
-							Name: p.Name,
-						},
-					))
-				} else {
-					if p.Type.GoName == "cxstring" {
+				if p.Type.LengthOfSlice == "" {
+					// Add the return argument to the return statement
+					if p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar {
+						addReturnItem(doCCast(
+							"GoString",
+							&ast.Ident{
+								Name: p.Name,
+							},
+						))
+					} else if p.Type.GoName == "cxstring" {
 						addReturnItem(doCall(p.Name, "String"))
+					} else if p.Type.IsPrimitive {
+						addReturnItem(doCast(
+							p.Type.GoName,
+							&ast.Ident{
+								Name: p.Name,
+							},
+						))
 					} else {
 						addReturnItem(&ast.Ident{
 							Name: p.Name,
@@ -511,6 +662,61 @@ func generateASTFunction(f *Function) string {
 				}
 
 				continue
+			} else if p.Type.PointerLevel > 0 && p.Type.IsPrimitive && p.Type.CGoName != CSChar {
+				hasDeclaration = true
+
+				var varType = doCType(p.Type.CGoName)
+
+				addStatement(&ast.DeclStmt{
+					Decl: &ast.GenDecl{
+						Tok: token.VAR,
+						Specs: []ast.Spec{
+							&ast.ValueSpec{
+								Names: []*ast.Ident{
+									&ast.Ident{
+										Name: "cp_" + p.Name,
+									},
+								},
+								Type: varType,
+							},
+						},
+					},
+				})
+				addStatement(&ast.IfStmt{
+					Cond: &ast.BinaryExpr{
+						X: &ast.Ident{
+							Name: p.Name,
+						},
+						Op: token.NEQ,
+						Y: &ast.Ident{
+							Name: "nil",
+						},
+					},
+					Body: &ast.BlockStmt{
+						List: []ast.Stmt{
+							&ast.AssignStmt{
+								Lhs: []ast.Expr{
+									&ast.Ident{
+										Name: "cp_" + p.Name,
+									},
+								},
+								Tok: token.ASSIGN,
+								Rhs: []ast.Expr{
+									&ast.CallExpr{
+										Fun: varType,
+										Args: []ast.Expr{
+											&ast.StarExpr{
+												X: &ast.Ident{
+													Name: p.Name,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				})
 			}
 
 			astFunc.Type.Params.List = append(astFunc.Type.Params.List, doField(p.Name, p.Type))
@@ -576,6 +782,13 @@ func generateASTFunction(f *Function) string {
 								},
 							),
 						)
+					} else if p.Type.PointerLevel > 0 {
+						pf = &ast.UnaryExpr{
+							Op: token.AND,
+							X: &ast.Ident{
+								Name: "cp_" + p.Name,
+							},
+						}
 					} else {
 						pf = doCCast(
 							p.Type.CGoName,
@@ -587,6 +800,13 @@ func generateASTFunction(f *Function) string {
 				}
 			} else {
 				pf = accessMember(p.Name, "c")
+
+				if p.Type.PointerLevel > 0 && !p.Type.IsReturnArgument {
+					pf = &ast.UnaryExpr{
+						Op: token.AND,
+						X:  pf,
+					}
+				}
 			}
 
 			if p.Type.IsReturnArgument {
@@ -663,6 +883,22 @@ func generateASTFunction(f *Function) string {
 					X: call,
 				})
 				addEmptyLine()
+			} else if f.ReturnType.PointerLevel > 0 {
+				// Do the C function call and save the result into the new variable "o"
+				addAssignmentToO(&ast.StarExpr{
+					X: call,
+				})
+				addEmptyLine()
+
+				addReturnItem(&ast.UnaryExpr{
+					Op: token.AND,
+					X: doCompose(
+						f.ReturnType.GoName,
+						&ast.Ident{
+							Name: "o",
+						},
+					),
+				})
 			} else {
 				var convCall ast.Expr
 
@@ -688,9 +924,13 @@ func generateASTFunction(f *Function) string {
 			}
 		}
 
+		addCToGoConversions()
+
 		// Add the return statement
 		addStatement(retur)
 	} else {
+		addCToGoConversions()
+
 		// No return needed, just add the C function call
 		addStatement(&ast.ExprStmt{
 			X: call,

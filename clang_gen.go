@@ -2,59 +2,82 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
+import "unsafe"
 
-import (
-	"unsafe"
-)
+/*
+	Retrieve the set of display options most similar to the
+	default behavior of the clang compiler.
 
-// Retrieve the set of display options most similar to the default behavior of the clang compiler. \returns A set of display options suitable for use with \c clang_formatDiagnostic().
+	Returns A set of display options suitable for use with \c
+	clang_formatDiagnostic().
+*/
 func DefaultDiagnosticDisplayOptions() uint16 {
 	return uint16(C.clang_defaultDiagnosticDisplayOptions())
 }
 
-// Retrieve the name of a particular diagnostic category. This is now deprecated. Use clang_getDiagnosticCategoryText() instead. \param Category A diagnostic category number, as returned by \c clang_getDiagnosticCategory(). \returns The name of the given diagnostic category.
-func GetDiagnosticCategoryName(Category uint16) string {
-	o := cxstring{C.clang_getDiagnosticCategoryName(C.uint(Category))}
+/*
+	Retrieve the name of a particular diagnostic category. This
+	is now deprecated. Use clang_getDiagnosticCategoryText()
+	instead.
+
+	Parameter Category A diagnostic category number, as returned by
+	clang_getDiagnosticCategory().
+
+	Returns The name of the given diagnostic category.
+*/
+func GetDiagnosticCategoryName(category uint16) string {
+	o := cxstring{C.clang_getDiagnosticCategoryName(C.uint(category))}
 	defer o.Dispose()
 
 	return o.String()
 }
 
-// Returns the set of flags that is suitable for parsing a translation unit that is being edited. The set of flags returned provide options for \c clang_parseTranslationUnit() to indicate that the translation unit is likely to be reparsed many times, either explicitly (via \c clang_reparseTranslationUnit()) or implicitly (e.g., by code completion (\c clang_codeCompletionAt())). The returned flag set contains an unspecified set of optimizations (e.g., the precompiled preamble) geared toward improving the performance of these routines. The set of optimizations enabled may change from one version to the next.
+/*
+	Returns the set of flags that is suitable for parsing a translation
+	unit that is being edited.
+
+	The set of flags returned provide options for clang_parseTranslationUnit()
+	to indicate that the translation unit is likely to be reparsed many times,
+	either explicitly (via clang_reparseTranslationUnit()) or implicitly
+	(e.g., by code completion (clang_codeCompletionAt())). The returned flag
+	set contains an unspecified set of optimizations (e.g., the precompiled
+	preamble) geared toward improving the performance of these routines. The
+	set of optimizations enabled may change from one version to the next.
+*/
 func DefaultEditingTranslationUnitOptions() uint16 {
 	return uint16(C.clang_defaultEditingTranslationUnitOptions())
 }
 
 // Construct a USR for a specified Objective-C class.
-func ConstructUSR_ObjCClass(class_name string) string {
-	c_class_name := C.CString(class_name)
-	defer C.free(unsafe.Pointer(c_class_name))
+func ConstructUSR_ObjCClass(className string) string {
+	c_className := C.CString(className)
+	defer C.free(unsafe.Pointer(c_className))
 
-	o := cxstring{C.clang_constructUSR_ObjCClass(c_class_name)}
+	o := cxstring{C.clang_constructUSR_ObjCClass(c_className)}
 	defer o.Dispose()
 
 	return o.String()
 }
 
 // Construct a USR for a specified Objective-C category.
-func ConstructUSR_ObjCCategory(class_name string, category_name string) string {
-	c_class_name := C.CString(class_name)
-	defer C.free(unsafe.Pointer(c_class_name))
-	c_category_name := C.CString(category_name)
-	defer C.free(unsafe.Pointer(c_category_name))
+func ConstructUSR_ObjCCategory(className string, categoryName string) string {
+	c_className := C.CString(className)
+	defer C.free(unsafe.Pointer(c_className))
+	c_categoryName := C.CString(categoryName)
+	defer C.free(unsafe.Pointer(c_categoryName))
 
-	o := cxstring{C.clang_constructUSR_ObjCCategory(c_class_name, c_category_name)}
+	o := cxstring{C.clang_constructUSR_ObjCCategory(c_className, c_categoryName)}
 	defer o.Dispose()
 
 	return o.String()
 }
 
 // Construct a USR for a specified Objective-C protocol.
-func ConstructUSR_ObjCProtocol(protocol_name string) string {
-	c_protocol_name := C.CString(protocol_name)
-	defer C.free(unsafe.Pointer(c_protocol_name))
+func ConstructUSR_ObjCProtocol(protocolName string) string {
+	c_protocolName := C.CString(protocolName)
+	defer C.free(unsafe.Pointer(c_protocolName))
 
-	o := cxstring{C.clang_constructUSR_ObjCProtocol(c_protocol_name)}
+	o := cxstring{C.clang_constructUSR_ObjCProtocol(c_protocolName)}
 	defer o.Dispose()
 
 	return o.String()
@@ -97,7 +120,7 @@ func EnableStackTraces() {
 	C.clang_enableStackTraces()
 }
 
-// Returns a default set of code-completion options that can be passed to\c clang_codeCompleteAt().
+// Returns a default set of code-completion options that can be passed toclang_codeCompleteAt().
 func DefaultCodeCompleteOptions() uint16 {
 	return uint16(C.clang_defaultCodeCompleteOptions())
 }
@@ -110,7 +133,12 @@ func GetClangVersion() string {
 	return o.String()
 }
 
-// Enable/disable crash recovery. \param isEnabled Flag to indicate if crash recovery is enabled. A non-zero value enables crash recovery, while 0 disables it.
+/*
+	Enable/disable crash recovery.
+
+	Parameter isEnabled Flag to indicate if crash recovery is enabled. A non-zero
+	value enables crash recovery, while 0 disables it.
+*/
 func ToggleCrashRecovery(isEnabled uint16) {
 	C.clang_toggleCrashRecovery(C.uint(isEnabled))
 }

@@ -2,12 +2,15 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
+import "fmt"
 
-import (
-	"fmt"
-)
+/*
+	Flags that control how translation units are saved.
 
-// Flags that control how translation units are saved. The enumerators in this enumeration type are meant to be bitwise ORed together to specify which options should be used when saving the translation unit.
+	The enumerators in this enumeration type are meant to be bitwise
+	ORed together to specify which options should be used when
+	saving the translation unit.
+*/
 type SaveTranslationUnit_Flags uint32
 
 const (
