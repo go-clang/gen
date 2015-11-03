@@ -578,7 +578,7 @@ func (c Cursor) CanonicalCursor() Cursor {
 	expression and the cursor is pointing to a selector identifier, or -1
 	otherwise.
 */
-func (c Cursor) ObjCSelectorIndex() int16 {
+func (c Cursor) SelectorIndex() int16 {
 	return int16(C.clang_Cursor_getObjCSelectorIndex(c.c))
 }
 
@@ -611,12 +611,12 @@ func (c Cursor) ReceiverType() Type {
 
 	Parameter reserved Reserved for future use, pass 0.
 */
-func (c Cursor) ObjCPropertyAttributes(reserved uint16) uint16 {
+func (c Cursor) PropertyAttributes(reserved uint16) uint16 {
 	return uint16(C.clang_Cursor_getObjCPropertyAttributes(c.c, C.uint(reserved)))
 }
 
 // Given a cursor that represents an ObjC method or parameter declaration, return the associated ObjC qualifiers for the return type or the parameter respectively. The bits are formed from CXObjCDeclQualifierKind.
-func (c Cursor) ObjCDeclQualifiers() uint16 {
+func (c Cursor) DeclQualifiers() uint16 {
 	return uint16(C.clang_Cursor_getObjCDeclQualifiers(c.c))
 }
 
