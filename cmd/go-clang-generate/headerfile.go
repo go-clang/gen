@@ -36,7 +36,6 @@ func (h *headerFile) addFunction(f *Function, fname string, fnamePrefix string, 
 		f.Name = fname
 
 		fStr := f.Generate()
-		s.Methods = deleteMethod(s.Methods, fname)
 		s.Methods = append(s.Methods, fStr)
 
 		return true
@@ -45,28 +44,13 @@ func (h *headerFile) addFunction(f *Function, fname string, fnamePrefix string, 
 	return false
 }
 
-func deleteMethod(methods []string, fName string) []string {
-	idx := -1
-	for i, mem := range methods {
-		if strings.Contains(mem, ") "+fName+"()") {
-			idx = i
-		}
-	}
-
-	if idx != -1 {
-		methods = append(methods[:idx], methods[idx+1:]...)
-	}
-
-	return methods
-}
-
 func (h *headerFile) addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
-	// TODO this is a big HACK. Figure out how we can trim receiver names while still not having two "Cursor" methods for TranslationUnit
+	// Needs to be renamed manually since clang_getTranslationUnitCursor will conflict with clang_getCursor
 	if f.CName == "clang_getTranslationUnitCursor" {
 		fname = "TranslationUnitCursor"
+	} else {
+		fname = upperFirstCharacter(fnamePrefix + upperFirstCharacter(fname))
 	}
-
-	fname = upperFirstCharacter(fnamePrefix + upperFirstCharacter(fname))
 
 	if e, ok := h.lookupEnum[rt.Type.GoName]; ok {
 		f.Name = fname
@@ -86,7 +70,6 @@ func (h *headerFile) addMethod(f *Function, fname string, fnamePrefix string, rt
 		}
 
 		fStr := f.Generate()
-		s.Methods = deleteMethod(s.Methods, fname)
 		s.Methods = append(s.Methods, fStr)
 
 		return true
@@ -459,7 +442,6 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 
 		// If we find a heuristic to add the function, add it!
 		added := false
-
 		if !found {
 			added = h.addBasicMethods(f, fname, "", rt)
 
