@@ -22,6 +22,5 @@ func (iocprli IdxObjCProtocolRefListInfo) Protocols() []*IdxObjCProtocolRefInfo 
 }
 
 func (iocprli IdxObjCProtocolRefListInfo) NumProtocols() uint16 {
-	value := uint16(iocprli.c.numProtocols)
-	return value
+	return uint16(iocprli.c.numProtocols)
 }

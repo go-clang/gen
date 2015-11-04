@@ -20,18 +20,19 @@ type UnsavedFile struct {
 	This file must already exist in the file system.
 */
 func (uf UnsavedFile) Filename() *int8 {
-	value := int8(*uf.c.Filename)
-	return &value
+	o := *uf.c.Filename
+
+	return &int8{o}
 }
 
 // A buffer containing the unsaved contents of this file.
 func (uf UnsavedFile) Contents() *int8 {
-	value := int8(*uf.c.Contents)
-	return &value
+	o := *uf.c.Contents
+
+	return &int8{o}
 }
 
 // The length of the unsaved contents of this buffer.
 func (uf UnsavedFile) Length() uint32 {
-	value := uint32(uf.c.Length)
-	return value
+	return uint32(uf.c.Length)
 }

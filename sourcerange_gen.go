@@ -47,11 +47,9 @@ func (sr SourceRange) RangeEnd() SourceLocation {
 }
 
 func (sr SourceRange) Begin_int_data() uint16 {
-	value := uint16(sr.c.begin_int_data)
-	return value
+	return uint16(sr.c.begin_int_data)
 }
 
 func (sr SourceRange) End_int_data() uint16 {
-	value := uint16(sr.c.end_int_data)
-	return value
+	return uint16(sr.c.end_int_data)
 }

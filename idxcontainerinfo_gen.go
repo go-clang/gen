@@ -18,6 +18,5 @@ func (ici *IdxContainerInfo) Index_setClientContainer(icc IdxClientContainer) {
 }
 
 func (ici IdxContainerInfo) Cursor() Cursor {
-	value := Cursor{ici.c.cursor}
-	return value
+	return Cursor{ici.c.cursor}
 }

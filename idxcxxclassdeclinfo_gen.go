@@ -9,8 +9,9 @@ type IdxCXXClassDeclInfo struct {
 }
 
 func (icxxcdi IdxCXXClassDeclInfo) DeclInfo() *IdxDeclInfo {
-	value := IdxDeclInfo{*icxxcdi.c.declInfo}
-	return &value
+	o := *icxxcdi.c.declInfo
+
+	return &IdxDeclInfo{o}
 }
 
 func (icxxcdi IdxCXXClassDeclInfo) Bases() []*IdxBaseClassInfo {
@@ -27,6 +28,5 @@ func (icxxcdi IdxCXXClassDeclInfo) Bases() []*IdxBaseClassInfo {
 }
 
 func (icxxcdi IdxCXXClassDeclInfo) NumBases() uint16 {
-	value := uint16(icxxcdi.c.numBases)
-	return value
+	return uint16(icxxcdi.c.numBases)
 }

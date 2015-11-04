@@ -8,16 +8,15 @@ type IdxObjCProtocolRefInfo struct {
 }
 
 func (iocpri IdxObjCProtocolRefInfo) Protocol() *IdxEntityInfo {
-	value := IdxEntityInfo{*iocpri.c.protocol}
-	return &value
+	o := *iocpri.c.protocol
+
+	return &IdxEntityInfo{o}
 }
 
 func (iocpri IdxObjCProtocolRefInfo) Cursor() Cursor {
-	value := Cursor{iocpri.c.cursor}
-	return value
+	return Cursor{iocpri.c.cursor}
 }
 
 func (iocpri IdxObjCProtocolRefInfo) Loc() IdxLoc {
-	value := IdxLoc{iocpri.c.loc}
-	return value
+	return IdxLoc{iocpri.c.loc}
 }

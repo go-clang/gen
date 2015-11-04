@@ -9,25 +9,23 @@ type IdxEntityRefInfo struct {
 }
 
 func (ieri IdxEntityRefInfo) Kind() IdxEntityRefKind {
-	value := IdxEntityRefKind(ieri.c.kind)
-	return value
+	return IdxEntityRefKind(ieri.c.kind)
 }
 
 // Reference cursor.
 func (ieri IdxEntityRefInfo) Cursor() Cursor {
-	value := Cursor{ieri.c.cursor}
-	return value
+	return Cursor{ieri.c.cursor}
 }
 
 func (ieri IdxEntityRefInfo) Loc() IdxLoc {
-	value := IdxLoc{ieri.c.loc}
-	return value
+	return IdxLoc{ieri.c.loc}
 }
 
 // The entity that gets referenced.
 func (ieri IdxEntityRefInfo) ReferencedEntity() *IdxEntityInfo {
-	value := IdxEntityInfo{*ieri.c.referencedEntity}
-	return &value
+	o := *ieri.c.referencedEntity
+
+	return &IdxEntityInfo{o}
 }
 
 /*
@@ -42,12 +40,14 @@ func (ieri IdxEntityRefInfo) ReferencedEntity() *IdxEntityInfo {
 	the parentEntity will be the function/method.
 */
 func (ieri IdxEntityRefInfo) ParentEntity() *IdxEntityInfo {
-	value := IdxEntityInfo{*ieri.c.parentEntity}
-	return &value
+	o := *ieri.c.parentEntity
+
+	return &IdxEntityInfo{o}
 }
 
 // Lexical container context of the reference.
 func (ieri IdxEntityRefInfo) Container() *IdxContainerInfo {
-	value := IdxContainerInfo{*ieri.c.container}
-	return &value
+	o := *ieri.c.container
+
+	return &IdxContainerInfo{o}
 }

@@ -8,16 +8,19 @@ type IdxObjCPropertyDeclInfo struct {
 }
 
 func (iocpdi IdxObjCPropertyDeclInfo) DeclInfo() *IdxDeclInfo {
-	value := IdxDeclInfo{*iocpdi.c.declInfo}
-	return &value
+	o := *iocpdi.c.declInfo
+
+	return &IdxDeclInfo{o}
 }
 
 func (iocpdi IdxObjCPropertyDeclInfo) Getter() *IdxEntityInfo {
-	value := IdxEntityInfo{*iocpdi.c.getter}
-	return &value
+	o := *iocpdi.c.getter
+
+	return &IdxEntityInfo{o}
 }
 
 func (iocpdi IdxObjCPropertyDeclInfo) Setter() *IdxEntityInfo {
-	value := IdxEntityInfo{*iocpdi.c.setter}
-	return &value
+	o := *iocpdi.c.setter
+
+	return &IdxEntityInfo{o}
 }

@@ -8,16 +8,19 @@ type IdxObjCInterfaceDeclInfo struct {
 }
 
 func (iocidi IdxObjCInterfaceDeclInfo) ContainerInfo() *IdxObjCContainerDeclInfo {
-	value := IdxObjCContainerDeclInfo{*iocidi.c.containerInfo}
-	return &value
+	o := *iocidi.c.containerInfo
+
+	return &IdxObjCContainerDeclInfo{o}
 }
 
 func (iocidi IdxObjCInterfaceDeclInfo) SuperInfo() *IdxBaseClassInfo {
-	value := IdxBaseClassInfo{*iocidi.c.superInfo}
-	return &value
+	o := *iocidi.c.superInfo
+
+	return &IdxBaseClassInfo{o}
 }
 
 func (iocidi IdxObjCInterfaceDeclInfo) Protocols() *IdxObjCProtocolRefListInfo {
-	value := IdxObjCProtocolRefListInfo{*iocidi.c.protocols}
-	return &value
+	o := *iocidi.c.protocols
+
+	return &IdxObjCProtocolRefListInfo{o}
 }

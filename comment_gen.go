@@ -438,6 +438,5 @@ func (c Comment) FullComment_getAsXML() string {
 }
 
 func (c Comment) TranslationUnit() TranslationUnit {
-	value := TranslationUnit{c.c.TranslationUnit}
-	return value
+	return TranslationUnit{c.c.TranslationUnit}
 }

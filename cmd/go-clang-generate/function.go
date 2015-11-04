@@ -86,7 +86,15 @@ func NewFunction(name, cname, comment, member string, typ Type) *Function {
 		CName:   cname,
 		Comment: comment,
 
-		Parameters: []FunctionParameter{},
+		Parameters: []FunctionParameter{ // TODO ... do a correct version here...
+			FunctionParameter{
+				Name:  receiverName,
+				CName: cname,
+				Type: Type{
+					GoName: receiverType,
+				},
+			},
+		},
 
 		ReturnType: typ,
 		Receiver: Receiver{
@@ -173,22 +181,6 @@ func (f *Function) Generate() string {
 	}
 
 	return sss
-}
-
-var templateGenerateStructMemberGetter = template.Must(template.New("go-clang-generate-function-getter").Parse(`{{$.Comment}}
-func ({{$.Receiver.Name}} {{$.Receiver.Type.GoName}}) {{$.Name}}() {{if ge $.ReturnType.PointerLevel 1}}*{{end}}{{$.ReturnType.GoName}} {
-	value := {{if eq $.ReturnType.GoName "bool"}}{{$.Receiver.Name}}.c.{{$.Member}}{{else}}{{$.ReturnType.GoName}}{{if $.ReturnType.IsPrimitive}}({{if ge $.ReturnType.PointerLevel 1}}*{{end}}{{$.Receiver.Name}}.c.{{$.Member}}){{else}}{{"{"}}{{if ge $.ReturnType.PointerLevel 1}}*{{end}}{{$.Receiver.Name}}.c.{{$.Member}}{{"}"}}{{end}}{{end}}
-	return {{if eq $.ReturnType.GoName "bool"}}value != C.int(0){{else}}{{if ge $.ReturnType.PointerLevel 1}}&{{end}}value{{end}}
-}
-`))
-
-func generateFunctionStructMemberGetter(f *Function) string {
-	var b bytes.Buffer
-	if err := templateGenerateStructMemberGetter.Execute(&b, f); err != nil {
-		panic(err)
-	}
-
-	return b.String()
 }
 
 // FunctionSliceReturn TODO refactor

@@ -50,14 +50,23 @@ func (fa *ASTFunc) generate() {
 
 	fa.generateReceiver()
 
-	// Basic call to the C function
-	call := doCCast(fa.Function.CName)
+	if fa.Function.Member != "" {
+		fa.generateReturn(&ast.SelectorExpr{
+			X: accessMember(fa.Function.Receiver.Name, "c"),
+			Sel: &ast.Ident{
+				Name: fa.Function.Member,
+			},
+		})
+	} else {
+		// Basic call to the C function
+		call := doCCast(fa.Function.CName)
 
-	if callArguments := fa.generateParameters(); len(callArguments) > 0 {
-		call.Args = callArguments
+		if callArguments := fa.generateParameters(); len(callArguments) > 0 {
+			call.Args = callArguments
+		}
+
+		fa.generateReturn(call)
 	}
-
-	fa.generateReturn(fa.Function.ReturnType, call)
 }
 
 func (fa *ASTFunc) generateReceiver() {
@@ -483,7 +492,9 @@ func (fa *ASTFunc) generateParameters() []ast.Expr {
 	return callArguments
 }
 
-func (fa *ASTFunc) generateReturn(returnType Type, call ast.Expr) {
+func (fa *ASTFunc) generateReturn(call ast.Expr) {
+	returnType := fa.Function.ReturnType
+
 	// Check if we need to add a return
 	if returnType.GoName != "void" || len(fa.Return.Results) > 0 {
 		if returnType.GoName == "cxstring" {

@@ -8,11 +8,11 @@ type IdxObjCContainerDeclInfo struct {
 }
 
 func (ioccdi IdxObjCContainerDeclInfo) DeclInfo() *IdxDeclInfo {
-	value := IdxDeclInfo{*ioccdi.c.declInfo}
-	return &value
+	o := *ioccdi.c.declInfo
+
+	return &IdxDeclInfo{o}
 }
 
 func (ioccdi IdxObjCContainerDeclInfo) Kind() IdxObjCContainerKind {
-	value := IdxObjCContainerKind(ioccdi.c.kind)
-	return value
+	return IdxObjCContainerKind(ioccdi.c.kind)
 }

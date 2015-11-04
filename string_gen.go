@@ -17,6 +17,5 @@ type String struct {
 }
 
 func (s String) Private_flags() uint16 {
-	value := uint16(s.c.private_flags)
-	return value
+	return uint16(s.c.private_flags)
 }
