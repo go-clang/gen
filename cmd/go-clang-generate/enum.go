@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"strings"
 	"text/template"
 
@@ -20,29 +19,29 @@ type Enum struct {
 	Comment        string
 	UnderlyingType string
 
-	Items []Enumerator
+	Items []EnumItem
 
 	Methods []string
 }
 
-// Enumerator represents a generation enum item
-type Enumerator struct {
+// EnumItem represents a generation enum item
+type EnumItem struct {
 	Name    string
 	CName   string
 	Comment string
-	Value   int64
+	Value   uint64
 }
 
-func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Enum {
+func HandleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Enum {
 	e := Enum{
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
 		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
 
-		Items: []Enumerator{},
+		Items: []EnumItem{},
 	}
 
-	e.Name = trimClangPrefix(e.CName)
+	e.Name = trimLanguagePrefix(e.CName)
 
 	e.Receiver.Name = receiverName(e.Name)
 	e.Receiver.Type.GoName = e.Name
@@ -60,12 +59,12 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {
 		case clang.CK_EnumConstantDecl:
-			ei := Enumerator{
+			ei := EnumItem{
 				CName:   cursor.Spelling(),
 				Comment: cleanDoxygenComment(cursor.RawCommentText()), // TODO We are always using the same comment if there is none, see "TypeKind"
-				Value:   cursor.EnumConstantDeclValue(),
+				Value:   cursor.EnumConstantDeclUnsignedValue(),
 			}
-			ei.Name = trimClangPrefix(ei.CName)
+			ei.Name = trimLanguagePrefix(ei.CName)
 
 			// Check if the first item has an enum prefix
 			if len(e.Items) == 0 {
@@ -101,55 +100,68 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 	return &e
 }
 
-func generateEnum(e *Enum) error {
-	generateEnumStringMethods(e)
+func (e *Enum) ContainsMethod(name string) bool {
+	for _, m := range e.Methods {
+		if strings.Contains(m, ") "+name+"()") {
+			return true
+		}
+	}
 
+	return false
+}
+
+func (e *Enum) Generate() error {
 	f := NewFile(strings.ToLower(e.Name))
 	f.Enums = append(f.Enums, e)
 
 	return f.Generate()
 }
 
-func generateEnumStringMethods(e *Enum) {
-	hasSpelling := false
-	hasString := false
-	hasError := false
+var templateGenerateEnumString = template.Must(template.New("go-clang-generate-enum-string").Parse(`
+func ({{$.Receiver.Name}} {{$.Receiver.Type.GoName}}) String() string {
+	return {{$.Receiver.Name}}.Spelling()
+}
+`))
 
-	for _, fStr := range e.Methods {
-		if strings.Contains(fStr, ") Spelling() ") {
-			hasSpelling = true
+var templateGenerateEnumError = template.Must(template.New("go-clang-generate-enum-error").Parse(`
+func ({{$.Receiver.Name}} {{$.Receiver.Type.GoName}}) Error() string {
+	return {{$.Receiver.Name}}.Spelling()
+}
+`))
+
+func (e *Enum) AddEnumStringMethods() error {
+	if !e.ContainsMethod("Spelling") {
+		if err := e.addEnumSpellingMethod(); err != nil {
+			return err
 		}
-
-		if strings.Contains(fStr, ") String() ") {
-			hasString = true
+	}
+	if !e.ContainsMethod("String") {
+		if err := e.addEnumMethod(templateGenerateEnumString); err != nil {
+			return err
 		}
-
-		if strings.Contains(fStr, ") Error() ") {
-			hasError = true
+	}
+	if strings.HasSuffix(e.Name, "Error") && !e.ContainsMethod("Error") {
+		if err := e.addEnumMethod(templateGenerateEnumError); err != nil {
+			return err
 		}
 	}
 
-	if !hasSpelling {
-		err := generateEnumSpellingMethod(e, templateGenerateEnumSpelling)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-	if !hasString {
-		if err := generateEnumMethod(e, templateGenerateEnumString); err != nil {
-			panic(err)
-		}
-	}
-	if strings.HasSuffix(e.Name, "Error") && !hasError {
-		if err := generateEnumMethod(e, templateGenerateEnumError); err != nil {
-			panic(err)
-		}
-	}
+	return nil
 }
 
-func generateEnumSpellingMethod(e *Enum, tmpl *template.Template) error {
+var templateGenerateEnumSpelling = template.Must(template.New("go-clang-generate-enum-spelling").Parse(`
+func ({{$.Receiver}} {{$.ReceiverType}}) Spelling() string {
+	switch {{$.Receiver}} {
+		{{range $en := $.Cases}}case {{range $sn := $en.CaseStr}}{{$sn}}{{end}}: return "{{$en.PrettyStr}}"
+		{{end}}
+	}
+
+	return fmt.Sprintf("{{$.ReceiverType}} unkown %d", int({{$.Receiver}}))
+}
+`))
+
+func (e *Enum) addEnumSpellingMethod() error {
 	var b bytes.Buffer
-	var err error
 
 	type Case struct {
 		CaseStr   []string
@@ -179,7 +191,6 @@ func generateEnumSpellingMethod(e *Enum, tmpl *template.Template) error {
 			CaseStr:   []string{enumerator.Name},
 			PrettyStr: strings.Replace(enumerator.Name, "_", "=", 1),
 		}
-
 		m[enumerator.Name] = struct{}{}
 
 		for s := i + 1; s < len(e.Items); s++ {
@@ -193,7 +204,7 @@ func generateEnumSpellingMethod(e *Enum, tmpl *template.Template) error {
 		s.Cases = append(s.Cases, c)
 	}
 
-	if err = tmpl.Execute(&b, s); err != nil {
+	if err := templateGenerateEnumSpelling.Execute(&b, s); err != nil {
 		return err
 	}
 
@@ -202,10 +213,9 @@ func generateEnumSpellingMethod(e *Enum, tmpl *template.Template) error {
 	return nil
 }
 
-func generateEnumMethod(e *Enum, tmpl *template.Template) error {
+func (e *Enum) addEnumMethod(tmpl *template.Template) error {
 	var b bytes.Buffer
-	var err error
-	if err = tmpl.Execute(&b, e); err != nil {
+	if err := tmpl.Execute(&b, e); err != nil {
 		return err
 	}
 
@@ -213,26 +223,3 @@ func generateEnumMethod(e *Enum, tmpl *template.Template) error {
 
 	return nil
 }
-
-var templateGenerateEnumSpelling = template.Must(template.New("go-clang-generate-enum-spelling").Parse(`
-func ({{$.Receiver}} {{$.ReceiverType}}) Spelling() string {
-	switch {{$.Receiver}} {
-		{{range $en := $.Cases}}case {{range $sn := $en.CaseStr}}{{$sn}}{{end}}: return "{{$en.PrettyStr}}"
-		{{end}}
-	}
-
-	return fmt.Sprintf("{{$.ReceiverType}} unkown %d", int({{$.Receiver}}))
-}
-`))
-
-var templateGenerateEnumString = template.Must(template.New("go-clang-generate-enum-string").Parse(`
-func ({{$.Receiver.Name}} {{$.Receiver.Type.GoName}}) String() string {
-	return {{$.Receiver.Name}}.Spelling()
-}
-`))
-
-var templateGenerateEnumError = template.Must(template.New("go-clang-generate-enum-error").Parse(`
-func ({{$.Receiver.Name}} {{$.Receiver.Type.GoName}}) Error() string {
-	return {{$.Receiver.Name}}.Spelling()
-}
-`))

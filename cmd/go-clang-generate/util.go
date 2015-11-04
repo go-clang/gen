@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"syscall"
@@ -24,16 +23,6 @@ func execToBuffer(cmd ...string) (out []byte, exitStatus int, err error) {
 	}
 
 	return out, 0, nil
-}
-
-func exitWithFatal(msg string, err error) {
-	if err == nil {
-		fmt.Printf("FATAL, %s\n", msg)
-	} else {
-		fmt.Printf("FATAL, %s: %s\n", msg, err)
-	}
-
-	os.Exit(1)
 }
 
 func stat(filepath string) (os.FileInfo, error) {
@@ -100,4 +89,16 @@ func upperFirstCharacter(s string) string {
 	r[0] = unicode.ToUpper(r[0])
 
 	return string(r)
+}
+
+var goKeywordReplacements = map[string]string{
+	"range": "r",
+}
+
+func ReplaceGoKeywords(s string) string {
+	if r, ok := goKeywordReplacements[s]; ok {
+		return r
+	}
+
+	return ""
 }

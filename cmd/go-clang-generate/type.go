@@ -58,7 +58,7 @@ type Type struct {
 	LengthOfSlice     string
 }
 
-func getType(cType clang.Type) (Type, error) {
+func TypeFromClangType(cType clang.Type) (Type, error) {
 	typ := Type{
 		CName: cType.TypeSpelling(),
 
@@ -110,11 +110,11 @@ func getType(cType clang.Type) (Type, error) {
 	case clang.TK_Bool:
 		typ.GoName = GoBool
 	case clang.TK_Void:
-		// TODO Does not exist in Go
+		// TODO Does not exist in Go, what should we do with it?
 		typ.CGoName = "void"
 		typ.GoName = "void"
 	case clang.TK_ConstantArray:
-		subTyp, err := getType(cType.ArrayElementType())
+		subTyp, err := TypeFromClangType(cType.ArrayElementType())
 		if err != nil {
 			return Type{}, err
 		}
@@ -129,7 +129,7 @@ func getType(cType clang.Type) (Type, error) {
 		typ.IsPrimitive = false
 
 		typeStr := cType.TypeSpelling()
-		if typeStr == "CXString" {
+		if typeStr == "CXString" { // TODO eliminate CXString from the generic code
 			typeStr = "cxstring"
 		} else if typeStr == "time_t" {
 			typ.CGoName = typeStr
@@ -137,7 +137,7 @@ func getType(cType clang.Type) (Type, error) {
 
 			typ.IsPrimitive = true
 		} else {
-			typeStr = trimClangPrefix(cType.Declaration().Type().TypeSpelling())
+			typeStr = trimLanguagePrefix(cType.Declaration().Type().TypeSpelling())
 		}
 
 		typ.CGoName = cType.Declaration().Type().TypeSpelling()
@@ -154,7 +154,7 @@ func getType(cType clang.Type) (Type, error) {
 			typ.IsFunctionPointer = true
 		}
 
-		subTyp, err := getType(cType.PointeeType())
+		subTyp, err := TypeFromClangType(cType.PointeeType())
 		if err != nil {
 			return Type{}, err
 		}
@@ -166,18 +166,18 @@ func getType(cType clang.Type) (Type, error) {
 		typ.IsPrimitive = subTyp.IsPrimitive
 	case clang.TK_Record:
 		typ.CGoName = cType.Declaration().Type().TypeSpelling()
-		typ.GoName = trimClangPrefix(typ.CGoName)
+		typ.GoName = trimLanguagePrefix(typ.CGoName)
 		typ.IsPrimitive = false
 	case clang.TK_FunctionProto:
 		typ.IsFunctionPointer = true
 		typ.CGoName = cType.Declaration().Type().TypeSpelling()
-		typ.GoName = trimClangPrefix(typ.CGoName)
+		typ.GoName = trimLanguagePrefix(typ.CGoName)
 	case clang.TK_Enum:
-		typ.GoName = trimClangPrefix(cType.Declaration().DisplayName())
+		typ.GoName = trimLanguagePrefix(cType.Declaration().DisplayName())
 		typ.IsEnumLiteral = true
 		typ.IsPrimitive = true
-	case clang.TK_Unexposed: // there is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013
-		subTyp, err := getType(cType.CanonicalType())
+	case clang.TK_Unexposed: // There is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013 TODO where is this documented?
+		subTyp, err := TypeFromClangType(cType.CanonicalType())
 		if err != nil {
 			return Type{}, err
 		}

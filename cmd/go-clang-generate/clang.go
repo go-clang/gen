@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -14,6 +16,7 @@ func cleanDoxygenComment(comment string) string {
 	// Remove C style comment
 	comment = strings.TrimPrefix(comment, "/**")
 	comment = strings.TrimSuffix(comment, "*/")
+	comment = strings.TrimPrefix(comment, "//")
 	comment = reReplaceCComments.ReplaceAllString(comment, "\n")
 
 	// Replace some tags
@@ -50,11 +53,42 @@ func cleanDoxygenComment(comment string) string {
 	}
 }
 
-func trimClangPrefix(name string) string {
-	name = strings.TrimPrefix(name, "CX_CXX")
-	name = strings.TrimPrefix(name, "CXX")
-	name = strings.TrimPrefix(name, "CX")
-	name = strings.TrimPrefix(name, "ObjC")
+type Version struct {
+	Major    int
+	Minor    int
+	Subminor int
+}
 
-	return name
+func ParseVersion(s []byte) *Version {
+	m := regexp.MustCompile(`^(\d+)\.(\d+)(?:\.(\d+))?`).FindSubmatch(s)
+	if m == nil {
+		return nil
+	}
+
+	var err error
+	var v Version
+
+	if v.Major, err = strconv.Atoi(string(m[1])); err != nil {
+		return nil
+	}
+	if v.Minor, err = strconv.Atoi(string(m[2])); err != nil {
+		return nil
+	}
+	if len(m[3]) != 0 {
+		if v.Subminor, err = strconv.Atoi(string(m[3])); err != nil {
+			return nil
+		}
+	} else {
+		v.Subminor = 0
+	}
+
+	return &v
+}
+
+func (v Version) String() string {
+	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Subminor)
+}
+
+func (v Version) StringMinor() string {
+	return fmt.Sprintf("%d.%d", v.Major, v.Minor)
 }

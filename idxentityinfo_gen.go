@@ -8,6 +8,16 @@ type IdxEntityInfo struct {
 	c C.CXIdxEntityInfo
 }
 
+// For retrieving a custom CXIdxClientEntity attached to an entity.
+func (iei *IdxEntityInfo) Index_getClientEntity() IdxClientEntity {
+	return IdxClientEntity{C.clang_index_getClientEntity(&iei.c)}
+}
+
+// For setting a custom CXIdxClientEntity attached to an entity.
+func (iei *IdxEntityInfo) Index_setClientEntity(ice IdxClientEntity) {
+	C.clang_index_setClientEntity(&iei.c, ice.c)
+}
+
 func (iei IdxEntityInfo) Kind() IdxEntityKind {
 	value := IdxEntityKind(iei.c.kind)
 	return value
@@ -54,14 +64,4 @@ func (iei IdxEntityInfo) Attributes() []*IdxAttrInfo {
 func (iei IdxEntityInfo) NumAttributes() uint16 {
 	value := uint16(iei.c.numAttributes)
 	return value
-}
-
-// For retrieving a custom CXIdxClientEntity attached to an entity.
-func (iei *IdxEntityInfo) Index_getClientEntity() IdxClientEntity {
-	return IdxClientEntity{C.clang_index_getClientEntity(&iei.c)}
-}
-
-// For setting a custom CXIdxClientEntity attached to an entity.
-func (iei *IdxEntityInfo) Index_setClientEntity(ice IdxClientEntity) {
-	C.clang_index_setClientEntity(&iei.c, ice.c)
 }

@@ -11,6 +11,43 @@ import (
 	"github.com/sbinet/go-clang"
 )
 
+func trimCommonFunctionName(name string, typ Type) string {
+	name = trimCommonFunctionNamePrefix(name)
+
+	if fn := strings.TrimPrefix(name, typ.GoName+"_"); len(fn) != len(name) {
+		name = fn
+	} else if fn := strings.TrimPrefix(name, typ.GoName); len(fn) != len(name) {
+		name = fn
+	}
+
+	name = trimCommonFunctionNamePrefix(name)
+
+	// If the function name is empty at this point, it is a constructor
+	if name == "" {
+		name = typ.GoName
+	}
+
+	return name
+}
+
+func trimCommonFunctionNamePrefix(name string) string {
+	name = strings.TrimPrefix(name, "create")
+	name = strings.TrimPrefix(name, "get")
+
+	name = trimLanguagePrefix(name)
+
+	return name
+}
+
+func trimLanguagePrefix(name string) string {
+	name = strings.TrimPrefix(name, "CX_CXX")
+	name = strings.TrimPrefix(name, "CXX")
+	name = strings.TrimPrefix(name, "CX")
+	name = strings.TrimPrefix(name, "ObjC")
+
+	return name
+}
+
 // Function represents a generation function
 type Function struct {
 	Name    string
@@ -32,11 +69,40 @@ type FunctionParameter struct {
 	Type  Type
 }
 
-var keywordReplacements = map[string]string{
-	"range": "r",
+func NewFunction(name, cname, comment, member string, typ Type) *Function {
+	receiverType := trimLanguagePrefix(cname)
+	receiverName := receiverName(receiverType)
+	functionName := upperFirstCharacter(name)
+
+	if typ.IsPrimitive {
+		typ.CGoName = typ.GoName
+	}
+	if (strings.HasPrefix(name, "has") || strings.HasPrefix(name, "is")) && typ.GoName == GoInt16 {
+		typ.GoName = GoBool
+	}
+
+	f := &Function{
+		Name:    functionName,
+		CName:   cname,
+		Comment: comment,
+
+		Parameters: []FunctionParameter{},
+
+		ReturnType: typ,
+		Receiver: Receiver{
+			Name: receiverName,
+			Type: Type{
+				GoName: receiverType,
+			},
+		},
+
+		Member: member,
+	}
+
+	return f
 }
 
-func handleFunctionCursor(cursor clang.Cursor) *Function {
+func HandleFunctionCursor(cursor clang.Cursor) *Function {
 	f := Function{
 		CName:   cursor.Spelling(),
 		Comment: cleanDoxygenComment(cursor.RawCommentText()),
@@ -46,7 +112,7 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 
 	f.Name = strings.TrimPrefix(f.CName, "clang_")
 
-	typ, err := getType(cursor.ResultType())
+	typ, err := TypeFromClangType(cursor.ResultType())
 	if err != nil {
 		panic(err)
 	}
@@ -60,7 +126,7 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 			CName: param.DisplayName(),
 		}
 
-		typ, err := getType(param.Type())
+		typ, err := TypeFromClangType(param.Type())
 		if err != nil {
 			panic(err)
 		}
@@ -76,7 +142,7 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 			}
 			p.Name = lowerFirstCharacter(strings.Join(pns, ""))
 		}
-		if r, ok := keywordReplacements[p.Name]; ok {
+		if r := ReplaceGoKeywords(p.Name); r != "" {
 			p.Name = r
 		}
 
@@ -86,7 +152,7 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 	return &f
 }
 
-func generateASTFunction(f *Function) string {
+func (f *Function) Generate() string {
 	astFunc := ast.FuncDecl{
 		Name: &ast.Ident{
 			Name: f.Name,
@@ -974,7 +1040,7 @@ func generateFunctionStructMemberGetter(f *Function) string {
 
 // FunctionSliceReturn TODO refactor
 type FunctionSliceReturn struct {
-	Function
+	*Function
 
 	SizeMember string
 
@@ -1008,37 +1074,4 @@ func generateFunctionSliceReturn(f *FunctionSliceReturn) string {
 
 	return b.String()
 
-}
-
-func generateFunction(name, cname, comment, member string, typ Type) *Function {
-	receiverType := trimClangPrefix(cname)
-	receiverName := receiverName(receiverType)
-	functionName := upperFirstCharacter(name)
-
-	if typ.IsPrimitive {
-		typ.CGoName = typ.GoName
-	}
-	if (strings.HasPrefix(name, "has") || strings.HasPrefix(name, "is")) && typ.GoName == GoInt16 {
-		typ.GoName = GoBool
-	}
-
-	f := &Function{
-		Name:    functionName,
-		CName:   cname,
-		Comment: comment,
-
-		Parameters: []FunctionParameter{},
-
-		ReturnType: typ,
-		Receiver: Receiver{
-			Name: receiverName,
-			Type: Type{
-				GoName: receiverType,
-			},
-		},
-
-		Member: member,
-	}
-
-	return f
 }

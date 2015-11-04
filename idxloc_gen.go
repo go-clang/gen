@@ -8,11 +8,6 @@ type IdxLoc struct {
 	c C.CXIdxLoc
 }
 
-func (il IdxLoc) Int_data() uint16 {
-	value := uint16(il.c.int_data)
-	return value
-}
-
 /*
 	Retrieve the CXIdxFile, file, line, column, and offset represented by
 	the given CXIdxLoc.
@@ -36,4 +31,9 @@ func (il IdxLoc) IndexLoc_getFileLocation() (IdxClientFile, File, uint16, uint16
 // Retrieve the CXSourceLocation represented by the given CXIdxLoc.
 func (il IdxLoc) IndexLoc_getCXSourceLocation() SourceLocation {
 	return SourceLocation{C.clang_indexLoc_getCXSourceLocation(il.c)}
+}
+
+func (il IdxLoc) Int_data() uint16 {
+	value := uint16(il.c.int_data)
+	return value
 }

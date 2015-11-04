@@ -14,18 +14,6 @@ type CodeCompleteResults struct {
 	c C.CXCodeCompleteResults
 }
 
-// The code-completion results.
-func (ccr CodeCompleteResults) Results() *CompletionResult {
-	value := CompletionResult{*ccr.c.Results}
-	return &value
-}
-
-// The number of code-completion results stored in the Results array.
-func (ccr CodeCompleteResults) NumResults() uint16 {
-	value := uint16(ccr.c.NumResults)
-	return value
-}
-
 // Free the given set of code-completion results.
 func (ccr *CodeCompleteResults) Dispose() {
 	C.clang_disposeCodeCompleteResults(&ccr.c)
@@ -118,4 +106,16 @@ func (ccr *CodeCompleteResults) CodeCompleteGetObjCSelector() string {
 	defer o.Dispose()
 
 	return o.String()
+}
+
+// The code-completion results.
+func (ccr CodeCompleteResults) Results() *CompletionResult {
+	value := CompletionResult{*ccr.c.Results}
+	return &value
+}
+
+// The number of code-completion results stored in the Results array.
+func (ccr CodeCompleteResults) NumResults() uint16 {
+	value := uint16(ccr.c.NumResults)
+	return value
 }

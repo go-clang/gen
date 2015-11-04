@@ -29,11 +29,6 @@ type Cursor struct {
 	c C.CXCursor
 }
 
-func (c Cursor) Xdata() int16 {
-	value := int16(c.c.xdata)
-	return value
-}
-
 // Retrieve the NULL cursor, which represents no entity.
 func NewNullCursor() Cursor {
 	return Cursor{C.clang_getNullCursor()}
@@ -805,4 +800,9 @@ func (c Cursor) CompletionString() CompletionString {
 */
 func (c Cursor) FindReferencesInFile(file File, visitor CursorAndRangeVisitor) Result {
 	return Result(C.clang_findReferencesInFile(c.c, file.c, visitor.c))
+}
+
+func (c Cursor) Xdata() int16 {
+	value := int16(c.c.xdata)
+	return value
 }

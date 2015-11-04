@@ -84,8 +84,14 @@ func (f *File) Generate() error {
 
 	filename := f.Name + "_gen.go"
 
-	out, err := imports.Process(filename, b.Bytes(), nil)
+	bo := b.Bytes()
+	out, err := imports.Process(filename, bo, nil)
 	if err != nil {
+		// Write the file anyway so we can look at the problem
+		if err := ioutil.WriteFile(filename, bo, 0700); err != nil {
+			return err
+		}
+
 		return err
 	}
 
