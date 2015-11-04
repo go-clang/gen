@@ -12,10 +12,7 @@ import (
 )
 
 func trimCommonFunctionName(name string, typ Type) string {
-	name = strings.TrimPrefix(name, "create")
-	name = strings.TrimPrefix(name, "get")
-
-	name = trimLanguagePrefix(name)
+	name = trimCommonFunctionNamePrefix(name)
 
 	if fn := strings.TrimPrefix(name, typ.GoName+"_"); len(fn) != len(name) {
 		name = fn
@@ -23,15 +20,21 @@ func trimCommonFunctionName(name string, typ Type) string {
 		name = fn
 	}
 
-	name = strings.TrimPrefix(name, "create")
-	name = strings.TrimPrefix(name, "get")
-
-	name = trimLanguagePrefix(name)
+	name = trimCommonFunctionNamePrefix(name)
 
 	// If the function name is empty at this point, it is a constructor
 	if name == "" {
 		name = typ.GoName
 	}
+
+	return name
+}
+
+func trimCommonFunctionNamePrefix(name string) string {
+	name = strings.TrimPrefix(name, "create")
+	name = strings.TrimPrefix(name, "get")
+
+	name = trimLanguagePrefix(name)
 
 	return name
 }
