@@ -132,7 +132,7 @@ func (h *headerFile) isEnumOrStruct(name string) bool {
 	return false
 }
 
-func HandleHeaderFile(headerFilename string, clangArguments []string) {
+func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 	h := &headerFile{
 		name: headerFilename,
 
@@ -158,7 +158,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) {
 	findStructsRe := regexp.MustCompile(`(?s)struct[\s\w]+{.+?}`)
 	f, err := ioutil.ReadFile(h.name)
 	if err != nil {
-		exitWithFatal("Cannot read Index.h", nil)
+		return CmdFatal("Cannot read Index.h", nil)
 	}
 	voidPointerReplacements := map[string]string{}
 	findVoidPointerRe := regexp.MustCompile(`(?:const\s+)?void\s*\*\s*(\w+(\[\d+\])?;)`)
@@ -177,7 +177,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) {
 	}
 	err = ioutil.WriteFile(h.name, []byte(fs), 0700)
 	if err != nil {
-		exitWithFatal("Cannot write Index.h", nil)
+		return CmdFatal("Cannot write Index.h", nil)
 	}
 
 	// Parse clang-c's Index.h to analyse everything we need to know
@@ -188,15 +188,15 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) {
 	defer tu.Dispose()
 
 	if !tu.IsValid() {
-		exitWithFatal("Cannot parse Index.h", nil)
+		return CmdFatal("Cannot parse Index.h", nil)
 	}
 
 	for _, diag := range tu.Diagnostics() {
 		switch diag.Severity() {
 		case clang.Diagnostic_Error:
-			exitWithFatal("Diagnostic error in Index.h", errors.New(diag.Spelling()))
+			return CmdFatal("Diagnostic error in Index.h", errors.New(diag.Spelling()))
 		case clang.Diagnostic_Fatal:
-			exitWithFatal("Diagnostic fatal in Index.h", errors.New(diag.Spelling()))
+			return CmdFatal("Diagnostic fatal in Index.h", errors.New(diag.Spelling()))
 		}
 	}
 
@@ -520,7 +520,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) {
 		}
 
 		if err := generateEnum(e); err != nil {
-			exitWithFatal("Cannot generate enum", err)
+			return CmdFatal("Cannot generate enum", err)
 		}
 	}
 
@@ -530,7 +530,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) {
 		}
 
 		if err := generateStruct(s); err != nil {
-			exitWithFatal("Cannot generate struct", err)
+			return CmdFatal("Cannot generate struct", err)
 		}
 	}
 
@@ -540,7 +540,9 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) {
 		}
 
 		if err := clangFile.Generate(); err != nil {
-			exitWithFatal("Cannot generate clang file", err)
+			return CmdFatal("Cannot generate clang file", err)
 		}
 	}
+
+	return nil
 }
