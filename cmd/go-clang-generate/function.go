@@ -153,258 +153,16 @@ func HandleFunctionCursor(cursor clang.Cursor) *Function {
 }
 
 func (f *Function) Generate() string {
-	astFunc := ast.FuncDecl{
-		Name: &ast.Ident{
-			Name: f.Name,
-		},
-		Type: &ast.FuncType{
-			Results: &ast.FieldList{
-				List: []*ast.Field{},
-			},
-		},
-		Body: &ast.BlockStmt{},
-	}
+	fa := NewASTFunc(f)
 
-	retur := &ast.ReturnStmt{
-		Results: []ast.Expr{},
-	}
 	hasReturnArguments := false
-
-	accessMember := func(variable string, member string) *ast.SelectorExpr {
-		return &ast.SelectorExpr{
-			X: &ast.Ident{
-				Name: variable,
-			},
-			Sel: &ast.Ident{
-				Name: member,
-			},
-		}
-	}
-	addStatement := func(stmt ast.Stmt) {
-		astFunc.Body.List = append(astFunc.Body.List, stmt)
-	}
-	addAssignment := func(variable string, e ast.Expr) {
-		addStatement(&ast.AssignStmt{
-			Lhs: []ast.Expr{
-				&ast.Ident{
-					Name: variable,
-				},
-			},
-			Tok: token.DEFINE,
-			Rhs: []ast.Expr{
-				e,
-			},
-		})
-	}
-	addAssignmentToO := func(e ast.Expr) {
-		addAssignment("o", e)
-	}
-	addDefer := func(call *ast.CallExpr) {
-		addStatement(&ast.DeferStmt{
-			Call: call,
-		})
-	}
-	addEmptyLine := func() {
-		// TODO this should be done using something else than a fake statement.
-		addStatement(&ast.ExprStmt{
-			X: &ast.CallExpr{
-				Fun: &ast.Ident{
-					Name: "REMOVE",
-				},
-			},
-		})
-	}
-	addReturnItem := func(item ast.Expr) {
-		retur.Results = append(retur.Results, item)
-	}
-	doCall := func(variable string, method string, args ...ast.Expr) *ast.CallExpr {
-		return &ast.CallExpr{
-			Fun:  accessMember(variable, method),
-			Args: args,
-		}
-	}
-	doCast := func(typ string, args ...ast.Expr) *ast.CallExpr {
-		return &ast.CallExpr{
-			Fun: &ast.Ident{
-				Name: typ,
-			},
-			Args: args,
-		}
-	}
-	doCompose := func(typ string, v ast.Expr) *ast.CompositeLit {
-		return &ast.CompositeLit{
-			Type: &ast.Ident{
-				Name: typ,
-			},
-			Elts: []ast.Expr{
-				v,
-			},
-		}
-	}
-	doCType := func(c string) *ast.SelectorExpr {
-		return accessMember("C", c)
-	}
-	doCCast := func(typ string, args ...ast.Expr) *ast.CallExpr {
-		return doCall("C", typ, args...)
-	}
-	doField := func(name string, typ Type) *ast.Field {
-		f := &ast.Field{}
-
-		if name != "" {
-			f.Names = []*ast.Ident{
-				&ast.Ident{
-					Name: name,
-				},
-			}
-		}
-		if typ.GoName != "" {
-			if typ.PointerLevel > 0 && typ.CGoName == CSChar {
-				f.Type = &ast.Ident{
-					Name: "string",
-				}
-			} else {
-				f.Type = &ast.Ident{
-					Name: typ.GoName,
-				}
-			}
-
-			if typ.IsSlice {
-				f.Type = &ast.ArrayType{
-					Elt: f.Type,
-				}
-			} else if typ.PointerLevel > 0 && typ.CGoName != CSChar && !typ.IsReturnArgument {
-				for i := 0; i < typ.PointerLevel; i++ {
-					f.Type = &ast.StarExpr{
-						X: f.Type,
-					}
-				}
-			}
-		}
-
-		return f
-	}
-	addReturnType := func(name string, typ Type) {
-		astFunc.Type.Results.List = append(astFunc.Type.Results.List, doField(name, typ))
-	}
-	doZero := func() *ast.BasicLit {
-		return &ast.BasicLit{
-			Kind:  token.INT,
-			Value: "0",
-		}
-	}
-	getSliceType := func(typ Type) ast.Expr {
-		var sliceType ast.Expr
-
-		if typ.PointerLevel > 0 && typ.CGoName == CSChar {
-			sliceType = doCType("char")
-		} else {
-			sliceType = doCType(typ.CGoName)
-		}
-
-		for i := 1; i < typ.PointerLevel; i++ {
-			sliceType = &ast.StarExpr{
-				X: sliceType,
-			}
-		}
-
-		return sliceType
-	}
-
-	addCToGoConversions := func() {
-		cToGoTypeConversions := false
-
-		for _, p := range f.Parameters {
-			if p.Type.IsSlice && p.Type.IsReturnArgument {
-				cToGoTypeConversions = true
-
-				var lengthOfSlice string
-				for _, pl := range f.Parameters {
-					if pl.Type.LengthOfSlice == p.Name {
-						lengthOfSlice = pl.Name
-
-						break
-					}
-				}
-
-				addAssignment("gos_"+p.Name, &ast.CallExpr{
-					Fun: &ast.ParenExpr{
-						X: &ast.StarExpr{
-							X: accessMember("reflect", "SliceHeader"),
-						},
-					},
-					Args: []ast.Expr{
-						doCall(
-							"unsafe",
-							"Pointer",
-							&ast.UnaryExpr{
-								Op: token.AND,
-								X: &ast.Ident{
-									Name: p.Name,
-								},
-							},
-						),
-					},
-				})
-				addStatement(&ast.AssignStmt{
-					Lhs: []ast.Expr{
-						accessMember("gos_"+p.Name, "Cap"),
-					},
-					Tok: token.ASSIGN,
-					Rhs: []ast.Expr{
-						doCast(
-							"int",
-							&ast.Ident{
-								Name: lengthOfSlice,
-							},
-						),
-					},
-				})
-				addStatement(&ast.AssignStmt{
-					Lhs: []ast.Expr{
-						accessMember("gos_"+p.Name, "Len"),
-					},
-					Tok: token.ASSIGN,
-					Rhs: []ast.Expr{
-						doCast(
-							"int",
-							&ast.Ident{
-								Name: lengthOfSlice,
-							},
-						),
-					},
-				})
-				addStatement(&ast.AssignStmt{
-					Lhs: []ast.Expr{
-						accessMember("gos_"+p.Name, "Data"),
-					},
-					Tok: token.ASSIGN,
-					Rhs: []ast.Expr{
-						doCast(
-							"uintptr",
-							doCall(
-								"unsafe",
-								"Pointer",
-								&ast.Ident{
-									Name: "cp_" + p.Name,
-								},
-							),
-						),
-					},
-				})
-			}
-		}
-
-		if cToGoTypeConversions {
-			addEmptyLine()
-		}
-	}
 
 	// TODO maybe name the return arguments ... because of clang_getDiagnosticOption -> the normal return can be always just "o"?
 
 	// TODO reenable this, see the comment at the bottom of the generate function for details
 	// Add function comment
 	/*if f.Comment != "" {
-		astFunc.Doc = &ast.CommentGroup{
+		fa.Doc = &ast.CommentGroup{
 			List: []*ast.Comment{
 				&ast.Comment{
 					Text: f.Comment,
@@ -416,7 +174,7 @@ func (f *Function) Generate() string {
 	// Add receiver to make function a method
 	if f.Receiver.Name != "" {
 		if len(f.Parameters) > 0 { // TODO maybe to not set the receiver at all? -> do this outside of the generate function?
-			astFunc.Recv = &ast.FieldList{
+			fa.Recv = &ast.FieldList{
 				List: []*ast.Field{
 					doField(f.Receiver.Name, f.Receiver.Type),
 				},
@@ -432,7 +190,7 @@ func (f *Function) Generate() string {
 			f.Parameters[0].Name = f.Receiver.Name
 		}
 
-		astFunc.Type.Params = &ast.FieldList{
+		fa.Type.Params = &ast.FieldList{
 			List: []*ast.Field{},
 		}
 
@@ -455,7 +213,7 @@ func (f *Function) Generate() string {
 				// Declare the slice
 				sliceType := getSliceType(p.Type)
 
-				addAssignment(
+				fa.addAssignment(
 					"ca_"+p.Name,
 					doCast(
 						"make",
@@ -470,24 +228,11 @@ func (f *Function) Generate() string {
 						),
 					),
 				)
-				addStatement(&ast.DeclStmt{
-					Decl: &ast.GenDecl{
-						Tok: token.VAR,
-						Specs: []ast.Spec{
-							&ast.ValueSpec{
-								Names: []*ast.Ident{
-									&ast.Ident{
-										Name: "cp_" + p.Name,
-									},
-								},
-								Type: &ast.StarExpr{
-									X: sliceType,
-								},
-							},
-						},
-					},
-				})
-				addStatement(&ast.IfStmt{
+				fa.addStatement(doDeclare(
+					"cp_"+p.Name,
+					doPointer(sliceType),
+				))
+				fa.addStatement(&ast.IfStmt{
 					Cond: &ast.BinaryExpr{
 						X: doCast(
 							"len",
@@ -508,15 +253,12 @@ func (f *Function) Generate() string {
 								},
 								Tok: token.ASSIGN,
 								Rhs: []ast.Expr{
-									&ast.UnaryExpr{
-										Op: token.AND,
-										X: &ast.IndexExpr{
-											X: &ast.Ident{
-												Name: "ca_" + p.Name,
-											},
-											Index: doZero(),
+									doReference(&ast.IndexExpr{
+										X: &ast.Ident{
+											Name: "ca_" + p.Name,
 										},
-									},
+										Index: doZero(),
+									}),
 								},
 							},
 						},
@@ -610,7 +352,7 @@ func (f *Function) Generate() string {
 					})
 				}
 
-				addStatement(&ast.RangeStmt{
+				fa.addStatement(&ast.RangeStmt{
 					Key: &ast.Ident{
 						Name: "i",
 					},
@@ -632,33 +374,20 @@ func (f *Function) Generate() string {
 						retType.GoName = "string"
 					}
 
-					addReturnType("", retType)
+					fa.addReturnType("", retType)
 				}
 
 				if p.Type.IsSlice && p.Type.IsReturnArgument {
-					addStatement(&ast.DeclStmt{
-						Decl: &ast.GenDecl{
-							Tok: token.VAR,
-							Specs: []ast.Spec{
-								&ast.ValueSpec{
-									Names: []*ast.Ident{
-										&ast.Ident{
-											Name: "cp_" + p.Name,
-										},
-									},
-									Type: getSliceType(p.Type),
-								},
-							},
-						},
-					})
+					fa.addStatement(doDeclare(
+						"cp_"+p.Name,
+						getSliceType(p.Type),
+					))
 				}
 
 				// Declare the return argument's variable
 				var varType ast.Expr
 				if p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar {
-					varType = &ast.StarExpr{
-						X: doCType("char"),
-					}
+					varType = doPointer(doCType("char"))
 				} else if p.Type.IsPrimitive {
 					varType = doCType(p.Type.CGoName)
 				} else {
@@ -672,25 +401,15 @@ func (f *Function) Generate() string {
 					}
 				}
 
-				addStatement(&ast.DeclStmt{
-					Decl: &ast.GenDecl{
-						Tok: token.VAR,
-						Specs: []ast.Spec{
-							&ast.ValueSpec{
-								Names: []*ast.Ident{
-									&ast.Ident{
-										Name: p.Name,
-									},
-								},
-								Type: varType,
-							},
-						},
-					},
-				})
+				fa.addStatement(doDeclare(
+					p.Name,
+					varType,
+				))
+
 				if p.Type.GoName == "cxstring" {
-					addDefer(doCall(p.Name, "Dispose"))
+					fa.addDefer(doCall(p.Name, "Dispose"))
 				} else if p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar {
-					addDefer(doCCast(
+					fa.addDefer(doCCast(
 						"free",
 						doCall(
 							"unsafe",
@@ -705,23 +424,23 @@ func (f *Function) Generate() string {
 				if p.Type.LengthOfSlice == "" {
 					// Add the return argument to the return statement
 					if p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar {
-						addReturnItem(doCCast(
+						fa.addReturnItem(doCCast(
 							"GoString",
 							&ast.Ident{
 								Name: p.Name,
 							},
 						))
 					} else if p.Type.GoName == "cxstring" {
-						addReturnItem(doCall(p.Name, "String"))
+						fa.addReturnItem(doCall(p.Name, "String"))
 					} else if p.Type.IsPrimitive {
-						addReturnItem(doCast(
+						fa.addReturnItem(doCast(
 							p.Type.GoName,
 							&ast.Ident{
 								Name: p.Name,
 							},
 						))
 					} else {
-						addReturnItem(&ast.Ident{
+						fa.addReturnItem(&ast.Ident{
 							Name: p.Name,
 						})
 					}
@@ -733,22 +452,11 @@ func (f *Function) Generate() string {
 
 				var varType = doCType(p.Type.CGoName)
 
-				addStatement(&ast.DeclStmt{
-					Decl: &ast.GenDecl{
-						Tok: token.VAR,
-						Specs: []ast.Spec{
-							&ast.ValueSpec{
-								Names: []*ast.Ident{
-									&ast.Ident{
-										Name: "cp_" + p.Name,
-									},
-								},
-								Type: varType,
-							},
-						},
-					},
-				})
-				addStatement(&ast.IfStmt{
+				fa.addStatement(doDeclare(
+					"cp_"+p.Name,
+					varType,
+				))
+				fa.addStatement(&ast.IfStmt{
 					Cond: &ast.BinaryExpr{
 						X: &ast.Ident{
 							Name: p.Name,
@@ -771,11 +479,9 @@ func (f *Function) Generate() string {
 									&ast.CallExpr{
 										Fun: varType,
 										Args: []ast.Expr{
-											&ast.StarExpr{
-												X: &ast.Ident{
-													Name: p.Name,
-												},
-											},
+											doPointer(&ast.Ident{
+												Name: p.Name,
+											}),
 										},
 									},
 								},
@@ -785,11 +491,11 @@ func (f *Function) Generate() string {
 				})
 			}
 
-			astFunc.Type.Params.List = append(astFunc.Type.Params.List, doField(p.Name, p.Type))
+			fa.Type.Params.List = append(fa.Type.Params.List, doField(p.Name, p.Type))
 		}
 
 		if hasReturnArguments || hasDeclaration {
-			addEmptyLine()
+			fa.addEmptyLine()
 		}
 
 		goToCTypeConversions := false
@@ -807,7 +513,7 @@ func (f *Function) Generate() string {
 				if p.Type.PointerLevel == 1 && p.Type.CGoName == CSChar {
 					goToCTypeConversions = true
 
-					addAssignment(
+					fa.addAssignment(
 						"c_"+p.Name,
 						doCCast(
 							"CString",
@@ -816,7 +522,7 @@ func (f *Function) Generate() string {
 							},
 						),
 					)
-					addDefer(doCCast(
+					fa.addDefer(doCCast(
 						"free",
 						doCall(
 							"unsafe",
@@ -849,12 +555,9 @@ func (f *Function) Generate() string {
 							),
 						)
 					} else if p.Type.PointerLevel > 0 {
-						pf = &ast.UnaryExpr{
-							Op: token.AND,
-							X: &ast.Ident{
-								Name: "cp_" + p.Name,
-							},
-						}
+						pf = doReference(&ast.Ident{
+							Name: "cp_" + p.Name,
+						})
 					} else {
 						pf = doCCast(
 							p.Type.CGoName,
@@ -868,25 +571,19 @@ func (f *Function) Generate() string {
 				pf = accessMember(p.Name, "c")
 
 				if p.Type.PointerLevel > 0 && !p.Type.IsReturnArgument {
-					pf = &ast.UnaryExpr{
-						Op: token.AND,
-						X:  pf,
-					}
+					pf = doReference(pf)
 				}
 			}
 
 			if p.Type.IsReturnArgument {
-				pf = &ast.UnaryExpr{
-					Op: token.AND,
-					X:  pf,
-				}
+				pf = doReference(pf)
 			}
 
 			call.Args = append(call.Args, pf)
 		}
 
 		if goToCTypeConversions {
-			addEmptyLine()
+			fa.addEmptyLine()
 		}
 	}
 
@@ -894,31 +591,31 @@ func (f *Function) Generate() string {
 	if f.ReturnType.GoName != "void" || hasReturnArguments {
 		if f.ReturnType.GoName == "cxstring" {
 			// Do the C function call and save the result into the new variable "o" while transforming it into a cxstring
-			addAssignmentToO(doCompose("cxstring", call))
-			addDefer(doCall("o", "Dispose"))
-			addEmptyLine()
+			fa.addAssignment("o", doCompose("cxstring", call))
+			fa.addDefer(doCall("o", "Dispose"))
+			fa.addEmptyLine()
 
 			// Call the String method on the cxstring instance
-			addReturnItem(doCall("o", "String"))
+			fa.addReturnItem(doCall("o", "String"))
 
 			// Change the return type to "string"
-			addReturnType("", Type{
+			fa.addReturnType("", Type{
 				GoName: "string",
 			})
 		} else {
 			if f.ReturnType.GoName != "void" {
 				// Add the function return type
-				addReturnType("", f.ReturnType)
+				fa.addReturnType("", f.ReturnType)
 			}
 
 			// Do we need to convert the return of the C function into a boolean?
 			if f.ReturnType.GoName == "bool" {
 				// Do the C function call and save the result into the new variable "o"
-				addAssignmentToO(call)
-				addEmptyLine()
+				fa.addAssignment("o", call)
+				fa.addEmptyLine()
 
 				// Check if o is not equal to zero and return the result
-				addReturnItem(&ast.BinaryExpr{
+				fa.addReturnItem(&ast.BinaryExpr{
 					X: &ast.Ident{
 						Name: "o",
 					},
@@ -930,12 +627,12 @@ func (f *Function) Generate() string {
 				})
 			} else if f.ReturnType.CGoName == CSChar && f.ReturnType.PointerLevel == 1 {
 				// If this is a normal const char * C type there is not so much to do
-				addReturnItem(doCCast(
+				fa.addReturnItem(doCCast(
 					"GoString",
 					call,
 				))
 			} else if f.ReturnType.GoName == "time.Time" {
-				addReturnItem(doCall(
+				fa.addReturnItem(doCall(
 					"time",
 					"Unix",
 					doCast("int64", call),
@@ -945,26 +642,21 @@ func (f *Function) Generate() string {
 				// Handle the case where the C function has no return argument but parameters that are return arguments
 
 				// Do the C function call
-				addStatement(&ast.ExprStmt{
+				fa.addStatement(&ast.ExprStmt{
 					X: call,
 				})
-				addEmptyLine()
+				fa.addEmptyLine()
 			} else if f.ReturnType.PointerLevel > 0 {
 				// Do the C function call and save the result into the new variable "o"
-				addAssignmentToO(&ast.StarExpr{
-					X: call,
-				})
-				addEmptyLine()
+				fa.addAssignment("o", doUnreference(call))
+				fa.addEmptyLine()
 
-				addReturnItem(&ast.UnaryExpr{
-					Op: token.AND,
-					X: doCompose(
-						f.ReturnType.GoName,
-						&ast.Ident{
-							Name: "o",
-						},
-					),
-				})
+				fa.addReturnItem(doReference(doCompose(
+					f.ReturnType.GoName,
+					&ast.Ident{
+						Name: "o",
+					},
+				)))
 			} else {
 				var convCall ast.Expr
 
@@ -977,34 +669,34 @@ func (f *Function) Generate() string {
 
 				if hasReturnArguments {
 					// Do the C function call and save the result into the new variable "o"
-					addAssignmentToO(convCall)
-					addEmptyLine()
+					fa.addAssignment("o", convCall)
+					fa.addEmptyLine()
 
 					// Add the C function call result to the return statement
-					addReturnItem(&ast.Ident{
+					fa.addReturnItem(&ast.Ident{
 						Name: "o",
 					})
 				} else {
-					addReturnItem(convCall)
+					fa.addReturnItem(convCall)
 				}
 			}
 		}
 
-		addCToGoConversions()
+		fa.addCToGoConversions()
 
 		// Add the return statement
-		addStatement(retur)
+		fa.addStatement(fa.Return)
 	} else {
-		addCToGoConversions()
+		fa.addCToGoConversions()
 
 		// No return needed, just add the C function call
-		addStatement(&ast.ExprStmt{
+		fa.addStatement(&ast.ExprStmt{
 			X: call,
 		})
 	}
 
 	var b bytes.Buffer
-	err := format.Node(&b, token.NewFileSet(), []ast.Decl{&astFunc})
+	err := format.Node(&b, token.NewFileSet(), []ast.Decl{fa.FuncDecl})
 	if err != nil {
 		panic(err)
 	}
