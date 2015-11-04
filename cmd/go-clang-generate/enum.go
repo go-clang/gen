@@ -30,7 +30,7 @@ type Enumerator struct {
 	Name    string
 	CName   string
 	Comment string
-	Value   int64
+	Value   uint64
 }
 
 func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Enum {
@@ -63,7 +63,7 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 			ei := Enumerator{
 				CName:   cursor.Spelling(),
 				Comment: cleanDoxygenComment(cursor.RawCommentText()), // TODO We are always using the same comment if there is none, see "TypeKind"
-				Value:   cursor.EnumConstantDeclValue(),
+				Value:   cursor.EnumConstantDeclUnsignedValue(),
 			}
 			ei.Name = trimLanguagePrefix(ei.CName)
 
