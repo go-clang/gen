@@ -9,11 +9,6 @@ type Type struct {
 	c C.CXType
 }
 
-func (t Type) Kind() TypeKind {
-	value := TypeKind(t.c.kind)
-	return value
-}
-
 /*
 	Pretty-print the underlying type using the rules of the
 	language of the translation unit from which it came.
@@ -238,4 +233,9 @@ func (t Type) OffsetOf(s string) int64 {
 */
 func (t Type) RefQualifier() RefQualifierKind {
 	return RefQualifierKind(C.clang_Type_getCXXRefQualifier(t.c))
+}
+
+func (t Type) Kind() TypeKind {
+	value := TypeKind(t.c.kind)
+	return value
 }

@@ -97,7 +97,9 @@ func Cmd(args []string) error {
 			continue
 		}
 
-		HandleHeaderFile(clangCDirectory+h.Name(), clangArguments)
+		if err := HandleHeaderFile(clangCDirectory+h.Name(), clangArguments); err != nil {
+			return err
+		}
 	}
 
 	return nil

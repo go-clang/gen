@@ -13,16 +13,6 @@ type SourceRange struct {
 	c C.CXSourceRange
 }
 
-func (sr SourceRange) Begin_int_data() uint16 {
-	value := uint16(sr.c.begin_int_data)
-	return value
-}
-
-func (sr SourceRange) End_int_data() uint16 {
-	value := uint16(sr.c.end_int_data)
-	return value
-}
-
 // Retrieve a NULL (invalid) source range.
 func NewNullRange() SourceRange {
 	return SourceRange{C.clang_getNullRange()}
@@ -54,4 +44,14 @@ func (sr SourceRange) RangeStart() SourceLocation {
 // Retrieve a source location representing the last character within a source range.
 func (sr SourceRange) RangeEnd() SourceLocation {
 	return SourceLocation{C.clang_getRangeEnd(sr.c)}
+}
+
+func (sr SourceRange) Begin_int_data() uint16 {
+	value := uint16(sr.c.begin_int_data)
+	return value
+}
+
+func (sr SourceRange) End_int_data() uint16 {
+	value := uint16(sr.c.end_int_data)
+	return value
 }

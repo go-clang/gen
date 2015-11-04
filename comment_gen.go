@@ -8,11 +8,6 @@ type Comment struct {
 	c C.CXComment
 }
 
-func (c Comment) TranslationUnit() TranslationUnit {
-	value := TranslationUnit{c.c.TranslationUnit}
-	return value
-}
-
 /*
 	Parameter Comment AST node of any kind.
 
@@ -440,4 +435,9 @@ func (c Comment) FullComment_getAsXML() string {
 	defer o.Dispose()
 
 	return o.String()
+}
+
+func (c Comment) TranslationUnit() TranslationUnit {
+	value := TranslationUnit{c.c.TranslationUnit}
+	return value
 }

@@ -9,6 +9,26 @@ type CompletionResult struct {
 }
 
 /*
+	Sort the code-completion results in case-insensitive alphabetical
+	order.
+
+	Parameter Results The set of results to sort.
+	Parameter NumResults The number of results in \p Results.
+*/
+func SortCodeCompletionResults(results []CompletionResult) {
+	ca_results := make([]C.CXCompletionResult, len(results))
+	var cp_results *C.CXCompletionResult
+	if len(results) > 0 {
+		cp_results = &ca_results[0]
+	}
+	for i := range results {
+		ca_results[i] = results[i].c
+	}
+
+	C.clang_sortCodeCompletionResults(cp_results, C.uint(len(results)))
+}
+
+/*
 	The kind of entity that this completion refers to.
 
 	The cursor kind will be a macro, keyword, or a declaration (one of the
@@ -27,24 +47,4 @@ func (cr CompletionResult) CursorKind() CursorKind {
 func (cr CompletionResult) CompletionString() CompletionString {
 	value := CompletionString{cr.c.CompletionString}
 	return value
-}
-
-/*
-	Sort the code-completion results in case-insensitive alphabetical
-	order.
-
-	Parameter Results The set of results to sort.
-	Parameter NumResults The number of results in \p Results.
-*/
-func SortCodeCompletionResults(results []CompletionResult) {
-	ca_results := make([]C.CXCompletionResult, len(results))
-	var cp_results *C.CXCompletionResult
-	if len(results) > 0 {
-		cp_results = &ca_results[0]
-	}
-	for i := range results {
-		ca_results[i] = results[i].c
-	}
-
-	C.clang_sortCodeCompletionResults(cp_results, C.uint(len(results)))
 }

@@ -14,11 +14,6 @@ type SourceLocation struct {
 	c C.CXSourceLocation
 }
 
-func (sl SourceLocation) Int_data() uint16 {
-	value := uint16(sl.c.int_data)
-	return value
-}
-
 // Retrieve a NULL (invalid) source location.
 func NewNullLocation() SourceLocation {
 	return SourceLocation{C.clang_getNullLocation()}
@@ -225,4 +220,9 @@ func (sl SourceLocation) FileLocation() (File, uint16, uint16, uint16) {
 	C.clang_getFileLocation(sl.c, &file.c, &line, &column, &offset)
 
 	return file, uint16(line), uint16(column), uint16(offset)
+}
+
+func (sl SourceLocation) Int_data() uint16 {
+	value := uint16(sl.c.int_data)
+	return value
 }

@@ -521,7 +521,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 		}
 
 		if err := e.AddEnumStringMethods(); err != nil {
-			CmdFatal("Cannot generate enum string methods", err)
+			return CmdFatal("Cannot generate enum string methods", err)
 		}
 
 		if err := e.Generate(); err != nil {
@@ -532,6 +532,10 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 	for _, s := range h.structs {
 		if h.name != "./clang-c/Index.h" {
 			s.HeaderFile = h.name
+		}
+
+		if err := s.AddMemberGetters(); err != nil {
+			return CmdFatal("Cannot generate struct member getters", err)
 		}
 
 		if err := s.Generate(); err != nil {

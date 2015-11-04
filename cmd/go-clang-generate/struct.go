@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/sbinet/go-clang"
@@ -55,60 +56,6 @@ func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 
 				Type: typ,
 			})
-
-			comment := cleanDoxygenComment(cursor.RawCommentText())
-
-			if (typ.PointerLevel >= 1 && typ.GoName == "void") || typ.CGoName == "uintptr_t" {
-				/*typ.CName = "void"
-				typ.Name = GoPointer
-				if typ.PointerLevel >= 1 {
-					typ.PointerLevel--
-				}
-				typ.IsPrimitive = true*/
-
-				break
-			}
-
-			var method string
-
-			var fName string
-
-			if typ.PointerLevel == 2 || typ.IsArray {
-				sizeMember := ""
-
-				if typ.ArraySize == -1 {
-					sizeMember = "num" + upperFirstCharacter(cursor.DisplayName())
-				}
-
-				f := &FunctionSliceReturn{
-					Function: NewFunction(cursor.DisplayName(), cname, comment, cursor.DisplayName(), typ),
-
-					SizeMember: sizeMember,
-
-					CElementType:    typ.CGoName,
-					ElementType:     typ.GoName,
-					IsPrimitive:     typ.IsPrimitive,
-					ArrayDimensions: typ.PointerLevel,
-					ArraySize:       typ.ArraySize,
-				}
-
-				method = generateFunctionSliceReturn(f)
-				fName = f.Name
-
-			} else if typ.PointerLevel < 2 {
-
-				f := NewFunction(cursor.DisplayName(), cname, comment, cursor.DisplayName(), typ)
-
-				method = generateFunctionStructMemberGetter(f)
-				fName = f.Name
-
-			} else {
-				panic("Three pointers")
-			}
-
-			if !s.ContainsMethod(fName) {
-				s.Methods = append(s.Methods, method)
-			}
 		}
 
 		return clang.CVR_Continue
@@ -132,4 +79,58 @@ func (s *Struct) Generate() error {
 	f.Structs = append(f.Structs, s)
 
 	return f.Generate()
+}
+
+func (s *Struct) AddMemberGetters() error {
+	for _, m := range s.Members {
+		if (m.Type.PointerLevel >= 1 && m.Type.GoName == "void") || m.Type.CGoName == "uintptr_t" {
+			/*typ.CName = "void"
+			typ.Name = GoPointer
+			if typ.PointerLevel >= 1 {
+				typ.PointerLevel--
+			}
+			typ.IsPrimitive = true*/
+
+			continue
+		}
+
+		var fName string
+		var method string
+
+		if m.Type.PointerLevel == 2 || m.Type.IsArray {
+			sizeMember := ""
+
+			if m.Type.ArraySize == -1 {
+				sizeMember = "num" + upperFirstCharacter(m.CName)
+			}
+
+			f := &FunctionSliceReturn{
+				Function: NewFunction(m.CName, s.CName, m.Comment, m.CName, m.Type),
+
+				SizeMember: sizeMember,
+
+				CElementType:    m.Type.CGoName,
+				ElementType:     m.Type.GoName,
+				IsPrimitive:     m.Type.IsPrimitive,
+				ArrayDimensions: m.Type.PointerLevel,
+				ArraySize:       m.Type.ArraySize,
+			}
+
+			fName = f.Name
+			method = generateFunctionSliceReturn(f)
+		} else if m.Type.PointerLevel < 2 {
+			f := NewFunction(m.CName, s.CName, m.Comment, m.CName, m.Type)
+
+			fName = f.Name
+			method = generateFunctionStructMemberGetter(f)
+		} else {
+			return fmt.Errorf("Three pointers")
+		}
+
+		if !s.ContainsMethod(fName) {
+			s.Methods = append(s.Methods, method)
+		}
+	}
+
+	return nil
 }
