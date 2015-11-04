@@ -520,6 +520,10 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			e.HeaderFile = h.name
 		}
 
+		if err := e.AddEnumStringMethods(); err != nil {
+			CmdFatal("Cannot generate enum string methods", err)
+		}
+
 		if err := e.Generate(); err != nil {
 			return CmdFatal("Cannot generate enum", err)
 		}

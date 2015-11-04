@@ -111,10 +111,6 @@ func (e *Enum) ContainsMethod(name string) bool {
 }
 
 func (e *Enum) Generate() error {
-	if err := e.AddEnumStringMethods(); err != nil {
-		return err
-	}
-
 	f := NewFile(strings.ToLower(e.Name))
 	f.Enums = append(f.Enums, e)
 
