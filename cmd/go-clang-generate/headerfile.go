@@ -254,7 +254,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			if s, ok := h.lookupStruct[underlyingStructType]; ok && !s.CNameIsTypeDef && strings.HasPrefix(underlyingType, "struct "+s.CName) {
 				// Sometimes the typedef is not a parent of the struct but a sibling TODO find out if this is a bug?
 
-				sn := HandleVoidStructCursor(cursor, cname, true)
+				sn := HandleStructCursor(cursor, cname, true)
 
 				h.lookupStruct[sn.Name] = sn
 				h.lookupNonTypedefs["struct "+sn.CName] = sn.Name
@@ -272,7 +272,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 					}
 				}
 			} else if underlyingType == "void *" {
-				s := HandleVoidStructCursor(cursor, cname, true)
+				s := HandleStructCursor(cursor, cname, true)
 
 				h.lookupStruct[s.Name] = s
 				h.lookupNonTypedefs["struct "+s.CName] = s.Name

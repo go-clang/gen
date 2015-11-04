@@ -16,11 +16,19 @@ type Struct struct {
 	Receiver       Receiver
 	Comment        string
 
+	Members []*StructMember
 	Methods []string
 }
 
-func HandleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
-	s := Struct{
+type StructMember struct {
+	CName   string
+	Comment string
+
+	Type Type
+}
+
+func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
+	s := &Struct{
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
 		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
@@ -29,14 +37,7 @@ func HandleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bo
 	s.Name = trimLanguagePrefix(s.CName)
 	s.Receiver.Name = receiverName(s.Name)
 
-	return &s
-}
-
-func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
-	s := HandleVoidStructCursor(cursor, cname, cnameIsTypeDef)
-
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
-
 		switch cursor.Kind() {
 		case clang.CK_FieldDecl:
 			typ, err := TypeFromClangType(cursor.Type()) // TODO error handling
@@ -47,6 +48,13 @@ func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 			if typ.IsFunctionPointer {
 				return clang.CVR_Continue
 			}
+
+			s.Members = append(s.Members, &StructMember{
+				CName:   cursor.DisplayName(),
+				Comment: cleanDoxygenComment(cursor.RawCommentText()),
+
+				Type: typ,
+			})
 
 			comment := cleanDoxygenComment(cursor.RawCommentText())
 
@@ -105,6 +113,7 @@ func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 
 		return clang.CVR_Continue
 	})
+
 	return s
 }
 
