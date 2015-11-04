@@ -105,7 +105,3 @@ func main() {
 		newHeaderFile(clangCDirectory + h.Name()).handleHeaderFile(clangArguments)
 	}
 }
-
-func printFunctionDetails(f *Function) {
-	fmt.Printf("@@ %s %#v %#v\n", f.CName, f.ReturnType, f.Parameters)
-}
