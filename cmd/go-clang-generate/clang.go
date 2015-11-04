@@ -16,6 +16,7 @@ func cleanDoxygenComment(comment string) string {
 	// Remove C style comment
 	comment = strings.TrimPrefix(comment, "/**")
 	comment = strings.TrimSuffix(comment, "*/")
+	comment = strings.TrimPrefix(comment, "//")
 	comment = reReplaceCComments.ReplaceAllString(comment, "\n")
 
 	// Replace some tags
@@ -52,7 +53,7 @@ func cleanDoxygenComment(comment string) string {
 	}
 }
 
-func trimClangPrefix(name string) string {
+func trimClangLanguagePrefix(name string) string {
 	name = strings.TrimPrefix(name, "CX_CXX")
 	name = strings.TrimPrefix(name, "CXX")
 	name = strings.TrimPrefix(name, "CX")

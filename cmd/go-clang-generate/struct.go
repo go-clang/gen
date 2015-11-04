@@ -26,7 +26,7 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 
 		switch cursor.Kind() {
 		case clang.CK_FieldDecl:
-			typ, err := getType(cursor.Type()) // TODO error handling
+			typ, err := TypeFromClangType(cursor.Type()) // TODO error handling
 			if err != nil {
 				return clang.CVR_Continue
 			}
@@ -117,7 +117,7 @@ func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bo
 		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
 	}
 
-	s.Name = trimClangPrefix(s.CName)
+	s.Name = trimClangLanguagePrefix(s.CName)
 	s.Receiver.Name = receiverName(s.Name)
 
 	return &s

@@ -89,6 +89,6 @@ func main() {
 			continue
 		}
 
-		newHeaderFile(clangCDirectory + h.Name()).handleHeaderFile(clangArguments)
+		HandleHeaderFile(clangCDirectory+h.Name(), clangArguments)
 	}
 }

@@ -15,7 +15,7 @@ func trimCommonFunctionName(fname string, rt Receiver) string {
 	fname = strings.TrimPrefix(fname, "create")
 	fname = strings.TrimPrefix(fname, "get")
 
-	fname = trimClangPrefix(fname)
+	fname = trimClangLanguagePrefix(fname)
 
 	if fn := strings.TrimPrefix(fname, rt.Type.GoName+"_"); len(fn) != len(fname) {
 		fname = fn
@@ -28,7 +28,7 @@ func trimCommonFunctionName(fname string, rt Receiver) string {
 	fname = strings.TrimPrefix(fname, "create")
 	fname = strings.TrimPrefix(fname, "get")
 
-	fname = trimClangPrefix(fname)
+	fname = trimClangLanguagePrefix(fname)
 
 	// If the function name is empty at this point, it is a constructor
 	if fname == "" {
@@ -73,7 +73,7 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 
 	f.Name = strings.TrimPrefix(f.CName, "clang_")
 
-	typ, err := getType(cursor.ResultType())
+	typ, err := TypeFromClangType(cursor.ResultType())
 	if err != nil {
 		panic(err)
 	}
@@ -87,7 +87,7 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 			CName: param.DisplayName(),
 		}
 
-		typ, err := getType(param.Type())
+		typ, err := TypeFromClangType(param.Type())
 		if err != nil {
 			panic(err)
 		}
@@ -1038,7 +1038,7 @@ func generateFunctionSliceReturn(f *FunctionSliceReturn) string {
 }
 
 func generateFunction(name, cname, comment, member string, typ Type) *Function {
-	receiverType := trimClangPrefix(cname)
+	receiverType := trimClangLanguagePrefix(cname)
 	receiverName := receiverName(receiverType)
 	functionName := upperFirstCharacter(name)
 

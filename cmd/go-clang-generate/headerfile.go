@@ -22,21 +22,6 @@ type headerFile struct {
 	lookupStruct      map[string]*Struct
 }
 
-func newHeaderFile(name string) *headerFile {
-	return &headerFile{
-		name: name,
-
-		lookupEnum:        map[string]*Enum{},
-		lookupNonTypedefs: map[string]string{},
-		lookupStruct: map[string]*Struct{
-			"cxstring": &Struct{
-				Name:  "cxstring",
-				CName: "CXString",
-			},
-		},
-	}
-}
-
 func (h *headerFile) addFunction(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 	fname = upperFirstCharacter(fnamePrefix + upperFirstCharacter(fname))
 
@@ -147,7 +132,20 @@ func (h *headerFile) isEnumOrStruct(name string) bool {
 	return false
 }
 
-func (h *headerFile) handleHeaderFile(clangArguments []string) {
+func HandleHeaderFile(headerFilename string, clangArguments []string) {
+	h := &headerFile{
+		name: headerFilename,
+
+		lookupEnum:        map[string]*Enum{},
+		lookupNonTypedefs: map[string]string{},
+		lookupStruct: map[string]*Struct{
+			"cxstring": &Struct{
+				Name:  "cxstring",
+				CName: "CXString",
+			},
+		},
+	}
+
 	/*
 		Hide all "void *" fields of structs by replacing the type with "uintptr_t".
 
@@ -174,7 +172,7 @@ func (h *headerFile) handleHeaderFile(clangArguments []string) {
 	for s, r := range voidPointerReplacements {
 		fs = strings.Replace(fs, s, r, -1)
 	}
-	if incl := "#include <stdint.h>"; !strings.HasPrefix(fs, incl) {
+	if incl := "#include <stdint.h>"; !strings.HasPrefix(fs, incl) { // Include for uintptr_t
 		fs = "#include <stdint.h>\n\n" + fs
 	}
 	err = ioutil.WriteFile(h.name, []byte(fs), 0700)
@@ -371,7 +369,7 @@ func (h *headerFile) handleHeaderFile(clangArguments []string) {
 					pa := &f.Parameters[j]
 
 					if pa.CName == paCName {
-						// TODO remove this when getType cane handle this kind of conversion
+						// TODO remove this when TypeFromClangType cane handle this kind of conversion
 						if pa.Type.GoName == "struct CXUnsavedFile" || pa.Type.GoName == "UnsavedFile" {
 							pa.Type.GoName = "UnsavedFile"
 							pa.Type.CGoName = "struct_CXUnsavedFile"
