@@ -11,33 +11,6 @@ import (
 	// "github.com/termie/go-shutil"
 )
 
-func trimCommonFName(fname string, rt Receiver) string {
-	fname = strings.TrimPrefix(fname, "create")
-	fname = strings.TrimPrefix(fname, "get")
-
-	fname = trimClangPrefix(fname)
-
-	if fn := strings.TrimPrefix(fname, rt.Type.GoName+"_"); len(fn) != len(fname) {
-		fname = fn
-	} else if fn := strings.TrimPrefix(fname, rt.Type.GoName); len(fn) != len(fname) {
-		fname = fn
-	} else if fn := strings.TrimSuffix(fname, rt.CName); len(fn) != len(fname) {
-		fname = fn
-	}
-
-	fname = strings.TrimPrefix(fname, "create")
-	fname = strings.TrimPrefix(fname, "get")
-
-	fname = trimClangPrefix(fname)
-
-	// If the function name is empty at this point, it is a constructor
-	if fname == "" {
-		fname = rt.Type.GoName
-	}
-
-	return fname
-}
-
 type LLVMVersion struct {
 	Major    int
 	Minor    int

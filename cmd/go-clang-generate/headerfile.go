@@ -111,7 +111,7 @@ func (h *headerFile) addMethod(f *Function, fname string, fnamePrefix string, rt
 
 func (h *headerFile) addBasicMethods(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 	if len(f.Parameters) == 0 && h.isEnumOrStruct(f.ReturnType.GoName) {
-		fname = trimCommonFName(fname, rt)
+		fname = trimCommonFunctionName(fname, rt)
 		if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
 			fname = "New" + fname
 		}
@@ -485,12 +485,12 @@ func (h *headerFile) handleHeaderFile(clangArguments []string) {
 
 					added = true
 				} else if h.isEnumOrStruct(f.ReturnType.GoName) || f.ReturnType.IsPrimitive {
-					fname = trimCommonFName(fname, rt)
+					fname = trimCommonFunctionName(fname, rt)
 
 					added = h.addMethod(f, fname, "", rt)
 
 					if !added && h.isEnumOrStruct(f.ReturnType.GoName) {
-						fname = trimCommonFName(fname, rt)
+						fname = trimCommonFunctionName(fname, rt)
 						if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
 							fname = "New" + fname
 						}
