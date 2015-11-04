@@ -4,18 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"regexp"
-	"strconv"
 	"strings"
 
 	// "github.com/termie/go-shutil"
 )
-
-type LLVMVersion struct {
-	Major    int
-	Minor    int
-	Subminor int
-}
 
 func main() {
 	rawLLVMVersion, _, err := execToBuffer("llvm-config", "--version")
@@ -23,18 +15,12 @@ func main() {
 		exitWithFatal("Cannot determine LLVM version", err)
 	}
 
-	matchLLVMVersion := regexp.MustCompile(`^(\d+)\.(\d+)(?:\.(\d+))?`).FindSubmatch(rawLLVMVersion)
-	if matchLLVMVersion == nil {
+	llvmVersion := ParseVersion(rawLLVMVersion)
+	if llvmVersion == nil {
 		exitWithFatal("Cannot parse LLVM version", nil)
 	}
 
-	var llvmVersion LLVMVersion
-
-	llvmVersion.Major, _ = strconv.Atoi(string(matchLLVMVersion[1]))
-	llvmVersion.Minor, _ = strconv.Atoi(string(matchLLVMVersion[2]))
-	llvmVersion.Subminor, _ = strconv.Atoi(string(matchLLVMVersion[3]))
-
-	fmt.Println("Found LLVM version", string(matchLLVMVersion[0]))
+	fmt.Println("Found LLVM version", llvmVersion.String())
 
 	rawLLVMIncludeDir, _, err := execToBuffer("llvm-config", "--includedir")
 	if err != nil {
@@ -49,16 +35,17 @@ func main() {
 	fmt.Println("Clang-C include directory", clangCIncludeDir)
 
 	clangArguments := []string{
-		"-I", ".", // Include current folder
+		"-I", ".", // Include the current directory
 	}
 
+	// Find Clang's include directory
 	for _, d := range []string{
 		"/usr/local/lib/clang",
 		"/usr/include/clang",
 	} {
 		for _, di := range []string{
-			d + fmt.Sprintf("/%d.%d.%d/include", llvmVersion.Major, llvmVersion.Minor, llvmVersion.Subminor),
-			d + fmt.Sprintf("/%d.%d/include", llvmVersion.Major, llvmVersion.Minor),
+			d + fmt.Sprintf("/%s/include", llvmVersion.String()),
+			d + fmt.Sprintf("/%s/include", llvmVersion.StringMinor()),
 		} {
 			if dirExists(di) == nil {
 				clangArguments = append(clangArguments, "-I", di)
@@ -68,12 +55,13 @@ func main() {
 
 	fmt.Printf("Using clang arguments: %v\n", clangArguments)
 
-	fmt.Printf("Will generate go-clang for LLVM version %d.%d in current directory\n", llvmVersion.Major, llvmVersion.Minor)
+	fmt.Printf("Will generate go-clang for LLVM version %s into the current directory\n", llvmVersion.String())
 
+	clangCDirectory := "./clang-c/"
 	// TODO reenable
 	/*// Copy the Clang-C include directory into the current directory
-	_ = os.RemoveAll("./clang-c/")
-	if err := shutil.CopyTree(clangCIncludeDir, "./clang-c/", nil); err != nil {
+	_ = os.RemoveAll(clangCDirectory)
+	if err := shutil.CopyTree(clangCIncludeDir, clangCDirectory, nil); err != nil {
 		exitWithFatal(fmt.Sprintf("Cannot copy Clang-C include directory %q into current directory", clangCIncludeDir), err)
 	}*/
 
@@ -92,13 +80,12 @@ func main() {
 		}
 	}
 
-	clangCDirectory := "./clang-c/"
 	headers, err := ioutil.ReadDir(clangCDirectory)
 	if err != nil {
 		exitWithFatal("Cannot list clang-c directory", err)
 	}
 	for _, h := range headers {
-		if h.IsDir() {
+		if h.IsDir() && !strings.HasSuffix(h.Name(), ".h") {
 			continue
 		}
 
