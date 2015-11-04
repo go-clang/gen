@@ -19,13 +19,13 @@ type Enum struct {
 	Comment        string
 	UnderlyingType string
 
-	Items []Enumerator
+	Items []EnumItem
 
 	Methods []string
 }
 
-// Enumerator represents a generation enum item
-type Enumerator struct {
+// EnumItem represents a generation enum item
+type EnumItem struct {
 	Name    string
 	CName   string
 	Comment string
@@ -38,7 +38,7 @@ func HandleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 		CNameIsTypeDef: cnameIsTypeDef,
 		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
 
-		Items: []Enumerator{},
+		Items: []EnumItem{},
 	}
 
 	e.Name = trimLanguagePrefix(e.CName)
@@ -59,7 +59,7 @@ func HandleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {
 		case clang.CK_EnumConstantDecl:
-			ei := Enumerator{
+			ei := EnumItem{
 				CName:   cursor.Spelling(),
 				Comment: cleanDoxygenComment(cursor.RawCommentText()), // TODO We are always using the same comment if there is none, see "TypeKind"
 				Value:   cursor.EnumConstantDeclUnsignedValue(),
