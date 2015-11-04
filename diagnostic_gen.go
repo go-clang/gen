@@ -38,7 +38,7 @@ func (d Diagnostic) Dispose() {
 
 	Returns A new string containing for formatted diagnostic.
 */
-func (d Diagnostic) Format(options uint16) string {
+func (d Diagnostic) FormatDiagnostic(options uint16) string {
 	o := cxstring{C.clang_formatDiagnostic(d.c, C.uint(options))}
 	defer o.Dispose()
 

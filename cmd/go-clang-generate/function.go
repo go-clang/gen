@@ -21,8 +21,6 @@ func trimCommonFunctionName(name string, typ Type) string {
 		name = fn
 	} else if fn := strings.TrimPrefix(name, typ.GoName); len(fn) != len(name) {
 		name = fn
-	} else if fn := strings.TrimSuffix(name, typ.CName); len(fn) != len(name) {
-		name = fn
 	}
 
 	name = strings.TrimPrefix(name, "create")

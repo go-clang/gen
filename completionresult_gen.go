@@ -36,7 +36,7 @@ func (cr CompletionResult) CompletionString() CompletionString {
 	Parameter Results The set of results to sort.
 	Parameter NumResults The number of results in \p Results.
 */
-func SortCodeCompletion(results []CompletionResult) {
+func SortCodeCompletionResults(results []CompletionResult) {
 	ca_results := make([]C.CXCompletionResult, len(results))
 	var cp_results *C.CXCompletionResult
 	if len(results) > 0 {
