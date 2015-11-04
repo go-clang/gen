@@ -117,7 +117,7 @@ func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bo
 		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
 	}
 
-	s.Name = trimClangLanguagePrefix(s.CName)
+	s.Name = trimLanguagePrefix(s.CName)
 	s.Receiver.Name = receiverName(s.Name)
 
 	return &s

@@ -3,11 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/sbinet/go-clang"
 	"io/ioutil"
 	"regexp"
 	"strings"
 	"unicode"
+
+	"github.com/sbinet/go-clang"
 )
 
 type headerFile struct {
@@ -96,7 +97,7 @@ func (h *headerFile) addMethod(f *Function, fname string, fnamePrefix string, rt
 
 func (h *headerFile) addBasicMethods(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 	if len(f.Parameters) == 0 && h.isEnumOrStruct(f.ReturnType.GoName) {
-		fname = trimCommonFunctionName(fname, rt)
+		fname = trimCommonFunctionName(fname, rt.Type)
 		if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
 			fname = "New" + fname
 		}
@@ -483,12 +484,12 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 
 					added = true
 				} else if h.isEnumOrStruct(f.ReturnType.GoName) || f.ReturnType.IsPrimitive {
-					fname = trimCommonFunctionName(fname, rt)
+					fname = trimCommonFunctionName(fname, rt.Type)
 
 					added = h.addMethod(f, fname, "", rt)
 
 					if !added && h.isEnumOrStruct(f.ReturnType.GoName) {
-						fname = trimCommonFunctionName(fname, rt)
+						fname = trimCommonFunctionName(fname, rt.Type)
 						if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
 							fname = "New" + fname
 						}

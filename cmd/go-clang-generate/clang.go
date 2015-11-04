@@ -53,15 +53,6 @@ func cleanDoxygenComment(comment string) string {
 	}
 }
 
-func trimClangLanguagePrefix(name string) string {
-	name = strings.TrimPrefix(name, "CX_CXX")
-	name = strings.TrimPrefix(name, "CXX")
-	name = strings.TrimPrefix(name, "CX")
-	name = strings.TrimPrefix(name, "ObjC")
-
-	return name
-}
-
 type Version struct {
 	Major    int
 	Minor    int

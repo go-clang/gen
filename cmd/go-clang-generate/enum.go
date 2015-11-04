@@ -42,7 +42,7 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 		Items: []Enumerator{},
 	}
 
-	e.Name = trimClangLanguagePrefix(e.CName)
+	e.Name = trimLanguagePrefix(e.CName)
 
 	e.Receiver.Name = receiverName(e.Name)
 	e.Receiver.Type.GoName = e.Name
@@ -65,7 +65,7 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 				Comment: cleanDoxygenComment(cursor.RawCommentText()), // TODO We are always using the same comment if there is none, see "TypeKind"
 				Value:   cursor.EnumConstantDeclValue(),
 			}
-			ei.Name = trimClangLanguagePrefix(ei.CName)
+			ei.Name = trimLanguagePrefix(ei.CName)
 
 			// Check if the first item has an enum prefix
 			if len(e.Items) == 0 {

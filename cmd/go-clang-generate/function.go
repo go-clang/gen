@@ -11,31 +11,40 @@ import (
 	"github.com/sbinet/go-clang"
 )
 
-func trimCommonFunctionName(fname string, rt Receiver) string {
-	fname = strings.TrimPrefix(fname, "create")
-	fname = strings.TrimPrefix(fname, "get")
+func trimCommonFunctionName(name string, typ Type) string {
+	name = strings.TrimPrefix(name, "create")
+	name = strings.TrimPrefix(name, "get")
 
-	fname = trimClangLanguagePrefix(fname)
+	name = trimLanguagePrefix(name)
 
-	if fn := strings.TrimPrefix(fname, rt.Type.GoName+"_"); len(fn) != len(fname) {
-		fname = fn
-	} else if fn := strings.TrimPrefix(fname, rt.Type.GoName); len(fn) != len(fname) {
-		fname = fn
-	} else if fn := strings.TrimSuffix(fname, rt.CName); len(fn) != len(fname) {
-		fname = fn
+	if fn := strings.TrimPrefix(name, typ.GoName+"_"); len(fn) != len(name) {
+		name = fn
+	} else if fn := strings.TrimPrefix(name, typ.GoName); len(fn) != len(name) {
+		name = fn
+	} else if fn := strings.TrimSuffix(name, typ.CName); len(fn) != len(name) {
+		name = fn
 	}
 
-	fname = strings.TrimPrefix(fname, "create")
-	fname = strings.TrimPrefix(fname, "get")
+	name = strings.TrimPrefix(name, "create")
+	name = strings.TrimPrefix(name, "get")
 
-	fname = trimClangLanguagePrefix(fname)
+	name = trimLanguagePrefix(name)
 
 	// If the function name is empty at this point, it is a constructor
-	if fname == "" {
-		fname = rt.Type.GoName
+	if name == "" {
+		name = typ.GoName
 	}
 
-	return fname
+	return name
+}
+
+func trimLanguagePrefix(name string) string {
+	name = strings.TrimPrefix(name, "CX_CXX")
+	name = strings.TrimPrefix(name, "CXX")
+	name = strings.TrimPrefix(name, "CX")
+	name = strings.TrimPrefix(name, "ObjC")
+
+	return name
 }
 
 // Function represents a generation function
@@ -1038,7 +1047,7 @@ func generateFunctionSliceReturn(f *FunctionSliceReturn) string {
 }
 
 func generateFunction(name, cname, comment, member string, typ Type) *Function {
-	receiverType := trimClangLanguagePrefix(cname)
+	receiverType := trimLanguagePrefix(cname)
 	receiverName := receiverName(receiverType)
 	functionName := upperFirstCharacter(name)
 
