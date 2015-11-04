@@ -29,13 +29,13 @@ func (h *headerFile) addFunction(f *Function, fname string, fnamePrefix string, 
 	if e, ok := h.lookupEnum[rt.Type.GoName]; ok {
 		f.Name = fname
 
-		e.Methods = append(e.Methods, generateASTFunction(f))
+		e.Methods = append(e.Methods, f.Generate())
 
 		return true
 	} else if s, ok := h.lookupStruct[rt.Type.GoName]; ok && s.CName != "CXString" {
 		f.Name = fname
 
-		fStr := generateASTFunction(f)
+		fStr := f.Generate()
 		s.Methods = deleteMethod(s.Methods, fname)
 		s.Methods = append(s.Methods, fStr)
 
@@ -73,7 +73,7 @@ func (h *headerFile) addMethod(f *Function, fname string, fnamePrefix string, rt
 		f.Receiver = e.Receiver
 		f.Receiver.Type = rt.Type
 
-		e.Methods = append(e.Methods, generateASTFunction(f))
+		e.Methods = append(e.Methods, f.Generate())
 
 		return true
 	} else if s, ok := h.lookupStruct[rt.Type.GoName]; ok && s.CName != "CXString" {
@@ -85,7 +85,7 @@ func (h *headerFile) addMethod(f *Function, fname string, fnamePrefix string, rt
 			f.Receiver = Receiver{}
 		}
 
-		fStr := generateASTFunction(f)
+		fStr := f.Generate()
 		s.Methods = deleteMethod(s.Methods, fname)
 		s.Methods = append(s.Methods, fStr)
 
@@ -223,7 +223,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 				break
 			}
 
-			e := handleEnumCursor(cursor, cname, cnameIsTypeDef)
+			e := HandleEnumCursor(cursor, cname, cnameIsTypeDef)
 
 			h.lookupEnum[e.Name] = e
 			h.lookupNonTypedefs["enum "+e.CName] = e.Name
@@ -231,7 +231,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 
 			h.enums = append(h.enums, e)
 		case clang.CK_FunctionDecl:
-			f := handleFunctionCursor(cursor)
+			f := HandleFunctionCursor(cursor)
 			if f != nil {
 				h.functions = append(h.functions, f)
 			}
@@ -240,7 +240,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 				break
 			}
 
-			s := handleStructCursor(cursor, cname, cnameIsTypeDef)
+			s := HandleStructCursor(cursor, cname, cnameIsTypeDef)
 
 			h.lookupStruct[s.Name] = s
 			h.lookupNonTypedefs["struct "+s.CName] = s.Name
@@ -254,7 +254,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			if s, ok := h.lookupStruct[underlyingStructType]; ok && !s.CNameIsTypeDef && strings.HasPrefix(underlyingType, "struct "+s.CName) {
 				// Sometimes the typedef is not a parent of the struct but a sibling TODO find out if this is a bug?
 
-				sn := handleVoidStructCursor(cursor, cname, true)
+				sn := HandleVoidStructCursor(cursor, cname, true)
 
 				h.lookupStruct[sn.Name] = sn
 				h.lookupNonTypedefs["struct "+sn.CName] = sn.Name
@@ -272,7 +272,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 					}
 				}
 			} else if underlyingType == "void *" {
-				s := handleVoidStructCursor(cursor, cname, true)
+				s := HandleVoidStructCursor(cursor, cname, true)
 
 				h.lookupStruct[s.Name] = s
 				h.lookupNonTypedefs["struct "+s.CName] = s.Name
@@ -480,7 +480,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 				if len(f.Parameters) == 0 {
 					f.Name = upperFirstCharacter(f.Name)
 
-					clangFile.Functions = append(clangFile.Functions, generateASTFunction(f))
+					clangFile.Functions = append(clangFile.Functions, f.Generate())
 
 					added = true
 				} else if h.isEnumOrStruct(f.ReturnType.GoName) || f.ReturnType.IsPrimitive {
@@ -502,7 +502,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 					if !added {
 						f.Name = upperFirstCharacter(f.Name)
 
-						clangFile.Functions = append(clangFile.Functions, generateASTFunction(f))
+						clangFile.Functions = append(clangFile.Functions, f.Generate())
 
 						added = true
 					}
@@ -520,7 +520,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			e.HeaderFile = h.name
 		}
 
-		if err := generateEnum(e); err != nil {
+		if err := e.Generate(); err != nil {
 			return CmdFatal("Cannot generate enum", err)
 		}
 	}
@@ -530,7 +530,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			s.HeaderFile = h.name
 		}
 
-		if err := generateStruct(s); err != nil {
+		if err := s.Generate(); err != nil {
 			return CmdFatal("Cannot generate struct", err)
 		}
 	}

@@ -90,3 +90,15 @@ func upperFirstCharacter(s string) string {
 
 	return string(r)
 }
+
+var goKeywordReplacements = map[string]string{
+	"range": "r",
+}
+
+func ReplaceGoKeywords(s string) string {
+	if r, ok := goKeywordReplacements[s]; ok {
+		return r
+	}
+
+	return ""
+}

@@ -66,11 +66,40 @@ type FunctionParameter struct {
 	Type  Type
 }
 
-var keywordReplacements = map[string]string{
-	"range": "r",
+func NewFunction(name, cname, comment, member string, typ Type) *Function {
+	receiverType := trimLanguagePrefix(cname)
+	receiverName := receiverName(receiverType)
+	functionName := upperFirstCharacter(name)
+
+	if typ.IsPrimitive {
+		typ.CGoName = typ.GoName
+	}
+	if (strings.HasPrefix(name, "has") || strings.HasPrefix(name, "is")) && typ.GoName == GoInt16 {
+		typ.GoName = GoBool
+	}
+
+	f := &Function{
+		Name:    functionName,
+		CName:   cname,
+		Comment: comment,
+
+		Parameters: []FunctionParameter{},
+
+		ReturnType: typ,
+		Receiver: Receiver{
+			Name: receiverName,
+			Type: Type{
+				GoName: receiverType,
+			},
+		},
+
+		Member: member,
+	}
+
+	return f
 }
 
-func handleFunctionCursor(cursor clang.Cursor) *Function {
+func HandleFunctionCursor(cursor clang.Cursor) *Function {
 	f := Function{
 		CName:   cursor.Spelling(),
 		Comment: cleanDoxygenComment(cursor.RawCommentText()),
@@ -110,7 +139,7 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 			}
 			p.Name = lowerFirstCharacter(strings.Join(pns, ""))
 		}
-		if r, ok := keywordReplacements[p.Name]; ok {
+		if r := ReplaceGoKeywords(p.Name); r != "" {
 			p.Name = r
 		}
 
@@ -120,7 +149,7 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 	return &f
 }
 
-func generateASTFunction(f *Function) string {
+func (f *Function) Generate() string {
 	astFunc := ast.FuncDecl{
 		Name: &ast.Ident{
 			Name: f.Name,
@@ -1008,7 +1037,7 @@ func generateFunctionStructMemberGetter(f *Function) string {
 
 // FunctionSliceReturn TODO refactor
 type FunctionSliceReturn struct {
-	Function
+	*Function
 
 	SizeMember string
 
@@ -1042,37 +1071,4 @@ func generateFunctionSliceReturn(f *FunctionSliceReturn) string {
 
 	return b.String()
 
-}
-
-func generateFunction(name, cname, comment, member string, typ Type) *Function {
-	receiverType := trimLanguagePrefix(cname)
-	receiverName := receiverName(receiverType)
-	functionName := upperFirstCharacter(name)
-
-	if typ.IsPrimitive {
-		typ.CGoName = typ.GoName
-	}
-	if (strings.HasPrefix(name, "has") || strings.HasPrefix(name, "is")) && typ.GoName == GoInt16 {
-		typ.GoName = GoBool
-	}
-
-	f := &Function{
-		Name:    functionName,
-		CName:   cname,
-		Comment: comment,
-
-		Parameters: []FunctionParameter{},
-
-		ReturnType: typ,
-		Receiver: Receiver{
-			Name: receiverName,
-			Type: Type{
-				GoName: receiverType,
-			},
-		},
-
-		Member: member,
-	}
-
-	return f
 }

@@ -19,8 +19,21 @@ type Struct struct {
 	Methods []string
 }
 
-func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
-	s := handleVoidStructCursor(cursor, cname, cnameIsTypeDef)
+func HandleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
+	s := Struct{
+		CName:          cname,
+		CNameIsTypeDef: cnameIsTypeDef,
+		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
+	}
+
+	s.Name = trimLanguagePrefix(s.CName)
+	s.Receiver.Name = receiverName(s.Name)
+
+	return &s
+}
+
+func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
+	s := HandleVoidStructCursor(cursor, cname, cnameIsTypeDef)
 
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 
@@ -60,7 +73,7 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 				}
 
 				f := &FunctionSliceReturn{
-					Function: *generateFunction(cursor.DisplayName(), cname, comment, cursor.DisplayName(), typ),
+					Function: NewFunction(cursor.DisplayName(), cname, comment, cursor.DisplayName(), typ),
 
 					SizeMember: sizeMember,
 
@@ -76,7 +89,7 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 
 			} else if typ.PointerLevel < 2 {
 
-				f := generateFunction(cursor.DisplayName(), cname, comment, cursor.DisplayName(), typ)
+				f := NewFunction(cursor.DisplayName(), cname, comment, cursor.DisplayName(), typ)
 
 				method = generateFunctionStructMemberGetter(f)
 				fName = f.Name
@@ -85,7 +98,7 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 				panic("Three pointers")
 			}
 
-			if !containsMethod(s.Methods, fName) {
+			if !s.ContainsMethod(fName) {
 				s.Methods = append(s.Methods, method)
 			}
 		}
@@ -95,35 +108,17 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 	return s
 }
 
-func containsMethod(methods []string, fName string) bool {
-	idx := -1
-	for i, mem := range methods {
-		if strings.Contains(mem, ") "+fName+"()") {
-			idx = i
+func (s *Struct) ContainsMethod(name string) bool {
+	for _, m := range s.Methods {
+		if strings.Contains(m, ") "+name+"()") {
+			return true
 		}
-	}
-
-	if idx != -1 {
-		return true
 	}
 
 	return false
 }
 
-func handleVoidStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
-	s := Struct{
-		CName:          cname,
-		CNameIsTypeDef: cnameIsTypeDef,
-		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
-	}
-
-	s.Name = trimLanguagePrefix(s.CName)
-	s.Receiver.Name = receiverName(s.Name)
-
-	return &s
-}
-
-func generateStruct(s *Struct) error {
+func (s *Struct) Generate() error {
 	f := NewFile(strings.ToLower(s.Name))
 	f.Structs = append(f.Structs, s)
 
