@@ -8,17 +8,17 @@ import (
 )
 
 type IdxEntityInfo struct {
-	c C.CXIdxEntityInfo
+	c *C.CXIdxEntityInfo
 }
 
 // For retrieving a custom CXIdxClientEntity attached to an entity.
 func (iei *IdxEntityInfo) Index_getClientEntity() IdxClientEntity {
-	return IdxClientEntity{C.clang_index_getClientEntity(&iei.c)}
+	return IdxClientEntity{C.clang_index_getClientEntity(iei.c)}
 }
 
 // For setting a custom CXIdxClientEntity attached to an entity.
 func (iei *IdxEntityInfo) Index_setClientEntity(ice IdxClientEntity) {
-	C.clang_index_setClientEntity(&iei.c, ice.c)
+	C.clang_index_setClientEntity(iei.c, ice.c)
 }
 
 func (iei IdxEntityInfo) Kind() IdxEntityKind {

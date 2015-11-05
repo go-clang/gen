@@ -57,7 +57,7 @@ const (
 {{range $i, $s := $.Structs}}
 {{$s.Comment}}
 type {{$s.Name}} struct {
-	c C.{{if not $s.CNameIsTypeDef}}struct_{{end}}{{$s.CName}}
+	c {{if $s.IsPointerComposition}}*{{end}}C.{{if not $s.CNameIsTypeDef}}struct_{{end}}{{$s.CName}}
 }
 {{range $i, $m := $s.Methods}}
 {{$m}}

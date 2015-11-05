@@ -23,27 +23,6 @@ type headerFile struct {
 	lookupStruct      map[string]*Struct
 }
 
-func (h *headerFile) addFunction(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
-	fname = upperFirstCharacter(fnamePrefix + upperFirstCharacter(fname))
-
-	if e, ok := h.lookupEnum[rt.Type.GoName]; ok {
-		f.Name = fname
-
-		e.Methods = append(e.Methods, f.Generate())
-
-		return true
-	} else if s, ok := h.lookupStruct[rt.Type.GoName]; ok && s.CName != "CXString" {
-		f.Name = fname
-
-		fStr := f.Generate()
-		s.Methods = append(s.Methods, fStr)
-
-		return true
-	}
-
-	return false
-}
-
 func (h *headerFile) addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 	// Needs to be renamed manually since clang_getTranslationUnitCursor will conflict with clang_getCursor
 	if f.CName == "clang_getTranslationUnitCursor" {
@@ -54,23 +33,18 @@ func (h *headerFile) addMethod(f *Function, fname string, fnamePrefix string, rt
 
 	if e, ok := h.lookupEnum[rt.Type.GoName]; ok {
 		f.Name = fname
-		f.Receiver = e.Receiver
-		f.Receiver.Type = rt.Type
 
-		e.Methods = append(e.Methods, f.Generate())
+		e.Methods = append(e.Methods, f)
 
 		return true
 	} else if s, ok := h.lookupStruct[rt.Type.GoName]; ok && s.CName != "CXString" {
 		f.Name = fname
-		f.Receiver = s.Receiver
-		f.Receiver.Type = rt.Type
 
-		if f.Receiver.Type.IsSlice {
-			f.Receiver = Receiver{}
+		if !rt.Type.IsSlice && rt.Type.PointerLevel > 0 {
+			s.IsPointerComposition = true
 		}
 
-		fStr := f.Generate()
-		s.Methods = append(s.Methods, fStr)
+		s.Methods = append(s.Methods, f)
 
 		return true
 	}
@@ -114,6 +88,12 @@ func (h *headerFile) isEnumOrStruct(name string) bool {
 	}
 
 	return false
+}
+
+func (h *headerFile) setIsPointerComposition(typ *Type) {
+	if s, ok := h.lookupStruct[typ.GoName]; ok && s.IsPointerComposition {
+		typ.IsPointerComposition = true
+	}
 }
 
 func HandleHeaderFile(headerFilename string, clangArguments []string) error {
@@ -472,7 +452,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 						rtc := rt
 						rtc.Type = f.ReturnType
 
-						added = h.addFunction(f, fname, "", rtc)
+						added = h.addMethod(f, fname, "", rtc)
 					}
 					if !added {
 						f.Name = upperFirstCharacter(f.Name)
@@ -499,6 +479,28 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			return CmdFatal("Cannot generate enum string methods", err)
 		}
 
+		for i, m := range e.Methods {
+			if r := h.handleMethod(e.Name, m); r != "" {
+				e.Methods[i] = r
+			}
+			switch m := m.(type) {
+			case *Function:
+				if len(m.Parameters) > 0 && !m.Parameters[0].Type.IsSlice && m.Parameters[0].Type.GoName == e.Name {
+					m.Receiver = Receiver{
+						Name: receiverName(e.Name),
+						Type: m.Parameters[0].Type,
+					}
+
+					h.setIsPointerComposition(&m.Receiver.Type)
+				}
+				for i := range m.Parameters {
+					h.setIsPointerComposition(&m.Parameters[i].Type)
+				}
+
+				e.Methods[i] = m.Generate()
+			}
+		}
+
 		if err := e.Generate(); err != nil {
 			return CmdFatal("Cannot generate enum", err)
 		}
@@ -511,6 +513,12 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 
 		if err := s.AddMemberGetters(); err != nil {
 			return CmdFatal("Cannot generate struct member getters", err)
+		}
+
+		for i, m := range s.Methods {
+			if r := h.handleMethod(s.Name, m); r != "" {
+				s.Methods[i] = r
+			}
 		}
 
 		if err := s.Generate(); err != nil {
@@ -529,4 +537,26 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 	}
 
 	return nil
+}
+
+func (h *headerFile) handleMethod(rname string, m interface{}) string {
+	switch m := m.(type) {
+	case *Function:
+		if len(m.Parameters) > 0 && !m.Parameters[0].Type.IsSlice && m.Parameters[0].Type.GoName == rname {
+			m.Receiver = Receiver{
+				Name: receiverName(rname),
+				Type: m.Parameters[0].Type,
+			}
+
+			h.setIsPointerComposition(&m.Receiver.Type)
+		}
+		for i := range m.Parameters {
+			h.setIsPointerComposition(&m.Parameters[i].Type)
+		}
+		h.setIsPointerComposition(&m.ReturnType)
+
+		return m.Generate()
+	}
+
+	return ""
 }

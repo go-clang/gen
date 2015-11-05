@@ -16,8 +16,10 @@ type Struct struct {
 	Receiver       Receiver
 	Comment        string
 
+	IsPointerComposition bool
+
 	Members []*StructMember
-	Methods []string
+	Methods []interface{}
 }
 
 type StructMember struct {
@@ -65,8 +67,15 @@ func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 
 func (s *Struct) ContainsMethod(name string) bool {
 	for _, m := range s.Methods {
-		if strings.Contains(m, ") "+name+"()") {
-			return true
+		switch m := m.(type) {
+		case *Function:
+			if m.Name == name {
+				return true
+			}
+		case string:
+			if strings.Contains(m, ") "+name+"()") {
+				return true
+			}
 		}
 	}
 
@@ -112,7 +121,7 @@ func (s *Struct) AddMemberGetters() error {
 		f := NewFunction(m.CName, s.CName, m.Comment, m.CName, m.Type)
 
 		if !s.ContainsMethod(f.Name) {
-			s.Methods = append(s.Methods, f.Generate())
+			s.Methods = append(s.Methods, f)
 		}
 	}
 

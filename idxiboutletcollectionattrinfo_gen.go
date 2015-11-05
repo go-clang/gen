@@ -12,7 +12,7 @@ func (iibocai IdxIBOutletCollectionAttrInfo) AttrInfo() *IdxAttrInfo {
 
 	var gop_o *IdxAttrInfo
 	if o != nil {
-		gop_o = &IdxAttrInfo{*o}
+		gop_o = &IdxAttrInfo{o}
 	}
 
 	return gop_o
@@ -23,7 +23,7 @@ func (iibocai IdxIBOutletCollectionAttrInfo) ObjcClass() *IdxEntityInfo {
 
 	var gop_o *IdxEntityInfo
 	if o != nil {
-		gop_o = &IdxEntityInfo{*o}
+		gop_o = &IdxEntityInfo{o}
 	}
 
 	return gop_o

@@ -12,7 +12,7 @@ func (ibci IdxBaseClassInfo) Base() *IdxEntityInfo {
 
 	var gop_o *IdxEntityInfo
 	if o != nil {
-		gop_o = &IdxEntityInfo{*o}
+		gop_o = &IdxEntityInfo{o}
 	}
 
 	return gop_o

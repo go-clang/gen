@@ -12,7 +12,7 @@ func (iocpdi IdxObjCPropertyDeclInfo) DeclInfo() *IdxDeclInfo {
 
 	var gop_o *IdxDeclInfo
 	if o != nil {
-		gop_o = &IdxDeclInfo{*o}
+		gop_o = &IdxDeclInfo{o}
 	}
 
 	return gop_o
@@ -23,7 +23,7 @@ func (iocpdi IdxObjCPropertyDeclInfo) Getter() *IdxEntityInfo {
 
 	var gop_o *IdxEntityInfo
 	if o != nil {
-		gop_o = &IdxEntityInfo{*o}
+		gop_o = &IdxEntityInfo{o}
 	}
 
 	return gop_o
@@ -34,7 +34,7 @@ func (iocpdi IdxObjCPropertyDeclInfo) Setter() *IdxEntityInfo {
 
 	var gop_o *IdxEntityInfo
 	if o != nil {
-		gop_o = &IdxEntityInfo{*o}
+		gop_o = &IdxEntityInfo{o}
 	}
 
 	return gop_o

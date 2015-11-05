@@ -58,6 +58,8 @@ type Type struct {
 	IsReturnArgument  bool
 	IsSlice           bool
 	LengthOfSlice     string
+
+	IsPointerComposition bool // TODO we need to handle this better
 }
 
 func TypeFromClangType(cType clang.Type) (Type, error) {

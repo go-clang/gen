@@ -58,7 +58,7 @@ type Function struct {
 
 	Receiver Receiver
 
-	Member string
+	Member *FunctionParameter
 }
 
 // FunctionParameter represents a generation function parameter
@@ -100,7 +100,10 @@ func NewFunction(name, cname, comment, member string, typ Type) *Function {
 			},
 		},
 
-		Member: member,
+		Member: &FunctionParameter{
+			Name: member,
+			Type: typ,
+		},
 	}
 
 	return f

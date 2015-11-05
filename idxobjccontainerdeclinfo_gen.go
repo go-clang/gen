@@ -12,7 +12,7 @@ func (ioccdi IdxObjCContainerDeclInfo) DeclInfo() *IdxDeclInfo {
 
 	var gop_o *IdxDeclInfo
 	if o != nil {
-		gop_o = &IdxDeclInfo{*o}
+		gop_o = &IdxDeclInfo{o}
 	}
 
 	return gop_o

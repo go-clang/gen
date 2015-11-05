@@ -27,7 +27,7 @@ func (ieri IdxEntityRefInfo) ReferencedEntity() *IdxEntityInfo {
 
 	var gop_o *IdxEntityInfo
 	if o != nil {
-		gop_o = &IdxEntityInfo{*o}
+		gop_o = &IdxEntityInfo{o}
 	}
 
 	return gop_o
@@ -49,7 +49,7 @@ func (ieri IdxEntityRefInfo) ParentEntity() *IdxEntityInfo {
 
 	var gop_o *IdxEntityInfo
 	if o != nil {
-		gop_o = &IdxEntityInfo{*o}
+		gop_o = &IdxEntityInfo{o}
 	}
 
 	return gop_o
@@ -61,7 +61,7 @@ func (ieri IdxEntityRefInfo) Container() *IdxContainerInfo {
 
 	var gop_o *IdxContainerInfo
 	if o != nil {
-		gop_o = &IdxContainerInfo{*o}
+		gop_o = &IdxContainerInfo{o}
 	}
 
 	return gop_o

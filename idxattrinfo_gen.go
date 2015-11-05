@@ -4,11 +4,11 @@ package phoenix
 import "C"
 
 type IdxAttrInfo struct {
-	c C.CXIdxAttrInfo
+	c *C.CXIdxAttrInfo
 }
 
 func (iai *IdxAttrInfo) Index_getIBOutletCollectionAttrInfo() *IdxIBOutletCollectionAttrInfo {
-	o := C.clang_index_getIBOutletCollectionAttrInfo(&iai.c)
+	o := C.clang_index_getIBOutletCollectionAttrInfo(iai.c)
 
 	var gop_o *IdxIBOutletCollectionAttrInfo
 	if o != nil {
