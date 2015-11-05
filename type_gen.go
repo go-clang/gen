@@ -28,7 +28,7 @@ func (t Type) Spelling() string {
 	Returns non-zero if the CXTypes represent the same type and
 	zero otherwise.
 */
-func (t Type) EqualTypes(t2 Type) bool {
+func (t Type) Equal(t2 Type) bool {
 	o := C.clang_equalTypes(t.c, t2.c)
 
 	return o != C.uint(0)

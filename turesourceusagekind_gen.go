@@ -29,7 +29,7 @@ const (
 )
 
 // Returns the human-readable null-terminated C string that represents the name of the memory category. This string should never be freed.
-func (turuk TUResourceUsageKind) TUResourceUsageName() string {
+func (turuk TUResourceUsageKind) Name() string {
 	return C.GoString(C.clang_getTUResourceUsageName(C.enum_CXTUResourceUsageKind(turuk)))
 }
 

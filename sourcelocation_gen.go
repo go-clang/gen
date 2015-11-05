@@ -27,21 +27,21 @@ func NewNullLocation() SourceLocation {
 	Returns non-zero if the source locations refer to the same location, zero
 	if they refer to different locations.
 */
-func (sl SourceLocation) EqualLocations(sl2 SourceLocation) bool {
+func (sl SourceLocation) Equal(sl2 SourceLocation) bool {
 	o := C.clang_equalLocations(sl.c, sl2.c)
 
 	return o != C.uint(0)
 }
 
 // Returns non-zero if the given source location is in a system header.
-func (sl SourceLocation) Location_IsInSystemHeader() bool {
+func (sl SourceLocation) IsInSystemHeader() bool {
 	o := C.clang_Location_isInSystemHeader(sl.c)
 
 	return o != C.int(0)
 }
 
 // Returns non-zero if the given source location is in the main file of the corresponding translation unit.
-func (sl SourceLocation) Location_IsFromMainFile() bool {
+func (sl SourceLocation) IsFromMainFile() bool {
 	o := C.clang_Location_isFromMainFile(sl.c)
 
 	return o != C.int(0)
@@ -220,8 +220,4 @@ func (sl SourceLocation) FileLocation() (File, uint16, uint16, uint16) {
 	C.clang_getFileLocation(sl.c, &file.c, &line, &column, &offset)
 
 	return file, uint16(line), uint16(column), uint16(offset)
-}
-
-func (sl SourceLocation) Int_data() uint16 {
-	return uint16(sl.c.int_data)
 }

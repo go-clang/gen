@@ -50,7 +50,7 @@ func NewRemappingsFromFileList(filePaths []string) Remapping {
 }
 
 // Determine the number of remappings.
-func (r Remapping) Remap_getNumFiles() uint16 {
+func (r Remapping) NumFiles() uint16 {
 	return uint16(C.clang_remap_getNumFiles(r.c))
 }
 
@@ -62,7 +62,7 @@ func (r Remapping) Remap_getNumFiles() uint16 {
 	Parameter transformed If non-NULL, will be set to the filename that the original
 	is associated with.
 */
-func (r Remapping) Remap_getFilenames(index uint16) (string, string) {
+func (r Remapping) Filenames(index uint16) (string, string) {
 	var original cxstring
 	defer original.Dispose()
 	var transformed cxstring
@@ -74,6 +74,6 @@ func (r Remapping) Remap_getFilenames(index uint16) (string, string) {
 }
 
 // Dispose the remapping.
-func (r Remapping) Remap_Dispose() {
+func (r Remapping) Dispose() {
 	C.clang_remap_dispose(r.c)
 }

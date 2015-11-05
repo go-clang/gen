@@ -7,7 +7,7 @@ type IdxAttrInfo struct {
 	c *C.CXIdxAttrInfo
 }
 
-func (iai *IdxAttrInfo) Index_getIBOutletCollectionAttrInfo() *IdxIBOutletCollectionAttrInfo {
+func (iai *IdxAttrInfo) IBOutletCollectionAttrInfo() *IdxIBOutletCollectionAttrInfo {
 	o := C.clang_index_getIBOutletCollectionAttrInfo(iai.c)
 
 	var gop_o *IdxIBOutletCollectionAttrInfo

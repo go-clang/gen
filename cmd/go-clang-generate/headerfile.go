@@ -69,6 +69,7 @@ func (h *headerFile) addBasicMethods(f *Function, fname string, fnamePrefix stri
 
 		return h.addMethod(f, fname, fnamePrefix, rt)
 	} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && h.isEnumOrStruct(f.Parameters[0].Type.GoName) && f.Parameters[0].Type == f.Parameters[1].Type {
+		fname = "Equal"
 		f.Parameters[0].Name = receiverName(f.Parameters[0].Type.GoName)
 		f.Parameters[1].Name = f.Parameters[0].Name + "2"
 
@@ -276,8 +277,6 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 		*/
 		// TODO report other enums like callbacks that they are not implemented https://github.com/zimmski/go-clang-phoenix/issues/51
 
-		fname := f.Name
-
 		// Prepare the parameters
 		for i := range f.Parameters {
 			p := &f.Parameters[i]
@@ -405,6 +404,36 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			}
 		}
 
+		fname := f.Name
+
+		// TODO happy hack we trim some whitelisted prefixes https://github.com/zimmski/go-clang-phoenix/issues/40
+		if fn := strings.TrimPrefix(fname, "indexLoc_"); len(fn) != len(fname) {
+			fname = fn
+		} else if fn := strings.TrimPrefix(fname, "index_"); len(fn) != len(fname) {
+			fname = fn
+		} else if fn := strings.TrimPrefix(fname, "Location_"); len(fn) != len(fname) {
+			fname = fn
+		} else if fn := strings.TrimPrefix(fname, "Range_"); len(fn) != len(fname) {
+			fname = fn
+		} else if fn := strings.TrimPrefix(fname, "remap_"); len(fn) != len(fname) {
+			fname = fn
+		}
+
+		if len(f.Parameters) > 0 && h.isEnumOrStruct(f.Parameters[0].Type.GoName) {
+			switch f.Parameters[0].Type.GoName {
+			case "CodeCompleteResults":
+				fname = strings.TrimPrefix(fname, "codeComplete")
+			case "CompletionString":
+				if f.CName == "clang_getNumCompletionChunks" {
+					fname = "NumChunks"
+				} else {
+					fname = strings.TrimPrefix(fname, "getCompletion")
+				}
+			case "SourceRange":
+				fname = strings.TrimPrefix(fname, "getRange")
+			}
+		}
+
 		// If we find a heuristic to add the function, add it!
 		added := false
 		if !found {
@@ -432,6 +461,9 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 					added = true
 				} else if h.isEnumOrStruct(f.ReturnType.GoName) || f.ReturnType.IsPrimitive {
 					fname = trimCommonFunctionName(fname, rt.Type)
+					if fn := strings.TrimPrefix(fname, f.ReturnType.GoName+"_"); len(fn) != len(fname) {
+						fname = fn
+					}
 
 					added = h.addMethod(f, fname, "", rt)
 

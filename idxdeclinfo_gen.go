@@ -11,7 +11,7 @@ type IdxDeclInfo struct {
 	c *C.CXIdxDeclInfo
 }
 
-func (idi *IdxDeclInfo) Index_getObjCContainerDeclInfo() *IdxObjCContainerDeclInfo {
+func (idi *IdxDeclInfo) ContainerDeclInfo() *IdxObjCContainerDeclInfo {
 	o := C.clang_index_getObjCContainerDeclInfo(idi.c)
 
 	var gop_o *IdxObjCContainerDeclInfo
@@ -22,7 +22,7 @@ func (idi *IdxDeclInfo) Index_getObjCContainerDeclInfo() *IdxObjCContainerDeclIn
 	return gop_o
 }
 
-func (idi *IdxDeclInfo) Index_getObjCInterfaceDeclInfo() *IdxObjCInterfaceDeclInfo {
+func (idi *IdxDeclInfo) InterfaceDeclInfo() *IdxObjCInterfaceDeclInfo {
 	o := C.clang_index_getObjCInterfaceDeclInfo(idi.c)
 
 	var gop_o *IdxObjCInterfaceDeclInfo
@@ -33,7 +33,7 @@ func (idi *IdxDeclInfo) Index_getObjCInterfaceDeclInfo() *IdxObjCInterfaceDeclIn
 	return gop_o
 }
 
-func (idi *IdxDeclInfo) Index_getObjCCategoryDeclInfo() *IdxObjCCategoryDeclInfo {
+func (idi *IdxDeclInfo) CategoryDeclInfo() *IdxObjCCategoryDeclInfo {
 	o := C.clang_index_getObjCCategoryDeclInfo(idi.c)
 
 	var gop_o *IdxObjCCategoryDeclInfo
@@ -44,7 +44,7 @@ func (idi *IdxDeclInfo) Index_getObjCCategoryDeclInfo() *IdxObjCCategoryDeclInfo
 	return gop_o
 }
 
-func (idi *IdxDeclInfo) Index_getObjCProtocolRefListInfo() *IdxObjCProtocolRefListInfo {
+func (idi *IdxDeclInfo) ProtocolRefListInfo() *IdxObjCProtocolRefListInfo {
 	o := C.clang_index_getObjCProtocolRefListInfo(idi.c)
 
 	var gop_o *IdxObjCProtocolRefListInfo
@@ -55,7 +55,7 @@ func (idi *IdxDeclInfo) Index_getObjCProtocolRefListInfo() *IdxObjCProtocolRefLi
 	return gop_o
 }
 
-func (idi *IdxDeclInfo) Index_getObjCPropertyDeclInfo() *IdxObjCPropertyDeclInfo {
+func (idi *IdxDeclInfo) PropertyDeclInfo() *IdxObjCPropertyDeclInfo {
 	o := C.clang_index_getObjCPropertyDeclInfo(idi.c)
 
 	var gop_o *IdxObjCPropertyDeclInfo
@@ -66,7 +66,7 @@ func (idi *IdxDeclInfo) Index_getObjCPropertyDeclInfo() *IdxObjCPropertyDeclInfo
 	return gop_o
 }
 
-func (idi *IdxDeclInfo) Index_getCXXClassDeclInfo() *IdxCXXClassDeclInfo {
+func (idi *IdxDeclInfo) ClassDeclInfo() *IdxCXXClassDeclInfo {
 	o := C.clang_index_getCXXClassDeclInfo(idi.c)
 
 	var gop_o *IdxCXXClassDeclInfo

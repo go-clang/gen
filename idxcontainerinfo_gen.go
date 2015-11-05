@@ -8,12 +8,12 @@ type IdxContainerInfo struct {
 }
 
 // For retrieving a custom CXIdxClientContainer attached to a container.
-func (ici *IdxContainerInfo) Index_getClientContainer() IdxClientContainer {
+func (ici *IdxContainerInfo) ClientContainer() IdxClientContainer {
 	return IdxClientContainer{C.clang_index_getClientContainer(ici.c)}
 }
 
 // For setting a custom CXIdxClientContainer attached to a container.
-func (ici *IdxContainerInfo) Index_setClientContainer(icc IdxClientContainer) {
+func (ici *IdxContainerInfo) SetClientContainer(icc IdxClientContainer) {
 	C.clang_index_setClientContainer(ici.c, icc.c)
 }
 

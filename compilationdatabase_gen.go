@@ -23,7 +23,7 @@ type CompilationDatabase struct {
 
 	It must be freed by clang_CompilationDatabase_dispose.
 */
-func CompilationDatabase_fromDirectory(buildDir string) (CompilationDatabase_Error, CompilationDatabase) {
+func FromDirectory(buildDir string) (CompilationDatabase_Error, CompilationDatabase) {
 	var errorCode C.CXCompilationDatabase_Error
 
 	c_buildDir := C.CString(buildDir)
