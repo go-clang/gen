@@ -18,6 +18,13 @@ func trimCommonFunctionName(name string, typ Type) string {
 	} else if fn := strings.TrimPrefix(name, typ.GoName); len(fn) != len(name) {
 		name = fn
 	}
+	if tkn := strings.TrimSuffix(typ.GoName, "Kind"); len(tkn) != len(typ.GoName) {
+		if fn := strings.TrimPrefix(name, tkn+"_"); len(fn) != len(name) {
+			name = fn
+		} else if fn := strings.TrimPrefix(name, tkn); len(fn) != len(name) {
+			name = fn
+		}
+	}
 
 	name = trimCommonFunctionNamePrefix(name)
 
