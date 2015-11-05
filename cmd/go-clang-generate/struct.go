@@ -42,9 +42,9 @@ func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {
 		case clang.CK_FieldDecl:
-			typ, err := TypeFromClangType(cursor.Type()) // TODO error handling
+			typ, err := TypeFromClangType(cursor.Type())
 			if err != nil {
-				return clang.CVR_Continue
+				panic(err)
 			}
 
 			if typ.IsFunctionPointer {
