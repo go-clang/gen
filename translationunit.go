@@ -32,3 +32,13 @@ func (tu TranslationUnit) AnnotateTokens(Tokens []Token) []Cursor {
 func (tu TranslationUnit) IsValid() bool {
 	return tu.c != nil
 }
+
+func (tu TranslationUnit) Diagnostics() []Diagnostic { // TODO this can be generated
+	s := make([]Diagnostic, tu.NumDiagnostics())
+
+	for i := range s {
+		s[i] = tu.Diagnostic(uint16(i))
+	}
+
+	return s
+}
