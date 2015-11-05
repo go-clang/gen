@@ -277,8 +277,6 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 		*/
 		// TODO report other enums like callbacks that they are not implemented https://github.com/zimmski/go-clang-phoenix/issues/51
 
-		fname := f.Name
-
 		// Prepare the parameters
 		for i := range f.Parameters {
 			p := &f.Parameters[i]
@@ -404,6 +402,17 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 
 				break
 			}
+		}
+
+		fname := f.Name
+
+		// TODO happy hack we trim some whitelisted prefixes https://github.com/zimmski/go-clang-phoenix/issues/40
+		if fn := strings.TrimPrefix(fname, "index_"); len(fn) != len(fname) {
+			fname = fn
+		} else if fn := strings.TrimPrefix(fname, "Location_"); len(fn) != len(fname) {
+			fname = fn
+		} else if fn := strings.TrimPrefix(fname, "remap_"); len(fn) != len(fname) {
+			fname = fn
 		}
 
 		// If we find a heuristic to add the function, add it!

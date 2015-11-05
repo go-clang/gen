@@ -12,12 +12,12 @@ type IdxEntityInfo struct {
 }
 
 // For retrieving a custom CXIdxClientEntity attached to an entity.
-func (iei *IdxEntityInfo) Index_getClientEntity() IdxClientEntity {
+func (iei *IdxEntityInfo) ClientEntity() IdxClientEntity {
 	return IdxClientEntity{C.clang_index_getClientEntity(iei.c)}
 }
 
 // For setting a custom CXIdxClientEntity attached to an entity.
-func (iei *IdxEntityInfo) Index_setClientEntity(ice IdxClientEntity) {
+func (iei *IdxEntityInfo) SetClientEntity(ice IdxClientEntity) {
 	C.clang_index_setClientEntity(iei.c, ice.c)
 }
 

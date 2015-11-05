@@ -34,14 +34,14 @@ func (sl SourceLocation) Equal(sl2 SourceLocation) bool {
 }
 
 // Returns non-zero if the given source location is in a system header.
-func (sl SourceLocation) Location_IsInSystemHeader() bool {
+func (sl SourceLocation) IsInSystemHeader() bool {
 	o := C.clang_Location_isInSystemHeader(sl.c)
 
 	return o != C.int(0)
 }
 
 // Returns non-zero if the given source location is in the main file of the corresponding translation unit.
-func (sl SourceLocation) Location_IsFromMainFile() bool {
+func (sl SourceLocation) IsFromMainFile() bool {
 	o := C.clang_Location_isFromMainFile(sl.c)
 
 	return o != C.int(0)
