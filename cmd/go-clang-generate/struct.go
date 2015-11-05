@@ -110,6 +110,11 @@ func (s *Struct) AddMemberGetters() error {
 
 	// Generate the getters we can handle
 	for _, m := range s.Members {
+		// TODO happy hack, we do not want getters to *int_data members https://github.com/zimmski/go-clang-phoenix/issues/40
+		if strings.HasSuffix(m.CName, "int_data") {
+			continue
+		}
+
 		if m.Type.CGoName == "void" || m.Type.CGoName == "uintptr_t" {
 			continue
 		}

@@ -45,11 +45,3 @@ func (sr SourceRange) RangeStart() SourceLocation {
 func (sr SourceRange) RangeEnd() SourceLocation {
 	return SourceLocation{C.clang_getRangeEnd(sr.c)}
 }
-
-func (sr SourceRange) Begin_int_data() uint16 {
-	return uint16(sr.c.begin_int_data)
-}
-
-func (sr SourceRange) End_int_data() uint16 {
-	return uint16(sr.c.end_int_data)
-}

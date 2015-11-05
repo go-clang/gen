@@ -221,7 +221,3 @@ func (sl SourceLocation) FileLocation() (File, uint16, uint16, uint16) {
 
 	return file, uint16(line), uint16(column), uint16(offset)
 }
-
-func (sl SourceLocation) Int_data() uint16 {
-	return uint16(sl.c.int_data)
-}

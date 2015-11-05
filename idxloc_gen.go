@@ -32,7 +32,3 @@ func (il IdxLoc) FileLocation() (IdxClientFile, File, uint16, uint16, uint16) {
 func (il IdxLoc) SourceLocation() SourceLocation {
 	return SourceLocation{C.clang_indexLoc_getCXSourceLocation(il.c)}
 }
-
-func (il IdxLoc) Int_data() uint16 {
-	return uint16(il.c.int_data)
-}
