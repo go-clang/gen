@@ -30,16 +30,12 @@ func (iei IdxEntityInfo) Lang() IdxEntityLanguage {
 	return IdxEntityLanguage(iei.c.lang)
 }
 
-func (iei IdxEntityInfo) Name() *int8 {
-	o := *iei.c.name
-
-	return &int8{o}
+func (iei IdxEntityInfo) Name() string {
+	return C.GoString(iei.c.name)
 }
 
-func (iei IdxEntityInfo) USR() *int8 {
-	o := *iei.c.USR
-
-	return &int8{o}
+func (iei IdxEntityInfo) USR() string {
+	return C.GoString(iei.c.USR)
 }
 
 func (iei IdxEntityInfo) Cursor() Cursor {

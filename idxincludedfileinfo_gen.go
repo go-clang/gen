@@ -14,10 +14,8 @@ func (iifi IdxIncludedFileInfo) HashLoc() IdxLoc {
 }
 
 // Filename as written in the \#include/\#import directive.
-func (iifi IdxIncludedFileInfo) Filename() *int8 {
-	o := *iifi.c.filename
-
-	return &int8{o}
+func (iifi IdxIncludedFileInfo) Filename() string {
+	return C.GoString(iifi.c.filename)
 }
 
 // The actual file that the \#include/\#import directive resolved to.
@@ -28,18 +26,18 @@ func (iifi IdxIncludedFileInfo) File() File {
 func (iifi IdxIncludedFileInfo) IsImport() bool {
 	o := iifi.c.isImport
 
-	return o != C.int16(0)
+	return o != C.int(0)
 }
 
 func (iifi IdxIncludedFileInfo) IsAngled() bool {
 	o := iifi.c.isAngled
 
-	return o != C.int16(0)
+	return o != C.int(0)
 }
 
 // Non-zero if the directive was automatically turned into a module import.
 func (iifi IdxIncludedFileInfo) IsModuleImport() bool {
 	o := iifi.c.isModuleImport
 
-	return o != C.int16(0)
+	return o != C.int(0)
 }

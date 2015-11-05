@@ -74,19 +74,19 @@ func (idi IdxDeclInfo) LexicalContainer() *IdxContainerInfo {
 func (idi IdxDeclInfo) IsRedeclaration() bool {
 	o := idi.c.isRedeclaration
 
-	return o != C.int16(0)
+	return o != C.int(0)
 }
 
 func (idi IdxDeclInfo) IsDefinition() bool {
 	o := idi.c.isDefinition
 
-	return o != C.int16(0)
+	return o != C.int(0)
 }
 
 func (idi IdxDeclInfo) IsContainer() bool {
 	o := idi.c.isContainer
 
-	return o != C.int16(0)
+	return o != C.int(0)
 }
 
 func (idi IdxDeclInfo) DeclAsContainer() *IdxContainerInfo {
@@ -99,7 +99,7 @@ func (idi IdxDeclInfo) DeclAsContainer() *IdxContainerInfo {
 func (idi IdxDeclInfo) IsImplicit() bool {
 	o := idi.c.isImplicit
 
-	return o != C.int16(0)
+	return o != C.int(0)
 }
 
 func (idi IdxDeclInfo) Attributes() []*IdxAttrInfo {

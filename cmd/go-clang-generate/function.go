@@ -74,9 +74,6 @@ func NewFunction(name, cname, comment, member string, typ Type) *Function {
 	receiverName := receiverName(receiverType)
 	functionName := upperFirstCharacter(name)
 
-	if typ.IsPrimitive {
-		typ.CGoName = typ.GoName
-	}
 	if (strings.HasPrefix(name, "has") || strings.HasPrefix(name, "is")) && typ.GoName == GoInt16 {
 		typ.GoName = GoBool
 	}

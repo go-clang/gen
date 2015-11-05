@@ -121,7 +121,6 @@ func TypeFromClangType(cType clang.Type) (Type, error) {
 
 		typ.CGoName = subTyp.CGoName
 		typ.GoName = subTyp.GoName
-		typ.CGoName = subTyp.CGoName
 		typ.PointerLevel += subTyp.PointerLevel
 		typ.IsArray = true
 		typ.ArraySize = cType.ArraySize()
@@ -161,7 +160,6 @@ func TypeFromClangType(cType clang.Type) (Type, error) {
 
 		typ.CGoName = subTyp.CGoName
 		typ.GoName = subTyp.GoName
-		typ.CGoName = subTyp.CGoName
 		typ.PointerLevel += subTyp.PointerLevel
 		typ.IsPrimitive = subTyp.IsPrimitive
 	case clang.TK_Record:
@@ -184,7 +182,6 @@ func TypeFromClangType(cType clang.Type) (Type, error) {
 
 		typ.CGoName = subTyp.CGoName
 		typ.GoName = subTyp.GoName
-		typ.CGoName = subTyp.CGoName
 		typ.PointerLevel += subTyp.PointerLevel
 		typ.IsPrimitive = subTyp.IsPrimitive
 	default:

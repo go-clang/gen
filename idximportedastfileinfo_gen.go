@@ -27,5 +27,5 @@ func (iiastfi IdxImportedASTFileInfo) Loc() IdxLoc {
 func (iiastfi IdxImportedASTFileInfo) IsImplicit() bool {
 	o := iiastfi.c.isImplicit
 
-	return o != C.int16(0)
+	return o != C.int(0)
 }

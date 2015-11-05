@@ -533,7 +533,7 @@ func (fa *ASTFunc) generateReturn(call ast.Expr) {
 						doZero(),
 					),
 				})
-			} else if returnType.CGoName == CSChar && returnType.PointerLevel == 1 {
+			} else if returnType.CGoName == CSChar && returnType.PointerLevel == 1 { // TODO refactor the const char * check so that one function is used everywhere to check for that C type
 				// If this is a normal const char * C type there is not so much to do
 				fa.addReturnItem(doCCast(
 					"GoString",

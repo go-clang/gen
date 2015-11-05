@@ -19,17 +19,13 @@ type UnsavedFile struct {
 
 	This file must already exist in the file system.
 */
-func (uf UnsavedFile) Filename() *int8 {
-	o := *uf.c.Filename
-
-	return &int8{o}
+func (uf UnsavedFile) Filename() string {
+	return C.GoString(uf.c.Filename)
 }
 
 // A buffer containing the unsaved contents of this file.
-func (uf UnsavedFile) Contents() *int8 {
-	o := *uf.c.Contents
-
-	return &int8{o}
+func (uf UnsavedFile) Contents() string {
+	return C.GoString(uf.c.Contents)
 }
 
 // The length of the unsaved contents of this buffer.
