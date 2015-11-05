@@ -444,6 +444,9 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 					added = true
 				} else if h.isEnumOrStruct(f.ReturnType.GoName) || f.ReturnType.IsPrimitive {
 					fname = trimCommonFunctionName(fname, rt.Type)
+					if fn := strings.TrimPrefix(fname, f.ReturnType.GoName+"_"); len(fn) != len(fname) {
+						fname = fn
+					}
 
 					added = h.addMethod(f, fname, "", rt)
 
