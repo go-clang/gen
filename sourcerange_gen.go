@@ -30,18 +30,18 @@ func (sr SourceRange) Equal(sr2 SourceRange) bool {
 }
 
 // Returns non-zero if \p range is null.
-func (sr SourceRange) Range_IsNull() bool {
+func (sr SourceRange) IsNull() bool {
 	o := C.clang_Range_isNull(sr.c)
 
 	return o != C.int(0)
 }
 
 // Retrieve a source location representing the first character within a source range.
-func (sr SourceRange) RangeStart() SourceLocation {
+func (sr SourceRange) Start() SourceLocation {
 	return SourceLocation{C.clang_getRangeStart(sr.c)}
 }
 
 // Retrieve a source location representing the last character within a source range.
-func (sr SourceRange) RangeEnd() SourceLocation {
+func (sr SourceRange) End() SourceLocation {
 	return SourceLocation{C.clang_getRangeEnd(sr.c)}
 }

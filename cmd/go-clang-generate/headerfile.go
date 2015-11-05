@@ -413,6 +413,8 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			fname = fn
 		} else if fn := strings.TrimPrefix(fname, "Location_"); len(fn) != len(fname) {
 			fname = fn
+		} else if fn := strings.TrimPrefix(fname, "Range_"); len(fn) != len(fname) {
+			fname = fn
 		} else if fn := strings.TrimPrefix(fname, "remap_"); len(fn) != len(fname) {
 			fname = fn
 		}
@@ -427,6 +429,8 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 				} else {
 					fname = strings.TrimPrefix(fname, "getCompletion")
 				}
+			case "SourceRange":
+				fname = strings.TrimPrefix(fname, "getRange")
 			}
 		}
 
