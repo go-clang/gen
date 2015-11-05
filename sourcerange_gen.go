@@ -23,7 +23,7 @@ func NewNullRange() SourceRange {
 
 	Returns non-zero if the ranges are the same, zero if they differ.
 */
-func (sr SourceRange) EqualRanges(sr2 SourceRange) bool {
+func (sr SourceRange) Equal(sr2 SourceRange) bool {
 	o := C.clang_equalRanges(sr.c, sr2.c)
 
 	return o != C.uint(0)

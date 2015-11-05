@@ -27,7 +27,7 @@ func NewNullLocation() SourceLocation {
 	Returns non-zero if the source locations refer to the same location, zero
 	if they refer to different locations.
 */
-func (sl SourceLocation) EqualLocations(sl2 SourceLocation) bool {
+func (sl SourceLocation) Equal(sl2 SourceLocation) bool {
 	o := C.clang_equalLocations(sl.c, sl2.c)
 
 	return o != C.uint(0)

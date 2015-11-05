@@ -69,6 +69,7 @@ func (h *headerFile) addBasicMethods(f *Function, fname string, fnamePrefix stri
 
 		return h.addMethod(f, fname, fnamePrefix, rt)
 	} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && h.isEnumOrStruct(f.Parameters[0].Type.GoName) && f.Parameters[0].Type == f.Parameters[1].Type {
+		fname = "Equal"
 		f.Parameters[0].Name = receiverName(f.Parameters[0].Type.GoName)
 		f.Parameters[1].Name = f.Parameters[0].Name + "2"
 
