@@ -29,7 +29,7 @@ func main() {
 	}
 	f.Close()
 
-	err, db := phoenix.CompilationDatabase_fromDirectory(dir)
+	err, db := phoenix.FromDirectory(dir)
 	if err != nil {
 		fmt.Printf("**error: could not open compilation database at [%s]: %v\n", dir, err)
 

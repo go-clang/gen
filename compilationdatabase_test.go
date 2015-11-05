@@ -5,14 +5,14 @@ import (
 )
 
 func TestCompilationDatabaseError(t *testing.T) {
-	err, _ := CompilationDatabase_fromDirectory("testdata-not-there")
+	err, _ := FromDirectory("testdata-not-there")
 	if err != CompilationDatabase_CanNotLoadDatabase {
 		t.Fatalf("expected %v", CompilationDatabase_CanNotLoadDatabase)
 	}
 }
 
 func TestCompilationDatabase(t *testing.T) {
-	err, db := CompilationDatabase_fromDirectory("testdata")
+	err, db := FromDirectory("testdata")
 	if err != CompilationDatabase_NoError {
 		t.Fatalf("error loading compilation database: %v", err)
 	}

@@ -29,8 +29,8 @@ func TestCompletion(t *testing.T) {
 
 		cs := r.CompletionString()
 
-		for i := uint16(0); i < cs.NumCompletionChunks(); i++ {
-			t.Logf("\t%s %s", cs.CompletionChunkKind(i), cs.CompletionChunkText(i))
+		for i := uint16(0); i < cs.NumChunks(); i++ {
+			t.Logf("\t%s %s", cs.ChunkKind(i), cs.ChunkText(i))
 		}
 	}
 
