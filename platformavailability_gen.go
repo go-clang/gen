@@ -19,37 +19,37 @@ func (pa PlatformAvailability) Dispose() {
 
 	Possible values are "ios" or "macosx".
 */
-func (pa PlatformAvailability) Platform() cxstring {
-	value := cxstring{pa.c.Platform}
-	return value
+func (pa PlatformAvailability) Platform() string {
+	o := cxstring{pa.c.Platform}
+	defer o.Dispose()
+
+	return o.String()
 }
 
 // The version number in which this entity was introduced.
 func (pa PlatformAvailability) Introduced() Version {
-	value := Version{pa.c.Introduced}
-	return value
+	return Version{pa.c.Introduced}
 }
 
 // The version number in which this entity was deprecated (but is still available).
 func (pa PlatformAvailability) Deprecated() Version {
-	value := Version{pa.c.Deprecated}
-	return value
+	return Version{pa.c.Deprecated}
 }
 
 // The version number in which this entity was obsoleted, and therefore is no longer available.
 func (pa PlatformAvailability) Obsoleted() Version {
-	value := Version{pa.c.Obsoleted}
-	return value
+	return Version{pa.c.Obsoleted}
 }
 
 // Whether the entity is unconditionally unavailable on this platform.
 func (pa PlatformAvailability) Unavailable() int16 {
-	value := int16(pa.c.Unavailable)
-	return value
+	return int16(pa.c.Unavailable)
 }
 
 // An optional message to provide to a user of this API, e.g., to suggest replacement APIs.
-func (pa PlatformAvailability) Message() cxstring {
-	value := cxstring{pa.c.Message}
-	return value
+func (pa PlatformAvailability) Message() string {
+	o := cxstring{pa.c.Message}
+	defer o.Dispose()
+
+	return o.String()
 }

@@ -13,11 +13,11 @@ func (turu TUResourceUsage) Dispose() {
 }
 
 func (turu TUResourceUsage) NumEntries() uint16 {
-	value := uint16(turu.c.numEntries)
-	return value
+	return uint16(turu.c.numEntries)
 }
 
 func (turu TUResourceUsage) Entries() *TUResourceUsageEntry {
-	value := TUResourceUsageEntry{*turu.c.entries}
-	return &value
+	o := *turu.c.entries
+
+	return &TUResourceUsageEntry{o}
 }

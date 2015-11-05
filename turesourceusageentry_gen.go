@@ -8,11 +8,9 @@ type TUResourceUsageEntry struct {
 }
 
 func (turue TUResourceUsageEntry) Kind() TUResourceUsageKind {
-	value := TUResourceUsageKind(turue.c.kind)
-	return value
+	return TUResourceUsageKind(turue.c.kind)
 }
 
 func (turue TUResourceUsageEntry) Amount() uint32 {
-	value := uint32(turue.c.amount)
-	return value
+	return uint32(turue.c.amount)
 }

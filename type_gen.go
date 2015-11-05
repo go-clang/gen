@@ -236,6 +236,5 @@ func (t Type) RefQualifier() RefQualifierKind {
 }
 
 func (t Type) Kind() TypeKind {
-	value := TypeKind(t.c.kind)
-	return value
+	return TypeKind(t.c.kind)
 }

@@ -45,55 +45,61 @@ func (idi *IdxDeclInfo) Index_getCXXClassDeclInfo() *IdxCXXClassDeclInfo {
 }
 
 func (idi IdxDeclInfo) EntityInfo() *IdxEntityInfo {
-	value := IdxEntityInfo{*idi.c.entityInfo}
-	return &value
+	o := *idi.c.entityInfo
+
+	return &IdxEntityInfo{o}
 }
 
 func (idi IdxDeclInfo) Cursor() Cursor {
-	value := Cursor{idi.c.cursor}
-	return value
+	return Cursor{idi.c.cursor}
 }
 
 func (idi IdxDeclInfo) Loc() IdxLoc {
-	value := IdxLoc{idi.c.loc}
-	return value
+	return IdxLoc{idi.c.loc}
 }
 
 func (idi IdxDeclInfo) SemanticContainer() *IdxContainerInfo {
-	value := IdxContainerInfo{*idi.c.semanticContainer}
-	return &value
+	o := *idi.c.semanticContainer
+
+	return &IdxContainerInfo{o}
 }
 
 // Generally same as #semanticContainer but can be different in cases like out-of-line C++ member functions.
 func (idi IdxDeclInfo) LexicalContainer() *IdxContainerInfo {
-	value := IdxContainerInfo{*idi.c.lexicalContainer}
-	return &value
+	o := *idi.c.lexicalContainer
+
+	return &IdxContainerInfo{o}
 }
 
 func (idi IdxDeclInfo) IsRedeclaration() bool {
-	value := idi.c.isRedeclaration
-	return value != C.int(0)
+	o := idi.c.isRedeclaration
+
+	return o != C.int(0)
 }
 
 func (idi IdxDeclInfo) IsDefinition() bool {
-	value := idi.c.isDefinition
-	return value != C.int(0)
+	o := idi.c.isDefinition
+
+	return o != C.int(0)
 }
 
 func (idi IdxDeclInfo) IsContainer() bool {
-	value := idi.c.isContainer
-	return value != C.int(0)
+	o := idi.c.isContainer
+
+	return o != C.int(0)
 }
 
 func (idi IdxDeclInfo) DeclAsContainer() *IdxContainerInfo {
-	value := IdxContainerInfo{*idi.c.declAsContainer}
-	return &value
+	o := *idi.c.declAsContainer
+
+	return &IdxContainerInfo{o}
 }
 
 // Whether the declaration exists in code or was created implicitly by the compiler, e.g. implicit objc methods for properties.
 func (idi IdxDeclInfo) IsImplicit() bool {
-	value := idi.c.isImplicit
-	return value != C.int(0)
+	o := idi.c.isImplicit
+
+	return o != C.int(0)
 }
 
 func (idi IdxDeclInfo) Attributes() []*IdxAttrInfo {
@@ -110,11 +116,9 @@ func (idi IdxDeclInfo) Attributes() []*IdxAttrInfo {
 }
 
 func (idi IdxDeclInfo) NumAttributes() uint16 {
-	value := uint16(idi.c.numAttributes)
-	return value
+	return uint16(idi.c.numAttributes)
 }
 
 func (idi IdxDeclInfo) Flags() uint16 {
-	value := uint16(idi.c.flags)
-	return value
+	return uint16(idi.c.flags)
 }

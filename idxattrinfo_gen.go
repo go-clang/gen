@@ -14,16 +14,13 @@ func (iai *IdxAttrInfo) Index_getIBOutletCollectionAttrInfo() *IdxIBOutletCollec
 }
 
 func (iai IdxAttrInfo) Kind() IdxAttrKind {
-	value := IdxAttrKind(iai.c.kind)
-	return value
+	return IdxAttrKind(iai.c.kind)
 }
 
 func (iai IdxAttrInfo) Cursor() Cursor {
-	value := Cursor{iai.c.cursor}
-	return value
+	return Cursor{iai.c.cursor}
 }
 
 func (iai IdxAttrInfo) Loc() IdxLoc {
-	value := IdxLoc{iai.c.loc}
-	return value
+	return IdxLoc{iai.c.loc}
 }

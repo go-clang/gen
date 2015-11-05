@@ -8,21 +8,21 @@ type IdxIBOutletCollectionAttrInfo struct {
 }
 
 func (iibocai IdxIBOutletCollectionAttrInfo) AttrInfo() *IdxAttrInfo {
-	value := IdxAttrInfo{*iibocai.c.attrInfo}
-	return &value
+	o := *iibocai.c.attrInfo
+
+	return &IdxAttrInfo{o}
 }
 
 func (iibocai IdxIBOutletCollectionAttrInfo) ObjcClass() *IdxEntityInfo {
-	value := IdxEntityInfo{*iibocai.c.objcClass}
-	return &value
+	o := *iibocai.c.objcClass
+
+	return &IdxEntityInfo{o}
 }
 
 func (iibocai IdxIBOutletCollectionAttrInfo) ClassCursor() Cursor {
-	value := Cursor{iibocai.c.classCursor}
-	return value
+	return Cursor{iibocai.c.classCursor}
 }
 
 func (iibocai IdxIBOutletCollectionAttrInfo) ClassLoc() IdxLoc {
-	value := IdxLoc{iibocai.c.classLoc}
-	return value
+	return IdxLoc{iibocai.c.classLoc}
 }

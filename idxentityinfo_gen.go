@@ -19,33 +19,27 @@ func (iei *IdxEntityInfo) Index_setClientEntity(ice IdxClientEntity) {
 }
 
 func (iei IdxEntityInfo) Kind() IdxEntityKind {
-	value := IdxEntityKind(iei.c.kind)
-	return value
+	return IdxEntityKind(iei.c.kind)
 }
 
 func (iei IdxEntityInfo) TemplateKind() IdxEntityCXXTemplateKind {
-	value := IdxEntityCXXTemplateKind(iei.c.templateKind)
-	return value
+	return IdxEntityCXXTemplateKind(iei.c.templateKind)
 }
 
 func (iei IdxEntityInfo) Lang() IdxEntityLanguage {
-	value := IdxEntityLanguage(iei.c.lang)
-	return value
+	return IdxEntityLanguage(iei.c.lang)
 }
 
-func (iei IdxEntityInfo) Name() *int8 {
-	value := int8(*iei.c.name)
-	return &value
+func (iei IdxEntityInfo) Name() string {
+	return C.GoString(iei.c.name)
 }
 
-func (iei IdxEntityInfo) USR() *int8 {
-	value := int8(*iei.c.USR)
-	return &value
+func (iei IdxEntityInfo) USR() string {
+	return C.GoString(iei.c.USR)
 }
 
 func (iei IdxEntityInfo) Cursor() Cursor {
-	value := Cursor{iei.c.cursor}
-	return value
+	return Cursor{iei.c.cursor}
 }
 
 func (iei IdxEntityInfo) Attributes() []*IdxAttrInfo {
@@ -62,6 +56,5 @@ func (iei IdxEntityInfo) Attributes() []*IdxAttrInfo {
 }
 
 func (iei IdxEntityInfo) NumAttributes() uint16 {
-	value := uint16(iei.c.numAttributes)
-	return value
+	return uint16(iei.c.numAttributes)
 }

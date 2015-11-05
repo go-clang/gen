@@ -8,16 +8,15 @@ type IdxBaseClassInfo struct {
 }
 
 func (ibci IdxBaseClassInfo) Base() *IdxEntityInfo {
-	value := IdxEntityInfo{*ibci.c.base}
-	return &value
+	o := *ibci.c.base
+
+	return &IdxEntityInfo{o}
 }
 
 func (ibci IdxBaseClassInfo) Cursor() Cursor {
-	value := Cursor{ibci.c.cursor}
-	return value
+	return Cursor{ibci.c.cursor}
 }
 
 func (ibci IdxBaseClassInfo) Loc() IdxLoc {
-	value := IdxLoc{ibci.c.loc}
-	return value
+	return IdxLoc{ibci.c.loc}
 }

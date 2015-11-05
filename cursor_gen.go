@@ -803,6 +803,5 @@ func (c Cursor) FindReferencesInFile(file File, visitor CursorAndRangeVisitor) R
 }
 
 func (c Cursor) Xdata() int16 {
-	value := int16(c.c.xdata)
-	return value
+	return int16(c.c.xdata)
 }

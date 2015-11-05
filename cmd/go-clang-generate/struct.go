@@ -122,7 +122,7 @@ func (s *Struct) AddMemberGetters() error {
 			f := NewFunction(m.CName, s.CName, m.Comment, m.CName, m.Type)
 
 			fName = f.Name
-			method = generateFunctionStructMemberGetter(f)
+			method = f.Generate()
 		} else {
 			return fmt.Errorf("Three pointers")
 		}

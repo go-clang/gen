@@ -34,6 +34,5 @@ func (il IdxLoc) IndexLoc_getCXSourceLocation() SourceLocation {
 }
 
 func (il IdxLoc) Int_data() uint16 {
-	value := uint16(il.c.int_data)
-	return value
+	return uint16(il.c.int_data)
 }

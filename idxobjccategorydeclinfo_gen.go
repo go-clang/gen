@@ -8,26 +8,27 @@ type IdxObjCCategoryDeclInfo struct {
 }
 
 func (ioccdi IdxObjCCategoryDeclInfo) ContainerInfo() *IdxObjCContainerDeclInfo {
-	value := IdxObjCContainerDeclInfo{*ioccdi.c.containerInfo}
-	return &value
+	o := *ioccdi.c.containerInfo
+
+	return &IdxObjCContainerDeclInfo{o}
 }
 
 func (ioccdi IdxObjCCategoryDeclInfo) ObjcClass() *IdxEntityInfo {
-	value := IdxEntityInfo{*ioccdi.c.objcClass}
-	return &value
+	o := *ioccdi.c.objcClass
+
+	return &IdxEntityInfo{o}
 }
 
 func (ioccdi IdxObjCCategoryDeclInfo) ClassCursor() Cursor {
-	value := Cursor{ioccdi.c.classCursor}
-	return value
+	return Cursor{ioccdi.c.classCursor}
 }
 
 func (ioccdi IdxObjCCategoryDeclInfo) ClassLoc() IdxLoc {
-	value := IdxLoc{ioccdi.c.classLoc}
-	return value
+	return IdxLoc{ioccdi.c.classLoc}
 }
 
 func (ioccdi IdxObjCCategoryDeclInfo) Protocols() *IdxObjCProtocolRefListInfo {
-	value := IdxObjCProtocolRefListInfo{*ioccdi.c.protocols}
-	return &value
+	o := *ioccdi.c.protocols
+
+	return &IdxObjCProtocolRefListInfo{o}
 }

@@ -110,12 +110,12 @@ func (ccr *CodeCompleteResults) CodeCompleteGetObjCSelector() string {
 
 // The code-completion results.
 func (ccr CodeCompleteResults) Results() *CompletionResult {
-	value := CompletionResult{*ccr.c.Results}
-	return &value
+	o := *ccr.c.Results
+
+	return &CompletionResult{o}
 }
 
 // The number of code-completion results stored in the Results array.
 func (ccr CodeCompleteResults) NumResults() uint16 {
-	value := uint16(ccr.c.NumResults)
-	return value
+	return uint16(ccr.c.NumResults)
 }

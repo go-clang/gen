@@ -39,12 +39,10 @@ func SortCodeCompletionResults(results []CompletionResult) {
 	the client to extract additional information from declaration.
 */
 func (cr CompletionResult) CursorKind() CursorKind {
-	value := CursorKind(cr.c.CursorKind)
-	return value
+	return CursorKind(cr.c.CursorKind)
 }
 
 // The code-completion string that describes how to insert this code-completion result into the editing buffer.
 func (cr CompletionResult) CompletionString() CompletionString {
-	value := CompletionString{cr.c.CompletionString}
-	return value
+	return CompletionString{cr.c.CompletionString}
 }

@@ -223,6 +223,5 @@ func (sl SourceLocation) FileLocation() (File, uint16, uint16, uint16) {
 }
 
 func (sl SourceLocation) Int_data() uint16 {
-	value := uint16(sl.c.int_data)
-	return value
+	return uint16(sl.c.int_data)
 }
