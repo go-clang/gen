@@ -82,7 +82,7 @@ func NewFunction(name, cname, comment, member string, typ Type) *Function {
 		CName:   cname,
 		Comment: comment,
 
-		Parameters: []FunctionParameter{ // TODO ... do a correct version here...
+		Parameters: []FunctionParameter{ // TODO this might not be needed if the receiver code is refactored https://github.com/zimmski/go-clang-phoenix/issues/52
 			FunctionParameter{
 				Name:  receiverName,
 				CName: cname,
@@ -171,10 +171,10 @@ func (f *Function) Generate() string {
 
 	sss := b.String()
 
-	// TODO hack to make new lines...
+	// TODO hack to make new lines... https://github.com/zimmski/go-clang-phoenix/issues/53
 	sss = strings.Replace(sss, "REMOVE()", "", -1)
 
-	// TODO find out how to position the comment correctly and do this using the AST
+	// TODO find out how to position the comment correctly and do this using the AST https://github.com/zimmski/go-clang-phoenix/issues/54
 	if f.Comment != "" {
 		sss = f.Comment + "\n" + sss
 	}
