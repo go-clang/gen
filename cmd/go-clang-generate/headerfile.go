@@ -418,8 +418,15 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 		}
 
 		if len(f.Parameters) > 0 && h.isEnumOrStruct(f.Parameters[0].Type.GoName) {
-			if f.Parameters[0].Type.GoName == "CodeCompleteResults" {
+			switch f.Parameters[0].Type.GoName {
+			case "CodeCompleteResults":
 				fname = strings.TrimPrefix(fname, "codeComplete")
+			case "CompletionString":
+				if f.CName == "clang_getNumCompletionChunks" {
+					fname = "NumChunks"
+				} else {
+					fname = strings.TrimPrefix(fname, "getCompletion")
+				}
 			}
 		}
 
