@@ -1,6 +1,5 @@
 package phoenix
 
-/* TODO
 import (
 	"strings"
 	"testing"
@@ -17,7 +16,11 @@ func TestDiagnostics(t *testing.T) {
 	defer tu.Dispose()
 
 	diags := tu.Diagnostics()
-	defer diags.Dispose()
+	defer func() {
+		for _, d := range diags {
+			d.Dispose()
+		}
+	}()
 
 	ok := false
 	for _, d := range diags {
@@ -26,8 +29,7 @@ func TestDiagnostics(t *testing.T) {
 		}
 		t.Log(d)
 		t.Log(d.Severity(), d.Spelling())
-		t.Log(d.Format(Diagnostic_DisplayCategoryName | Diagnostic_DisplaySourceLocation))
+		t.Log(d.FormatDiagnostic(uint16(Diagnostic_DisplayCategoryName | Diagnostic_DisplaySourceLocation)))
 	}
 	assert.True(t, ok)
 }
-*/

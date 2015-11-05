@@ -2,6 +2,10 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
+import (
+	"reflect"
+	"unsafe"
+)
 
 /*
 	Contains the results of code-completion.
@@ -109,10 +113,14 @@ func (ccr *CodeCompleteResults) CodeCompleteGetObjCSelector() string {
 }
 
 // The code-completion results.
-func (ccr CodeCompleteResults) Results() *CompletionResult {
-	o := *ccr.c.Results
+func (ccr CodeCompleteResults) Results() []CompletionResult {
+	var s []CompletionResult
+	gos_s := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+	gos_s.Cap = int(ccr.c.NumResults)
+	gos_s.Len = int(ccr.c.NumResults)
+	gos_s.Data = uintptr(unsafe.Pointer(ccr.c.Results))
 
-	return &CompletionResult{o}
+	return s
 }
 
 // The number of code-completion results stored in the Results array.

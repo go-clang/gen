@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"strings"
+	"unicode"
 
 	"github.com/sbinet/go-clang"
 )
@@ -189,4 +191,18 @@ func TypeFromClangType(cType clang.Type) (Type, error) {
 	}
 
 	return typ, nil
+}
+
+func ArrayNameFromLength(lengthCName string) string {
+	if pan := strings.TrimPrefix(lengthCName, "num_"); len(pan) != len(lengthCName) {
+		return pan
+	} else if pan := strings.TrimPrefix(lengthCName, "num"); len(pan) != len(lengthCName) {
+		return pan
+	} else if pan := strings.TrimPrefix(lengthCName, "Num"); len(pan) != len(lengthCName) && unicode.IsUpper(rune(pan[0])) {
+		return pan
+	} else if pan := strings.TrimSuffix(lengthCName, "_size"); len(pan) != len(lengthCName) {
+		return pan
+	}
+
+	return ""
 }

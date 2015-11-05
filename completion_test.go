@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-
 func TestCompletion(t *testing.T) {
 	idx := NewIndex(0, 0)
 	defer idx.Dispose()
@@ -17,7 +16,7 @@ func TestCompletion(t *testing.T) {
 	assert.True(t, tu.IsValid())
 	defer tu.Dispose()
 
-	res := tu.CompleteAt("cursor.c", 10, 16, nil, 0)
+	res := tu.CodeCompleteAt("cursor.c", 10, 16, nil, 0)
 	assert.True(t, res.IsValid())
 	defer res.Dispose()
 
