@@ -73,30 +73,48 @@ func doField(name string, typ Type) *ast.Field {
 		}
 	}
 	if typ.GoName != "" {
-		if typ.PointerLevel > 0 && typ.CGoName == CSChar {
-			f.Type = &ast.Ident{
-				Name: "string",
-			}
-		} else {
-			f.Type = &ast.Ident{
-				Name: typ.GoName,
-			}
-		}
-
-		if typ.IsSlice {
-			f.Type = &ast.ArrayType{
-				Elt: f.Type,
-			}
-		} else if typ.PointerLevel > 0 && typ.CGoName != CSChar && !typ.IsReturnArgument {
-			for i := 0; i < typ.PointerLevel; i++ {
-				f.Type = &ast.StarExpr{
-					X: f.Type,
-				}
-			}
-		}
+		f.Type = doGoType(typ)
 	}
 
 	return f
+}
+
+func doGoType(typ Type) ast.Expr {
+	var r ast.Expr
+
+	if typ.PointerLevel > 0 && typ.CGoName == CSChar {
+		r = &ast.Ident{
+			Name: "string",
+		}
+	} else {
+		r = &ast.Ident{
+			Name: typ.GoName,
+		}
+	}
+
+	pl := typ.PointerLevel
+
+	if typ.IsSlice {
+		pl--
+	}
+
+	if pl > 0 && typ.CGoName != CSChar && !typ.IsReturnArgument {
+		for pl != 0 {
+			r = &ast.StarExpr{
+				X: r,
+			}
+
+			pl--
+		}
+	}
+
+	if typ.IsSlice {
+		r = &ast.ArrayType{
+			Elt: r,
+		}
+	}
+
+	return r
 }
 
 func doCall(variable string, method string, args ...ast.Expr) *ast.CallExpr {

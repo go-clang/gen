@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/sbinet/go-clang"
@@ -82,53 +81,38 @@ func (s *Struct) Generate() error {
 }
 
 func (s *Struct) AddMemberGetters() error {
+	// Prepare members
 	for _, m := range s.Members {
-		if (m.Type.PointerLevel >= 1 && m.Type.GoName == "void") || m.Type.CGoName == "uintptr_t" {
-			/*typ.CName = "void"
-			typ.Name = GoPointer
-			if typ.PointerLevel >= 1 {
-				typ.PointerLevel--
-			}
-			typ.IsPrimitive = true*/
+		// TODO happy hack, if this is an array length parameter we need to find its partner
+		maCName := ArrayNameFromLength(m.CName)
 
+		if maCName != "" {
+			for _, ma := range s.Members {
+				if strings.ToLower(ma.CName) == strings.ToLower(maCName) {
+					m.Type.LengthOfSlice = ma.CName
+					ma.Type.IsSlice = true
+					ma.Type.LengthOfSlice = m.CName // TODO wrong usage but needed for the getter generation... maybe refactor this LengthOfSlice alltogether?
+
+					break
+				}
+			}
+		}
+	}
+
+	// Generate the getters we can handle
+	for _, m := range s.Members {
+		if m.Type.CGoName == "void" || m.Type.CGoName == "uintptr_t" {
 			continue
 		}
 
-		var fName string
-		var method string
-
-		if m.Type.PointerLevel == 2 || m.Type.IsArray {
-			sizeMember := ""
-
-			if m.Type.ArraySize == -1 {
-				sizeMember = "num" + upperFirstCharacter(m.CName)
-			}
-
-			f := &FunctionSliceReturn{
-				Function: NewFunction(m.CName, s.CName, m.Comment, m.CName, m.Type),
-
-				SizeMember: sizeMember,
-
-				CElementType:    m.Type.CGoName,
-				ElementType:     m.Type.GoName,
-				IsPrimitive:     m.Type.IsPrimitive,
-				ArrayDimensions: m.Type.PointerLevel,
-				ArraySize:       m.Type.ArraySize,
-			}
-
-			fName = f.Name
-			method = generateFunctionSliceReturn(f)
-		} else if m.Type.PointerLevel < 2 {
-			f := NewFunction(m.CName, s.CName, m.Comment, m.CName, m.Type)
-
-			fName = f.Name
-			method = f.Generate()
-		} else {
-			return fmt.Errorf("Three pointers")
+		if m.Type.IsArray { // TODO generate arrays with the correct size and type
+			continue
 		}
 
-		if !s.ContainsMethod(fName) {
-			s.Methods = append(s.Methods, method)
+		f := NewFunction(m.CName, s.CName, m.Comment, m.CName, m.Type)
+
+		if !s.ContainsMethod(f.Name) {
+			s.Methods = append(s.Methods, f.Generate())
 		}
 	}
 

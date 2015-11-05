@@ -2,7 +2,10 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-import "unsafe"
+import (
+	"reflect"
+	"unsafe"
+)
 
 type IdxDeclInfo struct {
 	c C.CXIdxDeclInfo
@@ -103,16 +106,13 @@ func (idi IdxDeclInfo) IsImplicit() bool {
 }
 
 func (idi IdxDeclInfo) Attributes() []*IdxAttrInfo {
-	sc := []*IdxAttrInfo{}
+	var s []*IdxAttrInfo
+	gos_s := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+	gos_s.Cap = int(idi.c.numAttributes)
+	gos_s.Len = int(idi.c.numAttributes)
+	gos_s.Data = uintptr(unsafe.Pointer(idi.c.attributes))
 
-	length := int(idi.c.numAttributes)
-	goslice := (*[1 << 30]*C.CXIdxAttrInfo)(unsafe.Pointer(&idi.c.attributes))[:length:length]
-
-	for is := 0; is < length; is++ {
-		sc = append(sc, &IdxAttrInfo{*goslice[is]})
-	}
-
-	return sc
+	return s
 }
 
 func (idi IdxDeclInfo) NumAttributes() uint16 {

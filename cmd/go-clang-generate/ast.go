@@ -51,12 +51,26 @@ func (fa *ASTFunc) generate() {
 	fa.generateReceiver()
 
 	if fa.Function.Member != "" {
-		fa.generateReturn(&ast.SelectorExpr{
-			X: accessMember(fa.Function.Receiver.Name, "c"),
-			Sel: &ast.Ident{
-				Name: fa.Function.Member,
-			},
-		})
+		if fa.Function.ReturnType.IsSlice {
+			fa.addStatement(doDeclare("s", doGoType(fa.Function.ReturnType)))
+			fa.addCToGoSliceConversion("s", fa.Function.Receiver.Name+".c."+fa.Function.Member, fa.Function.Receiver.Name+".c."+fa.Function.ReturnType.LengthOfSlice)
+
+			fa.addReturnItem(&ast.Ident{
+				Name: "s",
+			})
+			fa.addReturnType("", fa.Function.ReturnType)
+			fa.addEmptyLine()
+
+			// Add the return statement
+			fa.addStatement(fa.Return)
+		} else {
+			fa.generateReturn(&ast.SelectorExpr{
+				X: accessMember(fa.Function.Receiver.Name, "c"),
+				Sel: &ast.Ident{
+					Name: fa.Function.Member,
+				},
+			})
+		}
 	} else {
 		// Basic call to the C function
 		call := doCCast(fa.Function.CName)
@@ -115,160 +129,7 @@ func (fa *ASTFunc) generateParameters() []ast.Expr {
 		if p.Type.IsSlice && !p.Type.IsReturnArgument {
 			hasDeclaration = true
 
-			// Declare the slice
-			sliceType := getSliceType(p.Type)
-
-			fa.addAssignment(
-				"ca_"+p.Name,
-				doCast(
-					"make",
-					&ast.ArrayType{
-						Elt: sliceType,
-					},
-					doCast(
-						"len",
-						&ast.Ident{
-							Name: p.Name,
-						},
-					),
-				),
-			)
-			fa.addStatement(doDeclare(
-				"cp_"+p.Name,
-				doPointer(sliceType),
-			))
-			fa.addStatement(&ast.IfStmt{
-				Cond: &ast.BinaryExpr{
-					X: doCast(
-						"len",
-						&ast.Ident{
-							Name: p.Name,
-						},
-					),
-					Op: token.GTR,
-					Y:  doZero(),
-				},
-				Body: &ast.BlockStmt{
-					List: []ast.Stmt{
-						&ast.AssignStmt{
-							Lhs: []ast.Expr{
-								&ast.Ident{
-									Name: "cp_" + p.Name,
-								},
-							},
-							Tok: token.ASSIGN,
-							Rhs: []ast.Expr{
-								doReference(&ast.IndexExpr{
-									X: &ast.Ident{
-										Name: "ca_" + p.Name,
-									},
-									Index: doZero(),
-								}),
-							},
-						},
-					},
-				},
-			})
-
-			// Assign elements
-			var loopStatements []ast.Stmt
-
-			// Handle our good old friend the const char * differently...
-			if p.Type.CGoName == CSChar {
-				loopStatements = append(loopStatements, &ast.AssignStmt{
-					Lhs: []ast.Expr{
-						&ast.Ident{
-							Name: "ci_str",
-						},
-					},
-					Tok: token.DEFINE,
-					Rhs: []ast.Expr{
-						doCCast(
-							"CString",
-							&ast.IndexExpr{
-								X: &ast.Ident{
-									Name: p.Name,
-								},
-								Index: &ast.Ident{
-									Name: "i",
-								},
-							},
-						),
-					},
-				})
-				loopStatements = append(loopStatements, &ast.DeferStmt{
-					Call: doCCast(
-						"free",
-						doCall(
-							"unsafe",
-							"Pointer",
-							&ast.Ident{
-								Name: "ci_str",
-							},
-						),
-					),
-				})
-				loopStatements = append(loopStatements, &ast.AssignStmt{
-					Lhs: []ast.Expr{
-						&ast.IndexExpr{
-							X: &ast.Ident{
-								Name: "ca_" + p.Name,
-							},
-							Index: &ast.Ident{
-								Name: "i",
-							},
-						},
-					},
-					Tok: token.ASSIGN,
-					Rhs: []ast.Expr{
-						&ast.Ident{
-							Name: "ci_str",
-						},
-					},
-				})
-			} else {
-				loopStatements = append(loopStatements, &ast.AssignStmt{
-					Lhs: []ast.Expr{
-						&ast.IndexExpr{
-							X: &ast.Ident{
-								Name: "ca_" + p.Name,
-							},
-							Index: &ast.Ident{
-								Name: "i",
-							},
-						},
-					},
-					Tok: token.ASSIGN,
-					Rhs: []ast.Expr{
-						&ast.SelectorExpr{
-							X: &ast.IndexExpr{
-								X: &ast.Ident{
-									Name: p.Name,
-								},
-								Index: &ast.Ident{
-									Name: "i",
-								},
-							},
-							Sel: &ast.Ident{
-								Name: "c",
-							},
-						},
-					},
-				})
-			}
-
-			fa.addStatement(&ast.RangeStmt{
-				Key: &ast.Ident{
-					Name: "i",
-				},
-				Tok: token.DEFINE,
-				X: &ast.Ident{
-					Name: p.Name,
-				},
-				Body: &ast.BlockStmt{
-					List: loopStatements,
-				},
-			})
+			fa.addGoToCSliceConversion(p.Name, p.Type)
 		} else if p.Type.IsReturnArgument {
 			if p.Type.LengthOfSlice == "" {
 				// Add the return type to the function return arguments
@@ -663,70 +524,231 @@ func (fa *ASTFunc) addCToGoConversions() {
 				}
 			}
 
-			fa.addAssignment("gos_"+p.Name, &ast.CallExpr{
-				Fun: &ast.ParenExpr{
-					X: doPointer(accessMember("reflect", "SliceHeader")),
-				},
-				Args: []ast.Expr{
-					doCall(
-						"unsafe",
-						"Pointer",
-						doReference(&ast.Ident{
-							Name: p.Name,
-						}),
-					),
-				},
-			})
-			fa.addStatement(&ast.AssignStmt{
-				Lhs: []ast.Expr{
-					accessMember("gos_"+p.Name, "Cap"),
-				},
-				Tok: token.ASSIGN,
-				Rhs: []ast.Expr{
-					doCast(
-						"int",
-						&ast.Ident{
-							Name: lengthOfSlice,
-						},
-					),
-				},
-			})
-			fa.addStatement(&ast.AssignStmt{
-				Lhs: []ast.Expr{
-					accessMember("gos_"+p.Name, "Len"),
-				},
-				Tok: token.ASSIGN,
-				Rhs: []ast.Expr{
-					doCast(
-						"int",
-						&ast.Ident{
-							Name: lengthOfSlice,
-						},
-					),
-				},
-			})
-			fa.addStatement(&ast.AssignStmt{
-				Lhs: []ast.Expr{
-					accessMember("gos_"+p.Name, "Data"),
-				},
-				Tok: token.ASSIGN,
-				Rhs: []ast.Expr{
-					doCast(
-						"uintptr",
-						doCall(
-							"unsafe",
-							"Pointer",
-							&ast.Ident{
-								Name: "cp_" + p.Name,
-							},
-						),
-					),
-				},
-			})
+			fa.addCToGoSliceConversion(p.Name, "cp_"+p.Name, lengthOfSlice)
 		}
 	}
 
 	if cToGoTypeConversions {
 		fa.addEmptyLine()
 	}
+}
+
+func (fa *ASTFunc) addCToGoSliceConversion(name string, cname string, lengthOfSlice string) {
+	fa.addAssignment("gos_"+name, &ast.CallExpr{
+		Fun: &ast.ParenExpr{
+			X: doPointer(accessMember("reflect", "SliceHeader")),
+		},
+		Args: []ast.Expr{
+			doCall(
+				"unsafe",
+				"Pointer",
+				doReference(&ast.Ident{
+					Name: name,
+				}),
+			),
+		},
+	})
+	fa.addStatement(&ast.AssignStmt{
+		Lhs: []ast.Expr{
+			accessMember("gos_"+name, "Cap"),
+		},
+		Tok: token.ASSIGN,
+		Rhs: []ast.Expr{
+			doCast(
+				"int",
+				&ast.Ident{
+					Name: lengthOfSlice,
+				},
+			),
+		},
+	})
+	fa.addStatement(&ast.AssignStmt{
+		Lhs: []ast.Expr{
+			accessMember("gos_"+name, "Len"),
+		},
+		Tok: token.ASSIGN,
+		Rhs: []ast.Expr{
+			doCast(
+				"int",
+				&ast.Ident{
+					Name: lengthOfSlice,
+				},
+			),
+		},
+	})
+	fa.addStatement(&ast.AssignStmt{
+		Lhs: []ast.Expr{
+			accessMember("gos_"+name, "Data"),
+		},
+		Tok: token.ASSIGN,
+		Rhs: []ast.Expr{
+			doCast(
+				"uintptr",
+				doCall(
+					"unsafe",
+					"Pointer",
+					&ast.Ident{
+						Name: cname,
+					},
+				),
+			),
+		},
+	})
+}
+
+func (fa *ASTFunc) addGoToCSliceConversion(name string, typ Type) {
+	// Declare the slice
+	sliceType := getSliceType(typ)
+
+	fa.addAssignment(
+		"ca_"+name,
+		doCast(
+			"make",
+			&ast.ArrayType{
+				Elt: sliceType,
+			},
+			doCast(
+				"len",
+				&ast.Ident{
+					Name: name,
+				},
+			),
+		),
+	)
+	fa.addStatement(doDeclare(
+		"cp_"+name,
+		doPointer(sliceType),
+	))
+	fa.addStatement(&ast.IfStmt{
+		Cond: &ast.BinaryExpr{
+			X: doCast(
+				"len",
+				&ast.Ident{
+					Name: name,
+				},
+			),
+			Op: token.GTR,
+			Y:  doZero(),
+		},
+		Body: &ast.BlockStmt{
+			List: []ast.Stmt{
+				&ast.AssignStmt{
+					Lhs: []ast.Expr{
+						&ast.Ident{
+							Name: "cp_" + name,
+						},
+					},
+					Tok: token.ASSIGN,
+					Rhs: []ast.Expr{
+						doReference(&ast.IndexExpr{
+							X: &ast.Ident{
+								Name: "ca_" + name,
+							},
+							Index: doZero(),
+						}),
+					},
+				},
+			},
+		},
+	})
+
+	// Assign elements
+	var loopStatements []ast.Stmt
+
+	// Handle our good old friend the const char * differently...
+	if typ.CGoName == CSChar {
+		loopStatements = append(loopStatements, &ast.AssignStmt{
+			Lhs: []ast.Expr{
+				&ast.Ident{
+					Name: "ci_str",
+				},
+			},
+			Tok: token.DEFINE,
+			Rhs: []ast.Expr{
+				doCCast(
+					"CString",
+					&ast.IndexExpr{
+						X: &ast.Ident{
+							Name: name,
+						},
+						Index: &ast.Ident{
+							Name: "i",
+						},
+					},
+				),
+			},
+		})
+		loopStatements = append(loopStatements, &ast.DeferStmt{
+			Call: doCCast(
+				"free",
+				doCall(
+					"unsafe",
+					"Pointer",
+					&ast.Ident{
+						Name: "ci_str",
+					},
+				),
+			),
+		})
+		loopStatements = append(loopStatements, &ast.AssignStmt{
+			Lhs: []ast.Expr{
+				&ast.IndexExpr{
+					X: &ast.Ident{
+						Name: "ca_" + name,
+					},
+					Index: &ast.Ident{
+						Name: "i",
+					},
+				},
+			},
+			Tok: token.ASSIGN,
+			Rhs: []ast.Expr{
+				&ast.Ident{
+					Name: "ci_str",
+				},
+			},
+		})
+	} else {
+		loopStatements = append(loopStatements, &ast.AssignStmt{
+			Lhs: []ast.Expr{
+				&ast.IndexExpr{
+					X: &ast.Ident{
+						Name: "ca_" + name,
+					},
+					Index: &ast.Ident{
+						Name: "i",
+					},
+				},
+			},
+			Tok: token.ASSIGN,
+			Rhs: []ast.Expr{
+				&ast.SelectorExpr{
+					X: &ast.IndexExpr{
+						X: &ast.Ident{
+							Name: name,
+						},
+						Index: &ast.Ident{
+							Name: "i",
+						},
+					},
+					Sel: &ast.Ident{
+						Name: "c",
+					},
+				},
+			},
+		})
+	}
+
+	fa.addStatement(&ast.RangeStmt{
+		Key: &ast.Ident{
+			Name: "i",
+		},
+		Tok: token.DEFINE,
+		X: &ast.Ident{
+			Name: name,
+		},
+		Body: &ast.BlockStmt{
+			List: loopStatements,
+		},
+	})
 }

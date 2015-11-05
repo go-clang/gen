@@ -6,7 +6,6 @@ import (
 	"go/format"
 	"go/token"
 	"strings"
-	"text/template"
 
 	"github.com/sbinet/go-clang"
 )
@@ -178,42 +177,4 @@ func (f *Function) Generate() string {
 	}
 
 	return sss
-}
-
-// FunctionSliceReturn TODO refactor
-type FunctionSliceReturn struct {
-	*Function
-
-	SizeMember string
-
-	CElementType    string
-	ElementType     string
-	IsPrimitive     bool
-	ArrayDimensions int
-	ArraySize       int64
-}
-
-var templateGenerateReturnSlice = template.Must(template.New("go-clang-generate-slice").Parse(`{{$.Comment}}
-func ({{$.Receiver.Name}} {{$.Receiver.Type.GoName}}) {{$.Name}}() []{{if eq $.ArrayDimensions 2 }}*{{end}}{{$.ElementType}} {
-	sc := []{{if eq $.ArrayDimensions 2 }}*{{end}}{{$.ElementType}}{}
-
-	length := {{if ne $.ArraySize -1}}{{$.ArraySize}}{{else}}int({{$.Receiver.Name}}.c.{{$.SizeMember}}){{end}}
-	goslice := (*[1 << 30]{{if or (eq $.ArrayDimensions 2) (eq $.ElementType "unsafe.Pointer")}}*{{end}}C.{{$.CElementType}})(unsafe.Pointer(&{{$.Receiver.Name}}.c.{{$.Member}}))[:length:length]
-
-	for is := 0; is < length; is++ {
-		sc = append(sc, {{if eq $.ArrayDimensions 2}}&{{end}}{{$.ElementType}}{{if $.IsPrimitive}}({{if eq $.ArrayDimensions 2}}*{{end}}goslice[is]){{else}}{{"{"}}{{if eq $.ArrayDimensions 2}}*{{end}}goslice[is]{{"}"}}{{end}})
-	}
-
-	return sc
-}
-`))
-
-func generateFunctionSliceReturn(f *FunctionSliceReturn) string {
-	var b bytes.Buffer
-	if err := templateGenerateReturnSlice.Execute(&b, f); err != nil {
-		panic(err)
-	}
-
-	return b.String()
-
 }

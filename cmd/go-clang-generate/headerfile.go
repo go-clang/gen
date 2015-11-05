@@ -339,20 +339,13 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			}
 
 			// TODO happy hack, if this is an array length parameter we need to find its partner
-			var paCName string
-			if pan := strings.TrimPrefix(p.CName, "num_"); len(pan) != len(p.CName) {
-				paCName = pan
-			} else if pan := strings.TrimPrefix(p.CName, "Num"); len(pan) != len(p.CName) && unicode.IsUpper(rune(pan[0])) {
-				paCName = pan
-			} else if pan := strings.TrimSuffix(p.CName, "_size"); len(pan) != len(p.CName) {
-				paCName = pan
-			}
+			paCName := ArrayNameFromLength(p.CName)
 
 			if paCName != "" {
 				for j := range f.Parameters {
 					pa := &f.Parameters[j]
 
-					if pa.CName == paCName {
+					if strings.ToLower(pa.CName) == strings.ToLower(paCName) {
 						// TODO remove this when TypeFromClangType cane handle this kind of conversion
 						if pa.Type.GoName == "struct CXUnsavedFile" || pa.Type.GoName == "UnsavedFile" {
 							pa.Type.GoName = "UnsavedFile"

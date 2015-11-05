@@ -2,7 +2,10 @@ package phoenix
 
 // #include "go-clang.h"
 import "C"
-import "unsafe"
+import (
+	"reflect"
+	"unsafe"
+)
 
 type IdxCXXClassDeclInfo struct {
 	c C.CXIdxCXXClassDeclInfo
@@ -15,16 +18,13 @@ func (icxxcdi IdxCXXClassDeclInfo) DeclInfo() *IdxDeclInfo {
 }
 
 func (icxxcdi IdxCXXClassDeclInfo) Bases() []*IdxBaseClassInfo {
-	sc := []*IdxBaseClassInfo{}
+	var s []*IdxBaseClassInfo
+	gos_s := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+	gos_s.Cap = int(icxxcdi.c.numBases)
+	gos_s.Len = int(icxxcdi.c.numBases)
+	gos_s.Data = uintptr(unsafe.Pointer(icxxcdi.c.bases))
 
-	length := int(icxxcdi.c.numBases)
-	goslice := (*[1 << 30]*C.CXIdxBaseClassInfo)(unsafe.Pointer(&icxxcdi.c.bases))[:length:length]
-
-	for is := 0; is < length; is++ {
-		sc = append(sc, &IdxBaseClassInfo{*goslice[is]})
-	}
-
-	return sc
+	return s
 }
 
 func (icxxcdi IdxCXXClassDeclInfo) NumBases() uint16 {
