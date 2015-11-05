@@ -417,15 +417,49 @@ func (fa *ASTFunc) generateReturn(call ast.Expr) {
 				fa.addEmptyLine()
 			} else if returnType.PointerLevel > 0 {
 				// Do the C function call and save the result into the new variable "o"
-				fa.addAssignment("o", doUnreference(call))
+				fa.addAssignment("o", call)
 				fa.addEmptyLine()
 
-				fa.addReturnItem(doReference(doCompose(
-					returnType.GoName,
-					&ast.Ident{
-						Name: "o",
+				fa.addStatement(doDeclare(
+					"gop_o",
+					doGoType(returnType),
+				))
+				fa.addStatement(&ast.IfStmt{
+					Cond: &ast.BinaryExpr{
+						X: &ast.Ident{
+							Name: "o",
+						},
+						Op: token.NEQ,
+						Y: &ast.Ident{
+							Name: "nil",
+						},
 					},
-				)))
+					Body: &ast.BlockStmt{
+						List: []ast.Stmt{
+							&ast.AssignStmt{
+								Lhs: []ast.Expr{
+									&ast.Ident{
+										Name: "gop_o",
+									},
+								},
+								Tok: token.ASSIGN,
+								Rhs: []ast.Expr{
+									doReference(doCompose(
+										returnType.GoName,
+										doUnreference(&ast.Ident{
+											Name: "o",
+										}),
+									)),
+								},
+							},
+						},
+					},
+				})
+				fa.addEmptyLine()
+
+				fa.addReturnItem(&ast.Ident{
+					Name: "gop_o",
+				})
 			} else {
 				var convCall ast.Expr
 

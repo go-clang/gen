@@ -23,9 +23,14 @@ func (ieri IdxEntityRefInfo) Loc() IdxLoc {
 
 // The entity that gets referenced.
 func (ieri IdxEntityRefInfo) ReferencedEntity() *IdxEntityInfo {
-	o := *ieri.c.referencedEntity
+	o := ieri.c.referencedEntity
 
-	return &IdxEntityInfo{o}
+	var gop_o *IdxEntityInfo
+	if o != nil {
+		gop_o = &IdxEntityInfo{*o}
+	}
+
+	return gop_o
 }
 
 /*
@@ -40,14 +45,24 @@ func (ieri IdxEntityRefInfo) ReferencedEntity() *IdxEntityInfo {
 	the parentEntity will be the function/method.
 */
 func (ieri IdxEntityRefInfo) ParentEntity() *IdxEntityInfo {
-	o := *ieri.c.parentEntity
+	o := ieri.c.parentEntity
 
-	return &IdxEntityInfo{o}
+	var gop_o *IdxEntityInfo
+	if o != nil {
+		gop_o = &IdxEntityInfo{*o}
+	}
+
+	return gop_o
 }
 
 // Lexical container context of the reference.
 func (ieri IdxEntityRefInfo) Container() *IdxContainerInfo {
-	o := *ieri.c.container
+	o := ieri.c.container
 
-	return &IdxContainerInfo{o}
+	var gop_o *IdxContainerInfo
+	if o != nil {
+		gop_o = &IdxContainerInfo{*o}
+	}
+
+	return gop_o
 }

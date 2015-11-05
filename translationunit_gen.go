@@ -398,9 +398,14 @@ func (tu TranslationUnit) CodeCompleteAt(completeFilename string, completeLine u
 	c_completeFilename := C.CString(completeFilename)
 	defer C.free(unsafe.Pointer(c_completeFilename))
 
-	o := *C.clang_codeCompleteAt(tu.c, c_completeFilename, C.uint(completeLine), C.uint(completeColumn), cp_unsavedFiles, C.uint(len(unsavedFiles)), C.uint(options))
+	o := C.clang_codeCompleteAt(tu.c, c_completeFilename, C.uint(completeLine), C.uint(completeColumn), cp_unsavedFiles, C.uint(len(unsavedFiles)), C.uint(options))
 
-	return &CodeCompleteResults{o}
+	var gop_o *CodeCompleteResults
+	if o != nil {
+		gop_o = &CodeCompleteResults{*o}
+	}
+
+	return gop_o
 }
 
 /*

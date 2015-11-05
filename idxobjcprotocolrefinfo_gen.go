@@ -8,9 +8,14 @@ type IdxObjCProtocolRefInfo struct {
 }
 
 func (iocpri IdxObjCProtocolRefInfo) Protocol() *IdxEntityInfo {
-	o := *iocpri.c.protocol
+	o := iocpri.c.protocol
 
-	return &IdxEntityInfo{o}
+	var gop_o *IdxEntityInfo
+	if o != nil {
+		gop_o = &IdxEntityInfo{*o}
+	}
+
+	return gop_o
 }
 
 func (iocpri IdxObjCProtocolRefInfo) Cursor() Cursor {
