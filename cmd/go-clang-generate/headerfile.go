@@ -417,6 +417,12 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			fname = fn
 		}
 
+		if len(f.Parameters) > 0 && h.isEnumOrStruct(f.Parameters[0].Type.GoName) {
+			if f.Parameters[0].Type.GoName == "CodeCompleteResults" {
+				fname = strings.TrimPrefix(fname, "codeComplete")
+			}
+		}
+
 		// If we find a heuristic to add the function, add it!
 		added := false
 		if !found {

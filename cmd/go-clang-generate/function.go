@@ -6,6 +6,7 @@ import (
 	"go/format"
 	"go/token"
 	"strings"
+	"unicode"
 
 	"github.com/sbinet/go-clang"
 )
@@ -39,6 +40,9 @@ func trimCommonFunctionName(name string, typ Type) string {
 func trimCommonFunctionNamePrefix(name string) string {
 	name = strings.TrimPrefix(name, "create")
 	name = strings.TrimPrefix(name, "get")
+	if len(name) > 4 && unicode.IsUpper(rune(name[3])) {
+		name = strings.TrimPrefix(name, "Get")
+	}
 
 	name = trimLanguagePrefix(name)
 
