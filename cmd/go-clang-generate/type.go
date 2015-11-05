@@ -59,7 +59,7 @@ type Type struct {
 	IsSlice           bool
 	LengthOfSlice     string
 
-	IsPointerComposition bool // TODO we need to handle this better
+	IsPointerComposition bool
 }
 
 func TypeFromClangType(cType clang.Type) (Type, error) {
@@ -114,7 +114,7 @@ func TypeFromClangType(cType clang.Type) (Type, error) {
 	case clang.TK_Bool:
 		typ.GoName = GoBool
 	case clang.TK_Void:
-		// TODO Does not exist in Go, what should we do with it?
+		// TODO Does not exist in Go, what should we do with it? https://github.com/zimmski/go-clang-phoenix/issues/50
 		typ.CGoName = "void"
 		typ.GoName = "void"
 	case clang.TK_ConstantArray:
@@ -132,7 +132,7 @@ func TypeFromClangType(cType clang.Type) (Type, error) {
 		typ.IsPrimitive = false
 
 		typeStr := cType.TypeSpelling()
-		if typeStr == "CXString" { // TODO eliminate CXString from the generic code
+		if typeStr == "CXString" { // TODO eliminate CXString from the generic code https://github.com/zimmski/go-clang-phoenix/issues/25
 			typeStr = "cxstring"
 		} else if typeStr == "time_t" {
 			typ.CGoName = typeStr
@@ -178,7 +178,7 @@ func TypeFromClangType(cType clang.Type) (Type, error) {
 		typ.GoName = trimLanguagePrefix(cType.Declaration().DisplayName())
 		typ.IsEnumLiteral = true
 		typ.IsPrimitive = true
-	case clang.TK_Unexposed: // There is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013 TODO where is this documented?
+	case clang.TK_Unexposed: // There is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013 https://llvm.org/bugs/show_bug.cgi?id=15089
 		subTyp, err := TypeFromClangType(cType.CanonicalType())
 		if err != nil {
 			return Type{}, err

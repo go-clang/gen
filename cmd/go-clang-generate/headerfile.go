@@ -215,8 +215,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			underlyingStructType := strings.TrimSuffix(strings.TrimPrefix(underlyingType, "struct "), " *")
 
 			if s, ok := h.lookupStruct[underlyingStructType]; ok && !s.CNameIsTypeDef && strings.HasPrefix(underlyingType, "struct "+s.CName) {
-				// Sometimes the typedef is not a parent of the struct but a sibling TODO find out if this is a bug?
-
+				// Sometimes the typedef is not a parent of the struct but a sibling
 				sn := HandleStructCursor(cursor, cname, true)
 
 				h.lookupStruct[sn.Name] = sn
@@ -251,7 +250,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 	clangFile := NewFile("clang")
 
 	for _, f := range h.functions {
-		// Some functions are not compiled in (TODO only 3.4?) the library see https://lists.launchpad.net/desktop-packages/msg75835.html for a never resolved bug report
+		// Some functions are not compiled in (TODO only 3.4?) the library see https://lists.launchpad.net/desktop-packages/msg75835.html for a never resolved bug report https://github.com/zimmski/go-clang-phoenix/issues/59
 		if f.CName == "clang_CompileCommand_getMappedSourceContent" || f.CName == "clang_CompileCommand_getMappedSourcePath" || f.CName == "clang_CompileCommand_getNumMappedSources" {
 			fmt.Printf("Ignore function %q because it is not compiled within libClang\n", f.CName)
 
@@ -271,11 +270,11 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 		}
 
 		/*
-			TODO mark the enum
+			TODO mark the enum https://github.com/zimmski/go-clang-phoenix/issues/40
 				typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor, CXCursor parent, CXClientData client_data);
 			as manually implemented
 		*/
-		// TODO report other enums like callbacks that they are not implemented
+		// TODO report other enums like callbacks that they are not implemented https://github.com/zimmski/go-clang-phoenix/issues/51
 
 		fname := f.Name
 
@@ -288,7 +287,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			}
 			if e, ok := h.lookupEnum[p.Type.GoName]; ok {
 				p.CName = e.Receiver.CName
-				// TODO remove the receiver... and copy only names here to preserve the original pointers and so
+				// TODO remove the receiver... and copy only names here to preserve the original pointers and so https://github.com/zimmski/go-clang-phoenix/issues/40
 				p.Type.GoName = e.Receiver.Type.GoName
 				p.Type.CGoName = e.Receiver.Type.CGoName
 				p.Type.CGoName = e.Receiver.Type.CGoName
@@ -306,7 +305,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 				continue
 			}
 
-			// TODO happy hack, whiteflag types that are return arguments
+			// TODO happy hack, whiteflag types that are return arguments https://github.com/zimmski/go-clang-phoenix/issues/40
 			if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == GoInt16 || p.Type.GoName == GoUInt16 || p.Type.GoName == "CompilationDatabase_Error" || p.Type.GoName == "PlatformAvailability" || p.Type.GoName == "SourceRange" || p.Type.GoName == "LoadDiag_Error") {
 				p.Type.IsReturnArgument = true
 			}
@@ -318,7 +317,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 				p.Type.IsSlice = true
 			}
 
-			// TODO happy hack, if this is an array length parameter we need to find its partner
+			// TODO happy hack, if this is an array length parameter we need to find its partner https://github.com/zimmski/go-clang-phoenix/issues/40
 			paCName := ArrayNameFromLength(p.CName)
 
 			if paCName != "" {
@@ -326,7 +325,6 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 					pa := &f.Parameters[j]
 
 					if strings.ToLower(pa.CName) == strings.ToLower(paCName) {
-						// TODO remove this when TypeFromClangType cane handle this kind of conversion
 						if pa.Type.GoName == "struct CXUnsavedFile" || pa.Type.GoName == "UnsavedFile" {
 							pa.Type.GoName = "UnsavedFile"
 							pa.Type.CGoName = "struct_CXUnsavedFile"
@@ -405,12 +403,6 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 
 				break
 			}
-		}
-
-		if !f.ReturnType.IsSlice && f.ReturnType.PointerLevel > 0 && !(f.ReturnType.PointerLevel == 1 && f.ReturnType.CGoName == CSChar) && f.CName != "clang_codeCompleteAt" && f.ReturnType.GoName != "IdxCXXClassDeclInfo" && f.ReturnType.GoName != "IdxIBOutletCollectionAttrInfo" && f.ReturnType.GoName != "IdxObjCPropertyDeclInfo" && f.ReturnType.GoName != "IdxObjCProtocolRefListInfo" && f.ReturnType.GoName != "IdxObjCCategoryDeclInfo" && f.ReturnType.GoName != "IdxObjCInterfaceDeclInfo" && f.ReturnType.GoName != "IdxObjCContainerDeclInfo" { // TODO implement to return slices and references returns
-			fmt.Printf("Cannot handle return argument %s -> %#v\n", f.CName, f.ReturnType)
-
-			found = true
 		}
 
 		// If we find a heuristic to add the function, add it!

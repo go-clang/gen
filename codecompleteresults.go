@@ -1,6 +1,6 @@
 package phoenix
 
-func (ccr *CodeCompleteResults) Diagnostics() []Diagnostic { // TODO this can be generated
+func (ccr *CodeCompleteResults) Diagnostics() []Diagnostic { // TODO this can be generated https://github.com/zimmski/go-clang-phoenix/issues/47
 	s := make([]Diagnostic, ccr.CodeCompleteGetNumDiagnostics())
 
 	for i := range s {

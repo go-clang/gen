@@ -66,7 +66,7 @@ func Cmd(args []string) error {
 	fmt.Printf("Will generate go-clang for LLVM version %s into the current directory\n", llvmVersion.String())
 
 	clangCDirectory := "./clang-c/"
-	// TODO reenable
+	// TODO reenable https://github.com/zimmski/go-clang-phoenix/issues/55
 	/*// Copy the Clang-C include directory into the current directory
 	_ = os.RemoveAll(clangCDirectory)
 	if err := shutil.CopyTree(clangCIncludeDir, clangCDirectory, nil); err != nil {

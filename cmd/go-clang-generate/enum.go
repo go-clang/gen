@@ -61,7 +61,7 @@ func HandleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 		case clang.CK_EnumConstantDecl:
 			ei := EnumItem{
 				CName:   cursor.Spelling(),
-				Comment: cleanDoxygenComment(cursor.RawCommentText()), // TODO We are always using the same comment if there is none, see "TypeKind"
+				Comment: cleanDoxygenComment(cursor.RawCommentText()), // TODO We are always using the same comment if there is none, see "TypeKind" https://github.com/zimmski/go-clang-phoenix/issues/58
 				Value:   cursor.EnumConstantDeclUnsignedValue(),
 			}
 			ei.Name = trimLanguagePrefix(ei.CName)

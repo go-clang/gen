@@ -33,7 +33,7 @@ func (tu TranslationUnit) IsValid() bool {
 	return tu.c != nil
 }
 
-func (tu TranslationUnit) Diagnostics() []Diagnostic { // TODO this can be generated
+func (tu TranslationUnit) Diagnostics() []Diagnostic { // TODO this can be generated https://github.com/zimmski/go-clang-phoenix/issues/47
 	s := make([]Diagnostic, tu.NumDiagnostics())
 
 	for i := range s {

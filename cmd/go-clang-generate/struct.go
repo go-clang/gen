@@ -42,9 +42,9 @@ func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {
 		case clang.CK_FieldDecl:
-			typ, err := TypeFromClangType(cursor.Type()) // TODO error handling
+			typ, err := TypeFromClangType(cursor.Type())
 			if err != nil {
-				return clang.CVR_Continue
+				panic(err)
 			}
 
 			if typ.IsFunctionPointer {
@@ -92,7 +92,7 @@ func (s *Struct) Generate() error {
 func (s *Struct) AddMemberGetters() error {
 	// Prepare members
 	for _, m := range s.Members {
-		// TODO happy hack, if this is an array length parameter we need to find its partner
+		// TODO happy hack, if this is an array length parameter we need to find its partner https://github.com/zimmski/go-clang-phoenix/issues/40
 		maCName := ArrayNameFromLength(m.CName)
 
 		if maCName != "" {
@@ -100,7 +100,7 @@ func (s *Struct) AddMemberGetters() error {
 				if strings.ToLower(ma.CName) == strings.ToLower(maCName) {
 					m.Type.LengthOfSlice = ma.CName
 					ma.Type.IsSlice = true
-					ma.Type.LengthOfSlice = m.CName // TODO wrong usage but needed for the getter generation... maybe refactor this LengthOfSlice alltogether?
+					ma.Type.LengthOfSlice = m.CName // TODO wrong usage but needed for the getter generation... maybe refactor this LengthOfSlice alltogether? https://github.com/zimmski/go-clang-phoenix/issues/49
 
 					break
 				}
@@ -114,7 +114,7 @@ func (s *Struct) AddMemberGetters() error {
 			continue
 		}
 
-		if m.Type.IsArray { // TODO generate arrays with the correct size and type
+		if m.Type.IsArray { // TODO generate arrays with the correct size and type https://github.com/zimmski/go-clang-phoenix/issues/48
 			continue
 		}
 
