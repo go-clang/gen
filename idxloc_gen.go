@@ -16,7 +16,7 @@ type IdxLoc struct {
 	location of the macro expansion and if it refers into a macro argument
 	retrieves the location of the argument.
 */
-func (il IdxLoc) IndexLoc_getFileLocation() (IdxClientFile, File, uint16, uint16, uint16) {
+func (il IdxLoc) FileLocation() (IdxClientFile, File, uint16, uint16, uint16) {
 	var indexFile IdxClientFile
 	var file File
 	var line C.uint
@@ -29,7 +29,7 @@ func (il IdxLoc) IndexLoc_getFileLocation() (IdxClientFile, File, uint16, uint16
 }
 
 // Retrieve the CXSourceLocation represented by the given CXIdxLoc.
-func (il IdxLoc) IndexLoc_getCXSourceLocation() SourceLocation {
+func (il IdxLoc) SourceLocation() SourceLocation {
 	return SourceLocation{C.clang_indexLoc_getCXSourceLocation(il.c)}
 }
 

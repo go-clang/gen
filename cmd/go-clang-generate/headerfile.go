@@ -407,7 +407,9 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 		fname := f.Name
 
 		// TODO happy hack we trim some whitelisted prefixes https://github.com/zimmski/go-clang-phoenix/issues/40
-		if fn := strings.TrimPrefix(fname, "index_"); len(fn) != len(fname) {
+		if fn := strings.TrimPrefix(fname, "indexLoc_"); len(fn) != len(fname) {
+			fname = fn
+		} else if fn := strings.TrimPrefix(fname, "index_"); len(fn) != len(fname) {
 			fname = fn
 		} else if fn := strings.TrimPrefix(fname, "Location_"); len(fn) != len(fname) {
 			fname = fn
