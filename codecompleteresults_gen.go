@@ -15,17 +15,17 @@ import (
 	clang_disposeCodeCompleteResults.
 */
 type CodeCompleteResults struct {
-	c C.CXCodeCompleteResults
+	c *C.CXCodeCompleteResults
 }
 
 // Free the given set of code-completion results.
-func (ccr *CodeCompleteResults) Dispose() {
-	C.clang_disposeCodeCompleteResults(&ccr.c)
+func (ccr CodeCompleteResults) Dispose() {
+	C.clang_disposeCodeCompleteResults(ccr.c)
 }
 
 // Determine the number of diagnostics produced prior to the location where code completion was performed.
-func (ccr *CodeCompleteResults) CodeCompleteGetNumDiagnostics() uint16 {
-	return uint16(C.clang_codeCompleteGetNumDiagnostics(&ccr.c))
+func (ccr CodeCompleteResults) CodeCompleteGetNumDiagnostics() uint16 {
+	return uint16(C.clang_codeCompleteGetNumDiagnostics(ccr.c))
 }
 
 /*
@@ -37,8 +37,8 @@ func (ccr *CodeCompleteResults) CodeCompleteGetNumDiagnostics() uint16 {
 	Returns the requested diagnostic. This diagnostic must be freed
 	via a call to clang_disposeDiagnostic().
 */
-func (ccr *CodeCompleteResults) CodeCompleteGetDiagnostic(index uint16) Diagnostic {
-	return Diagnostic{C.clang_codeCompleteGetDiagnostic(&ccr.c, C.uint(index))}
+func (ccr CodeCompleteResults) CodeCompleteGetDiagnostic(index uint16) Diagnostic {
+	return Diagnostic{C.clang_codeCompleteGetDiagnostic(ccr.c, C.uint(index))}
 }
 
 /*
@@ -50,8 +50,8 @@ func (ccr *CodeCompleteResults) CodeCompleteGetDiagnostic(index uint16) Diagnost
 	Returns the kinds of completions that are appropriate for use
 	along with the given code completion results.
 */
-func (ccr *CodeCompleteResults) CodeCompleteGetContexts() uint64 {
-	return uint64(C.clang_codeCompleteGetContexts(&ccr.c))
+func (ccr CodeCompleteResults) CodeCompleteGetContexts() uint64 {
+	return uint64(C.clang_codeCompleteGetContexts(ccr.c))
 }
 
 /*
@@ -70,10 +70,10 @@ func (ccr *CodeCompleteResults) CodeCompleteGetContexts() uint64 {
 	Returns the container kind, or CXCursor_InvalidCode if there is not a
 	container
 */
-func (ccr *CodeCompleteResults) CodeCompleteGetContainerKind() (uint16, CursorKind) {
+func (ccr CodeCompleteResults) CodeCompleteGetContainerKind() (uint16, CursorKind) {
 	var isIncomplete C.uint
 
-	o := CursorKind(C.clang_codeCompleteGetContainerKind(&ccr.c, &isIncomplete))
+	o := CursorKind(C.clang_codeCompleteGetContainerKind(ccr.c, &isIncomplete))
 
 	return uint16(isIncomplete), o
 }
@@ -87,8 +87,8 @@ func (ccr *CodeCompleteResults) CodeCompleteGetContainerKind() (uint16, CursorKi
 
 	Returns the USR for the container
 */
-func (ccr *CodeCompleteResults) CodeCompleteGetContainerUSR() string {
-	o := cxstring{C.clang_codeCompleteGetContainerUSR(&ccr.c)}
+func (ccr CodeCompleteResults) CodeCompleteGetContainerUSR() string {
+	o := cxstring{C.clang_codeCompleteGetContainerUSR(ccr.c)}
 	defer o.Dispose()
 
 	return o.String()
@@ -105,8 +105,8 @@ func (ccr *CodeCompleteResults) CodeCompleteGetContainerUSR() string {
 	Returns the selector (or partial selector) that has been entered thus far
 	for an Objective-C message send.
 */
-func (ccr *CodeCompleteResults) CodeCompleteGetObjCSelector() string {
-	o := cxstring{C.clang_codeCompleteGetObjCSelector(&ccr.c)}
+func (ccr CodeCompleteResults) CodeCompleteGetObjCSelector() string {
+	o := cxstring{C.clang_codeCompleteGetObjCSelector(ccr.c)}
 	defer o.Dispose()
 
 	return o.String()

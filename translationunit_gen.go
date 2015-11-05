@@ -402,7 +402,7 @@ func (tu TranslationUnit) CodeCompleteAt(completeFilename string, completeLine u
 
 	var gop_o *CodeCompleteResults
 	if o != nil {
-		gop_o = &CodeCompleteResults{*o}
+		gop_o = &CodeCompleteResults{o}
 	}
 
 	return gop_o

@@ -1,6 +1,5 @@
 package phoenix
 
-/* TODO
 import (
 	"strings"
 	"testing"
@@ -16,8 +15,8 @@ func TestCompletion(t *testing.T) {
 	assert.True(t, tu.IsValid())
 	defer tu.Dispose()
 
-	res := tu.CodeCompleteAt("cursor.c", 10, 16, nil, 0)
-	assert.True(t, res.IsValid())
+	res := tu.CodeCompleteAt("cursor.c", 5, 18, nil, 0)
+	assert.NotNil(t, res)
 	defer res.Dispose()
 
 	if n := len(res.Results()); n < 10 {
@@ -27,13 +26,20 @@ func TestCompletion(t *testing.T) {
 	t.Logf("%+v", res)
 	for _, r := range res.Results() {
 		t.Logf("%+v", r)
-		for _, c := range r.CompletionString.Chunks() {
-			t.Logf("\t%+v", c)
+
+		cs := r.CompletionString()
+
+		for i := uint16(0); i < cs.NumCompletionChunks(); i++ {
+			t.Logf("\t%s %s", cs.CompletionChunkKind(i), cs.CompletionChunkText(i))
 		}
 	}
 
 	diags := res.Diagnostics()
-	defer diags.Dispose()
+	defer func() {
+		for _, d := range diags {
+			d.Dispose()
+		}
+	}()
 
 	ok := false
 	for _, d := range diags {
@@ -44,4 +50,3 @@ func TestCompletion(t *testing.T) {
 	}
 	assert.True(t, ok)
 }
-*/
