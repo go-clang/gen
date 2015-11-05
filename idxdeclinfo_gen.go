@@ -8,49 +8,84 @@ import (
 )
 
 type IdxDeclInfo struct {
-	c C.CXIdxDeclInfo
+	c *C.CXIdxDeclInfo
 }
 
 func (idi *IdxDeclInfo) Index_getObjCContainerDeclInfo() *IdxObjCContainerDeclInfo {
-	o := *C.clang_index_getObjCContainerDeclInfo(&idi.c)
+	o := C.clang_index_getObjCContainerDeclInfo(idi.c)
 
-	return &IdxObjCContainerDeclInfo{o}
+	var gop_o *IdxObjCContainerDeclInfo
+	if o != nil {
+		gop_o = &IdxObjCContainerDeclInfo{*o}
+	}
+
+	return gop_o
 }
 
 func (idi *IdxDeclInfo) Index_getObjCInterfaceDeclInfo() *IdxObjCInterfaceDeclInfo {
-	o := *C.clang_index_getObjCInterfaceDeclInfo(&idi.c)
+	o := C.clang_index_getObjCInterfaceDeclInfo(idi.c)
 
-	return &IdxObjCInterfaceDeclInfo{o}
+	var gop_o *IdxObjCInterfaceDeclInfo
+	if o != nil {
+		gop_o = &IdxObjCInterfaceDeclInfo{*o}
+	}
+
+	return gop_o
 }
 
 func (idi *IdxDeclInfo) Index_getObjCCategoryDeclInfo() *IdxObjCCategoryDeclInfo {
-	o := *C.clang_index_getObjCCategoryDeclInfo(&idi.c)
+	o := C.clang_index_getObjCCategoryDeclInfo(idi.c)
 
-	return &IdxObjCCategoryDeclInfo{o}
+	var gop_o *IdxObjCCategoryDeclInfo
+	if o != nil {
+		gop_o = &IdxObjCCategoryDeclInfo{*o}
+	}
+
+	return gop_o
 }
 
 func (idi *IdxDeclInfo) Index_getObjCProtocolRefListInfo() *IdxObjCProtocolRefListInfo {
-	o := *C.clang_index_getObjCProtocolRefListInfo(&idi.c)
+	o := C.clang_index_getObjCProtocolRefListInfo(idi.c)
 
-	return &IdxObjCProtocolRefListInfo{o}
+	var gop_o *IdxObjCProtocolRefListInfo
+	if o != nil {
+		gop_o = &IdxObjCProtocolRefListInfo{*o}
+	}
+
+	return gop_o
 }
 
 func (idi *IdxDeclInfo) Index_getObjCPropertyDeclInfo() *IdxObjCPropertyDeclInfo {
-	o := *C.clang_index_getObjCPropertyDeclInfo(&idi.c)
+	o := C.clang_index_getObjCPropertyDeclInfo(idi.c)
 
-	return &IdxObjCPropertyDeclInfo{o}
+	var gop_o *IdxObjCPropertyDeclInfo
+	if o != nil {
+		gop_o = &IdxObjCPropertyDeclInfo{*o}
+	}
+
+	return gop_o
 }
 
 func (idi *IdxDeclInfo) Index_getCXXClassDeclInfo() *IdxCXXClassDeclInfo {
-	o := *C.clang_index_getCXXClassDeclInfo(&idi.c)
+	o := C.clang_index_getCXXClassDeclInfo(idi.c)
 
-	return &IdxCXXClassDeclInfo{o}
+	var gop_o *IdxCXXClassDeclInfo
+	if o != nil {
+		gop_o = &IdxCXXClassDeclInfo{*o}
+	}
+
+	return gop_o
 }
 
 func (idi IdxDeclInfo) EntityInfo() *IdxEntityInfo {
-	o := *idi.c.entityInfo
+	o := idi.c.entityInfo
 
-	return &IdxEntityInfo{o}
+	var gop_o *IdxEntityInfo
+	if o != nil {
+		gop_o = &IdxEntityInfo{o}
+	}
+
+	return gop_o
 }
 
 func (idi IdxDeclInfo) Cursor() Cursor {
@@ -62,16 +97,26 @@ func (idi IdxDeclInfo) Loc() IdxLoc {
 }
 
 func (idi IdxDeclInfo) SemanticContainer() *IdxContainerInfo {
-	o := *idi.c.semanticContainer
+	o := idi.c.semanticContainer
 
-	return &IdxContainerInfo{o}
+	var gop_o *IdxContainerInfo
+	if o != nil {
+		gop_o = &IdxContainerInfo{o}
+	}
+
+	return gop_o
 }
 
 // Generally same as #semanticContainer but can be different in cases like out-of-line C++ member functions.
 func (idi IdxDeclInfo) LexicalContainer() *IdxContainerInfo {
-	o := *idi.c.lexicalContainer
+	o := idi.c.lexicalContainer
 
-	return &IdxContainerInfo{o}
+	var gop_o *IdxContainerInfo
+	if o != nil {
+		gop_o = &IdxContainerInfo{o}
+	}
+
+	return gop_o
 }
 
 func (idi IdxDeclInfo) IsRedeclaration() bool {
@@ -93,9 +138,14 @@ func (idi IdxDeclInfo) IsContainer() bool {
 }
 
 func (idi IdxDeclInfo) DeclAsContainer() *IdxContainerInfo {
-	o := *idi.c.declAsContainer
+	o := idi.c.declAsContainer
 
-	return &IdxContainerInfo{o}
+	var gop_o *IdxContainerInfo
+	if o != nil {
+		gop_o = &IdxContainerInfo{o}
+	}
+
+	return gop_o
 }
 
 // Whether the declaration exists in code or was created implicitly by the compiler, e.g. implicit objc methods for properties.

@@ -50,10 +50,10 @@ func (fa *ASTFunc) generate() {
 
 	fa.generateReceiver()
 
-	if fa.Function.Member != "" {
+	if fa.Function.Member != nil {
 		if fa.Function.ReturnType.IsSlice {
 			fa.addStatement(doDeclare("s", doGoType(fa.Function.ReturnType)))
-			fa.addCToGoSliceConversion("s", fa.Function.Receiver.Name+".c."+fa.Function.Member, fa.Function.Receiver.Name+".c."+fa.Function.ReturnType.LengthOfSlice)
+			fa.addCToGoSliceConversion("s", fa.Function.Receiver.Name+".c."+fa.Function.Member.Name, fa.Function.Receiver.Name+".c."+fa.Function.ReturnType.LengthOfSlice)
 
 			fa.addReturnItem(&ast.Ident{
 				Name: "s",
@@ -67,7 +67,7 @@ func (fa *ASTFunc) generate() {
 			fa.generateReturn(&ast.SelectorExpr{
 				X: accessMember(fa.Function.Receiver.Name, "c"),
 				Sel: &ast.Ident{
-					Name: fa.Function.Member,
+					Name: fa.Function.Member.Name,
 				},
 			})
 		}
@@ -334,12 +334,12 @@ func (fa *ASTFunc) generateParameters() []ast.Expr {
 		} else {
 			pf = accessMember(p.Name, "c")
 
-			if p.Type.PointerLevel > 0 && !p.Type.IsReturnArgument {
+			if p.Type.PointerLevel > 0 && !p.Type.IsReturnArgument && !p.Type.IsPointerComposition {
 				pf = doReference(pf)
 			}
 		}
 
-		if p.Type.IsReturnArgument {
+		if p.Type.IsReturnArgument && !p.Type.IsPointerComposition {
 			pf = doReference(pf)
 		}
 
@@ -417,15 +417,55 @@ func (fa *ASTFunc) generateReturn(call ast.Expr) {
 				fa.addEmptyLine()
 			} else if returnType.PointerLevel > 0 {
 				// Do the C function call and save the result into the new variable "o"
-				fa.addAssignment("o", doUnreference(call))
+				fa.addAssignment("o", call)
 				fa.addEmptyLine()
 
-				fa.addReturnItem(doReference(doCompose(
-					returnType.GoName,
-					&ast.Ident{
-						Name: "o",
+				fa.addStatement(doDeclare(
+					"gop_o",
+					doGoType(returnType),
+				))
+				var compositionValue ast.Expr = &ast.Ident{
+					Name: "o",
+				}
+				if returnType.IsPointerComposition && returnType.PointerLevel == 0 {
+					compositionValue = doReference(compositionValue)
+				} else if !returnType.IsPointerComposition && returnType.PointerLevel > 0 {
+					compositionValue = doUnreference(compositionValue)
+				}
+				fa.addStatement(&ast.IfStmt{
+					Cond: &ast.BinaryExpr{
+						X: &ast.Ident{
+							Name: "o",
+						},
+						Op: token.NEQ,
+						Y: &ast.Ident{
+							Name: "nil",
+						},
 					},
-				)))
+					Body: &ast.BlockStmt{
+						List: []ast.Stmt{
+							&ast.AssignStmt{
+								Lhs: []ast.Expr{
+									&ast.Ident{
+										Name: "gop_o",
+									},
+								},
+								Tok: token.ASSIGN,
+								Rhs: []ast.Expr{
+									doReference(doCompose(
+										returnType.GoName,
+										compositionValue,
+									)),
+								},
+							},
+						},
+					},
+				})
+				fa.addEmptyLine()
+
+				fa.addReturnItem(&ast.Ident{
+					Name: "gop_o",
+				})
 			} else {
 				var convCall ast.Expr
 

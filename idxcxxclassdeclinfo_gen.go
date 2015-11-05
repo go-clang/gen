@@ -12,9 +12,14 @@ type IdxCXXClassDeclInfo struct {
 }
 
 func (icxxcdi IdxCXXClassDeclInfo) DeclInfo() *IdxDeclInfo {
-	o := *icxxcdi.c.declInfo
+	o := icxxcdi.c.declInfo
 
-	return &IdxDeclInfo{o}
+	var gop_o *IdxDeclInfo
+	if o != nil {
+		gop_o = &IdxDeclInfo{o}
+	}
+
+	return gop_o
 }
 
 func (icxxcdi IdxCXXClassDeclInfo) Bases() []*IdxBaseClassInfo {

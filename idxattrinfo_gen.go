@@ -4,13 +4,18 @@ package phoenix
 import "C"
 
 type IdxAttrInfo struct {
-	c C.CXIdxAttrInfo
+	c *C.CXIdxAttrInfo
 }
 
 func (iai *IdxAttrInfo) Index_getIBOutletCollectionAttrInfo() *IdxIBOutletCollectionAttrInfo {
-	o := *C.clang_index_getIBOutletCollectionAttrInfo(&iai.c)
+	o := C.clang_index_getIBOutletCollectionAttrInfo(iai.c)
 
-	return &IdxIBOutletCollectionAttrInfo{o}
+	var gop_o *IdxIBOutletCollectionAttrInfo
+	if o != nil {
+		gop_o = &IdxIBOutletCollectionAttrInfo{*o}
+	}
+
+	return gop_o
 }
 
 func (iai IdxAttrInfo) Kind() IdxAttrKind {

@@ -8,15 +8,25 @@ type IdxIBOutletCollectionAttrInfo struct {
 }
 
 func (iibocai IdxIBOutletCollectionAttrInfo) AttrInfo() *IdxAttrInfo {
-	o := *iibocai.c.attrInfo
+	o := iibocai.c.attrInfo
 
-	return &IdxAttrInfo{o}
+	var gop_o *IdxAttrInfo
+	if o != nil {
+		gop_o = &IdxAttrInfo{o}
+	}
+
+	return gop_o
 }
 
 func (iibocai IdxIBOutletCollectionAttrInfo) ObjcClass() *IdxEntityInfo {
-	o := *iibocai.c.objcClass
+	o := iibocai.c.objcClass
 
-	return &IdxEntityInfo{o}
+	var gop_o *IdxEntityInfo
+	if o != nil {
+		gop_o = &IdxEntityInfo{o}
+	}
+
+	return gop_o
 }
 
 func (iibocai IdxIBOutletCollectionAttrInfo) ClassCursor() Cursor {

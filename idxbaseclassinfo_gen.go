@@ -8,9 +8,14 @@ type IdxBaseClassInfo struct {
 }
 
 func (ibci IdxBaseClassInfo) Base() *IdxEntityInfo {
-	o := *ibci.c.base
+	o := ibci.c.base
 
-	return &IdxEntityInfo{o}
+	var gop_o *IdxEntityInfo
+	if o != nil {
+		gop_o = &IdxEntityInfo{o}
+	}
+
+	return gop_o
 }
 
 func (ibci IdxBaseClassInfo) Cursor() Cursor {

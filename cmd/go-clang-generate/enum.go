@@ -21,7 +21,7 @@ type Enum struct {
 
 	Items []EnumItem
 
-	Methods []string
+	Methods []interface{}
 }
 
 // EnumItem represents a generation enum item
@@ -102,8 +102,15 @@ func HandleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 
 func (e *Enum) ContainsMethod(name string) bool {
 	for _, m := range e.Methods {
-		if strings.Contains(m, ") "+name+"()") {
-			return true
+		switch m := m.(type) {
+		case *Function:
+			if m.Name == name {
+				return true
+			}
+		case string:
+			if strings.Contains(m, ") "+name+"()") {
+				return true
+			}
 		}
 	}
 

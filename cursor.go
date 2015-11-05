@@ -24,7 +24,7 @@ func (c Cursor) PlatformAvailability(availabilitySize int) (always_deprecated bo
 
 	availability = make([]PlatformAvailability, nn)
 	for i := 0; i < nn; i++ {
-		availability[i] = PlatformAvailability{cp_availability[i]}
+		availability[i] = PlatformAvailability{&cp_availability[i]}
 	}
 
 	return c_always_deprecated != 0, c_deprecated_message.String(), c_always_unavailable != 0, c_unavailable_message.String(), availability
