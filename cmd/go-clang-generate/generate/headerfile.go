@@ -1,7 +1,6 @@
-package main
+package generate
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"regexp"
@@ -11,7 +10,7 @@ import (
 	"github.com/sbinet/go-clang"
 )
 
-type HeaderFile struct {
+type headerFile struct {
 	name string
 
 	enums     []*Enum
@@ -23,7 +22,7 @@ type HeaderFile struct {
 	lookupStruct      map[string]*Struct
 }
 
-func (h *HeaderFile) AddMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
+func (h *headerFile) AddMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 	// Needs to be renamed manually since clang_getTranslationUnitCursor will conflict with clang_getCursor
 	if f.CName == "clang_getTranslationUnitCursor" {
 		fname = "TranslationUnitCursor"
@@ -52,7 +51,7 @@ func (h *HeaderFile) AddMethod(f *Function, fname string, fnamePrefix string, rt
 	return false
 }
 
-func (h *HeaderFile) addBasicMethods(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
+func (h *headerFile) addBasicMethods(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 	if len(f.Parameters) == 0 && h.IsEnumOrStruct(f.ReturnType.GoName) {
 		fname = TrimCommonFunctionName(fname, rt.Type)
 		if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
@@ -81,7 +80,7 @@ func (h *HeaderFile) addBasicMethods(f *Function, fname string, fnamePrefix stri
 	return false
 }
 
-func (h *HeaderFile) IsEnumOrStruct(name string) bool {
+func (h *headerFile) IsEnumOrStruct(name string) bool {
 	if _, ok := h.lookupEnum[name]; ok {
 		return true
 	} else if _, ok := h.lookupStruct[name]; ok {
@@ -91,15 +90,15 @@ func (h *HeaderFile) IsEnumOrStruct(name string) bool {
 	return false
 }
 
-func (h *HeaderFile) setIsPointerComposition(typ *Type) {
+func (h *headerFile) setIsPointerComposition(typ *Type) {
 	if s, ok := h.lookupStruct[typ.GoName]; ok && s.IsPointerComposition {
 		typ.IsPointerComposition = true
 	}
 }
 
-func handleHeaderFile(HeaderFilename string, clangArguments []string) error {
-	h := &HeaderFile{
-		name: HeaderFilename,
+func handleHeaderFile(headerFilename string, clangArguments []string) error {
+	h := &headerFile{
+		name: headerFilename,
 
 		lookupEnum:        map[string]*Enum{},
 		lookupNonTypedefs: map[string]string{},
@@ -123,7 +122,7 @@ func handleHeaderFile(HeaderFilename string, clangArguments []string) error {
 	findStructsRe := regexp.MustCompile(`(?s)struct[\s\w]+{.+?}`)
 	f, err := ioutil.ReadFile(h.name)
 	if err != nil {
-		return cmdFatal("Cannot read Index.h", nil)
+		return fmt.Errorf("Cannot read Index.h: %v", err)
 	}
 	voidPointerReplacements := map[string]string{}
 	findVoidPointerRe := regexp.MustCompile(`(?:const\s+)?void\s*\*\s*(\w+(\[\d+\])?;)`)
@@ -142,7 +141,7 @@ func handleHeaderFile(HeaderFilename string, clangArguments []string) error {
 	}
 	err = ioutil.WriteFile(h.name, []byte(fs), 0700)
 	if err != nil {
-		return cmdFatal("Cannot write Index.h", nil)
+		return fmt.Errorf("Cannot write Index.h: %v", err)
 	}
 
 	// Parse clang-c's Index.h to analyse everything we need to know
@@ -153,15 +152,15 @@ func handleHeaderFile(HeaderFilename string, clangArguments []string) error {
 	defer tu.Dispose()
 
 	if !tu.IsValid() {
-		return cmdFatal("Cannot parse Index.h", nil)
+		return fmt.Errorf("Cannot parse Index.h")
 	}
 
 	for _, diag := range tu.Diagnostics() {
 		switch diag.Severity() {
 		case clang.Diagnostic_Error:
-			return cmdFatal("Diagnostic error in Index.h", errors.New(diag.Spelling()))
+			return fmt.Errorf("Diagnostic error in Index.h: %s", diag.Spelling())
 		case clang.Diagnostic_Fatal:
-			return cmdFatal("Diagnostic fatal in Index.h", errors.New(diag.Spelling()))
+			return fmt.Errorf("Diagnostic fatal in Index.h: %s", diag.Spelling())
 		}
 	}
 
@@ -500,7 +499,7 @@ func handleHeaderFile(HeaderFilename string, clangArguments []string) error {
 		}
 
 		if err := e.addEnumStringMethods(); err != nil {
-			return cmdFatal("Cannot generate enum string methods", err)
+			return fmt.Errorf("Cannot generate enum string methods: %v", err)
 		}
 
 		for i, m := range e.Methods {
@@ -526,7 +525,7 @@ func handleHeaderFile(HeaderFilename string, clangArguments []string) error {
 		}
 
 		if err := e.generate(); err != nil {
-			return cmdFatal("Cannot generate enum", err)
+			return fmt.Errorf("Cannot generate enum: %v", err)
 		}
 	}
 
@@ -536,7 +535,7 @@ func handleHeaderFile(HeaderFilename string, clangArguments []string) error {
 		}
 
 		if err := s.addMemberGetters(); err != nil {
-			return cmdFatal("Cannot generate struct member getters", err)
+			return fmt.Errorf("Cannot generate struct member getters: %v", err)
 		}
 
 		for i, m := range s.Methods {
@@ -546,7 +545,7 @@ func handleHeaderFile(HeaderFilename string, clangArguments []string) error {
 		}
 
 		if err := s.generate(); err != nil {
-			return cmdFatal("Cannot generate struct", err)
+			return fmt.Errorf("Cannot generate struct: %v", err)
 		}
 	}
 
@@ -556,14 +555,14 @@ func handleHeaderFile(HeaderFilename string, clangArguments []string) error {
 		}
 
 		if err := clangFile.generate(); err != nil {
-			return cmdFatal("Cannot generate clang file", err)
+			return fmt.Errorf("Cannot generate clang file: %v", err)
 		}
 	}
 
 	return nil
 }
 
-func (h *HeaderFile) handleMethod(rname string, m interface{}) string {
+func (h *headerFile) handleMethod(rname string, m interface{}) string {
 	switch m := m.(type) {
 	case *Function:
 		if len(m.Parameters) > 0 && !m.Parameters[0].Type.IsSlice && m.Parameters[0].Type.GoName == rname {

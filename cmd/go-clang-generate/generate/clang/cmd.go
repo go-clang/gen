@@ -1,10 +1,12 @@
-package main
+package clang
 
 import (
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/zimmski/go-clang-phoenix/cmd/go-clang-generate/generate"
 )
 
 // cmdFatal returns a command error
@@ -17,8 +19,8 @@ func cmdFatal(msg string, err error) error {
 }
 
 // Cmd executes a generic go-clang-generate command
-func Cmd(args []string) error {
-	rawLLVMVersion, _, err := ExecToBuffer("llvm-config", "--version")
+func Cmd(args []string, api *generate.API) error {
+	rawLLVMVersion, _, err := execToBuffer("llvm-config", "--version")
 	if err != nil {
 		return cmdFatal("Cannot determine LLVM version", err)
 	}
@@ -30,13 +32,13 @@ func Cmd(args []string) error {
 
 	fmt.Println("Found LLVM version", llvmVersion.String())
 
-	rawLLVMIncludeDir, _, err := ExecToBuffer("llvm-config", "--includedir")
+	rawLLVMIncludeDir, _, err := execToBuffer("llvm-config", "--includedir")
 	if err != nil {
 		return cmdFatal("Cannot determine LLVM include directory", err)
 	}
 
 	clangCIncludeDir := strings.TrimSpace(string(rawLLVMIncludeDir)) + "/clang-c/"
-	if err := DirExists(clangCIncludeDir); err != nil {
+	if err := dirExists(clangCIncludeDir); err != nil {
 		return cmdFatal(fmt.Sprintf("Cannot find Clang-C include directory %q", clangCIncludeDir), err)
 	}
 
@@ -55,11 +57,13 @@ func Cmd(args []string) error {
 			d + fmt.Sprintf("/%s/include", llvmVersion.String()),
 			d + fmt.Sprintf("/%s/include", llvmVersion.StringMinor()),
 		} {
-			if DirExists(di) == nil {
+			if dirExists(di) == nil {
 				clangArguments = append(clangArguments, "-I", di)
 			}
 		}
 	}
+
+	api.ClangArguments = append(clangArguments, api.ClangArguments...)
 
 	fmt.Printf("Using clang arguments: %v\n", clangArguments)
 
@@ -97,8 +101,8 @@ func Cmd(args []string) error {
 			continue
 		}
 
-		if err := handleHeaderFile(clangCDirectory+h.Name(), clangArguments); err != nil {
-			return err
+		if err := api.HandleHeaderFile(clangCDirectory + h.Name()); err != nil {
+			return cmdFatal("Cannot list clang-c directory", err)
 		}
 	}
 
