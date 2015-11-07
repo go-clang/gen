@@ -12,7 +12,7 @@ var (
 	reReplaceMultilines = regexp.MustCompile(`[ \t]*\n[ \t]*`)
 )
 
-func cleanDoxygenComment(comment string) string {
+func CleanDoxygenComment(comment string) string {
 	// Remove C style comment
 	comment = strings.TrimPrefix(comment, "/**")
 	comment = strings.TrimSuffix(comment, "*/")

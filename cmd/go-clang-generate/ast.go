@@ -8,11 +8,11 @@ import (
 type ASTFunc struct {
 	*ast.FuncDecl
 
-	Function *Function
-	Return   *ast.ReturnStmt
+	f   *Function
+	ret *ast.ReturnStmt
 }
 
-func NewASTFunc(f *Function) *ASTFunc {
+func newASTFunc(f *Function) *ASTFunc {
 	return &ASTFunc{
 		FuncDecl: &ast.FuncDecl{
 			Name: &ast.Ident{
@@ -26,8 +26,8 @@ func NewASTFunc(f *Function) *ASTFunc {
 			Body: &ast.BlockStmt{},
 		},
 
-		Function: f,
-		Return: &ast.ReturnStmt{
+		f: f,
+		ret: &ast.ReturnStmt{
 			Results: []ast.Expr{},
 		},
 	}
@@ -50,30 +50,30 @@ func (fa *ASTFunc) generate() {
 
 	fa.generateReceiver()
 
-	if fa.Function.Member != nil {
-		if fa.Function.ReturnType.IsSlice {
-			fa.addStatement(doDeclare("s", doGoType(fa.Function.ReturnType)))
-			fa.addCToGoSliceConversion("s", fa.Function.Receiver.Name+".c."+fa.Function.Member.Name, fa.Function.Receiver.Name+".c."+fa.Function.ReturnType.LengthOfSlice)
+	if fa.f.Member != nil {
+		if fa.f.ReturnType.IsSlice {
+			fa.addStatement(doDeclare("s", doGoType(fa.f.ReturnType)))
+			fa.addCToGoSliceConversion("s", fa.f.Receiver.Name+".c."+fa.f.Member.Name, fa.f.Receiver.Name+".c."+fa.f.ReturnType.LengthOfSlice)
 
 			fa.addReturnItem(&ast.Ident{
 				Name: "s",
 			})
-			fa.addReturnType("", fa.Function.ReturnType)
+			fa.addReturnType("", fa.f.ReturnType)
 			fa.addEmptyLine()
 
 			// Add the return statement
-			fa.addStatement(fa.Return)
+			fa.addStatement(fa.ret)
 		} else {
 			fa.generateReturn(&ast.SelectorExpr{
-				X: accessMember(fa.Function.Receiver.Name, "c"),
+				X: accessMember(fa.f.Receiver.Name, "c"),
 				Sel: &ast.Ident{
-					Name: fa.Function.Member.Name,
+					Name: fa.f.Member.Name,
 				},
 			})
 		}
 	} else {
 		// Basic call to the C function
-		call := doCCast(fa.Function.CName)
+		call := doCCast(fa.f.CName)
 
 		if callArguments := fa.generateParameters(); len(callArguments) > 0 {
 			call.Args = callArguments
@@ -85,28 +85,28 @@ func (fa *ASTFunc) generate() {
 
 func (fa *ASTFunc) generateReceiver() {
 	// Add receiver to make function a method
-	if fa.Function.Receiver.Name == "" {
+	if fa.f.Receiver.Name == "" {
 		return
 	}
 
-	if len(fa.Function.Parameters) > 0 { // TODO maybe to not set the receiver at all? -> do this outside of the generate function? https://github.com/zimmski/go-clang-phoenix/issues/52
+	if len(fa.f.Parameters) > 0 { // TODO maybe to not set the receiver at all? -> do this outside of the generate function? https://github.com/zimmski/go-clang-phoenix/issues/52
 		fa.Recv = &ast.FieldList{
 			List: []*ast.Field{
-				doField(fa.Function.Receiver.Name, fa.Function.Receiver.Type),
+				doField(fa.f.Receiver.Name, fa.f.Receiver.Type),
 			},
 		}
 	}
 }
 
 func (fa *ASTFunc) generateParameters() []ast.Expr {
-	if len(fa.Function.Parameters) == 0 {
+	if len(fa.f.Parameters) == 0 {
 		return nil
 	}
 
 	var callArguments []ast.Expr
 
-	if fa.Function.Receiver.Name != "" {
-		fa.Function.Parameters[0].Name = fa.Function.Receiver.Name
+	if fa.f.Receiver.Name != "" {
+		fa.f.Parameters[0].Name = fa.f.Receiver.Name
 	}
 
 	fa.Type.Params = &ast.FieldList{
@@ -116,8 +116,8 @@ func (fa *ASTFunc) generateParameters() []ast.Expr {
 	hasDeclaration := false
 
 	// Add parameters to the function
-	for i, p := range fa.Function.Parameters {
-		if i == 0 && fa.Function.Receiver.Name != "" {
+	for i, p := range fa.f.Parameters {
+		if i == 0 && fa.f.Receiver.Name != "" {
 			continue
 		}
 
@@ -258,14 +258,14 @@ func (fa *ASTFunc) generateParameters() []ast.Expr {
 		fa.Type.Params.List = append(fa.Type.Params.List, doField(p.Name, p.Type))
 	}
 
-	if len(fa.Return.Results) > 0 || hasDeclaration {
+	if len(fa.ret.Results) > 0 || hasDeclaration {
 		fa.addEmptyLine()
 	}
 
 	goToCTypeConversions := false
 
 	// Add arguments to the C function call
-	for _, p := range fa.Function.Parameters {
+	for _, p := range fa.f.Parameters {
 		var pf ast.Expr
 
 		if p.Type.IsSlice {
@@ -354,10 +354,10 @@ func (fa *ASTFunc) generateParameters() []ast.Expr {
 }
 
 func (fa *ASTFunc) generateReturn(call ast.Expr) {
-	returnType := fa.Function.ReturnType
+	returnType := fa.f.ReturnType
 
 	// Check if we need to add a return
-	if returnType.GoName != "void" || len(fa.Return.Results) > 0 {
+	if returnType.GoName != "void" || len(fa.ret.Results) > 0 {
 		if returnType.GoName == "cxstring" {
 			// Do the C function call and save the result into the new variable "o" while transforming it into a cxstring
 			fa.addAssignment("o", doCompose("cxstring", call))
@@ -476,7 +476,7 @@ func (fa *ASTFunc) generateReturn(call ast.Expr) {
 					convCall = doCast(returnType.GoName, call)
 				}
 
-				if len(fa.Return.Results) > 0 {
+				if len(fa.ret.Results) > 0 {
 					// Do the C function call and save the result into the new variable "o"
 					fa.addAssignment("o", convCall)
 					fa.addEmptyLine()
@@ -494,7 +494,7 @@ func (fa *ASTFunc) generateReturn(call ast.Expr) {
 		fa.addCToGoConversions()
 
 		// Add the return statement
-		fa.addStatement(fa.Return)
+		fa.addStatement(fa.ret)
 	} else {
 		fa.addCToGoConversions()
 
@@ -541,7 +541,7 @@ func (fa *ASTFunc) addEmptyLine() {
 }
 
 func (fa *ASTFunc) addReturnItem(item ast.Expr) {
-	fa.Return.Results = append(fa.Return.Results, item)
+	fa.ret.Results = append(fa.ret.Results, item)
 }
 
 func (fa *ASTFunc) addReturnType(name string, typ Type) {
@@ -551,12 +551,12 @@ func (fa *ASTFunc) addReturnType(name string, typ Type) {
 func (fa *ASTFunc) addCToGoConversions() {
 	cToGoTypeConversions := false
 
-	for _, p := range fa.Function.Parameters {
+	for _, p := range fa.f.Parameters {
 		if p.Type.IsSlice && p.Type.IsReturnArgument {
 			cToGoTypeConversions = true
 
 			var lengthOfSlice string
-			for _, pl := range fa.Function.Parameters {
+			for _, pl := range fa.f.Parameters {
 				if pl.Type.LengthOfSlice == p.Name {
 					lengthOfSlice = pl.Name
 

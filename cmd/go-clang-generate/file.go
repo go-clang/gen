@@ -19,8 +19,8 @@ type File struct {
 	Structs   []*Struct
 }
 
-// NewFile creates a new blank file
-func NewFile(name string) *File {
+// newFile creates a new blank file
+func newFile(name string) *File {
 	return &File{
 		Name: name,
 
@@ -65,7 +65,7 @@ type {{$s.Name}} struct {
 {{end}}
 `))
 
-func (f *File) Generate() error {
+func (f *File) generate() error {
 	for _, e := range f.Enums {
 		if e.HeaderFile != "" {
 			f.HeaderFiles[e.HeaderFile] = struct{}{}

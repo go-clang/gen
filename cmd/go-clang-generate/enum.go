@@ -32,16 +32,16 @@ type EnumItem struct {
 	Value   uint64
 }
 
-func HandleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Enum {
+func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Enum {
 	e := Enum{
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
-		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
+		Comment:        CleanDoxygenComment(cursor.RawCommentText()),
 
 		Items: []EnumItem{},
 	}
 
-	e.Name = trimLanguagePrefix(e.CName)
+	e.Name = TrimLanguagePrefix(e.CName)
 
 	e.Receiver.Name = receiverName(e.Name)
 	e.Receiver.Type.GoName = e.Name
@@ -61,10 +61,10 @@ func HandleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 		case clang.CK_EnumConstantDecl:
 			ei := EnumItem{
 				CName:   cursor.Spelling(),
-				Comment: cleanDoxygenComment(cursor.RawCommentText()), // TODO We are always using the same comment if there is none, see "TypeKind" https://github.com/zimmski/go-clang-phoenix/issues/58
+				Comment: CleanDoxygenComment(cursor.RawCommentText()), // TODO We are always using the same comment if there is none, see "TypeKind" https://github.com/zimmski/go-clang-phoenix/issues/58
 				Value:   cursor.EnumConstantDeclUnsignedValue(),
 			}
-			ei.Name = trimLanguagePrefix(ei.CName)
+			ei.Name = TrimLanguagePrefix(ei.CName)
 
 			// Check if the first item has an enum prefix
 			if len(e.Items) == 0 {
@@ -117,11 +117,11 @@ func (e *Enum) ContainsMethod(name string) bool {
 	return false
 }
 
-func (e *Enum) Generate() error {
-	f := NewFile(strings.ToLower(e.Name))
+func (e *Enum) generate() error {
+	f := newFile(strings.ToLower(e.Name))
 	f.Enums = append(f.Enums, e)
 
-	return f.Generate()
+	return f.generate()
 }
 
 var templateGenerateEnumString = template.Must(template.New("go-clang-generate-enum-string").Parse(`
@@ -136,7 +136,7 @@ func ({{$.Receiver.Name}} {{$.Receiver.Type.GoName}}) Error() string {
 }
 `))
 
-func (e *Enum) AddEnumStringMethods() error {
+func (e *Enum) addEnumStringMethods() error {
 	if !e.ContainsMethod("Spelling") {
 		if err := e.addEnumSpellingMethod(); err != nil {
 			return err

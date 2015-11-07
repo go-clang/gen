@@ -11,7 +11,7 @@ import (
 	"github.com/sbinet/go-clang"
 )
 
-type headerFile struct {
+type HeaderFile struct {
 	name string
 
 	enums     []*Enum
@@ -23,12 +23,12 @@ type headerFile struct {
 	lookupStruct      map[string]*Struct
 }
 
-func (h *headerFile) addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
+func (h *HeaderFile) AddMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 	// Needs to be renamed manually since clang_getTranslationUnitCursor will conflict with clang_getCursor
 	if f.CName == "clang_getTranslationUnitCursor" {
 		fname = "TranslationUnitCursor"
 	} else {
-		fname = upperFirstCharacter(fnamePrefix + upperFirstCharacter(fname))
+		fname = UpperFirstCharacter(fnamePrefix + UpperFirstCharacter(fname))
 	}
 
 	if e, ok := h.lookupEnum[rt.Type.GoName]; ok {
@@ -52,36 +52,36 @@ func (h *headerFile) addMethod(f *Function, fname string, fnamePrefix string, rt
 	return false
 }
 
-func (h *headerFile) addBasicMethods(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
-	if len(f.Parameters) == 0 && h.isEnumOrStruct(f.ReturnType.GoName) {
-		fname = trimCommonFunctionName(fname, rt.Type)
+func (h *HeaderFile) addBasicMethods(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
+	if len(f.Parameters) == 0 && h.IsEnumOrStruct(f.ReturnType.GoName) {
+		fname = TrimCommonFunctionName(fname, rt.Type)
 		if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
 			fname = "New" + fname
 		}
 
-		return h.addMethod(f, fname, fnamePrefix, rt)
+		return h.AddMethod(f, fname, fnamePrefix, rt)
 	} else if (fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3]))) {
 		f.ReturnType.GoName = "bool"
 
-		return h.addMethod(f, fname, fnamePrefix, rt)
-	} else if len(f.Parameters) == 1 && h.isEnumOrStruct(f.Parameters[0].Type.GoName) && strings.HasPrefix(fname, "dispose") && f.ReturnType.GoName == "void" {
+		return h.AddMethod(f, fname, fnamePrefix, rt)
+	} else if len(f.Parameters) == 1 && h.IsEnumOrStruct(f.Parameters[0].Type.GoName) && strings.HasPrefix(fname, "dispose") && f.ReturnType.GoName == "void" {
 		fname = "Dispose"
 
-		return h.addMethod(f, fname, fnamePrefix, rt)
-	} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && h.isEnumOrStruct(f.Parameters[0].Type.GoName) && f.Parameters[0].Type == f.Parameters[1].Type {
+		return h.AddMethod(f, fname, fnamePrefix, rt)
+	} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && h.IsEnumOrStruct(f.Parameters[0].Type.GoName) && f.Parameters[0].Type == f.Parameters[1].Type {
 		fname = "Equal"
 		f.Parameters[0].Name = receiverName(f.Parameters[0].Type.GoName)
 		f.Parameters[1].Name = f.Parameters[0].Name + "2"
 
 		f.ReturnType.GoName = "bool"
 
-		return h.addMethod(f, fname, fnamePrefix, rt)
+		return h.AddMethod(f, fname, fnamePrefix, rt)
 	}
 
 	return false
 }
 
-func (h *headerFile) isEnumOrStruct(name string) bool {
+func (h *HeaderFile) IsEnumOrStruct(name string) bool {
 	if _, ok := h.lookupEnum[name]; ok {
 		return true
 	} else if _, ok := h.lookupStruct[name]; ok {
@@ -91,15 +91,15 @@ func (h *headerFile) isEnumOrStruct(name string) bool {
 	return false
 }
 
-func (h *headerFile) setIsPointerComposition(typ *Type) {
+func (h *HeaderFile) setIsPointerComposition(typ *Type) {
 	if s, ok := h.lookupStruct[typ.GoName]; ok && s.IsPointerComposition {
 		typ.IsPointerComposition = true
 	}
 }
 
-func HandleHeaderFile(headerFilename string, clangArguments []string) error {
-	h := &headerFile{
-		name: headerFilename,
+func handleHeaderFile(HeaderFilename string, clangArguments []string) error {
+	h := &HeaderFile{
+		name: HeaderFilename,
 
 		lookupEnum:        map[string]*Enum{},
 		lookupNonTypedefs: map[string]string{},
@@ -123,7 +123,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 	findStructsRe := regexp.MustCompile(`(?s)struct[\s\w]+{.+?}`)
 	f, err := ioutil.ReadFile(h.name)
 	if err != nil {
-		return CmdFatal("Cannot read Index.h", nil)
+		return cmdFatal("Cannot read Index.h", nil)
 	}
 	voidPointerReplacements := map[string]string{}
 	findVoidPointerRe := regexp.MustCompile(`(?:const\s+)?void\s*\*\s*(\w+(\[\d+\])?;)`)
@@ -142,7 +142,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 	}
 	err = ioutil.WriteFile(h.name, []byte(fs), 0700)
 	if err != nil {
-		return CmdFatal("Cannot write Index.h", nil)
+		return cmdFatal("Cannot write Index.h", nil)
 	}
 
 	// Parse clang-c's Index.h to analyse everything we need to know
@@ -153,15 +153,15 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 	defer tu.Dispose()
 
 	if !tu.IsValid() {
-		return CmdFatal("Cannot parse Index.h", nil)
+		return cmdFatal("Cannot parse Index.h", nil)
 	}
 
 	for _, diag := range tu.Diagnostics() {
 		switch diag.Severity() {
 		case clang.Diagnostic_Error:
-			return CmdFatal("Diagnostic error in Index.h", errors.New(diag.Spelling()))
+			return cmdFatal("Diagnostic error in Index.h", errors.New(diag.Spelling()))
 		case clang.Diagnostic_Fatal:
-			return CmdFatal("Diagnostic fatal in Index.h", errors.New(diag.Spelling()))
+			return cmdFatal("Diagnostic fatal in Index.h", errors.New(diag.Spelling()))
 		}
 	}
 
@@ -187,7 +187,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 				break
 			}
 
-			e := HandleEnumCursor(cursor, cname, cnameIsTypeDef)
+			e := handleEnumCursor(cursor, cname, cnameIsTypeDef)
 
 			h.lookupEnum[e.Name] = e
 			h.lookupNonTypedefs["enum "+e.CName] = e.Name
@@ -195,7 +195,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 
 			h.enums = append(h.enums, e)
 		case clang.CK_FunctionDecl:
-			f := HandleFunctionCursor(cursor)
+			f := handleFunctionCursor(cursor)
 			if f != nil {
 				h.functions = append(h.functions, f)
 			}
@@ -204,7 +204,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 				break
 			}
 
-			s := HandleStructCursor(cursor, cname, cnameIsTypeDef)
+			s := handleStructCursor(cursor, cname, cnameIsTypeDef)
 
 			h.lookupStruct[s.Name] = s
 			h.lookupNonTypedefs["struct "+s.CName] = s.Name
@@ -217,7 +217,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 
 			if s, ok := h.lookupStruct[underlyingStructType]; ok && !s.CNameIsTypeDef && strings.HasPrefix(underlyingType, "struct "+s.CName) {
 				// Sometimes the typedef is not a parent of the struct but a sibling
-				sn := HandleStructCursor(cursor, cname, true)
+				sn := handleStructCursor(cursor, cname, true)
 
 				h.lookupStruct[sn.Name] = sn
 				h.lookupNonTypedefs["struct "+sn.CName] = sn.Name
@@ -235,7 +235,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 					}
 				}
 			} else if underlyingType == "void *" {
-				s := HandleStructCursor(cursor, cname, true)
+				s := handleStructCursor(cursor, cname, true)
 
 				h.lookupStruct[s.Name] = s
 				h.lookupNonTypedefs["struct "+s.CName] = s.Name
@@ -248,7 +248,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 		return clang.CVR_Recurse
 	})
 
-	clangFile := NewFile("clang")
+	clangFile := newFile("clang")
 
 	for _, f := range h.functions {
 		// Some functions are not compiled in (TODO only 3.4?) the library see https://lists.launchpad.net/desktop-packages/msg75835.html for a never resolved bug report https://github.com/zimmski/go-clang-phoenix/issues/59
@@ -395,7 +395,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 				continue
 			}
 
-			if (!h.isEnumOrStruct(p.Type.GoName) && !p.Type.IsPrimitive) || p.Type.PointerLevel != 0 {
+			if (!h.IsEnumOrStruct(p.Type.GoName) && !p.Type.IsPrimitive) || p.Type.PointerLevel != 0 {
 				found = true
 
 				fmt.Printf("Cannot handle parameter %s -> %#v\n", f.CName, p)
@@ -419,7 +419,7 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			fname = fn
 		}
 
-		if len(f.Parameters) > 0 && h.isEnumOrStruct(f.Parameters[0].Type.GoName) {
+		if len(f.Parameters) > 0 && h.IsEnumOrStruct(f.Parameters[0].Type.GoName) {
 			switch f.Parameters[0].Type.GoName {
 			case "CodeCompleteResults":
 				fname = strings.TrimPrefix(fname, "codeComplete")
@@ -454,21 +454,21 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 
 			if !added {
 				if len(f.Parameters) == 0 {
-					f.Name = upperFirstCharacter(f.Name)
+					f.Name = UpperFirstCharacter(f.Name)
 
-					clangFile.Functions = append(clangFile.Functions, f.Generate())
+					clangFile.Functions = append(clangFile.Functions, f.generate())
 
 					added = true
-				} else if h.isEnumOrStruct(f.ReturnType.GoName) || f.ReturnType.IsPrimitive {
-					fname = trimCommonFunctionName(fname, rt.Type)
+				} else if h.IsEnumOrStruct(f.ReturnType.GoName) || f.ReturnType.IsPrimitive {
+					fname = TrimCommonFunctionName(fname, rt.Type)
 					if fn := strings.TrimPrefix(fname, f.ReturnType.GoName+"_"); len(fn) != len(fname) {
 						fname = fn
 					}
 
-					added = h.addMethod(f, fname, "", rt)
+					added = h.AddMethod(f, fname, "", rt)
 
-					if !added && h.isEnumOrStruct(f.ReturnType.GoName) {
-						fname = trimCommonFunctionName(fname, rt.Type)
+					if !added && h.IsEnumOrStruct(f.ReturnType.GoName) {
+						fname = TrimCommonFunctionName(fname, rt.Type)
 						if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
 							fname = "New" + fname
 						}
@@ -476,12 +476,12 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 						rtc := rt
 						rtc.Type = f.ReturnType
 
-						added = h.addMethod(f, fname, "", rtc)
+						added = h.AddMethod(f, fname, "", rtc)
 					}
 					if !added {
-						f.Name = upperFirstCharacter(f.Name)
+						f.Name = UpperFirstCharacter(f.Name)
 
-						clangFile.Functions = append(clangFile.Functions, f.Generate())
+						clangFile.Functions = append(clangFile.Functions, f.generate())
 
 						added = true
 					}
@@ -499,8 +499,8 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			e.HeaderFile = h.name
 		}
 
-		if err := e.AddEnumStringMethods(); err != nil {
-			return CmdFatal("Cannot generate enum string methods", err)
+		if err := e.addEnumStringMethods(); err != nil {
+			return cmdFatal("Cannot generate enum string methods", err)
 		}
 
 		for i, m := range e.Methods {
@@ -521,12 +521,12 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 					h.setIsPointerComposition(&m.Parameters[i].Type)
 				}
 
-				e.Methods[i] = m.Generate()
+				e.Methods[i] = m.generate()
 			}
 		}
 
-		if err := e.Generate(); err != nil {
-			return CmdFatal("Cannot generate enum", err)
+		if err := e.generate(); err != nil {
+			return cmdFatal("Cannot generate enum", err)
 		}
 	}
 
@@ -535,8 +535,8 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			s.HeaderFile = h.name
 		}
 
-		if err := s.AddMemberGetters(); err != nil {
-			return CmdFatal("Cannot generate struct member getters", err)
+		if err := s.addMemberGetters(); err != nil {
+			return cmdFatal("Cannot generate struct member getters", err)
 		}
 
 		for i, m := range s.Methods {
@@ -545,8 +545,8 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			}
 		}
 
-		if err := s.Generate(); err != nil {
-			return CmdFatal("Cannot generate struct", err)
+		if err := s.generate(); err != nil {
+			return cmdFatal("Cannot generate struct", err)
 		}
 	}
 
@@ -555,15 +555,15 @@ func HandleHeaderFile(headerFilename string, clangArguments []string) error {
 			clangFile.HeaderFiles[h.name] = struct{}{}
 		}
 
-		if err := clangFile.Generate(); err != nil {
-			return CmdFatal("Cannot generate clang file", err)
+		if err := clangFile.generate(); err != nil {
+			return cmdFatal("Cannot generate clang file", err)
 		}
 	}
 
 	return nil
 }
 
-func (h *headerFile) handleMethod(rname string, m interface{}) string {
+func (h *HeaderFile) handleMethod(rname string, m interface{}) string {
 	switch m := m.(type) {
 	case *Function:
 		if len(m.Parameters) > 0 && !m.Parameters[0].Type.IsSlice && m.Parameters[0].Type.GoName == rname {
@@ -579,7 +579,7 @@ func (h *headerFile) handleMethod(rname string, m interface{}) string {
 		}
 		h.setIsPointerComposition(&m.ReturnType)
 
-		return m.Generate()
+		return m.generate()
 	}
 
 	return ""

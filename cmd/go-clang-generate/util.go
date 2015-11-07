@@ -8,7 +8,7 @@ import (
 	"unicode"
 )
 
-func execToBuffer(cmd ...string) (out []byte, exitStatus int, err error) {
+func ExecToBuffer(cmd ...string) (out []byte, exitStatus int, err error) {
 	c := exec.Command(cmd[0], cmd[1:]...)
 
 	out, err = c.CombinedOutput()
@@ -49,7 +49,7 @@ var (
 	errNotAFile      = errors.New("not a file")
 )
 
-func dirExists(path string) error {
+func DirExists(path string) error {
 	fi, err := stat(path)
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func dirExists(path string) error {
 	return nil
 }
 
-func fileExists(filepath string) error {
+func FileExists(filepath string) error {
 	fi, err := stat(filepath)
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func fileExists(filepath string) error {
 	return nil
 }
 
-func lowerFirstCharacter(s string) string {
+func LowerFirstCharacter(s string) string {
 	r := []rune(s)
 
 	r[0] = unicode.ToLower(r[0])
@@ -83,7 +83,7 @@ func lowerFirstCharacter(s string) string {
 	return string(r)
 }
 
-func upperFirstCharacter(s string) string {
+func UpperFirstCharacter(s string) string {
 	r := []rune(s)
 
 	r[0] = unicode.ToUpper(r[0])

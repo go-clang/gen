@@ -62,7 +62,7 @@ type Type struct {
 	IsPointerComposition bool
 }
 
-func TypeFromClangType(cType clang.Type) (Type, error) {
+func typeFromClangType(cType clang.Type) (Type, error) {
 	typ := Type{
 		CName: cType.TypeSpelling(),
 
@@ -118,7 +118,7 @@ func TypeFromClangType(cType clang.Type) (Type, error) {
 		typ.CGoName = "void"
 		typ.GoName = "void"
 	case clang.TK_ConstantArray:
-		subTyp, err := TypeFromClangType(cType.ArrayElementType())
+		subTyp, err := typeFromClangType(cType.ArrayElementType())
 		if err != nil {
 			return Type{}, err
 		}
@@ -140,7 +140,7 @@ func TypeFromClangType(cType clang.Type) (Type, error) {
 
 			typ.IsPrimitive = true
 		} else {
-			typeStr = trimLanguagePrefix(cType.Declaration().Type().TypeSpelling())
+			typeStr = TrimLanguagePrefix(cType.Declaration().Type().TypeSpelling())
 		}
 
 		typ.CGoName = cType.Declaration().Type().TypeSpelling()
@@ -157,7 +157,7 @@ func TypeFromClangType(cType clang.Type) (Type, error) {
 			typ.IsFunctionPointer = true
 		}
 
-		subTyp, err := TypeFromClangType(cType.PointeeType())
+		subTyp, err := typeFromClangType(cType.PointeeType())
 		if err != nil {
 			return Type{}, err
 		}
@@ -168,18 +168,18 @@ func TypeFromClangType(cType clang.Type) (Type, error) {
 		typ.IsPrimitive = subTyp.IsPrimitive
 	case clang.TK_Record:
 		typ.CGoName = cType.Declaration().Type().TypeSpelling()
-		typ.GoName = trimLanguagePrefix(typ.CGoName)
+		typ.GoName = TrimLanguagePrefix(typ.CGoName)
 		typ.IsPrimitive = false
 	case clang.TK_FunctionProto:
 		typ.IsFunctionPointer = true
 		typ.CGoName = cType.Declaration().Type().TypeSpelling()
-		typ.GoName = trimLanguagePrefix(typ.CGoName)
+		typ.GoName = TrimLanguagePrefix(typ.CGoName)
 	case clang.TK_Enum:
-		typ.GoName = trimLanguagePrefix(cType.Declaration().DisplayName())
+		typ.GoName = TrimLanguagePrefix(cType.Declaration().DisplayName())
 		typ.IsEnumLiteral = true
 		typ.IsPrimitive = true
 	case clang.TK_Unexposed: // There is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013 https://llvm.org/bugs/show_bug.cgi?id=15089
-		subTyp, err := TypeFromClangType(cType.CanonicalType())
+		subTyp, err := typeFromClangType(cType.CanonicalType())
 		if err != nil {
 			return Type{}, err
 		}

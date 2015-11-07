@@ -29,20 +29,20 @@ type StructMember struct {
 	Type Type
 }
 
-func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
+func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
 	s := &Struct{
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
-		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
+		Comment:        CleanDoxygenComment(cursor.RawCommentText()),
 	}
 
-	s.Name = trimLanguagePrefix(s.CName)
+	s.Name = TrimLanguagePrefix(s.CName)
 	s.Receiver.Name = receiverName(s.Name)
 
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {
 		case clang.CK_FieldDecl:
-			typ, err := TypeFromClangType(cursor.Type())
+			typ, err := typeFromClangType(cursor.Type())
 			if err != nil {
 				panic(err)
 			}
@@ -53,7 +53,7 @@ func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 
 			s.Members = append(s.Members, &StructMember{
 				CName:   cursor.DisplayName(),
-				Comment: cleanDoxygenComment(cursor.RawCommentText()),
+				Comment: CleanDoxygenComment(cursor.RawCommentText()),
 
 				Type: typ,
 			})
@@ -82,14 +82,14 @@ func (s *Struct) ContainsMethod(name string) bool {
 	return false
 }
 
-func (s *Struct) Generate() error {
-	f := NewFile(strings.ToLower(s.Name))
+func (s *Struct) generate() error {
+	f := newFile(strings.ToLower(s.Name))
 	f.Structs = append(f.Structs, s)
 
-	return f.Generate()
+	return f.generate()
 }
 
-func (s *Struct) AddMemberGetters() error {
+func (s *Struct) addMemberGetters() error {
 	// Prepare members
 	for _, m := range s.Members {
 		// TODO happy hack, if this is an array length parameter we need to find its partner https://github.com/zimmski/go-clang-phoenix/issues/40
@@ -123,7 +123,7 @@ func (s *Struct) AddMemberGetters() error {
 			continue
 		}
 
-		f := NewFunction(m.CName, s.CName, m.Comment, m.CName, m.Type)
+		f := newFunction(m.CName, s.CName, m.Comment, m.CName, m.Type)
 
 		if !s.ContainsMethod(f.Name) {
 			s.Methods = append(s.Methods, f)
