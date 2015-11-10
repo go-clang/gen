@@ -32,6 +32,8 @@ func main() {
 func prepareFunctionName(h *generate.HeaderFile, f *generate.Function) string {
 	fname := f.Name
 
+	fname = strings.TrimPrefix(fname, "clang_")
+
 	// Trim some whitelisted prefixes by their function name
 	if fn := strings.TrimPrefix(fname, "indexLoc_"); len(fn) != len(fname) {
 		fname = fn
@@ -88,7 +90,7 @@ func prepareFunction(f *generate.Function) {
 			continue
 		}
 
-		// TODO happy hack, whiteflag types that are return arguments https://github.com/zimmski/go-clang-phoenix/issues/40
+		// Whiteflag types that are return arguments
 		if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == generate.GoInt16 || p.Type.GoName == generate.GoUInt16 || p.Type.GoName == "CompilationDatabase_Error" || p.Type.GoName == "PlatformAvailability" || p.Type.GoName == "SourceRange" || p.Type.GoName == "LoadDiag_Error") {
 			p.Type.IsReturnArgument = true
 		}
@@ -100,7 +102,7 @@ func prepareFunction(f *generate.Function) {
 			p.Type.IsSlice = true
 		}
 
-		// TODO happy hack, if this is an array length parameter we need to find its partner https://github.com/zimmski/go-clang-phoenix/issues/40
+		// If this is an array length parameter we need to find its partner
 		paCName := generate.ArrayNameFromLength(p.CName)
 
 		if paCName != "" {

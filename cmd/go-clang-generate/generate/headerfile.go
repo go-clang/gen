@@ -271,6 +271,14 @@ func handleHeaderFile(api *API, headerFilename string, clangArguments []string) 
 	clangFile := newFile("clang")
 
 	for _, f := range h.functions {
+		var fname string
+		if api.PrepareFunctionName != nil {
+			fname = api.PrepareFunctionName(h, f)
+			f.Name = fname
+		} else {
+			fname = f.Name
+		}
+
 		if api.FilterFunction != nil && !api.FilterFunction(f) {
 			continue
 		}
@@ -339,13 +347,6 @@ func handleHeaderFile(api *API, headerFilename string, clangArguments []string) 
 
 				break
 			}
-		}
-
-		var fname string
-		if api.PrepareFunctionName != nil {
-			fname = api.PrepareFunctionName(h, f)
-		} else {
-			fname = f.Name
 		}
 
 		// If we find a heuristic to add the function, add it!

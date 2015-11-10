@@ -69,14 +69,14 @@ func newFunction(name, cname, comment, member string, typ Type) *Function {
 }
 
 func handleFunctionCursor(cursor clang.Cursor) *Function {
+	fname := cursor.Spelling()
 	f := Function{
-		CName:   cursor.Spelling(),
+		Name:    fname,
+		CName:   fname,
 		Comment: CleanDoxygenComment(cursor.RawCommentText()),
 
 		Parameters: []FunctionParameter{},
 	}
-
-	f.Name = strings.TrimPrefix(f.CName, "clang_")
 
 	typ, err := typeFromClangType(cursor.ResultType())
 	if err != nil {
