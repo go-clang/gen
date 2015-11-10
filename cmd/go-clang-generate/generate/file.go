@@ -14,7 +14,7 @@ type File struct {
 
 	HeaderFiles map[string]struct{}
 
-	Functions []string
+	Functions []interface{}
 	Enums     []*Enum
 	Structs   []*Struct
 }
@@ -88,7 +88,7 @@ func (f *File) generate() error {
 	out, err := imports.Process(filename, bo, nil)
 	if err != nil {
 		// Write the file anyway so we can look at the problem
-		if err := ioutil.WriteFile(filename, bo, 0700); err != nil {
+		if err := ioutil.WriteFile(filename, bo, 0600); err != nil {
 			return err
 		}
 

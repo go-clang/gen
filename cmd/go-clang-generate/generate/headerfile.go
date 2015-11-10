@@ -10,7 +10,9 @@ import (
 	"github.com/sbinet/go-clang"
 )
 
-type headerFile struct {
+type HeaderFile struct {
+	api *API
+
 	name string
 
 	enums     []*Enum
@@ -22,13 +24,8 @@ type headerFile struct {
 	lookupStruct      map[string]*Struct
 }
 
-func (h *headerFile) AddMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
-	// Needs to be renamed manually since clang_getTranslationUnitCursor will conflict with clang_getCursor
-	if f.CName == "clang_getTranslationUnitCursor" {
-		fname = "TranslationUnitCursor"
-	} else {
-		fname = UpperFirstCharacter(fnamePrefix + UpperFirstCharacter(fname))
-	}
+func (h *HeaderFile) addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
+	fname = UpperFirstCharacter(fnamePrefix + UpperFirstCharacter(fname))
 
 	if e, ok := h.lookupEnum[rt.Type.GoName]; ok {
 		f.Name = fname
@@ -51,36 +48,36 @@ func (h *headerFile) AddMethod(f *Function, fname string, fnamePrefix string, rt
 	return false
 }
 
-func (h *headerFile) addBasicMethods(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
+func (h *HeaderFile) addBasicMethods(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 	if len(f.Parameters) == 0 && h.IsEnumOrStruct(f.ReturnType.GoName) {
 		fname = TrimCommonFunctionName(fname, rt.Type)
 		if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
 			fname = "New" + fname
 		}
 
-		return h.AddMethod(f, fname, fnamePrefix, rt)
+		return h.addMethod(f, fname, fnamePrefix, rt)
 	} else if (fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3]))) {
 		f.ReturnType.GoName = "bool"
 
-		return h.AddMethod(f, fname, fnamePrefix, rt)
+		return h.addMethod(f, fname, fnamePrefix, rt)
 	} else if len(f.Parameters) == 1 && h.IsEnumOrStruct(f.Parameters[0].Type.GoName) && strings.HasPrefix(fname, "dispose") && f.ReturnType.GoName == "void" {
 		fname = "Dispose"
 
-		return h.AddMethod(f, fname, fnamePrefix, rt)
+		return h.addMethod(f, fname, fnamePrefix, rt)
 	} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && h.IsEnumOrStruct(f.Parameters[0].Type.GoName) && f.Parameters[0].Type == f.Parameters[1].Type {
 		fname = "Equal"
-		f.Parameters[0].Name = receiverName(f.Parameters[0].Type.GoName)
+		f.Parameters[0].Name = commonReceiverName(f.Parameters[0].Type.GoName)
 		f.Parameters[1].Name = f.Parameters[0].Name + "2"
 
 		f.ReturnType.GoName = "bool"
 
-		return h.AddMethod(f, fname, fnamePrefix, rt)
+		return h.addMethod(f, fname, fnamePrefix, rt)
 	}
 
 	return false
 }
 
-func (h *headerFile) IsEnumOrStruct(name string) bool {
+func (h *HeaderFile) IsEnumOrStruct(name string) bool {
 	if _, ok := h.lookupEnum[name]; ok {
 		return true
 	} else if _, ok := h.lookupStruct[name]; ok {
@@ -90,26 +87,13 @@ func (h *headerFile) IsEnumOrStruct(name string) bool {
 	return false
 }
 
-func (h *headerFile) setIsPointerComposition(typ *Type) {
+func (h *HeaderFile) setIsPointerComposition(typ *Type) {
 	if s, ok := h.lookupStruct[typ.GoName]; ok && s.IsPointerComposition {
 		typ.IsPointerComposition = true
 	}
 }
 
-func handleHeaderFile(headerFilename string, clangArguments []string) error {
-	h := &headerFile{
-		name: headerFilename,
-
-		lookupEnum:        map[string]*Enum{},
-		lookupNonTypedefs: map[string]string{},
-		lookupStruct: map[string]*Struct{
-			"cxstring": &Struct{
-				Name:  "cxstring",
-				CName: "CXString",
-			},
-		},
-	}
-
+func (h *HeaderFile) prepareFile() error {
 	/*
 		Hide all "void *" fields of structs by replacing the type with "uintptr_t".
 
@@ -139,32 +123,22 @@ func handleHeaderFile(headerFilename string, clangArguments []string) error {
 	if incl := "#include <stdint.h>"; !strings.HasPrefix(fs, incl) { // Include for uintptr_t
 		fs = "#include <stdint.h>\n\n" + fs
 	}
-	err = ioutil.WriteFile(h.name, []byte(fs), 0700)
+	err = ioutil.WriteFile(h.name, []byte(fs), 0600)
 	if err != nil {
-		return fmt.Errorf("Cannot write Index.h: %v", err)
+		return fmt.Errorf("Cannot write %s: %v", h.name, err)
 	}
 
-	// Parse clang-c's Index.h to analyse everything we need to know
-	idx := clang.NewIndex(0, 1)
-	defer idx.Dispose()
+	return nil
+}
 
-	tu := idx.Parse(h.name, clangArguments, nil, 0)
-	defer tu.Dispose()
+func (h *HeaderFile) handleFile(cursor clang.Cursor) {
+	/*
+		TODO mark the enum https://github.com/zimmski/go-clang-phoenix/issues/40
+			typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor, CXCursor parent, CXClientData client_data);
+		as manually implemented
+	*/
+	// TODO report other enums like callbacks that they are not implemented https://github.com/zimmski/go-clang-phoenix/issues/51
 
-	if !tu.IsValid() {
-		return fmt.Errorf("Cannot parse Index.h")
-	}
-
-	for _, diag := range tu.Diagnostics() {
-		switch diag.Severity() {
-		case clang.Diagnostic_Error:
-			return fmt.Errorf("Diagnostic error in Index.h: %s", diag.Spelling())
-		case clang.Diagnostic_Fatal:
-			return fmt.Errorf("Diagnostic fatal in Index.h: %s", diag.Spelling())
-		}
-	}
-
-	cursor := tu.ToCursor()
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		// Only handle code of the current file
 		sourceFile, _, _, _ := cursor.Location().GetFileLocation()
@@ -204,6 +178,7 @@ func handleHeaderFile(headerFilename string, clangArguments []string) error {
 			}
 
 			s := handleStructCursor(cursor, cname, cnameIsTypeDef)
+			s.api = h.api
 
 			h.lookupStruct[s.Name] = s
 			h.lookupNonTypedefs["struct "+s.CName] = s.Name
@@ -217,6 +192,7 @@ func handleHeaderFile(headerFilename string, clangArguments []string) error {
 			if s, ok := h.lookupStruct[underlyingStructType]; ok && !s.CNameIsTypeDef && strings.HasPrefix(underlyingType, "struct "+s.CName) {
 				// Sometimes the typedef is not a parent of the struct but a sibling
 				sn := handleStructCursor(cursor, cname, true)
+				sn.api = h.api
 
 				h.lookupStruct[sn.Name] = sn
 				h.lookupNonTypedefs["struct "+sn.CName] = sn.Name
@@ -235,6 +211,7 @@ func handleHeaderFile(headerFilename string, clangArguments []string) error {
 				}
 			} else if underlyingType == "void *" {
 				s := handleStructCursor(cursor, cname, true)
+				s.api = h.api
 
 				h.lookupStruct[s.Name] = s
 				h.lookupNonTypedefs["struct "+s.CName] = s.Name
@@ -246,35 +223,57 @@ func handleHeaderFile(headerFilename string, clangArguments []string) error {
 
 		return clang.CVR_Recurse
 	})
+}
 
+func handleHeaderFile(api *API, headerFilename string, clangArguments []string) error {
+	h := &HeaderFile{
+		api: api,
+
+		name: headerFilename,
+
+		lookupEnum:        map[string]*Enum{},
+		lookupNonTypedefs: map[string]string{},
+		lookupStruct: map[string]*Struct{
+			"cxstring": &Struct{
+				Name:  "cxstring",
+				CName: "CXString",
+			},
+		},
+	}
+
+	if err := h.prepareFile(); err != nil {
+		return err
+	}
+
+	// Parse the header file to analyse everything we need to know
+	idx := clang.NewIndex(0, 1)
+	defer idx.Dispose()
+
+	tu := idx.Parse(h.name, clangArguments, nil, 0)
+	defer tu.Dispose()
+
+	if !tu.IsValid() {
+		return fmt.Errorf("Cannot parse Index.h")
+	}
+
+	for _, diag := range tu.Diagnostics() {
+		switch diag.Severity() {
+		case clang.Diagnostic_Error:
+			return fmt.Errorf("Diagnostic error in Index.h: %s", diag.Spelling())
+		case clang.Diagnostic_Fatal:
+			return fmt.Errorf("Diagnostic fatal in Index.h: %s", diag.Spelling())
+		}
+	}
+
+	h.handleFile(tu.ToCursor())
+
+	// Prepare all functions
 	clangFile := newFile("clang")
 
 	for _, f := range h.functions {
-		// Some functions are not compiled in (TODO only 3.4?) the library see https://lists.launchpad.net/desktop-packages/msg75835.html for a never resolved bug report https://github.com/zimmski/go-clang-phoenix/issues/59
-		if f.CName == "clang_CompileCommand_getMappedSourceContent" || f.CName == "clang_CompileCommand_getMappedSourcePath" || f.CName == "clang_CompileCommand_getNumMappedSources" {
-			fmt.Printf("Ignore function %q because it is not compiled within libClang\n", f.CName)
-
+		if api.FilterFunction != nil && !api.FilterFunction(f) {
 			continue
 		}
-		// Some functions can not be handled automatically by us
-		if f.CName == "clang_executeOnThread" || f.CName == "clang_getInclusions" {
-			fmt.Printf("Ignore function %q because it cannot be handled automatically\n", f.CName)
-
-			continue
-		}
-		// Some functions are simply manually implemented
-		if f.CName == "clang_annotateTokens" || f.CName == "clang_getCursorPlatformAvailability" || f.CName == "clang_visitChildren" {
-			fmt.Printf("Ignore function %q because it is manually implemented\n", f.CName)
-
-			continue
-		}
-
-		/*
-			TODO mark the enum https://github.com/zimmski/go-clang-phoenix/issues/40
-				typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor, CXCursor parent, CXClientData client_data);
-			as manually implemented
-		*/
-		// TODO report other enums like callbacks that they are not implemented https://github.com/zimmski/go-clang-phoenix/issues/51
 
 		// Prepare the parameters
 		for i := range f.Parameters {
@@ -285,73 +284,16 @@ func handleHeaderFile(headerFilename string, clangArguments []string) error {
 			}
 			if e, ok := h.lookupEnum[p.Type.GoName]; ok {
 				p.CName = e.Receiver.CName
-				// TODO remove the receiver... and copy only names here to preserve the original pointers and so https://github.com/zimmski/go-clang-phoenix/issues/40
+				// TODO remove the receiver... and copy only names here to preserve the original pointers and so https://github.com/zimmski/go-clang-phoenix/issues/52
 				p.Type.GoName = e.Receiver.Type.GoName
 				p.Type.CGoName = e.Receiver.Type.CGoName
 				p.Type.CGoName = e.Receiver.Type.CGoName
 			} else if _, ok := h.lookupStruct[p.Type.GoName]; ok {
 			}
-
-			if f.CName == "clang_getRemappingsFromFileList" {
-				switch p.CName {
-				case "filePaths":
-					p.Type.IsSlice = true
-				case "numFiles":
-					p.Type.LengthOfSlice = "filePaths"
-				}
-
-				continue
-			}
-
-			// TODO happy hack, whiteflag types that are return arguments https://github.com/zimmski/go-clang-phoenix/issues/40
-			if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == GoInt16 || p.Type.GoName == GoUInt16 || p.Type.GoName == "CompilationDatabase_Error" || p.Type.GoName == "PlatformAvailability" || p.Type.GoName == "SourceRange" || p.Type.GoName == "LoadDiag_Error") {
-				p.Type.IsReturnArgument = true
-			}
-			if p.Type.PointerLevel == 2 && (p.Type.GoName == "Token" || p.Type.GoName == "Cursor") {
-				p.Type.IsReturnArgument = true
-			}
-
-			if f.CName == "clang_disposeOverriddenCursors" && p.CName == "overridden" {
-				p.Type.IsSlice = true
-			}
-
-			// TODO happy hack, if this is an array length parameter we need to find its partner https://github.com/zimmski/go-clang-phoenix/issues/40
-			paCName := ArrayNameFromLength(p.CName)
-
-			if paCName != "" {
-				for j := range f.Parameters {
-					pa := &f.Parameters[j]
-
-					if strings.ToLower(pa.CName) == strings.ToLower(paCName) {
-						if pa.Type.GoName == "struct CXUnsavedFile" || pa.Type.GoName == "UnsavedFile" {
-							pa.Type.GoName = "UnsavedFile"
-							pa.Type.CGoName = "struct_CXUnsavedFile"
-						} else if pa.Type.CGoName == CSChar && pa.Type.PointerLevel == 2 {
-						} else if pa.Type.GoName == "CompletionResult" {
-						} else if pa.Type.GoName == "Token" {
-						} else if pa.Type.GoName == "Cursor" {
-						} else {
-							break
-						}
-
-						p.Type.LengthOfSlice = pa.Name
-						pa.Type.IsSlice = true
-
-						if pa.Type.IsReturnArgument && p.Type.PointerLevel > 0 {
-							p.Type.IsReturnArgument = true
-						}
-
-						break
-					}
-				}
-			}
 		}
-		for i := range f.Parameters {
-			p := &f.Parameters[i]
 
-			if p.Type.CGoName == CSChar && p.Type.PointerLevel == 2 && !p.Type.IsSlice {
-				p.Type.IsReturnArgument = true
-			}
+		if api.PrepareFunction != nil {
+			api.PrepareFunction(f)
 		}
 
 		// Prepare the return argument
@@ -366,7 +308,7 @@ func handleHeaderFile(headerFilename string, clangArguments []string) error {
 		// Prepare the receiver
 		var rt Receiver
 		if len(f.Parameters) > 0 {
-			rt.Name = receiverName(f.Parameters[0].Type.GoName)
+			rt.Name = commonReceiverName(f.Parameters[0].Type.GoName)
 			rt.CName = f.Parameters[0].CName
 			rt.Type = f.Parameters[0].Type
 		} else {
@@ -381,16 +323,12 @@ func handleHeaderFile(headerFilename string, clangArguments []string) error {
 		found := false
 
 		for _, p := range f.Parameters {
-			// These pointers are ok
-			if p.Type.PointerLevel == 1 && (p.Type.CGoName == CSChar || p.Type.GoName == "UnsavedFile" || p.Type.GoName == "CodeCompleteResults" || p.Type.GoName == "CursorKind" || p.Type.GoName == "IdxContainerInfo" || p.Type.GoName == "IdxDeclInfo" || p.Type.GoName == "IndexerCallbacks" || p.Type.GoName == "TranslationUnit" || p.Type.GoName == "IdxEntityInfo" || p.Type.GoName == "IdxAttrInfo") {
+			if api.FilterFunctionParameter != nil && !api.FilterFunctionParameter(p) {
 				continue
 			}
-			// Return arguments are always ok since we mark them earlier
-			if p.Type.IsReturnArgument {
-				continue
-			}
-			// We whiteflag slices
-			if p.Type.IsSlice {
+
+			// Return arguments and slices are always ok since we mark them earlier
+			if p.Type.IsReturnArgument || p.Type.IsSlice {
 				continue
 			}
 
@@ -403,34 +341,11 @@ func handleHeaderFile(headerFilename string, clangArguments []string) error {
 			}
 		}
 
-		fname := f.Name
-
-		// TODO happy hack we trim some whitelisted prefixes https://github.com/zimmski/go-clang-phoenix/issues/40
-		if fn := strings.TrimPrefix(fname, "indexLoc_"); len(fn) != len(fname) {
-			fname = fn
-		} else if fn := strings.TrimPrefix(fname, "index_"); len(fn) != len(fname) {
-			fname = fn
-		} else if fn := strings.TrimPrefix(fname, "Location_"); len(fn) != len(fname) {
-			fname = fn
-		} else if fn := strings.TrimPrefix(fname, "Range_"); len(fn) != len(fname) {
-			fname = fn
-		} else if fn := strings.TrimPrefix(fname, "remap_"); len(fn) != len(fname) {
-			fname = fn
-		}
-
-		if len(f.Parameters) > 0 && h.IsEnumOrStruct(f.Parameters[0].Type.GoName) {
-			switch f.Parameters[0].Type.GoName {
-			case "CodeCompleteResults":
-				fname = strings.TrimPrefix(fname, "codeComplete")
-			case "CompletionString":
-				if f.CName == "clang_getNumCompletionChunks" {
-					fname = "NumChunks"
-				} else {
-					fname = strings.TrimPrefix(fname, "getCompletion")
-				}
-			case "SourceRange":
-				fname = strings.TrimPrefix(fname, "getRange")
-			}
+		var fname string
+		if api.PrepareFunctionName != nil {
+			fname = api.PrepareFunctionName(h, f)
+		} else {
+			fname = f.Name
 		}
 
 		// If we find a heuristic to add the function, add it!
@@ -452,38 +367,30 @@ func handleHeaderFile(headerFilename string, clangArguments []string) error {
 			}
 
 			if !added {
-				if len(f.Parameters) == 0 {
+				fname = TrimCommonFunctionName(fname, rt.Type)
+				if fn := strings.TrimPrefix(fname, f.ReturnType.GoName+"_"); len(fn) != len(fname) {
+					fname = fn
+				}
+
+				added = h.addMethod(f, fname, "", rt)
+
+				if !added && h.IsEnumOrStruct(f.ReturnType.GoName) {
+					fname = TrimCommonFunctionName(fname, rt.Type)
+					if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
+						fname = "New" + fname
+					}
+
+					rtc := rt
+					rtc.Type = f.ReturnType
+
+					added = h.addMethod(f, fname, "", rtc)
+				}
+				if !added {
 					f.Name = UpperFirstCharacter(f.Name)
 
-					clangFile.Functions = append(clangFile.Functions, f.generate())
+					clangFile.Functions = append(clangFile.Functions, f)
 
 					added = true
-				} else if h.IsEnumOrStruct(f.ReturnType.GoName) || f.ReturnType.IsPrimitive {
-					fname = TrimCommonFunctionName(fname, rt.Type)
-					if fn := strings.TrimPrefix(fname, f.ReturnType.GoName+"_"); len(fn) != len(fname) {
-						fname = fn
-					}
-
-					added = h.AddMethod(f, fname, "", rt)
-
-					if !added && h.IsEnumOrStruct(f.ReturnType.GoName) {
-						fname = TrimCommonFunctionName(fname, rt.Type)
-						if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
-							fname = "New" + fname
-						}
-
-						rtc := rt
-						rtc.Type = f.ReturnType
-
-						added = h.AddMethod(f, fname, "", rtc)
-					}
-					if !added {
-						f.Name = UpperFirstCharacter(f.Name)
-
-						clangFile.Functions = append(clangFile.Functions, f.generate())
-
-						added = true
-					}
 				}
 			}
 		}
@@ -510,7 +417,7 @@ func handleHeaderFile(headerFilename string, clangArguments []string) error {
 			case *Function:
 				if len(m.Parameters) > 0 && !m.Parameters[0].Type.IsSlice && m.Parameters[0].Type.GoName == e.Name {
 					m.Receiver = Receiver{
-						Name: receiverName(e.Name),
+						Name: commonReceiverName(e.Name),
 						Type: m.Parameters[0].Type,
 					}
 
@@ -554,6 +461,12 @@ func handleHeaderFile(headerFilename string, clangArguments []string) error {
 			clangFile.HeaderFiles[h.name] = struct{}{}
 		}
 
+		for i, m := range clangFile.Functions {
+			if r := h.handleMethod("", m); r != "" {
+				clangFile.Functions[i] = r
+			}
+		}
+
 		if err := clangFile.generate(); err != nil {
 			return fmt.Errorf("Cannot generate clang file: %v", err)
 		}
@@ -562,12 +475,18 @@ func handleHeaderFile(headerFilename string, clangArguments []string) error {
 	return nil
 }
 
-func (h *headerFile) handleMethod(rname string, m interface{}) string {
+func (h *HeaderFile) handleMethod(receiverName string, m interface{}) string {
 	switch m := m.(type) {
 	case *Function:
-		if len(m.Parameters) > 0 && !m.Parameters[0].Type.IsSlice && m.Parameters[0].Type.GoName == rname {
+		if h.api.FixedFunctionName != nil {
+			if fname := h.api.FixedFunctionName(m); fname != "" {
+				m.Name = fname
+			}
+		}
+
+		if len(m.Parameters) > 0 && !m.Parameters[0].Type.IsSlice && m.Parameters[0].Type.GoName == receiverName {
 			m.Receiver = Receiver{
-				Name: receiverName(rname),
+				Name: commonReceiverName(receiverName),
 				Type: m.Parameters[0].Type,
 			}
 

@@ -6,57 +6,9 @@ import (
 	"go/format"
 	"go/token"
 	"strings"
-	"unicode"
 
 	"github.com/sbinet/go-clang"
 )
-
-func TrimCommonFunctionName(name string, typ Type) string {
-	name = TrimCommonFunctionNamePrefix(name)
-
-	if fn := strings.TrimPrefix(name, typ.GoName+"_"); len(fn) != len(name) {
-		name = fn
-	} else if fn := strings.TrimPrefix(name, typ.GoName); len(fn) != len(name) {
-		name = fn
-	}
-	if tkn := strings.TrimSuffix(typ.GoName, "Kind"); len(tkn) != len(typ.GoName) {
-		if fn := strings.TrimPrefix(name, tkn+"_"); len(fn) != len(name) {
-			name = fn
-		} else if fn := strings.TrimPrefix(name, tkn); len(fn) != len(name) {
-			name = fn
-		}
-	}
-
-	name = TrimCommonFunctionNamePrefix(name)
-
-	// If the function name is empty at this point, it is a constructor
-	if name == "" {
-		name = typ.GoName
-	}
-
-	return name
-}
-
-func TrimCommonFunctionNamePrefix(name string) string {
-	name = strings.TrimPrefix(name, "create")
-	name = strings.TrimPrefix(name, "get")
-	if len(name) > 4 && unicode.IsUpper(rune(name[3])) {
-		name = strings.TrimPrefix(name, "Get")
-	}
-
-	name = TrimLanguagePrefix(name)
-
-	return name
-}
-
-func TrimLanguagePrefix(name string) string {
-	name = strings.TrimPrefix(name, "CX_CXX")
-	name = strings.TrimPrefix(name, "CXX")
-	name = strings.TrimPrefix(name, "CX")
-	name = strings.TrimPrefix(name, "ObjC")
-
-	return name
-}
 
 // Function represents a generation function
 type Function struct {
@@ -80,13 +32,9 @@ type FunctionParameter struct {
 }
 
 func newFunction(name, cname, comment, member string, typ Type) *Function {
-	receiverType := TrimLanguagePrefix(cname)
-	receiverName := receiverName(receiverType)
 	functionName := UpperFirstCharacter(name)
-
-	if (strings.HasPrefix(name, "has") || strings.HasPrefix(name, "is")) && typ.GoName == GoInt16 {
-		typ.GoName = GoBool
-	}
+	receiverType := TrimLanguagePrefix(cname)
+	receiverName := commonReceiverName(receiverType)
 
 	f := &Function{
 		Name:    functionName,
@@ -152,7 +100,7 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 
 		p.Name = p.CName
 		if p.Name == "" {
-			p.Name = receiverName(p.Type.GoName)
+			p.Name = commonReceiverName(p.Type.GoName)
 		} else {
 			pns := strings.Split(p.Name, "_")
 			for i := range pns {

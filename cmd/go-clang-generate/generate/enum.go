@@ -43,7 +43,7 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 
 	e.Name = TrimLanguagePrefix(e.CName)
 
-	e.Receiver.Name = receiverName(e.Name)
+	e.Receiver.Name = commonReceiverName(e.Name)
 	e.Receiver.Type.GoName = e.Name
 	e.Receiver.Type.CGoName = e.CName
 	if cnameIsTypeDef {
