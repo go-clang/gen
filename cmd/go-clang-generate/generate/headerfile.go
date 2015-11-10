@@ -401,9 +401,7 @@ func handleHeaderFile(api *API, headerFilename string, clangArguments []string) 
 	}
 
 	for _, e := range h.enums {
-		if h.name != "./clang-c/Index.h" {
-			e.HeaderFile = h.name
-		}
+		e.HeaderFile = h.name
 
 		if err := e.addEnumStringMethods(); err != nil {
 			return fmt.Errorf("Cannot generate enum string methods: %v", err)
@@ -437,9 +435,7 @@ func handleHeaderFile(api *API, headerFilename string, clangArguments []string) 
 	}
 
 	for _, s := range h.structs {
-		if h.name != "./clang-c/Index.h" {
-			s.HeaderFile = h.name
-		}
+		s.HeaderFile = h.name
 
 		if err := s.addMemberGetters(); err != nil {
 			return fmt.Errorf("Cannot generate struct member getters: %v", err)
@@ -457,9 +453,7 @@ func handleHeaderFile(api *API, headerFilename string, clangArguments []string) 
 	}
 
 	if len(clangFile.Functions) > 0 {
-		if h.name != "./clang-c/Index.h" {
-			clangFile.HeaderFiles[h.name] = struct{}{}
-		}
+		clangFile.HeaderFiles[h.name] = struct{}{}
 
 		for i, m := range clangFile.Functions {
 			if r := h.handleMethod("", m); r != "" {
