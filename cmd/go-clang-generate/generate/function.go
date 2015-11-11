@@ -1,4 +1,4 @@
-package main
+package generate
 
 import (
 	"bytes"
@@ -6,57 +6,9 @@ import (
 	"go/format"
 	"go/token"
 	"strings"
-	"unicode"
 
 	"github.com/sbinet/go-clang"
 )
-
-func trimCommonFunctionName(name string, typ Type) string {
-	name = trimCommonFunctionNamePrefix(name)
-
-	if fn := strings.TrimPrefix(name, typ.GoName+"_"); len(fn) != len(name) {
-		name = fn
-	} else if fn := strings.TrimPrefix(name, typ.GoName); len(fn) != len(name) {
-		name = fn
-	}
-	if tkn := strings.TrimSuffix(typ.GoName, "Kind"); len(tkn) != len(typ.GoName) {
-		if fn := strings.TrimPrefix(name, tkn+"_"); len(fn) != len(name) {
-			name = fn
-		} else if fn := strings.TrimPrefix(name, tkn); len(fn) != len(name) {
-			name = fn
-		}
-	}
-
-	name = trimCommonFunctionNamePrefix(name)
-
-	// If the function name is empty at this point, it is a constructor
-	if name == "" {
-		name = typ.GoName
-	}
-
-	return name
-}
-
-func trimCommonFunctionNamePrefix(name string) string {
-	name = strings.TrimPrefix(name, "create")
-	name = strings.TrimPrefix(name, "get")
-	if len(name) > 4 && unicode.IsUpper(rune(name[3])) {
-		name = strings.TrimPrefix(name, "Get")
-	}
-
-	name = trimLanguagePrefix(name)
-
-	return name
-}
-
-func trimLanguagePrefix(name string) string {
-	name = strings.TrimPrefix(name, "CX_CXX")
-	name = strings.TrimPrefix(name, "CXX")
-	name = strings.TrimPrefix(name, "CX")
-	name = strings.TrimPrefix(name, "ObjC")
-
-	return name
-}
 
 // Function represents a generation function
 type Function struct {
@@ -79,14 +31,10 @@ type FunctionParameter struct {
 	Type  Type
 }
 
-func NewFunction(name, cname, comment, member string, typ Type) *Function {
-	receiverType := trimLanguagePrefix(cname)
-	receiverName := receiverName(receiverType)
-	functionName := upperFirstCharacter(name)
-
-	if (strings.HasPrefix(name, "has") || strings.HasPrefix(name, "is")) && typ.GoName == GoInt16 {
-		typ.GoName = GoBool
-	}
+func newFunction(name, cname, comment, member string, typ Type) *Function {
+	functionName := UpperFirstCharacter(name)
+	receiverType := TrimLanguagePrefix(cname)
+	receiverName := commonReceiverName(receiverType)
 
 	f := &Function{
 		Name:    functionName,
@@ -120,17 +68,17 @@ func NewFunction(name, cname, comment, member string, typ Type) *Function {
 	return f
 }
 
-func HandleFunctionCursor(cursor clang.Cursor) *Function {
+func handleFunctionCursor(cursor clang.Cursor) *Function {
+	fname := cursor.Spelling()
 	f := Function{
-		CName:   cursor.Spelling(),
-		Comment: cleanDoxygenComment(cursor.RawCommentText()),
+		Name:    fname,
+		CName:   fname,
+		Comment: CleanDoxygenComment(cursor.RawCommentText()),
 
 		Parameters: []FunctionParameter{},
 	}
 
-	f.Name = strings.TrimPrefix(f.CName, "clang_")
-
-	typ, err := TypeFromClangType(cursor.ResultType())
+	typ, err := typeFromClangType(cursor.ResultType())
 	if err != nil {
 		panic(err)
 	}
@@ -144,7 +92,7 @@ func HandleFunctionCursor(cursor clang.Cursor) *Function {
 			CName: param.DisplayName(),
 		}
 
-		typ, err := TypeFromClangType(param.Type())
+		typ, err := typeFromClangType(param.Type())
 		if err != nil {
 			panic(err)
 		}
@@ -152,13 +100,13 @@ func HandleFunctionCursor(cursor clang.Cursor) *Function {
 
 		p.Name = p.CName
 		if p.Name == "" {
-			p.Name = receiverName(p.Type.GoName)
+			p.Name = commonReceiverName(p.Type.GoName)
 		} else {
 			pns := strings.Split(p.Name, "_")
 			for i := range pns {
-				pns[i] = upperFirstCharacter(pns[i])
+				pns[i] = UpperFirstCharacter(pns[i])
 			}
-			p.Name = lowerFirstCharacter(strings.Join(pns, ""))
+			p.Name = LowerFirstCharacter(strings.Join(pns, ""))
 		}
 		if r := ReplaceGoKeywords(p.Name); r != "" {
 			p.Name = r
@@ -170,8 +118,8 @@ func HandleFunctionCursor(cursor clang.Cursor) *Function {
 	return &f
 }
 
-func (f *Function) Generate() string {
-	fa := NewASTFunc(f)
+func (f *Function) generate() string {
+	fa := newASTFunc(f)
 	fa.generate()
 
 	var b bytes.Buffer

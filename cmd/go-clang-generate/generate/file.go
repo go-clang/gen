@@ -1,4 +1,4 @@
-package main
+package generate
 
 import (
 	"bytes"
@@ -14,13 +14,13 @@ type File struct {
 
 	HeaderFiles map[string]struct{}
 
-	Functions []string
+	Functions []interface{}
 	Enums     []*Enum
 	Structs   []*Struct
 }
 
-// NewFile creates a new blank file
-func NewFile(name string) *File {
+// newFile creates a new blank file
+func newFile(name string) *File {
 	return &File{
 		Name: name,
 
@@ -65,7 +65,7 @@ type {{$s.Name}} struct {
 {{end}}
 `))
 
-func (f *File) Generate() error {
+func (f *File) generate() error {
 	for _, e := range f.Enums {
 		if e.HeaderFile != "" {
 			f.HeaderFiles[e.HeaderFile] = struct{}{}
@@ -88,7 +88,7 @@ func (f *File) Generate() error {
 	out, err := imports.Process(filename, bo, nil)
 	if err != nil {
 		// Write the file anyway so we can look at the problem
-		if err := ioutil.WriteFile(filename, bo, 0700); err != nil {
+		if err := ioutil.WriteFile(filename, bo, 0600); err != nil {
 			return err
 		}
 

@@ -1,4 +1,4 @@
-package main
+package generate
 
 import (
 	"strings"
@@ -8,6 +8,8 @@ import (
 
 // Struct represents a generation struct
 type Struct struct {
+	api *API
+
 	HeaderFile string
 
 	Name           string
@@ -29,20 +31,20 @@ type StructMember struct {
 	Type Type
 }
 
-func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
+func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
 	s := &Struct{
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
-		Comment:        cleanDoxygenComment(cursor.RawCommentText()),
+		Comment:        CleanDoxygenComment(cursor.RawCommentText()),
 	}
 
-	s.Name = trimLanguagePrefix(s.CName)
-	s.Receiver.Name = receiverName(s.Name)
+	s.Name = TrimLanguagePrefix(s.CName)
+	s.Receiver.Name = commonReceiverName(s.Name)
 
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {
 		case clang.CK_FieldDecl:
-			typ, err := TypeFromClangType(cursor.Type())
+			typ, err := typeFromClangType(cursor.Type())
 			if err != nil {
 				panic(err)
 			}
@@ -53,7 +55,7 @@ func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 
 			s.Members = append(s.Members, &StructMember{
 				CName:   cursor.DisplayName(),
-				Comment: cleanDoxygenComment(cursor.RawCommentText()),
+				Comment: CleanDoxygenComment(cursor.RawCommentText()),
 
 				Type: typ,
 			})
@@ -82,36 +84,21 @@ func (s *Struct) ContainsMethod(name string) bool {
 	return false
 }
 
-func (s *Struct) Generate() error {
-	f := NewFile(strings.ToLower(s.Name))
+func (s *Struct) generate() error {
+	f := newFile(strings.ToLower(s.Name))
 	f.Structs = append(f.Structs, s)
 
-	return f.Generate()
+	return f.generate()
 }
 
-func (s *Struct) AddMemberGetters() error {
-	// Prepare members
-	for _, m := range s.Members {
-		// TODO happy hack, if this is an array length parameter we need to find its partner https://github.com/zimmski/go-clang-phoenix/issues/40
-		maCName := ArrayNameFromLength(m.CName)
-
-		if maCName != "" {
-			for _, ma := range s.Members {
-				if strings.ToLower(ma.CName) == strings.ToLower(maCName) {
-					m.Type.LengthOfSlice = ma.CName
-					ma.Type.IsSlice = true
-					ma.Type.LengthOfSlice = m.CName // TODO wrong usage but needed for the getter generation... maybe refactor this LengthOfSlice alltogether? https://github.com/zimmski/go-clang-phoenix/issues/49
-
-					break
-				}
-			}
-		}
+func (s *Struct) addMemberGetters() error {
+	if s.api.PrepareStructMembers != nil {
+		s.api.PrepareStructMembers(s)
 	}
 
 	// Generate the getters we can handle
 	for _, m := range s.Members {
-		// TODO happy hack, we do not want getters to *int_data members https://github.com/zimmski/go-clang-phoenix/issues/40
-		if strings.HasSuffix(m.CName, "int_data") {
+		if s.api.FilterStructMemberGetter != nil && !s.api.FilterStructMemberGetter(m) {
 			continue
 		}
 
@@ -123,7 +110,7 @@ func (s *Struct) AddMemberGetters() error {
 			continue
 		}
 
-		f := NewFunction(m.CName, s.CName, m.Comment, m.CName, m.Type)
+		f := newFunction(m.CName, s.CName, m.Comment, m.CName, m.Type)
 
 		if !s.ContainsMethod(f.Name) {
 			s.Methods = append(s.Methods, f)

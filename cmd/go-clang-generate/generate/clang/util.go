@@ -1,11 +1,10 @@
-package main
+package clang
 
 import (
 	"errors"
 	"os"
 	"os/exec"
 	"syscall"
-	"unicode"
 )
 
 func execToBuffer(cmd ...string) (out []byte, exitStatus int, err error) {
@@ -73,32 +72,4 @@ func fileExists(filepath string) error {
 	}
 
 	return nil
-}
-
-func lowerFirstCharacter(s string) string {
-	r := []rune(s)
-
-	r[0] = unicode.ToLower(r[0])
-
-	return string(r)
-}
-
-func upperFirstCharacter(s string) string {
-	r := []rune(s)
-
-	r[0] = unicode.ToUpper(r[0])
-
-	return string(r)
-}
-
-var goKeywordReplacements = map[string]string{
-	"range": "r",
-}
-
-func ReplaceGoKeywords(s string) string {
-	if r, ok := goKeywordReplacements[s]; ok {
-		return r
-	}
-
-	return ""
 }
