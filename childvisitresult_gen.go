@@ -31,10 +31,9 @@ func (cvr ChildVisitResult) Spelling() string {
 		return "ChildVisit=Continue"
 	case ChildVisit_Recurse:
 		return "ChildVisit=Recurse"
-
 	}
 
-	return fmt.Sprintf("ChildVisitResult unkown %d", int(cvr))
+	return fmt.Sprintf("ChildVisitResult unkown %d", cvr)
 }
 
 func (cvr ChildVisitResult) String() string {

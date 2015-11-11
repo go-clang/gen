@@ -8,7 +8,7 @@ import "C"
 type TypeKind uint32
 
 const (
-	// Reprents an invalid type (e.g., where no type is available).
+	// Represents an invalid type (e.g., where no type is available).
 	Type_Invalid TypeKind = C.CXType_Invalid
 	// A type whose specific kind is not exposed via this interface.
 	Type_Unexposed = C.CXType_Unexposed

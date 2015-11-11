@@ -33,10 +33,9 @@ func (lk LinkageKind) Spelling() string {
 		return "Linkage=UniqueExternal"
 	case Linkage_External:
 		return "Linkage=External"
-
 	}
 
-	return fmt.Sprintf("LinkageKind unkown %d", int(lk))
+	return fmt.Sprintf("LinkageKind unkown %d", lk)
 }
 
 func (lk LinkageKind) String() string {

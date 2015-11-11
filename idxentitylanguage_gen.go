@@ -24,10 +24,9 @@ func (iel IdxEntityLanguage) Spelling() string {
 		return "IdxEntityLang=ObjC"
 	case IdxEntityLang_CXX:
 		return "IdxEntityLang=CXX"
-
 	}
 
-	return fmt.Sprintf("IdxEntityLanguage unkown %d", int(iel))
+	return fmt.Sprintf("IdxEntityLanguage unkown %d", iel)
 }
 
 func (iel IdxEntityLanguage) String() string {

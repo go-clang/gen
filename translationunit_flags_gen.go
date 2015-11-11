@@ -111,10 +111,9 @@ func (tuf TranslationUnit_Flags) Spelling() string {
 		return "TranslationUnit=SkipFunctionBodies"
 	case TranslationUnit_IncludeBriefCommentsInCodeCompletion:
 		return "TranslationUnit=IncludeBriefCommentsInCodeCompletion"
-
 	}
 
-	return fmt.Sprintf("TranslationUnit_Flags unkown %d", int(tuf))
+	return fmt.Sprintf("TranslationUnit_Flags unkown %d", tuf)
 }
 
 func (tuf TranslationUnit_Flags) String() string {

@@ -157,7 +157,7 @@ func (i Index) TranslationUnitFromSourceFile(sourceFilename string, clangCommand
 	return TranslationUnit{C.clang_createTranslationUnitFromSourceFile(i.c, c_sourceFilename, C.int(len(clangCommandLineArgs)), cp_clangCommandLineArgs, C.uint(len(unsavedFiles)), cp_unsavedFiles)}
 }
 
-// Create a translation unit from an AST file (-emit-ast).
+// Same as clang_createTranslationUnit2, but returns the CXTranslationUnit instead of an error code. In case of an error this routine returns a NULL CXTranslationUnit, without further detailed error codes.
 func (i Index) TranslationUnit(astFilename string) TranslationUnit {
 	c_astFilename := C.CString(astFilename)
 	defer C.free(unsafe.Pointer(c_astFilename))
@@ -166,47 +166,21 @@ func (i Index) TranslationUnit(astFilename string) TranslationUnit {
 }
 
 /*
-	Parse the given source file and the translation unit corresponding
-	to that file.
+	Create a translation unit from an AST file (-emit-ast).
 
-	This routine is the main entry point for the Clang C API, providing the
-	ability to parse a source file into a translation unit that can then be
-	queried by other functions in the API. This routine accepts a set of
-	command-line arguments so that the compilation can be configured in the same
-	way that the compiler is configured on the command line.
+	\param[out] out_TU A non-NULL pointer to store the created
+	CXTranslationUnit.
 
-	Parameter CIdx The index object with which the translation unit will be
-	associated.
-
-	Parameter source_filename The name of the source file to load, or NULL if the
-	source file is included in \p command_line_args.
-
-	Parameter command_line_args The command-line arguments that would be
-	passed to the clang executable if it were being invoked out-of-process.
-	These command-line options will be parsed and will affect how the translation
-	unit is parsed. Note that the following options are ignored: '-c',
-	'-emit-ast', '-fsyntax-only' (which is the default), and '-o \<output file>'.
-
-	Parameter num_command_line_args The number of command-line arguments in
-	\p command_line_args.
-
-	Parameter unsaved_files the files that have not yet been saved to disk
-	but may be required for parsing, including the contents of
-	those files. The contents and name of these files (as specified by
-	CXUnsavedFile) are copied when necessary, so the client only needs to
-	guarantee their validity until the call to this function returns.
-
-	Parameter num_unsaved_files the number of unsaved file entries in \p
-	unsaved_files.
-
-	Parameter options A bitmask of options that affects how the translation unit
-	is managed but not its compilation. This should be a bitwise OR of the
-	CXTranslationUnit_XXX flags.
-
-	Returns A new translation unit describing the parsed code and containing
-	any diagnostics produced by the compiler. If there is a failure from which
-	the compiler cannot recover, returns NULL.
+	Returns Zero on success, otherwise returns an error code.
 */
+func (i Index) TranslationUnit2(astFilename string, outTU *TranslationUnit) ErrorCode {
+	c_astFilename := C.CString(astFilename)
+	defer C.free(unsafe.Pointer(c_astFilename))
+
+	return ErrorCode(C.clang_createTranslationUnit2(i.c, c_astFilename, &outTU.c))
+}
+
+// Same as clang_parseTranslationUnit2, but returns the CXTranslationUnit instead of an error code. In case of an error this routine returns a NULL CXTranslationUnit, without further detailed error codes.
 func (i Index) ParseTranslationUnit(sourceFilename string, commandLineArgs []string, unsavedFiles []UnsavedFile, options uint16) TranslationUnit {
 	ca_commandLineArgs := make([]*C.char, len(commandLineArgs))
 	var cp_commandLineArgs **C.char
@@ -231,6 +205,76 @@ func (i Index) ParseTranslationUnit(sourceFilename string, commandLineArgs []str
 	defer C.free(unsafe.Pointer(c_sourceFilename))
 
 	return TranslationUnit{C.clang_parseTranslationUnit(i.c, c_sourceFilename, cp_commandLineArgs, C.int(len(commandLineArgs)), cp_unsavedFiles, C.uint(len(unsavedFiles)), C.uint(options))}
+}
+
+/*
+	Parse the given source file and the translation unit corresponding
+	to that file.
+
+	This routine is the main entry point for the Clang C API, providing the
+	ability to parse a source file into a translation unit that can then be
+	queried by other functions in the API. This routine accepts a set of
+	command-line arguments so that the compilation can be configured in the same
+	way that the compiler is configured on the command line.
+
+	Parameter CIdx The index object with which the translation unit will be
+	associated.
+
+	Parameter source_filename The name of the source file to load, or NULL if the
+	source file is included in command_line_args.
+
+	Parameter command_line_args The command-line arguments that would be
+	passed to the clang executable if it were being invoked out-of-process.
+	These command-line options will be parsed and will affect how the translation
+	unit is parsed. Note that the following options are ignored: '-c',
+	'-emit-ast', '-fsyntax-only' (which is the default), and '-o \<output file>'.
+
+	Parameter num_command_line_args The number of command-line arguments in
+	command_line_args.
+
+	Parameter unsaved_files the files that have not yet been saved to disk
+	but may be required for parsing, including the contents of
+	those files. The contents and name of these files (as specified by
+	CXUnsavedFile) are copied when necessary, so the client only needs to
+	guarantee their validity until the call to this function returns.
+
+	Parameter num_unsaved_files the number of unsaved file entries in \p
+	unsaved_files.
+
+	Parameter options A bitmask of options that affects how the translation unit
+	is managed but not its compilation. This should be a bitwise OR of the
+	CXTranslationUnit_XXX flags.
+
+	\param[out] out_TU A non-NULL pointer to store the created
+	CXTranslationUnit, describing the parsed code and containing any
+	diagnostics produced by the compiler.
+
+	Returns Zero on success, otherwise returns an error code.
+*/
+func (i Index) ParseTranslationUnit2(sourceFilename string, commandLineArgs []string, unsavedFiles []UnsavedFile, options uint16, outTU *TranslationUnit) ErrorCode {
+	ca_commandLineArgs := make([]*C.char, len(commandLineArgs))
+	var cp_commandLineArgs **C.char
+	if len(commandLineArgs) > 0 {
+		cp_commandLineArgs = &ca_commandLineArgs[0]
+	}
+	for i := range commandLineArgs {
+		ci_str := C.CString(commandLineArgs[i])
+		defer C.free(unsafe.Pointer(ci_str))
+		ca_commandLineArgs[i] = ci_str
+	}
+	ca_unsavedFiles := make([]C.struct_CXUnsavedFile, len(unsavedFiles))
+	var cp_unsavedFiles *C.struct_CXUnsavedFile
+	if len(unsavedFiles) > 0 {
+		cp_unsavedFiles = &ca_unsavedFiles[0]
+	}
+	for i := range unsavedFiles {
+		ca_unsavedFiles[i] = unsavedFiles[i].c
+	}
+
+	c_sourceFilename := C.CString(sourceFilename)
+	defer C.free(unsafe.Pointer(c_sourceFilename))
+
+	return ErrorCode(C.clang_parseTranslationUnit2(i.c, c_sourceFilename, cp_commandLineArgs, C.int(len(commandLineArgs)), cp_unsavedFiles, C.uint(len(unsavedFiles)), C.uint(options), &outTU.c))
 }
 
 /*

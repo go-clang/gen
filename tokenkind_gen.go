@@ -33,10 +33,9 @@ func (tk TokenKind) Spelling() string {
 		return "Token=Literal"
 	case Token_Comment:
 		return "Token=Comment"
-
 	}
 
-	return fmt.Sprintf("TokenKind unkown %d", int(tk))
+	return fmt.Sprintf("TokenKind unkown %d", tk)
 }
 
 func (tk TokenKind) String() string {

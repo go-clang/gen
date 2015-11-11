@@ -43,7 +43,7 @@ func (ccr *CodeCompleteResults) Diagnostic(index uint16) Diagnostic {
 }
 
 /*
-	Determines what compeltions are appropriate for the context
+	Determines what completions are appropriate for the context
 	the given code completion.
 
 	Parameter Results the code completion results to query

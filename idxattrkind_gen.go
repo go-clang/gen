@@ -24,10 +24,9 @@ func (iak IdxAttrKind) Spelling() string {
 		return "IdxAttr=IBOutlet"
 	case IdxAttr_IBOutletCollection:
 		return "IdxAttr=IBOutletCollection"
-
 	}
 
-	return fmt.Sprintf("IdxAttrKind unkown %d", int(iak))
+	return fmt.Sprintf("IdxAttrKind unkown %d", iak)
 }
 
 func (iak IdxAttrKind) String() string {
