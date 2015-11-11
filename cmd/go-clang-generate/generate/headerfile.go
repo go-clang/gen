@@ -362,7 +362,11 @@ func handleHeaderFile(api *API, headerFilename string, clangArguments []string) 
 
 						added = h.addBasicMethods(f, s[1], "", rtc)
 					} else {
-						added = h.addBasicMethods(f, strings.Join(s[1:], ""), s[0]+"_", rt)
+						if s[0] != "" {
+							s[0] += "_"
+						}
+
+						added = h.addBasicMethods(f, strings.Join(s[1:], ""), s[0], rt)
 					}
 				}
 			}
