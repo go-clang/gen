@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/termie/go-shutil"
+
 	"github.com/zimmski/go-clang-phoenix/cmd/go-clang-generate/generate"
 )
 
@@ -70,12 +72,12 @@ func Cmd(args []string, api *generate.API) error {
 	fmt.Printf("Will generate go-clang for LLVM version %s into the current directory\n", llvmVersion.String())
 
 	clangCDirectory := "./clang-c/"
-	// TODO reenable https://github.com/zimmski/go-clang-phoenix/issues/55
-	/*// Copy the Clang-C include directory into the current directory
+
+	// Copy the Clang-C include directory into the current directory
 	_ = os.RemoveAll(clangCDirectory)
 	if err := shutil.CopyTree(clangCIncludeDir, clangCDirectory, nil); err != nil {
 		return cmdFatal(fmt.Sprintf("Cannot copy Clang-C include directory %q into current directory", clangCIncludeDir), err)
-	}*/
+	}
 
 	// Remove all generated .go files
 	if files, err := ioutil.ReadDir("./"); err != nil {
