@@ -163,6 +163,13 @@ func filterFunction(f *generate.Function) bool {
 		return false
 	}
 
+	// TODO if this function is from CXString.h we ignore it https://github.com/zimmski/go-clang-phoenix/issues/25
+	for i := range f.IncludeFiles {
+		if strings.HasSuffix(i, "CXString.h") {
+			return false
+		}
+	}
+
 	return true
 }
 

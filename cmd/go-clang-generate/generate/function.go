@@ -12,6 +12,8 @@ import (
 
 // Function represents a generation function
 type Function struct {
+	IncludeFiles includeFiles
+
 	Name    string
 	CName   string
 	Comment string
@@ -40,6 +42,8 @@ func newFunction(name, cname, comment, member string, typ Type) *Function {
 		Name:    functionName,
 		CName:   cname,
 		Comment: comment,
+
+		IncludeFiles: newIncludeFiles(),
 
 		Parameters: []FunctionParameter{ // TODO this might not be needed if the receiver code is refactored https://github.com/zimmski/go-clang-phoenix/issues/52
 			FunctionParameter{
@@ -74,6 +78,8 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 		Name:    fname,
 		CName:   fname,
 		Comment: CleanDoxygenComment(cursor.RawCommentText()),
+
+		IncludeFiles: newIncludeFiles(),
 
 		Parameters: []FunctionParameter{},
 	}

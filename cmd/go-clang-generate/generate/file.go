@@ -12,7 +12,7 @@ import (
 type File struct {
 	Name string
 
-	HeaderFiles map[string]struct{}
+	IncludeFiles includeFiles
 
 	Functions []interface{}
 	Enums     []*Enum
@@ -24,14 +24,13 @@ func newFile(name string) *File {
 	return &File{
 		Name: name,
 
-		HeaderFiles: map[string]struct{}{},
+		IncludeFiles: newIncludeFiles(),
 	}
 }
 
 var templateGenerateFile = template.Must(template.New("go-clang-generate-file").Parse(`package phoenix
 
-{{range $h, $dunno := $.HeaderFiles}}
-// #include "{{$h}}"
+{{range $h, $dunno := $.IncludeFiles}}// #include "{{$h}}"
 {{end}}// #include "go-clang.h"
 import "C"
 
@@ -67,13 +66,29 @@ type {{$s.Name}} struct {
 
 func (f *File) generate() error {
 	for _, e := range f.Enums {
-		if e.HeaderFile != "" {
-			f.HeaderFiles[e.HeaderFile] = struct{}{}
+		f.IncludeFiles.unifyIncludeFiles(e.IncludeFiles)
+
+		for _, fu := range e.Methods {
+			switch fu := fu.(type) {
+			case *Function:
+				f.IncludeFiles.unifyIncludeFiles(fu.IncludeFiles)
+			}
 		}
 	}
 	for _, s := range f.Structs {
-		if s.HeaderFile != "" {
-			f.HeaderFiles[s.HeaderFile] = struct{}{}
+		f.IncludeFiles.unifyIncludeFiles(s.IncludeFiles)
+
+		for _, fu := range s.Methods {
+			switch fu := fu.(type) {
+			case *Function:
+				f.IncludeFiles.unifyIncludeFiles(fu.IncludeFiles)
+			}
+		}
+	}
+	for _, fu := range f.Functions {
+		switch fu := fu.(type) {
+		case *Function:
+			f.IncludeFiles.unifyIncludeFiles(fu.IncludeFiles)
 		}
 	}
 

@@ -1,5 +1,11 @@
 package generate
 
+import (
+	"fmt"
+	"io/ioutil"
+	"strings"
+)
+
 type API struct {
 	// ClangArguments hold command line arguments for Clang
 	ClangArguments []string
@@ -21,6 +27,44 @@ type API struct {
 	FilterStructMemberGetter func(m *StructMember) bool
 }
 
-func (a *API) HandleHeaderFile(filename string) error {
-	return handleHeaderFile(a, filename, a.ClangArguments)
+func (a *API) HandleDirectory(dir string) error {
+	headers, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return fmt.Errorf("Cannot list clang-c directory: %v", err)
+	}
+
+	h := &HeaderFile{
+		api: a,
+
+		dir: dir,
+
+		lookupEnum:        map[string]*Enum{},
+		lookupNonTypedefs: map[string]string{},
+		lookupStruct: map[string]*Struct{
+			"cxstring": &Struct{
+				Name:  "cxstring",
+				CName: "CXString",
+			},
+		},
+	}
+
+	for _, hf := range headers {
+		name := hf.Name()
+
+		if hf.IsDir() || !strings.HasSuffix(name, ".h") {
+			continue
+		}
+
+		h.name = dir + name
+
+		if err := h.parse(a.ClangArguments); err != nil {
+			return fmt.Errorf("Cannot handle header file %q: %v", name, err)
+		}
+	}
+
+	if err := h.handle(); err != nil {
+		return err
+	}
+
+	return nil
 }
