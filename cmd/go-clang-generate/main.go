@@ -144,7 +144,7 @@ func prepareFunction(f *generate.Function) {
 }
 
 func filterFunction(f *generate.Function) bool {
-	// Some functions are not compiled in (TODO only 3.4?) the library see https://lists.launchpad.net/desktop-packages/msg75835.html for a never resolved bug report https://github.com/zimmski/go-clang-phoenix/issues/59
+	// Some functions are not compiled in the library see https://lists.launchpad.net/desktop-packages/msg75835.html for a never resolved bug report
 	if f.CName == "clang_CompileCommand_getMappedSourceContent" || f.CName == "clang_CompileCommand_getMappedSourcePath" || f.CName == "clang_CompileCommand_getNumMappedSources" {
 		fmt.Printf("Ignore function %q because it is not compiled within libClang\n", f.CName)
 
