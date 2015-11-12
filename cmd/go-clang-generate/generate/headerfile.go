@@ -50,12 +50,19 @@ func (h *HeaderFile) addMethod(f *Function, fname string, fnamePrefix string, rt
 
 func (h *HeaderFile) addBasicMethods(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 	if len(f.Parameters) == 0 && h.IsEnumOrStruct(f.ReturnType.GoName) {
-		fname = TrimCommonFunctionName(fname, rt.Type)
-		if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
+		rtc := rt
+		rtc.Type = f.ReturnType
+
+		fname = TrimCommonFunctionNamePrefix(fname)
+		if fname == "" {
+			fname = f.ReturnType.GoName
+		}
+
+		if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") || strings.HasSuffix(f.CName, "_create") {
 			fname = "New" + fname
 		}
 
-		return h.addMethod(f, fname, fnamePrefix, rt)
+		return h.addMethod(f, fname, fnamePrefix, rtc)
 	} else if (fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3]))) {
 		f.ReturnType.GoName = "bool"
 
@@ -362,7 +369,11 @@ func handleHeaderFile(api *API, headerFilename string, clangArguments []string) 
 
 						added = h.addBasicMethods(f, s[1], "", rtc)
 					} else {
-						added = h.addBasicMethods(f, strings.Join(s[1:], ""), s[0]+"_", rt)
+						if s[0] != "" {
+							s[0] += "_"
+						}
+
+						added = h.addBasicMethods(f, strings.Join(s[1:], ""), s[0], rt)
 					}
 				}
 			}
@@ -376,13 +387,17 @@ func handleHeaderFile(api *API, headerFilename string, clangArguments []string) 
 				added = h.addMethod(f, fname, "", rt)
 
 				if !added && h.IsEnumOrStruct(f.ReturnType.GoName) {
-					fname = TrimCommonFunctionName(fname, rt.Type)
-					if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") {
-						fname = "New" + fname
-					}
-
 					rtc := rt
 					rtc.Type = f.ReturnType
+
+					fname = TrimCommonFunctionNamePrefix(fname)
+					if fname == "" {
+						fname = f.ReturnType.GoName
+					}
+
+					if strings.HasPrefix(f.CName, "clang_create") || strings.HasPrefix(f.CName, "clang_get") || strings.HasSuffix(f.CName, "_create") {
+						fname = "New" + fname
+					}
 
 					added = h.addMethod(f, fname, "", rtc)
 				}

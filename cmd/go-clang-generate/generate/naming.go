@@ -76,6 +76,7 @@ func TrimLanguagePrefix(name string) string {
 	name = strings.TrimPrefix(name, "CXX")
 	name = strings.TrimPrefix(name, "CX")
 	name = strings.TrimPrefix(name, "ObjC")
+	name = strings.TrimPrefix(name, "_")
 
 	return name
 }
