@@ -99,12 +99,14 @@ func Cmd(args []string, api *generate.API) error {
 		return cmdFatal("Cannot list clang-c directory", err)
 	}
 	for _, h := range headers {
-		if h.IsDir() && !strings.HasSuffix(h.Name(), ".h") {
+		name := h.Name()
+
+		if h.IsDir() || !strings.HasSuffix(name, ".h") {
 			continue
 		}
 
-		if err := api.HandleHeaderFile(clangCDirectory + h.Name()); err != nil {
-			return cmdFatal("Cannot list clang-c directory", err)
+		if err := api.HandleHeaderFile(clangCDirectory + name); err != nil {
+			return cmdFatal(fmt.Sprintf("Cannot handle header file %q", name), err)
 		}
 	}
 
