@@ -149,7 +149,7 @@ func (idi IdxDeclInfo) DeclAsContainer() *IdxContainerInfo {
 	return gop_o
 }
 
-// Whether the declaration exists in code or was created implicitly by the compiler, e.g. implicit objc methods for properties.
+// Whether the declaration exists in code or was created implicitly by the compiler, e.g. implicit Objective-C methods for properties.
 func (idi IdxDeclInfo) IsImplicit() bool {
 	o := idi.c.isImplicit
 

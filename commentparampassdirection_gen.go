@@ -1,6 +1,6 @@
 package phoenix
 
-// #include "./clang-c/Index.h"
+// #include "./clang-c/Documentation.h"
 // #include "go-clang.h"
 import "C"
 import "fmt"
@@ -25,10 +25,9 @@ func (cppd CommentParamPassDirection) Spelling() string {
 		return "CommentParamPassDirection=Out"
 	case CommentParamPassDirection_InOut:
 		return "CommentParamPassDirection=InOut"
-
 	}
 
-	return fmt.Sprintf("CommentParamPassDirection unkown %d", int(cppd))
+	return fmt.Sprintf("CommentParamPassDirection unkown %d", cppd)
 }
 
 func (cppd CommentParamPassDirection) String() string {

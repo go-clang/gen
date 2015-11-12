@@ -1,6 +1,6 @@
 package phoenix
 
-// #include "./clang-c/Index.h"
+// #include "./clang-c/Documentation.h"
 // #include "go-clang.h"
 import "C"
 import "fmt"
@@ -29,10 +29,9 @@ func (cicrk CommentInlineCommandRenderKind) Spelling() string {
 		return "CommentInlineCommandRenderKind=Monospaced"
 	case CommentInlineCommandRenderKind_Emphasized:
 		return "CommentInlineCommandRenderKind=Emphasized"
-
 	}
 
-	return fmt.Sprintf("CommentInlineCommandRenderKind unkown %d", int(cicrk))
+	return fmt.Sprintf("CommentInlineCommandRenderKind unkown %d", cicrk)
 }
 
 func (cicrk CommentInlineCommandRenderKind) String() string {

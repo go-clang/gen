@@ -84,10 +84,9 @@ func (ddo DiagnosticDisplayOptions) Spelling() string {
 		return "Diagnostic=DisplayCategoryId"
 	case Diagnostic_DisplayCategoryName:
 		return "Diagnostic=DisplayCategoryName"
-
 	}
 
-	return fmt.Sprintf("DiagnosticDisplayOptions unkown %d", int(ddo))
+	return fmt.Sprintf("DiagnosticDisplayOptions unkown %d", ddo)
 }
 
 func (ddo DiagnosticDisplayOptions) String() string {

@@ -38,3 +38,10 @@ func (f File) UniqueID() (FileUniqueID, int16) {
 
 	return outID, o
 }
+
+// Returns non-zero if the file1 and file2 point to the same file, or they are both NULL.
+func (f File) IsEqual(file2 File) bool {
+	o := C.clang_File_isEqual(f.c, file2.c)
+
+	return o != C.int(0)
+}

@@ -18,10 +18,9 @@ func (vr VisitorResult) Spelling() string {
 		return "Visit=Break"
 	case Visit_Continue:
 		return "Visit=Continue"
-
 	}
 
-	return fmt.Sprintf("VisitorResult unkown %d", int(vr))
+	return fmt.Sprintf("VisitorResult unkown %d", vr)
 }
 
 func (vr VisitorResult) String() string {

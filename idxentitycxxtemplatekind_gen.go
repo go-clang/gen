@@ -25,10 +25,9 @@ func (iecxxtk IdxEntityCXXTemplateKind) Spelling() string {
 		return "IdxEntity=TemplatePartialSpecialization"
 	case IdxEntity_TemplateSpecialization:
 		return "IdxEntity=TemplateSpecialization"
-
 	}
 
-	return fmt.Sprintf("IdxEntityCXXTemplateKind unkown %d", int(iecxxtk))
+	return fmt.Sprintf("IdxEntityCXXTemplateKind unkown %d", iecxxtk)
 }
 
 func (iecxxtk IdxEntityCXXTemplateKind) String() string {

@@ -18,7 +18,7 @@ const (
 		Non-contiguous names occur in Objective-C when a selector with two or more
 		parameters is used, or in C++ when using an operator:
 		\code
-		[object doSomething:here withValue:there]; // ObjC
+		[object doSomething:here withValue:there]; // Objective-C
 		return some_vector[1]; // C++
 		\endcode
 	*/
@@ -33,10 +33,9 @@ func (nrf NameRefFlags) Spelling() string {
 		return "NameRange=WantTemplateArgs"
 	case NameRange_WantSinglePiece:
 		return "NameRange=WantSinglePiece"
-
 	}
 
-	return fmt.Sprintf("NameRefFlags unkown %d", int(nrf))
+	return fmt.Sprintf("NameRefFlags unkown %d", nrf)
 }
 
 func (nrf NameRefFlags) String() string {

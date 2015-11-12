@@ -15,10 +15,9 @@ func (idif IdxDeclInfoFlags) Spelling() string {
 	switch idif {
 	case IdxDeclFlag_Skipped:
 		return "IdxDeclFlag=Skipped"
-
 	}
 
-	return fmt.Sprintf("IdxDeclInfoFlags unkown %d", int(idif))
+	return fmt.Sprintf("IdxDeclInfoFlags unkown %d", idif)
 }
 
 func (idif IdxDeclInfoFlags) String() string {

@@ -40,10 +40,9 @@ func (gof GlobalOptFlags) Spelling() string {
 		return "GlobalOpt=ThreadBackgroundPriorityForEditing"
 	case GlobalOpt_ThreadBackgroundPriorityForAll:
 		return "GlobalOpt=ThreadBackgroundPriorityForAll"
-
 	}
 
-	return fmt.Sprintf("GlobalOptFlags unkown %d", int(gof))
+	return fmt.Sprintf("GlobalOptFlags unkown %d", gof)
 }
 
 func (gof GlobalOptFlags) String() string {

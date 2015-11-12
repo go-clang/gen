@@ -150,6 +150,27 @@ func doZero() *ast.BasicLit {
 	}
 }
 
+func doSwitchStmt(tag ast.Expr) *ast.SwitchStmt {
+	return &ast.SwitchStmt{
+		Tag:  tag,
+		Body: &ast.BlockStmt{},
+	}
+}
+
+func doCaseClause(c []ast.Expr, b []ast.Stmt) *ast.CaseClause {
+	return &ast.CaseClause{
+		List: c,
+		Body: b,
+	}
+}
+
+func doStringLit(value string) *ast.BasicLit {
+	return &ast.BasicLit{
+		Kind:  token.STRING,
+		Value: "\"" + value + "\"",
+	}
+}
+
 func getSliceType(typ Type) ast.Expr {
 	var sliceType ast.Expr
 

@@ -47,6 +47,23 @@ func (tu TranslationUnit) LocationForOffset(file File, offset uint16) SourceLoca
 	return SourceLocation{C.clang_getLocationForOffset(tu.c, file.c, C.uint(offset))}
 }
 
+/*
+	Retrieve all ranges that were skipped by the preprocessor.
+
+	The preprocessor will skip lines when they are surrounded by an
+	if/ifdef/ifndef directive whose condition does not evaluate to true.
+*/
+func (tu TranslationUnit) SkippedRanges(file File) *SourceRangeList {
+	o := C.clang_getSkippedRanges(tu.c, file.c)
+
+	var gop_o *SourceRangeList
+	if o != nil {
+		gop_o = &SourceRangeList{*o}
+	}
+
+	return gop_o
+}
+
 // Determine the number of diagnostics produced for the given translation unit.
 func (tu TranslationUnit) NumDiagnostics() uint16 {
 	return uint16(C.clang_getNumDiagnostics(tu.c))
@@ -178,10 +195,11 @@ func (tu TranslationUnit) DefaultReparseOptions() uint16 {
 	The function clang_defaultReparseOptions() produces a default set of
 	options recommended for most uses, based on the translation unit.
 
-	Returns 0 if the sources could be reparsed. A non-zero value will be
+	Returns 0 if the sources could be reparsed. A non-zero error code will be
 	returned if reparsing was impossible, such that the translation unit is
-	invalid. In such cases, the only valid call for \p TU is
-	clang_disposeTranslationUnit(TU).
+	invalid. In such cases, the only valid call for TU is
+	clang_disposeTranslationUnit(TU). The error codes returned by this
+	routine are described by the CXErrorCode enum.
 */
 func (tu TranslationUnit) ReparseTranslationUnit(unsavedFiles []UnsavedFile, options uint16) int16 {
 	ca_unsavedFiles := make([]C.struct_CXUnsavedFile, len(unsavedFiles))
@@ -228,6 +246,11 @@ func (tu TranslationUnit) TranslationUnitCursor() Cursor {
 */
 func (tu TranslationUnit) Cursor(sl SourceLocation) Cursor {
 	return Cursor{C.clang_getCursor(tu.c, sl.c)}
+}
+
+// Given a CXFile header file, return the module that contains it, if one exists.
+func (tu TranslationUnit) ModuleForFile(f File) Module {
+	return Module{C.clang_getModuleForFile(tu.c, f.c)}
 }
 
 /*

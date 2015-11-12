@@ -36,7 +36,7 @@ func (turuk TUResourceUsageKind) Name() string {
 
 func (turuk TUResourceUsageKind) Spelling() string {
 	switch turuk {
-	case TUResourceUsage_AST /*TUResourceUsage_MEMORY_IN_BYTES_BEGIN*/ /*TUResourceUsage_First*/ :
+	case TUResourceUsage_AST:
 		return "TUResourceUsage=AST, MEMORY_IN_BYTES_BEGIN, First"
 	case TUResourceUsage_Identifiers:
 		return "TUResourceUsage=Identifiers"
@@ -62,12 +62,11 @@ func (turuk TUResourceUsageKind) Spelling() string {
 		return "TUResourceUsage=PreprocessingRecord"
 	case TUResourceUsage_SourceManager_DataStructures:
 		return "TUResourceUsage=SourceManager_DataStructures"
-	case TUResourceUsage_Preprocessor_HeaderSearch /*TUResourceUsage_MEMORY_IN_BYTES_END*/ /*TUResourceUsage_Last*/ :
+	case TUResourceUsage_Preprocessor_HeaderSearch:
 		return "TUResourceUsage=Preprocessor_HeaderSearch, MEMORY_IN_BYTES_END, Last"
-
 	}
 
-	return fmt.Sprintf("TUResourceUsageKind unkown %d", int(turuk))
+	return fmt.Sprintf("TUResourceUsageKind unkown %d", turuk)
 }
 
 func (turuk TUResourceUsageKind) String() string {

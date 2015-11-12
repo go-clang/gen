@@ -18,7 +18,7 @@ const (
 	IndexOpt_IndexImplicitTemplateInstantiations = C.CXIndexOpt_IndexImplicitTemplateInstantiations
 	// Suppress all compiler warnings when parsing for indexing.
 	IndexOpt_SuppressWarnings = C.CXIndexOpt_SuppressWarnings
-	// Skip a function/method body that was already parsed during an indexing session assosiated with a CXIndexAction object. Bodies in system headers are always skipped.
+	// Skip a function/method body that was already parsed during an indexing session associated with a CXIndexAction object. Bodies in system headers are always skipped.
 	IndexOpt_SkipParsedBodiesInSession = C.CXIndexOpt_SkipParsedBodiesInSession
 )
 
@@ -36,10 +36,9 @@ func (iof IndexOptFlags) Spelling() string {
 		return "IndexOpt=SuppressWarnings"
 	case IndexOpt_SkipParsedBodiesInSession:
 		return "IndexOpt=SkipParsedBodiesInSession"
-
 	}
 
-	return fmt.Sprintf("IndexOptFlags unkown %d", int(iof))
+	return fmt.Sprintf("IndexOptFlags unkown %d", iof)
 }
 
 func (iof IndexOptFlags) String() string {

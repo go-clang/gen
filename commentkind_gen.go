@@ -1,6 +1,6 @@
 package phoenix
 
-// #include "./clang-c/Index.h"
+// #include "./clang-c/Documentation.h"
 // #include "go-clang.h"
 import "C"
 import "fmt"
@@ -114,10 +114,9 @@ func (ck CommentKind) Spelling() string {
 		return "Comment=VerbatimLine"
 	case Comment_FullComment:
 		return "Comment=FullComment"
-
 	}
 
-	return fmt.Sprintf("CommentKind unkown %d", int(ck))
+	return fmt.Sprintf("CommentKind unkown %d", ck)
 }
 
 func (ck CommentKind) String() string {

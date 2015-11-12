@@ -1,9 +1,8 @@
 package generate
 
 import (
-	"bytes"
+	"go/ast"
 	"strings"
-	"text/template"
 
 	"github.com/sbinet/go-clang"
 )
@@ -124,18 +123,6 @@ func (e *Enum) generate() error {
 	return f.generate()
 }
 
-var templateGenerateEnumString = template.Must(template.New("go-clang-generate-enum-string").Parse(`
-func ({{$.Receiver.Name}} {{$.Receiver.Type.GoName}}) String() string {
-	return {{$.Receiver.Name}}.Spelling()
-}
-`))
-
-var templateGenerateEnumError = template.Must(template.New("go-clang-generate-enum-error").Parse(`
-func ({{$.Receiver.Name}} {{$.Receiver.Type.GoName}}) Error() string {
-	return {{$.Receiver.Name}}.Spelling()
-}
-`))
-
 func (e *Enum) addEnumStringMethods() error {
 	if !e.ContainsMethod("Spelling") {
 		if err := e.addEnumSpellingMethod(); err != nil {
@@ -143,12 +130,12 @@ func (e *Enum) addEnumStringMethods() error {
 		}
 	}
 	if !e.ContainsMethod("String") {
-		if err := e.addEnumMethod(templateGenerateEnumString); err != nil {
+		if err := e.addEnumMethod("String"); err != nil {
 			return err
 		}
 	}
 	if strings.HasSuffix(e.Name, "Error") && !e.ContainsMethod("Error") {
-		if err := e.addEnumMethod(templateGenerateEnumError); err != nil {
+		if err := e.addEnumMethod("Error"); err != nil {
 			return err
 		}
 	}
@@ -156,77 +143,80 @@ func (e *Enum) addEnumStringMethods() error {
 	return nil
 }
 
-var templateGenerateEnumSpelling = template.Must(template.New("go-clang-generate-enum-spelling").Parse(`
-func ({{$.Receiver}} {{$.ReceiverType}}) Spelling() string {
-	switch {{$.Receiver}} {
-		{{range $en := $.Cases}}case {{range $sn := $en.CaseStr}}{{$sn}}{{end}}: return "{{$en.PrettyStr}}"
-		{{end}}
-	}
-
-	return fmt.Sprintf("{{$.ReceiverType}} unkown %d", int({{$.Receiver}}))
-}
-`))
-
 func (e *Enum) addEnumSpellingMethod() error {
-	var b bytes.Buffer
+	f := newFunction("Spelling", e.Name, "", "", Type{GoName: "string"})
+	fa := newASTFunc(f)
 
-	type Case struct {
-		CaseStr   []string
-		PrettyStr string
-	}
+	fa.generateReceiver()
 
-	type Switch struct {
-		Receiver     string
-		ReceiverType string
-		Cases        []Case
-	}
+	fa.addReturnType("", Type{
+		GoName: "string",
+	})
 
-	s := &Switch{
-		Receiver:     e.Receiver.Name,
-		ReceiverType: e.Receiver.Type.GoName,
-		Cases:        []Case{},
-	}
+	switchStmt := doSwitchStmt(&ast.Ident{Name: f.Receiver.Name})
+	fa.Body.List = append(fa.Body.List, switchStmt)
 
-	m := make(map[string]struct{})
+	m := make(map[uint64]*ast.CaseClause)
 
-	for i, enumerator := range e.Items {
-		if _, ok := m[enumerator.Name]; ok {
-			continue
-		}
+	for _, enumerator := range e.Items {
+		if caseClause, ok := m[enumerator.Value]; !ok {
+			c := []ast.Expr{&ast.Ident{Name: enumerator.Name}}
 
-		c := Case{
-			CaseStr:   []string{enumerator.Name},
-			PrettyStr: strings.Replace(enumerator.Name, "_", "=", 1),
-		}
-		m[enumerator.Name] = struct{}{}
-
-		for s := i + 1; s < len(e.Items); s++ {
-			if e.Items[s].Value == enumerator.Value {
-				c.CaseStr = append(c.CaseStr, "/*"+e.Items[s].Name+"*/")
-				c.PrettyStr = c.PrettyStr + ", " + e.Items[s].Name[strings.Index(e.Items[s].Name, "_")+1:]
-				m[e.Items[s].Name] = struct{}{}
+			ret := &ast.ReturnStmt{
+				Results: []ast.Expr{},
 			}
+
+			ret.Results = append(ret.Results, doStringLit(strings.Replace(enumerator.Name, "_", "=", 1)))
+
+			b := []ast.Stmt{ret}
+
+			caseClause = doCaseClause(c, b)
+			switchStmt.Body.List = append(switchStmt.Body.List, caseClause)
+			m[enumerator.Value] = caseClause
+		} else {
+			retStr := caseClause.Body[0].(*ast.ReturnStmt).Results[0].(*ast.BasicLit).Value
+			retStr = retStr[0:len(retStr)-1] + ", " + enumerator.Name[strings.Index(enumerator.Name, "_")+1:] + "\""
+			caseClause.Body[0].(*ast.ReturnStmt).Results[0].(*ast.BasicLit).Value = retStr
 		}
-
-		s.Cases = append(s.Cases, c)
 	}
 
-	if err := templateGenerateEnumSpelling.Execute(&b, s); err != nil {
-		return err
-	}
+	fa.addReturnItem(doCall(
+		"fmt",
+		"Sprintf",
+		doStringLit(f.Receiver.Type.GoName+" unkown %d"),
+		&ast.Ident{Name: f.Receiver.Name},
+	))
 
-	e.Methods = append(e.Methods, b.String())
+	fa.addEmptyLine()
+	fa.addStatement(fa.ret)
+
+	e.Methods = append(e.Methods, generateFunctionString(fa))
 
 	return nil
 }
 
-func (e *Enum) addEnumMethod(tmpl *template.Template) error {
-	var b bytes.Buffer
-	if err := tmpl.Execute(&b, e); err != nil {
-		return err
+func (e *Enum) addEnumMethod(fName string) error {
+	returnType := Type{
+		GoName: "string",
 	}
 
-	e.Methods = append(e.Methods, b.String())
+	f := newFunction(fName, e.Name, "", "", returnType)
+	fa := newASTFunc(f)
+
+	fa.generateReceiver()
+
+	fa.addReturnType("", Type{
+		GoName: "string",
+	})
+
+	fa.addReturnItem(doCall(
+		e.Receiver.Name,
+		"Spelling",
+	))
+
+	fa.addStatement(fa.ret)
+
+	e.Methods = append(e.Methods, generateFunctionString(fa))
 
 	return nil
 }
