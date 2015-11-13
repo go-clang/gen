@@ -29,7 +29,6 @@ func (ak AvailabilityKind) Spelling() string {
 		return "Availability=NotAvailable"
 	case Availability_NotAccessible:
 		return "Availability=NotAccessible"
-
 	}
 
 	return fmt.Sprintf("AvailabilityKind unkown %d", int(ak))

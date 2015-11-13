@@ -40,7 +40,6 @@ func (tle TypeLayoutError) Spelling() string {
 		return "TypeLayoutError=NotConstantSize"
 	case TypeLayoutError_InvalidFieldName:
 		return "TypeLayoutError=InvalidFieldName"
-
 	}
 
 	return fmt.Sprintf("TypeLayoutError unkown %d", int(tle))

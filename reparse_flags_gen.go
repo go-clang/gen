@@ -23,7 +23,6 @@ func (rf Reparse_Flags) Spelling() string {
 	switch rf {
 	case Reparse_None:
 		return "Reparse=None"
-
 	}
 
 	return fmt.Sprintf("Reparse_Flags unkown %d", int(rf))

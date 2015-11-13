@@ -21,7 +21,6 @@ func (iocck IdxObjCContainerKind) Spelling() string {
 		return "IdxObjCContainer=Interface"
 	case IdxObjCContainer_Implementation:
 		return "IdxObjCContainer=Implementation"
-
 	}
 
 	return fmt.Sprintf("IdxObjCContainerKind unkown %d", int(iocck))

@@ -1,6 +1,7 @@
 package generate
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
 )
@@ -147,6 +148,27 @@ func doZero() *ast.BasicLit {
 	return &ast.BasicLit{
 		Kind:  token.INT,
 		Value: "0",
+	}
+}
+
+func doSwitchStmt(tag ast.Expr) *ast.SwitchStmt {
+	return &ast.SwitchStmt{
+		Tag:  tag,
+		Body: &ast.BlockStmt{},
+	}
+}
+
+func doCaseClause(clause []ast.Expr, body []ast.Stmt) *ast.CaseClause {
+	return &ast.CaseClause{
+		List: clause,
+		Body: body,
+	}
+}
+
+func doStringLit(value string) *ast.BasicLit {
+	return &ast.BasicLit{
+		Kind:  token.STRING,
+		Value: fmt.Sprintf("%q", value),
 	}
 }
 

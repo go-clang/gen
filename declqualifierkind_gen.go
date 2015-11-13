@@ -34,7 +34,6 @@ func (dqk DeclQualifierKind) Spelling() string {
 		return "DeclQualifier=Byref"
 	case DeclQualifier_Oneway:
 		return "DeclQualifier=Oneway"
-
 	}
 
 	return fmt.Sprintf("DeclQualifierKind unkown %d", int(dqk))

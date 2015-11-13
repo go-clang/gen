@@ -33,7 +33,6 @@ func (ds DiagnosticSeverity) Spelling() string {
 		return "Diagnostic=Error"
 	case Diagnostic_Fatal:
 		return "Diagnostic=Fatal"
-
 	}
 
 	return fmt.Sprintf("DiagnosticSeverity unkown %d", int(ds))

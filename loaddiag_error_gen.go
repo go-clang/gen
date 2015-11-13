@@ -29,7 +29,6 @@ func (lde LoadDiag_Error) Spelling() string {
 		return "LoadDiag=CannotLoad"
 	case LoadDiag_InvalidFile:
 		return "LoadDiag=InvalidFile"
-
 	}
 
 	return fmt.Sprintf("LoadDiag_Error unkown %d", int(lde))

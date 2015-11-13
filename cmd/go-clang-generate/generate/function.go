@@ -1,10 +1,6 @@
 package generate
 
 import (
-	"bytes"
-	"go/ast"
-	"go/format"
-	"go/token"
 	"strings"
 
 	"github.com/sbinet/go-clang"
@@ -122,21 +118,12 @@ func (f *Function) generate() string {
 	fa := newASTFunc(f)
 	fa.generate()
 
-	var b bytes.Buffer
-	err := format.Node(&b, token.NewFileSet(), []ast.Decl{fa.FuncDecl})
-	if err != nil {
-		panic(err)
-	}
-
-	sss := b.String()
-
-	// TODO hack to make new lines... https://github.com/zimmski/go-clang-phoenix/issues/53
-	sss = strings.Replace(sss, "REMOVE()", "", -1)
+	fStr := generateFunctionString(fa)
 
 	// TODO find out how to position the comment correctly and do this using the AST https://github.com/zimmski/go-clang-phoenix/issues/54
 	if f.Comment != "" {
-		sss = f.Comment + "\n" + sss
+		fStr = f.Comment + "\n" + fStr
 	}
 
-	return sss
+	return fStr
 }

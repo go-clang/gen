@@ -114,7 +114,6 @@ func (ck CommentKind) Spelling() string {
 		return "Comment=VerbatimLine"
 	case Comment_FullComment:
 		return "Comment=FullComment"
-
 	}
 
 	return fmt.Sprintf("CommentKind unkown %d", int(ck))

@@ -19,7 +19,6 @@ func (cde CompilationDatabase_Error) Spelling() string {
 		return "CompilationDatabase=NoError"
 	case CompilationDatabase_CanNotLoadDatabase:
 		return "CompilationDatabase=CanNotLoadDatabase"
-
 	}
 
 	return fmt.Sprintf("CompilationDatabase_Error unkown %d", int(cde))

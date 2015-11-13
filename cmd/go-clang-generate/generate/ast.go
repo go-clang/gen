@@ -1,8 +1,11 @@
 package generate
 
 import (
+	"bytes"
 	"go/ast"
+	"go/format"
 	"go/token"
+	"strings"
 )
 
 type ASTFunc struct {
@@ -31,6 +34,19 @@ func newASTFunc(f *Function) *ASTFunc {
 			Results: []ast.Expr{},
 		},
 	}
+}
+
+func generateFunctionString(fa *ASTFunc) string {
+	var b bytes.Buffer
+	err := format.Node(&b, token.NewFileSet(), []ast.Decl{fa.FuncDecl})
+	if err != nil {
+		panic(err)
+	}
+
+	fStr := b.String()
+	fStr = strings.Replace(fStr, "REMOVE()", "", -1)
+
+	return fStr
 }
 
 func (fa *ASTFunc) generate() {

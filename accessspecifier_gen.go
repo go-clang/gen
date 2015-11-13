@@ -25,7 +25,6 @@ func (as AccessSpecifier) Spelling() string {
 		return "AccessSpecifier=Protected"
 	case AccessSpecifier_Private:
 		return "AccessSpecifier=Private"
-
 	}
 
 	return fmt.Sprintf("AccessSpecifier unkown %d", int(as))

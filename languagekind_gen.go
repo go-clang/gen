@@ -25,7 +25,6 @@ func (lk LanguageKind) Spelling() string {
 		return "Language=ObjC"
 	case Language_CPlusPlus:
 		return "Language=CPlusPlus"
-
 	}
 
 	return fmt.Sprintf("LanguageKind unkown %d", int(lk))
