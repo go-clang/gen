@@ -10,7 +10,7 @@ import (
 
 // Enum represents a generation enum
 type Enum struct {
-	HeaderFile string
+	IncludeFiles includeFiles
 
 	Name           string
 	CName          string
@@ -37,6 +37,8 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
 		Comment:        CleanDoxygenComment(cursor.RawCommentText()),
+
+		IncludeFiles: newIncludeFiles(),
 
 		Items: []EnumItem{},
 	}

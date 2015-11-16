@@ -94,20 +94,8 @@ func Cmd(args []string, api *generate.API) error {
 		}
 	}
 
-	headers, err := ioutil.ReadDir(clangCDirectory)
-	if err != nil {
-		return cmdFatal("Cannot list clang-c directory", err)
-	}
-	for _, h := range headers {
-		name := h.Name()
-
-		if h.IsDir() || !strings.HasSuffix(name, ".h") {
-			continue
-		}
-
-		if err := api.HandleHeaderFile(clangCDirectory + name); err != nil {
-			return cmdFatal(fmt.Sprintf("Cannot handle header file %q", name), err)
-		}
+	if err := api.HandleDirectory(clangCDirectory); err != nil {
+		return err
 	}
 
 	return nil

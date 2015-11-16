@@ -14,6 +14,7 @@ type HeaderFile struct {
 	api *API
 
 	name string
+	dir  string
 
 	enums     []*Enum
 	functions []*Function
@@ -149,7 +150,9 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		// Only handle code of the current file
 		sourceFile, _, _, _ := cursor.Location().GetFileLocation()
-		if sourceFile.Name() != h.name {
+		isCurrentFile := sourceFile.Name() == h.name
+
+		if !strings.HasPrefix(sourceFile.Name(), h.dir) {
 			return clang.CVR_Continue
 		}
 
@@ -168,15 +171,24 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 			}
 
 			e := handleEnumCursor(cursor, cname, cnameIsTypeDef)
+			e.IncludeFiles.addIncludeFile(sourceFile.Name())
 
-			h.lookupEnum[e.Name] = e
-			h.lookupNonTypedefs["enum "+e.CName] = e.Name
-			h.lookupEnum[e.CName] = e
+			if _, ok := h.lookupEnum[e.Name]; !ok {
+				h.lookupEnum[e.Name] = e
+				h.lookupNonTypedefs["enum "+e.CName] = e.Name
+				h.lookupEnum[e.CName] = e
 
-			h.enums = append(h.enums, e)
+				h.enums = append(h.enums, e)
+			}
 		case clang.CK_FunctionDecl:
+			if !isCurrentFile {
+				return clang.CVR_Continue
+			}
+
 			f := handleFunctionCursor(cursor)
 			if f != nil {
+				f.IncludeFiles.addIncludeFile(sourceFile.Name())
+
 				h.functions = append(h.functions, f)
 			}
 		case clang.CK_StructDecl:
@@ -186,12 +198,15 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 
 			s := handleStructCursor(cursor, cname, cnameIsTypeDef)
 			s.api = h.api
+			s.IncludeFiles.addIncludeFile(sourceFile.Name())
 
-			h.lookupStruct[s.Name] = s
-			h.lookupNonTypedefs["struct "+s.CName] = s.Name
-			h.lookupStruct[s.CName] = s
+			if _, ok := h.lookupStruct[s.Name]; !ok {
+				h.lookupStruct[s.Name] = s
+				h.lookupNonTypedefs["struct "+s.CName] = s.Name
+				h.lookupStruct[s.CName] = s
 
-			h.structs = append(h.structs, s)
+				h.structs = append(h.structs, s)
+			}
 		case clang.CK_TypedefDecl:
 			underlyingType := cursor.TypedefDeclUnderlyingType().TypeSpelling()
 			underlyingStructType := strings.TrimSuffix(strings.TrimPrefix(underlyingType, "struct "), " *")
@@ -200,6 +215,13 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 				// Sometimes the typedef is not a parent of the struct but a sibling
 				sn := handleStructCursor(cursor, cname, true)
 				sn.api = h.api
+				sn.IncludeFiles.addIncludeFile(sourceFile.Name())
+
+				if sn.Comment == "" {
+					sn.Comment = s.Comment
+				}
+				sn.Members = s.Members
+				sn.Methods = s.Methods
 
 				h.lookupStruct[sn.Name] = sn
 				h.lookupNonTypedefs["struct "+sn.CName] = sn.Name
@@ -219,12 +241,15 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 			} else if underlyingType == "void *" {
 				s := handleStructCursor(cursor, cname, true)
 				s.api = h.api
+				s.IncludeFiles.addIncludeFile(sourceFile.Name())
 
-				h.lookupStruct[s.Name] = s
-				h.lookupNonTypedefs["struct "+s.CName] = s.Name
-				h.lookupStruct[s.CName] = s
+				if _, ok := h.lookupStruct[s.Name]; !ok {
+					h.lookupStruct[s.Name] = s
+					h.lookupNonTypedefs["struct "+s.CName] = s.Name
+					h.lookupStruct[s.CName] = s
 
-				h.structs = append(h.structs, s)
+					h.structs = append(h.structs, s)
+				}
 			}
 		}
 
@@ -232,22 +257,7 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 	})
 }
 
-func handleHeaderFile(api *API, headerFilename string, clangArguments []string) error {
-	h := &HeaderFile{
-		api: api,
-
-		name: headerFilename,
-
-		lookupEnum:        map[string]*Enum{},
-		lookupNonTypedefs: map[string]string{},
-		lookupStruct: map[string]*Struct{
-			"cxstring": &Struct{
-				Name:  "cxstring",
-				CName: "CXString",
-			},
-		},
-	}
-
+func (h *HeaderFile) parse(clangArguments []string) error {
 	if err := h.prepareFile(); err != nil {
 		return err
 	}
@@ -274,19 +284,23 @@ func handleHeaderFile(api *API, headerFilename string, clangArguments []string) 
 
 	h.handleFile(tu.ToCursor())
 
+	return nil
+}
+
+func (h *HeaderFile) handle() error {
 	// Prepare all functions
 	clangFile := newFile("clang")
 
 	for _, f := range h.functions {
 		var fname string
-		if api.PrepareFunctionName != nil {
-			fname = api.PrepareFunctionName(h, f)
+		if h.api.PrepareFunctionName != nil {
+			fname = h.api.PrepareFunctionName(h, f)
 			f.Name = fname
 		} else {
 			fname = f.Name
 		}
 
-		if api.FilterFunction != nil && !api.FilterFunction(f) {
+		if h.api.FilterFunction != nil && !h.api.FilterFunction(f) {
 			continue
 		}
 
@@ -307,8 +321,8 @@ func handleHeaderFile(api *API, headerFilename string, clangArguments []string) 
 			}
 		}
 
-		if api.PrepareFunction != nil {
-			api.PrepareFunction(f)
+		if h.api.PrepareFunction != nil {
+			h.api.PrepareFunction(f)
 		}
 
 		// Prepare the return argument
@@ -338,7 +352,7 @@ func handleHeaderFile(api *API, headerFilename string, clangArguments []string) 
 		found := false
 
 		for _, p := range f.Parameters {
-			if api.FilterFunctionParameter != nil && !api.FilterFunctionParameter(p) {
+			if h.api.FilterFunctionParameter != nil && !h.api.FilterFunctionParameter(p) {
 				continue
 			}
 
@@ -417,8 +431,6 @@ func handleHeaderFile(api *API, headerFilename string, clangArguments []string) 
 	}
 
 	for _, e := range h.enums {
-		e.HeaderFile = h.name
-
 		if err := e.addEnumStringMethods(); err != nil {
 			return fmt.Errorf("Cannot generate enum string methods: %v", err)
 		}
@@ -441,6 +453,8 @@ func handleHeaderFile(api *API, headerFilename string, clangArguments []string) 
 					h.setIsPointerComposition(&m.Parameters[i].Type)
 				}
 
+				e.IncludeFiles.unifyIncludeFiles(m.IncludeFiles)
+
 				e.Methods[i] = m.generate()
 			}
 		}
@@ -451,8 +465,6 @@ func handleHeaderFile(api *API, headerFilename string, clangArguments []string) 
 	}
 
 	for _, s := range h.structs {
-		s.HeaderFile = h.name
-
 		if err := s.addMemberGetters(); err != nil {
 			return fmt.Errorf("Cannot generate struct member getters: %v", err)
 		}
@@ -460,6 +472,10 @@ func handleHeaderFile(api *API, headerFilename string, clangArguments []string) 
 		for i, m := range s.Methods {
 			if r := h.handleMethod(s.Name, m); r != "" {
 				s.Methods[i] = r
+			}
+			switch m := m.(type) {
+			case *Function:
+				s.IncludeFiles.unifyIncludeFiles(m.IncludeFiles)
 			}
 		}
 
@@ -469,7 +485,12 @@ func handleHeaderFile(api *API, headerFilename string, clangArguments []string) 
 	}
 
 	if len(clangFile.Functions) > 0 {
-		clangFile.HeaderFiles[h.name] = struct{}{}
+		for _, m := range clangFile.Functions {
+			switch m := m.(type) {
+			case *Function:
+				clangFile.IncludeFiles.unifyIncludeFiles(m.IncludeFiles)
+			}
+		}
 
 		for i, m := range clangFile.Functions {
 			if r := h.handleMethod("", m); r != "" {

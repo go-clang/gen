@@ -10,7 +10,7 @@ import (
 type Struct struct {
 	api *API
 
-	HeaderFile string
+	IncludeFiles includeFiles
 
 	Name           string
 	CName          string
@@ -36,6 +36,8 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
 		Comment:        CleanDoxygenComment(cursor.RawCommentText()),
+
+		IncludeFiles: newIncludeFiles(),
 	}
 
 	s.Name = TrimLanguagePrefix(s.CName)
