@@ -7,7 +7,7 @@ import (
 	"go/token"
 	"strings"
 
-	"github.com/sbinet/go-clang"
+	"github.com/zimmski/go-clang-phoenix"
 )
 
 // Function represents a generation function
@@ -72,7 +72,7 @@ func newFunction(name, cname, comment, member string, typ Type) *Function {
 	return f
 }
 
-func handleFunctionCursor(cursor clang.Cursor) *Function {
+func handleFunctionCursor(cursor phoenix.Cursor) *Function {
 	fname := cursor.Spelling()
 	f := Function{
 		Name:    fname,
@@ -90,9 +90,9 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 	}
 	f.ReturnType = typ
 
-	numParam := uint(cursor.NumArguments())
-	for i := uint(0); i < numParam; i++ {
-		param := cursor.Argument(i)
+	numParam := int(cursor.NumArguments())
+	for i := 0; i < numParam; i++ {
+		param := cursor.Argument(uint16(i))
 
 		p := FunctionParameter{
 			CName: param.DisplayName(),

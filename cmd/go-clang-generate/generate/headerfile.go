@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/sbinet/go-clang"
+	"github.com/zimmski/go-clang-phoenix"
 )
 
 type HeaderFile struct {
@@ -139,7 +139,7 @@ func (h *HeaderFile) prepareFile() error {
 	return nil
 }
 
-func (h *HeaderFile) handleFile(cursor clang.Cursor) {
+func (h *HeaderFile) handleFile(cursor phoenix.Cursor) {
 	/*
 		TODO mark the enum https://github.com/zimmski/go-clang-phoenix/issues/40
 			typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor, CXCursor parent, CXClientData client_data);
@@ -147,25 +147,25 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 	*/
 	// TODO report other enums like callbacks that they are not implemented https://github.com/zimmski/go-clang-phoenix/issues/51
 
-	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
+	cursor.Visit(func(cursor, parent phoenix.Cursor) phoenix.ChildVisitResult {
 		// Only handle code of the current file
-		sourceFile, _, _, _ := cursor.Location().GetFileLocation()
+		sourceFile, _, _, _ := cursor.Location().FileLocation()
 		isCurrentFile := sourceFile.Name() == h.name
 
 		if !strings.HasPrefix(sourceFile.Name(), h.dir) {
-			return clang.CVR_Continue
+			return phoenix.ChildVisit_Continue
 		}
 
 		cname := cursor.Spelling()
 		cnameIsTypeDef := false
 
-		if parentCName := parent.Spelling(); parent.Kind() == clang.CK_TypedefDecl && parentCName != "" {
+		if parentCName := parent.Spelling(); parent.Kind() == phoenix.Cursor_TypedefDecl && parentCName != "" {
 			cname = parentCName
 			cnameIsTypeDef = true
 		}
 
 		switch cursor.Kind() {
-		case clang.CK_EnumDecl:
+		case phoenix.Cursor_EnumDecl:
 			if cname == "" {
 				break
 			}
@@ -180,9 +180,9 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 
 				h.enums = append(h.enums, e)
 			}
-		case clang.CK_FunctionDecl:
+		case phoenix.Cursor_FunctionDecl:
 			if !isCurrentFile {
-				return clang.CVR_Continue
+				return phoenix.ChildVisit_Continue
 			}
 
 			f := handleFunctionCursor(cursor)
@@ -191,7 +191,7 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 
 				h.functions = append(h.functions, f)
 			}
-		case clang.CK_StructDecl:
+		case phoenix.Cursor_StructDecl:
 			if cname == "" {
 				break
 			}
@@ -207,8 +207,8 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 
 				h.structs = append(h.structs, s)
 			}
-		case clang.CK_TypedefDecl:
-			underlyingType := cursor.TypedefDeclUnderlyingType().TypeSpelling()
+		case phoenix.Cursor_TypedefDecl:
+			underlyingType := cursor.TypedefDeclUnderlyingType().Spelling()
 			underlyingStructType := strings.TrimSuffix(strings.TrimPrefix(underlyingType, "struct "), " *")
 
 			if s, ok := h.lookupStruct[underlyingStructType]; ok && !s.CNameIsTypeDef && strings.HasPrefix(underlyingType, "struct "+s.CName) {
@@ -253,7 +253,7 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 			}
 		}
 
-		return clang.CVR_Recurse
+		return phoenix.ChildVisit_Recurse
 	})
 }
 
@@ -263,10 +263,10 @@ func (h *HeaderFile) parse(clangArguments []string) error {
 	}
 
 	// Parse the header file to analyse everything we need to know
-	idx := clang.NewIndex(0, 1)
+	idx := phoenix.NewIndex(0, 1)
 	defer idx.Dispose()
 
-	tu := idx.Parse(h.name, clangArguments, nil, 0)
+	tu := idx.ParseTranslationUnit(h.name, clangArguments, nil, 0)
 	defer tu.Dispose()
 
 	if !tu.IsValid() {
@@ -275,14 +275,14 @@ func (h *HeaderFile) parse(clangArguments []string) error {
 
 	for _, diag := range tu.Diagnostics() {
 		switch diag.Severity() {
-		case clang.Diagnostic_Error:
+		case phoenix.Diagnostic_Error:
 			return fmt.Errorf("Diagnostic error in Index.h: %s", diag.Spelling())
-		case clang.Diagnostic_Fatal:
+		case phoenix.Diagnostic_Fatal:
 			return fmt.Errorf("Diagnostic fatal in Index.h: %s", diag.Spelling())
 		}
 	}
 
-	h.handleFile(tu.ToCursor())
+	h.handleFile(tu.TranslationUnitCursor())
 
 	return nil
 }

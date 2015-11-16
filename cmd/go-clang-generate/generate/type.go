@@ -5,7 +5,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/sbinet/go-clang"
+	"github.com/zimmski/go-clang-phoenix"
 )
 
 // Defines all available Go types
@@ -62,9 +62,9 @@ type Type struct {
 	IsPointerComposition bool
 }
 
-func typeFromClangType(cType clang.Type) (Type, error) {
+func typeFromClangType(cType phoenix.Type) (Type, error) {
 	typ := Type{
-		CName: cType.TypeSpelling(),
+		CName: cType.Spelling(),
 
 		PointerLevel:      0,
 		IsPrimitive:       true,
@@ -75,49 +75,49 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 	}
 
 	switch cType.Kind() {
-	case clang.TK_Char_S:
+	case phoenix.Type_Char_S:
 		typ.CGoName = CSChar
 		typ.GoName = GoInt8
-	case clang.TK_Char_U:
+	case phoenix.Type_Char_U:
 		typ.CGoName = CUChar
 		typ.GoName = GoUInt8
-	case clang.TK_Int:
+	case phoenix.Type_Int:
 		typ.CGoName = CInt
 		typ.GoName = GoInt16
-	case clang.TK_Short:
+	case phoenix.Type_Short:
 		typ.CGoName = CShort
 		typ.GoName = GoInt16
-	case clang.TK_UShort:
+	case phoenix.Type_UShort:
 		typ.CGoName = CUShort
 		typ.GoName = GoUInt16
-	case clang.TK_UInt:
+	case phoenix.Type_UInt:
 		typ.CGoName = CUInt
 		typ.GoName = GoUInt16
-	case clang.TK_Long:
+	case phoenix.Type_Long:
 		typ.CGoName = CLongInt
 		typ.GoName = GoInt32
-	case clang.TK_ULong:
+	case phoenix.Type_ULong:
 		typ.CGoName = CULongInt
 		typ.GoName = GoUInt32
-	case clang.TK_LongLong:
+	case phoenix.Type_LongLong:
 		typ.CGoName = CLongLong
 		typ.GoName = GoInt64
-	case clang.TK_ULongLong:
+	case phoenix.Type_ULongLong:
 		typ.CGoName = CULongLong
 		typ.GoName = GoUInt64
-	case clang.TK_Float:
+	case phoenix.Type_Float:
 		typ.CGoName = CFloat
 		typ.GoName = GoFloat32
-	case clang.TK_Double:
+	case phoenix.Type_Double:
 		typ.CGoName = CDouble
 		typ.GoName = GoFloat64
-	case clang.TK_Bool:
+	case phoenix.Type_Bool:
 		typ.GoName = GoBool
-	case clang.TK_Void:
+	case phoenix.Type_Void:
 		// TODO Does not exist in Go, what should we do with it? https://github.com/zimmski/go-clang-phoenix/issues/50
 		typ.CGoName = "void"
 		typ.GoName = "void"
-	case clang.TK_ConstantArray:
+	case phoenix.Type_ConstantArray:
 		subTyp, err := typeFromClangType(cType.ArrayElementType())
 		if err != nil {
 			return Type{}, err
@@ -128,10 +128,10 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 		typ.PointerLevel += subTyp.PointerLevel
 		typ.IsArray = true
 		typ.ArraySize = cType.ArraySize()
-	case clang.TK_Typedef:
+	case phoenix.Type_Typedef:
 		typ.IsPrimitive = false
 
-		typeStr := cType.TypeSpelling()
+		typeStr := cType.Spelling()
 		if typeStr == "CXString" { // TODO eliminate CXString from the generic code https://github.com/zimmski/go-clang-phoenix/issues/25
 			typeStr = "cxstring"
 		} else if typeStr == "time_t" {
@@ -140,20 +140,20 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 
 			typ.IsPrimitive = true
 		} else {
-			typeStr = TrimLanguagePrefix(cType.Declaration().Type().TypeSpelling())
+			typeStr = TrimLanguagePrefix(cType.Declaration().Type().Spelling())
 		}
 
-		typ.CGoName = cType.Declaration().Type().TypeSpelling()
+		typ.CGoName = cType.Declaration().Type().Spelling()
 		typ.GoName = typeStr
 
-		if cType.CanonicalType().Kind() == clang.TK_Enum {
+		if cType.CanonicalType().Kind() == phoenix.Type_Enum {
 			typ.IsEnumLiteral = true
 			typ.IsPrimitive = true
 		}
-	case clang.TK_Pointer:
+	case phoenix.Type_Pointer:
 		typ.PointerLevel++
 
-		if cType.PointeeType().CanonicalType().Kind() == clang.TK_FunctionProto {
+		if cType.PointeeType().CanonicalType().Kind() == phoenix.Type_FunctionProto {
 			typ.IsFunctionPointer = true
 		}
 
@@ -166,19 +166,19 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 		typ.GoName = subTyp.GoName
 		typ.PointerLevel += subTyp.PointerLevel
 		typ.IsPrimitive = subTyp.IsPrimitive
-	case clang.TK_Record:
-		typ.CGoName = cType.Declaration().Type().TypeSpelling()
+	case phoenix.Type_Record:
+		typ.CGoName = cType.Declaration().Type().Spelling()
 		typ.GoName = TrimLanguagePrefix(typ.CGoName)
 		typ.IsPrimitive = false
-	case clang.TK_FunctionProto:
+	case phoenix.Type_FunctionProto:
 		typ.IsFunctionPointer = true
-		typ.CGoName = cType.Declaration().Type().TypeSpelling()
+		typ.CGoName = cType.Declaration().Type().Spelling()
 		typ.GoName = TrimLanguagePrefix(typ.CGoName)
-	case clang.TK_Enum:
+	case phoenix.Type_Enum:
 		typ.GoName = TrimLanguagePrefix(cType.Declaration().DisplayName())
 		typ.IsEnumLiteral = true
 		typ.IsPrimitive = true
-	case clang.TK_Unexposed: // There is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013 https://llvm.org/bugs/show_bug.cgi?id=15089
+	case phoenix.Type_Unexposed: // There is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013 https://llvm.org/bugs/show_bug.cgi?id=15089
 		subTyp, err := typeFromClangType(cType.CanonicalType())
 		if err != nil {
 			return Type{}, err
@@ -189,7 +189,7 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 		typ.PointerLevel += subTyp.PointerLevel
 		typ.IsPrimitive = subTyp.IsPrimitive
 	default:
-		return Type{}, fmt.Errorf("unhandled type %q of kind %q", cType.TypeSpelling(), cType.Kind().Spelling())
+		return Type{}, fmt.Errorf("unhandled type %q of kind %q", cType.Spelling(), cType.Kind().Spelling())
 	}
 
 	return typ, nil
