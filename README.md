@@ -53,3 +53,17 @@ make lint
 ```
 
 This will generate the bindings with the correct `bootstrap` Clang version, make sure that the bindings compile, run all tests and process the source code with the project's linters. Make sure that you do not introduce new linting problems.
+
+## Maintainer documentation
+
+The following sections are specific to the maintainer process.
+
+### Branch a new Clang version
+
+Every now and then a new Clang version emerges which needs to be generated for go-clang-phoenix. This can be done inside the development VM using the following statement. Replace `3.4` with the Clang version you want to branch off.
+
+```bash
+make branch 3.4
+```
+
+This will install, configure, generate and install the given Clang version in a branch "v34". Please note, that the "dots" of the version will not be included in the branch name. This is needed to trick gopkg.in believing that this is a new major version. The commit and push for the new version has do be done by hand. The branch should pass all TravisCI checks.
