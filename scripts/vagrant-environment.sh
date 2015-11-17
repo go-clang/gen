@@ -26,3 +26,5 @@ cd $HOME/go/src/github.com/zimmski/go-clang-phoenix/
 make install-dependencies
 make install-tools
 make install
+
+cp $HOME/go/bin/go-clang-generate $HOME/go-clang-generate
