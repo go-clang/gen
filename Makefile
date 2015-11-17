@@ -1,10 +1,17 @@
-.PHONY: all clean generate install install-dependencies install-tools lint test test-verbose
+.PHONY: all branch clean generate install install-dependencies install-tools lint test test-verbose
 
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 export ROOT_DIR
 
+ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+$(eval $(ARGS):;@:) # turn arguments into do-nothing targets
+export ARGS
+
 all: install-dependencies install-tools install test
 
+branch:
+	make switch-clang-version $(ARGS)
+	scripts/branch.sh $(ARGS)
 clean:
 	rm -r clang-c/
 	rm *_gen.go
@@ -29,6 +36,8 @@ install-tools:
 	go get -u github.com/mattn/goveralls/...
 lint: install
 	scripts/lint.sh
+switch-clang-version:
+	scripts/switch-clang-version.sh $(ARGS)
 test:
 	CGO_CFLAGS="-I`llvm-config --includedir`" CGO_LDFLAGS="-L`llvm-config --libdir`" go test -timeout 60s -race ./...
 test-verbose:
