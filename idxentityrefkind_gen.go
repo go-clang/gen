@@ -21,7 +21,6 @@ func (ierk IdxEntityRefKind) Spelling() string {
 		return "IdxEntityRef=Direct"
 	case IdxEntityRef_Implicit:
 		return "IdxEntityRef=Implicit"
-
 	}
 
 	return fmt.Sprintf("IdxEntityRefKind unkown %d", int(ierk))

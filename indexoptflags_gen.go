@@ -36,7 +36,6 @@ func (iof IndexOptFlags) Spelling() string {
 		return "IndexOpt=SuppressWarnings"
 	case IndexOpt_SkipParsedBodiesInSession:
 		return "IndexOpt=SkipParsedBodiesInSession"
-
 	}
 
 	return fmt.Sprintf("IndexOptFlags unkown %d", int(iof))

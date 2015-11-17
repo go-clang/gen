@@ -33,7 +33,6 @@ func (nrf NameRefFlags) Spelling() string {
 		return "NameRange=WantTemplateArgs"
 	case NameRange_WantSinglePiece:
 		return "NameRange=WantSinglePiece"
-
 	}
 
 	return fmt.Sprintf("NameRefFlags unkown %d", int(nrf))

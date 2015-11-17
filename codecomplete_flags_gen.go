@@ -31,7 +31,6 @@ func (ccf CodeComplete_Flags) Spelling() string {
 		return "CodeComplete=IncludeCodePatterns"
 	case CodeComplete_IncludeBriefComments:
 		return "CodeComplete=IncludeBriefComments"
-
 	}
 
 	return fmt.Sprintf("CodeComplete_Flags unkown %d", int(ccf))

@@ -23,7 +23,6 @@ func (stuf SaveTranslationUnit_Flags) Spelling() string {
 	switch stuf {
 	case SaveTranslationUnit_None:
 		return "SaveTranslationUnit=None"
-
 	}
 
 	return fmt.Sprintf("SaveTranslationUnit_Flags unkown %d", int(stuf))

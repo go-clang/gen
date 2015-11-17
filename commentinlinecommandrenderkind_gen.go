@@ -29,7 +29,6 @@ func (cicrk CommentInlineCommandRenderKind) Spelling() string {
 		return "CommentInlineCommandRenderKind=Monospaced"
 	case CommentInlineCommandRenderKind_Emphasized:
 		return "CommentInlineCommandRenderKind=Emphasized"
-
 	}
 
 	return fmt.Sprintf("CommentInlineCommandRenderKind unkown %d", int(cicrk))

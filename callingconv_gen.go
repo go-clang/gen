@@ -55,7 +55,6 @@ func (cc CallingConv) Spelling() string {
 		return "CallingConv=Invalid"
 	case CallingConv_Unexposed:
 		return "CallingConv=Unexposed"
-
 	}
 
 	return fmt.Sprintf("CallingConv unkown %d", int(cc))

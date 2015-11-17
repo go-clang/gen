@@ -25,7 +25,6 @@ func (cppd CommentParamPassDirection) Spelling() string {
 		return "CommentParamPassDirection=Out"
 	case CommentParamPassDirection_InOut:
 		return "CommentParamPassDirection=InOut"
-
 	}
 
 	return fmt.Sprintf("CommentParamPassDirection unkown %d", int(cppd))

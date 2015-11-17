@@ -24,7 +24,6 @@ func (r Result) Spelling() string {
 		return "Result=Invalid"
 	case Result_VisitBreak:
 		return "Result=VisitBreak"
-
 	}
 
 	return fmt.Sprintf("Result unkown %d", int(r))

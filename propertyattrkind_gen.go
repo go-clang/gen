@@ -52,7 +52,6 @@ func (pak PropertyAttrKind) Spelling() string {
 		return "PropertyAttr=strong"
 	case PropertyAttr_unsafe_unretained:
 		return "PropertyAttr=unsafe_unretained"
-
 	}
 
 	return fmt.Sprintf("PropertyAttrKind unkown %d", int(pak))
