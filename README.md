@@ -26,6 +26,8 @@ To ease the development process we have our own development environment based on
 
 The following command will recompile `go-clang-generate` and will regenerate the bindings for the currently set up Clang version.
 
+> **Please note**, that only the major and minor verison must be declared if a Clang version is needed in a command.
+
 ```bash
 make generate
 ```
@@ -58,6 +60,8 @@ This will generate the bindings with the correct `bootstrap` Clang version, make
 
 The following sections are specific to the maintainer process.
 
+> **Please note**, that only the major and minor verison must be declared if a Clang version is needed in a command.
+
 ### Branch a new Clang version
 
 Every now and then a new Clang version emerges which needs to be generated for go-clang-phoenix. This can be done inside the development VM using the following statement. Replace `3.4` with the Clang version you want to branch off.
@@ -67,3 +71,7 @@ make branch 3.4
 ```
 
 This will install, configure, generate and install the given Clang version in a branch "v34". Please note, that the "dots" of the version will not be included in the branch name. This is needed to trick gopkg.in believing that this is a new major version. The commit and push for the new version has do be done by hand. The branch should pass all TravisCI checks.
+
+### Update a branch with a new Clang version
+
+Every now and then a new Clang subminor version is released. A version branch can be updated by simply running the same process as with adding a new Clang version branch. This just depends on the packages of the used VM distribution not on go-clang-phoenix itself. Please note, it is intentional that the old branch is overwritten. Since we generate the whole binding anew we do not need the old branch.
