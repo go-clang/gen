@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 export CODENAME=$(lsb_release --codename --short)
 export LLVM_VERSION=3.4
@@ -19,3 +19,6 @@ apt-get -V install -y clang-${LLVM_VERSION} git libclang-${LLVM_VERSION}-dev llv
 # Setup LLVM and Clang
 ln -s /usr/bin/llvm-config-$LLVM_VERSION /usr/bin/llvm-config
 ln -s /usr/lib/x86_64-linux-gnu/libclang-$LLVM_VERSION.so /usr/lib/x86_64-linux-gnu/libclang.so
+
+# We need to set the rights for the synced folder manually since vagrant will create all non-existing folders up to the synced folder with root as user and group.
+chown -R vagrant:vagrant /home/vagrant
