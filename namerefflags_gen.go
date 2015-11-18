@@ -18,7 +18,7 @@ const (
 		Non-contiguous names occur in Objective-C when a selector with two or more
 		parameters is used, or in C++ when using an operator:
 		\code
-		[object doSomething:here withValue:there]; // ObjC
+		[object doSomething:here withValue:there]; // Objective-C
 		return some_vector[1]; // C++
 		\endcode
 	*/

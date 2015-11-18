@@ -1,9 +1,15 @@
 package phoenix
 
+// #include "./clang-c/BuildSystem.h"
 // #include "./clang-c/Index.h"
 // #include "go-clang.h"
 import "C"
 import "unsafe"
+
+// Return the timestamp for use with Clang's -fbuild-session-timestamp= option.
+func GetBuildSessionTimestamp() uint64 {
+	return uint64(C.clang_getBuildSessionTimestamp())
+}
 
 /*
 	Retrieve the set of display options most similar to the

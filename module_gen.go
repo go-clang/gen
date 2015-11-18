@@ -51,3 +51,14 @@ func (m Module) FullName() string {
 
 	return o.String()
 }
+
+/*
+	Parameter Module a module object.
+
+	Returns non-zero if the module is a system one.
+*/
+func (m Module) IsSystem() bool {
+	o := C.clang_Module_isSystem(m.c)
+
+	return o != C.int(0)
+}

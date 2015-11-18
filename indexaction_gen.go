@@ -36,11 +36,12 @@ func (ia IndexAction) Dispose() {
 	Parameter index_options A bitmask of options that affects how indexing is
 	performed. This should be a bitwise OR of the CXIndexOpt_XXX flags.
 
-	Parameter out_TU [out] pointer to store a CXTranslationUnit that can be reused
-	after indexing is finished. Set to NULL if you do not require it.
+	\param[out] out_TU pointer to store a CXTranslationUnit that can be
+	reused after indexing is finished. Set to NULL if you do not require it.
 
-	Returns If there is a failure from which the there is no recovery, returns
-	non-zero, otherwise returns 0.
+	Returns 0 on success or if there were errors from which the compiler could
+	recover. If there is a failure from which there is no recovery, returns
+	a non-zero CXErrorCode.
 
 	The rest of the parameters are the same as #clang_parseTranslationUnit.
 */
@@ -83,7 +84,7 @@ func (ia IndexAction) IndexSourceFile(clientData ClientData, indexCallbacks *Ind
 
 	The parameters are the same as #clang_indexSourceFile.
 
-	Returns If there is a failure from which the there is no recovery, returns
+	Returns If there is a failure from which there is no recovery, returns
 	non-zero, otherwise returns 0.
 */
 func (ia IndexAction) IndexTranslationUnit(clientData ClientData, indexCallbacks *IndexerCallbacks, indexCallbacksSize uint16, indexOptions uint16, tu TranslationUnit) int16 {

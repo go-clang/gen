@@ -1,6 +1,6 @@
 package phoenix
 
-// #include "./clang-c/Index.h"
+// #include "./clang-c/Documentation.h"
 // #include "go-clang.h"
 import "C"
 import "fmt"
