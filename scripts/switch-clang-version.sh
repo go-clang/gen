@@ -4,7 +4,12 @@ if [ -z "$1" ]; then
 	exit
 fi
 
+export CODENAME=$(lsb_release --codename --short)
 export LLVM_VERSION=$1
+
+# Add repositories
+sudo add-apt-repository --enable-source "deb http://llvm.org/apt/${CODENAME}/ llvm-toolchain-${CODENAME}-${LLVM_VERSION} main"
+sudo apt-get update
 
 sudo rm /usr/bin/llvm-config
 sudo rm /usr/lib/x86_64-linux-gnu/libclang.so
