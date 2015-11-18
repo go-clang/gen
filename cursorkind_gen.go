@@ -225,7 +225,7 @@ const (
 		expression is not reported.
 	*/
 	Cursor_UnexposedExpr = C.CXCursor_UnexposedExpr
-	// An expression that refers to some value declaration, such as a function, varible, or enumerator.
+	// An expression that refers to some value declaration, such as a function, variable, or enumerator.
 	Cursor_DeclRefExpr = C.CXCursor_DeclRefExpr
 	// An expression that refers to a member of a struct, union, class, Objective-C class, etc.
 	Cursor_MemberRefExpr = C.CXCursor_MemberRefExpr
@@ -374,11 +374,11 @@ const (
 	Cursor_LambdaExpr     = C.CXCursor_LambdaExpr
 	// Objective-c Boolean Literal.
 	Cursor_ObjCBoolLiteralExpr = C.CXCursor_ObjCBoolLiteralExpr
-	// Represents the "self" expression in a ObjC method.
+	// Represents the "self" expression in an Objective-C method.
 	Cursor_ObjCSelfExpr = C.CXCursor_ObjCSelfExpr
-	// Represents the "self" expression in a ObjC method.
+	// Represents the "self" expression in an Objective-C method.
 	Cursor_LastExpr = C.CXCursor_LastExpr
-	// Represents the "self" expression in a ObjC method.
+	// Represents the "self" expression in an Objective-C method.
 	Cursor_FirstStmt = C.CXCursor_FirstStmt
 	/*
 		A statement whose specific kind is not exposed via this
@@ -466,7 +466,7 @@ const (
 	// A MS inline assembly statement extension.
 	Cursor_MSAsmStmt = C.CXCursor_MSAsmStmt
 	/*
-		The null satement ";": C99 6.8.3p3.
+		The null statement ";": C99 6.8.3p3.
 
 		This cursor kind is used to describe the null statement.
 	*/
@@ -475,7 +475,55 @@ const (
 	Cursor_DeclStmt = C.CXCursor_DeclStmt
 	// OpenMP parallel directive.
 	Cursor_OMPParallelDirective = C.CXCursor_OMPParallelDirective
-	// OpenMP parallel directive.
+	// OpenMP SIMD directive.
+	Cursor_OMPSimdDirective = C.CXCursor_OMPSimdDirective
+	// OpenMP for directive.
+	Cursor_OMPForDirective = C.CXCursor_OMPForDirective
+	// OpenMP sections directive.
+	Cursor_OMPSectionsDirective = C.CXCursor_OMPSectionsDirective
+	// OpenMP section directive.
+	Cursor_OMPSectionDirective = C.CXCursor_OMPSectionDirective
+	// OpenMP single directive.
+	Cursor_OMPSingleDirective = C.CXCursor_OMPSingleDirective
+	// OpenMP parallel for directive.
+	Cursor_OMPParallelForDirective = C.CXCursor_OMPParallelForDirective
+	// OpenMP parallel sections directive.
+	Cursor_OMPParallelSectionsDirective = C.CXCursor_OMPParallelSectionsDirective
+	// OpenMP task directive.
+	Cursor_OMPTaskDirective = C.CXCursor_OMPTaskDirective
+	// OpenMP master directive.
+	Cursor_OMPMasterDirective = C.CXCursor_OMPMasterDirective
+	// OpenMP critical directive.
+	Cursor_OMPCriticalDirective = C.CXCursor_OMPCriticalDirective
+	// OpenMP taskyield directive.
+	Cursor_OMPTaskyieldDirective = C.CXCursor_OMPTaskyieldDirective
+	// OpenMP barrier directive.
+	Cursor_OMPBarrierDirective = C.CXCursor_OMPBarrierDirective
+	// OpenMP taskwait directive.
+	Cursor_OMPTaskwaitDirective = C.CXCursor_OMPTaskwaitDirective
+	// OpenMP flush directive.
+	Cursor_OMPFlushDirective = C.CXCursor_OMPFlushDirective
+	// Windows Structured Exception Handling's leave statement.
+	Cursor_SEHLeaveStmt = C.CXCursor_SEHLeaveStmt
+	// OpenMP ordered directive.
+	Cursor_OMPOrderedDirective = C.CXCursor_OMPOrderedDirective
+	// OpenMP atomic directive.
+	Cursor_OMPAtomicDirective = C.CXCursor_OMPAtomicDirective
+	// OpenMP for SIMD directive.
+	Cursor_OMPForSimdDirective = C.CXCursor_OMPForSimdDirective
+	// OpenMP parallel for SIMD directive.
+	Cursor_OMPParallelForSimdDirective = C.CXCursor_OMPParallelForSimdDirective
+	// OpenMP target directive.
+	Cursor_OMPTargetDirective = C.CXCursor_OMPTargetDirective
+	// OpenMP teams directive.
+	Cursor_OMPTeamsDirective = C.CXCursor_OMPTeamsDirective
+	// OpenMP taskgroup directive.
+	Cursor_OMPTaskgroupDirective = C.CXCursor_OMPTaskgroupDirective
+	// OpenMP cancellation point directive.
+	Cursor_OMPCancellationPointDirective = C.CXCursor_OMPCancellationPointDirective
+	// OpenMP cancel directive.
+	Cursor_OMPCancelDirective = C.CXCursor_OMPCancelDirective
+	// OpenMP cancel directive.
 	Cursor_LastStmt = C.CXCursor_LastStmt
 	/*
 		Cursor that represents the translation unit itself.
@@ -510,6 +558,22 @@ const (
 	// An attribute whose specific kind is not exposed via this interface.
 	Cursor_PackedAttr = C.CXCursor_PackedAttr
 	// An attribute whose specific kind is not exposed via this interface.
+	Cursor_PureAttr = C.CXCursor_PureAttr
+	// An attribute whose specific kind is not exposed via this interface.
+	Cursor_ConstAttr = C.CXCursor_ConstAttr
+	// An attribute whose specific kind is not exposed via this interface.
+	Cursor_NoDuplicateAttr = C.CXCursor_NoDuplicateAttr
+	// An attribute whose specific kind is not exposed via this interface.
+	Cursor_CUDAConstantAttr = C.CXCursor_CUDAConstantAttr
+	// An attribute whose specific kind is not exposed via this interface.
+	Cursor_CUDADeviceAttr = C.CXCursor_CUDADeviceAttr
+	// An attribute whose specific kind is not exposed via this interface.
+	Cursor_CUDAGlobalAttr = C.CXCursor_CUDAGlobalAttr
+	// An attribute whose specific kind is not exposed via this interface.
+	Cursor_CUDAHostAttr = C.CXCursor_CUDAHostAttr
+	// An attribute whose specific kind is not exposed via this interface.
+	Cursor_CUDASharedAttr = C.CXCursor_CUDASharedAttr
+	// An attribute whose specific kind is not exposed via this interface.
 	Cursor_LastAttr = C.CXCursor_LastAttr
 	// An attribute whose specific kind is not exposed via this interface.
 	Cursor_PreprocessingDirective = C.CXCursor_PreprocessingDirective
@@ -531,6 +595,8 @@ const (
 	Cursor_FirstExtraDecl = C.CXCursor_FirstExtraDecl
 	// A module import declaration.
 	Cursor_LastExtraDecl = C.CXCursor_LastExtraDecl
+	// A code completion overload candidate.
+	Cursor_OverloadCandidate = C.CXCursor_OverloadCandidate
 )
 
 // Determine whether the given cursor kind represents a declaration.

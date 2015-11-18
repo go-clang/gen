@@ -88,7 +88,7 @@ func (t Type) FunctionTypeCallingConv() CallingConv {
 }
 
 /*
-	Retrieve the result type associated with a function type.
+	Retrieve the return type associated with a function type.
 
 	If a non-function type is passed in, an invalid type is returned.
 */
@@ -97,7 +97,7 @@ func (t Type) ResultType() Type {
 }
 
 /*
-	Retrieve the number of non-variadic arguments associated with a
+	Retrieve the number of non-variadic parameters associated with a
 	function type.
 
 	If a non-function type is passed in, -1 is returned.
@@ -107,7 +107,7 @@ func (t Type) NumArgTypes() int16 {
 }
 
 /*
-	Retrieve the type of an argument of a function type.
+	Retrieve the type of a parameter of a function type.
 
 	If a non-function type is passed in or the function does not have enough
 	parameters, an invalid type is returned.
@@ -224,6 +224,28 @@ func (t Type) OffsetOf(s string) int64 {
 	defer C.free(unsafe.Pointer(c_s))
 
 	return int64(C.clang_Type_getOffsetOf(t.c, c_s))
+}
+
+/*
+	Returns the number of template arguments for given class template
+	specialization, or -1 if type T is not a class template specialization.
+
+	Variadic argument packs count as only one argument, and can not be inspected
+	further.
+*/
+func (t Type) NumTemplateArguments() int16 {
+	return int16(C.clang_Type_getNumTemplateArguments(t.c))
+}
+
+/*
+	Returns the type template argument of a template class specialization
+	at given index.
+
+	This function only returns template type arguments and does not handle
+	template template arguments or variadic packs.
+*/
+func (t Type) TemplateArgumentAsType(i uint16) Type {
+	return Type{C.clang_Type_getTemplateArgumentAsType(t.c, C.uint(i))}
 }
 
 /*

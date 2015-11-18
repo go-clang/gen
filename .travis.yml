@@ -4,17 +4,17 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.4
+      - llvm-toolchain-precise-3.7
     packages:
-      - llvm-3.4
-      - clang-3.4
-      - libclang1-3.4
-      - libclang-3.4-dev
+      - llvm-3.7
+      - clang-3.7
+      - libclang1-3.7
+      - libclang-3.7-dev
 
 install:
   - mkdir -p /home/travis/bin
-  - sudo ln -s /usr/bin/llvm-config-3.4 /home/travis/bin/llvm-config
-  - sudo ln -s /usr/lib/llvm-3.4/lib/libclang.so.1 /usr/lib/x86_64-linux-gnu/libclang.so
+  - sudo ln -s /usr/bin/llvm-config-3.7 /home/travis/bin/llvm-config
+  - sudo ln -s /usr/lib/llvm-3.7/lib/libclang.so.1 /usr/lib/x86_64-linux-gnu/libclang.so
   - sudo ldconfig
 
   - llvm-config --version

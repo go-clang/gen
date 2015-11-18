@@ -1,10 +1,10 @@
 package phoenix
 
-// #include "./clang-c/Index.h"
+// #include "./clang-c/Documentation.h"
 // #include "go-clang.h"
 import "C"
 
-// A comment AST node.
+// A parsed comment.
 type Comment struct {
 	c C.CXComment
 }
