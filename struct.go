@@ -108,7 +108,7 @@ func (s *Struct) addMemberGetters() error {
 			continue
 		}
 
-		if m.Type.IsArray { // TODO generate arrays with the correct size and type https://github.com/zimmski/go-clang-phoenix/issues/48
+		if m.Type.IsArray { // TODO generate arrays with the correct size and type https://github.com/zimmski/go-clang-phoenix-gen/issues/48
 			continue
 		}
 

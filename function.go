@@ -41,7 +41,7 @@ func newFunction(name, cname, comment, member string, typ Type) *Function {
 
 		IncludeFiles: newIncludeFiles(),
 
-		Parameters: []FunctionParameter{ // TODO this might not be needed if the receiver code is refactored https://github.com/zimmski/go-clang-phoenix/issues/52
+		Parameters: []FunctionParameter{ // TODO this might not be needed if the receiver code is refactored https://github.com/zimmski/go-clang-phoenix-gen/issues/52
 			FunctionParameter{
 				Name:  receiverName,
 				CName: cname,
@@ -126,7 +126,7 @@ func (f *Function) generate() string {
 
 	fStr := generateFunctionString(fa)
 
-	// TODO find out how to position the comment correctly and do this using the AST https://github.com/zimmski/go-clang-phoenix/issues/54
+	// TODO find out how to position the comment correctly and do this using the AST https://github.com/zimmski/go-clang-phoenix-gen/issues/54
 	if f.Comment != "" {
 		fStr = f.Comment + "\n" + fStr
 	}

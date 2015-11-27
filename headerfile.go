@@ -141,11 +141,11 @@ func (h *HeaderFile) prepareFile() error {
 
 func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 	/*
-		TODO mark the enum https://github.com/zimmski/go-clang-phoenix/issues/40
+		TODO mark the enum https://github.com/zimmski/go-clang-phoenix-gen/issues/40
 			typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor, CXCursor parent, CXClientData client_data);
 		as manually implemented
 	*/
-	// TODO report other enums like callbacks that they are not implemented https://github.com/zimmski/go-clang-phoenix/issues/51
+	// TODO report other enums like callbacks that they are not implemented https://github.com/zimmski/go-clang-phoenix-gen/issues/51
 
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		// Only handle code of the current file
@@ -313,7 +313,7 @@ func (h *HeaderFile) handle() error {
 			}
 			if e, ok := h.lookupEnum[p.Type.GoName]; ok {
 				p.CName = e.Receiver.CName
-				// TODO remove the receiver... and copy only names here to preserve the original pointers and so https://github.com/zimmski/go-clang-phoenix/issues/52
+				// TODO remove the receiver... and copy only names here to preserve the original pointers and so https://github.com/zimmski/go-clang-phoenix-gen/issues/52
 				p.Type.GoName = e.Receiver.Type.GoName
 				p.Type.CGoName = e.Receiver.Type.CGoName
 				p.Type.CGoName = e.Receiver.Type.CGoName

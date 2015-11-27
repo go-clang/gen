@@ -8,7 +8,7 @@ import (
 
 	"github.com/termie/go-shutil"
 
-	generate "github.com/zimmski/go-clang-phoenix"
+	generate "github.com/zimmski/go-clang-phoenix-gen"
 )
 
 // cmdFatal returns a command error
