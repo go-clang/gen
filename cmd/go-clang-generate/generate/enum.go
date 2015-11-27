@@ -4,7 +4,7 @@ import (
 	"go/ast"
 	"strings"
 
-	"github.com/zimmski/go-clang-phoenix"
+	"github.com/zimmski/go-clang-phoenix-bootstrap/clang"
 )
 
 // Enum represents a generation enum
@@ -31,7 +31,7 @@ type EnumItem struct {
 	Value   uint64
 }
 
-func handleEnumCursor(cursor phoenix.Cursor, cname string, cnameIsTypeDef bool) *Enum {
+func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Enum {
 	e := Enum{
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
@@ -57,9 +57,9 @@ func handleEnumCursor(cursor phoenix.Cursor, cname string, cnameIsTypeDef bool) 
 	enumNamePrefix = strings.TrimSuffix(enumNamePrefix, "Kind")
 	enumNamePrefix = strings.SplitN(enumNamePrefix, "_", 2)[0]
 
-	cursor.Visit(func(cursor, parent phoenix.Cursor) phoenix.ChildVisitResult {
+	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {
-		case phoenix.Cursor_EnumConstantDecl:
+		case clang.Cursor_EnumConstantDecl:
 			ei := EnumItem{
 				CName:   cursor.Spelling(),
 				Comment: CleanDoxygenComment(cursor.RawCommentText()), // TODO We are always using the same comment if there is none, see "TypeKind" https://github.com/zimmski/go-clang-phoenix/issues/58
@@ -89,7 +89,7 @@ func handleEnumCursor(cursor phoenix.Cursor, cname string, cnameIsTypeDef bool) 
 			panic(cursor.Kind())
 		}
 
-		return phoenix.ChildVisit_Continue
+		return clang.ChildVisit_Continue
 	})
 
 	if strings.HasSuffix(e.Name, "Error") {

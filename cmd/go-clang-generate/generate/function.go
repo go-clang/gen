@@ -3,7 +3,7 @@ package generate
 import (
 	"strings"
 
-	"github.com/zimmski/go-clang-phoenix"
+	"github.com/zimmski/go-clang-phoenix-bootstrap/clang"
 )
 
 // Function represents a generation function
@@ -68,7 +68,7 @@ func newFunction(name, cname, comment, member string, typ Type) *Function {
 	return f
 }
 
-func handleFunctionCursor(cursor phoenix.Cursor) *Function {
+func handleFunctionCursor(cursor clang.Cursor) *Function {
 	fname := cursor.Spelling()
 	f := Function{
 		Name:    fname,

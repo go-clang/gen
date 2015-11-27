@@ -3,7 +3,7 @@ package generate
 import (
 	"strings"
 
-	"github.com/zimmski/go-clang-phoenix"
+	"github.com/zimmski/go-clang-phoenix-bootstrap/clang"
 )
 
 // Struct represents a generation struct
@@ -31,7 +31,7 @@ type StructMember struct {
 	Type Type
 }
 
-func handleStructCursor(cursor phoenix.Cursor, cname string, cnameIsTypeDef bool) *Struct {
+func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
 	s := &Struct{
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
@@ -43,16 +43,16 @@ func handleStructCursor(cursor phoenix.Cursor, cname string, cnameIsTypeDef bool
 	s.Name = TrimLanguagePrefix(s.CName)
 	s.Receiver.Name = commonReceiverName(s.Name)
 
-	cursor.Visit(func(cursor, parent phoenix.Cursor) phoenix.ChildVisitResult {
+	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {
-		case phoenix.Cursor_FieldDecl:
+		case clang.Cursor_FieldDecl:
 			typ, err := typeFromClangType(cursor.Type())
 			if err != nil {
 				panic(err)
 			}
 
 			if typ.IsFunctionPointer {
-				return phoenix.ChildVisit_Continue
+				return clang.ChildVisit_Continue
 			}
 
 			s.Members = append(s.Members, &StructMember{
@@ -63,7 +63,7 @@ func handleStructCursor(cursor phoenix.Cursor, cname string, cnameIsTypeDef bool
 			})
 		}
 
-		return phoenix.ChildVisit_Continue
+		return clang.ChildVisit_Continue
 	})
 
 	return s

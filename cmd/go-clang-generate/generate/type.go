@@ -5,7 +5,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/zimmski/go-clang-phoenix"
+	"github.com/zimmski/go-clang-phoenix-bootstrap/clang"
 )
 
 // Defines all available Go types
@@ -62,7 +62,7 @@ type Type struct {
 	IsPointerComposition bool
 }
 
-func typeFromClangType(cType phoenix.Type) (Type, error) {
+func typeFromClangType(cType clang.Type) (Type, error) {
 	typ := Type{
 		CName: cType.Spelling(),
 
@@ -75,49 +75,49 @@ func typeFromClangType(cType phoenix.Type) (Type, error) {
 	}
 
 	switch cType.Kind() {
-	case phoenix.Type_Char_S:
+	case clang.Type_Char_S:
 		typ.CGoName = CSChar
 		typ.GoName = GoInt8
-	case phoenix.Type_Char_U:
+	case clang.Type_Char_U:
 		typ.CGoName = CUChar
 		typ.GoName = GoUInt8
-	case phoenix.Type_Int:
+	case clang.Type_Int:
 		typ.CGoName = CInt
 		typ.GoName = GoInt16
-	case phoenix.Type_Short:
+	case clang.Type_Short:
 		typ.CGoName = CShort
 		typ.GoName = GoInt16
-	case phoenix.Type_UShort:
+	case clang.Type_UShort:
 		typ.CGoName = CUShort
 		typ.GoName = GoUInt16
-	case phoenix.Type_UInt:
+	case clang.Type_UInt:
 		typ.CGoName = CUInt
 		typ.GoName = GoUInt16
-	case phoenix.Type_Long:
+	case clang.Type_Long:
 		typ.CGoName = CLongInt
 		typ.GoName = GoInt32
-	case phoenix.Type_ULong:
+	case clang.Type_ULong:
 		typ.CGoName = CULongInt
 		typ.GoName = GoUInt32
-	case phoenix.Type_LongLong:
+	case clang.Type_LongLong:
 		typ.CGoName = CLongLong
 		typ.GoName = GoInt64
-	case phoenix.Type_ULongLong:
+	case clang.Type_ULongLong:
 		typ.CGoName = CULongLong
 		typ.GoName = GoUInt64
-	case phoenix.Type_Float:
+	case clang.Type_Float:
 		typ.CGoName = CFloat
 		typ.GoName = GoFloat32
-	case phoenix.Type_Double:
+	case clang.Type_Double:
 		typ.CGoName = CDouble
 		typ.GoName = GoFloat64
-	case phoenix.Type_Bool:
+	case clang.Type_Bool:
 		typ.GoName = GoBool
-	case phoenix.Type_Void:
+	case clang.Type_Void:
 		// TODO Does not exist in Go, what should we do with it? https://github.com/zimmski/go-clang-phoenix/issues/50
 		typ.CGoName = "void"
 		typ.GoName = "void"
-	case phoenix.Type_ConstantArray:
+	case clang.Type_ConstantArray:
 		subTyp, err := typeFromClangType(cType.ArrayElementType())
 		if err != nil {
 			return Type{}, err
@@ -128,7 +128,7 @@ func typeFromClangType(cType phoenix.Type) (Type, error) {
 		typ.PointerLevel += subTyp.PointerLevel
 		typ.IsArray = true
 		typ.ArraySize = cType.ArraySize()
-	case phoenix.Type_Typedef:
+	case clang.Type_Typedef:
 		typ.IsPrimitive = false
 
 		typeStr := cType.Spelling()
@@ -146,14 +146,14 @@ func typeFromClangType(cType phoenix.Type) (Type, error) {
 		typ.CGoName = cType.Declaration().Type().Spelling()
 		typ.GoName = typeStr
 
-		if cType.CanonicalType().Kind() == phoenix.Type_Enum {
+		if cType.CanonicalType().Kind() == clang.Type_Enum {
 			typ.IsEnumLiteral = true
 			typ.IsPrimitive = true
 		}
-	case phoenix.Type_Pointer:
+	case clang.Type_Pointer:
 		typ.PointerLevel++
 
-		if cType.PointeeType().CanonicalType().Kind() == phoenix.Type_FunctionProto {
+		if cType.PointeeType().CanonicalType().Kind() == clang.Type_FunctionProto {
 			typ.IsFunctionPointer = true
 		}
 
@@ -166,19 +166,19 @@ func typeFromClangType(cType phoenix.Type) (Type, error) {
 		typ.GoName = subTyp.GoName
 		typ.PointerLevel += subTyp.PointerLevel
 		typ.IsPrimitive = subTyp.IsPrimitive
-	case phoenix.Type_Record:
+	case clang.Type_Record:
 		typ.CGoName = cType.Declaration().Type().Spelling()
 		typ.GoName = TrimLanguagePrefix(typ.CGoName)
 		typ.IsPrimitive = false
-	case phoenix.Type_FunctionProto:
+	case clang.Type_FunctionProto:
 		typ.IsFunctionPointer = true
 		typ.CGoName = cType.Declaration().Type().Spelling()
 		typ.GoName = TrimLanguagePrefix(typ.CGoName)
-	case phoenix.Type_Enum:
+	case clang.Type_Enum:
 		typ.GoName = TrimLanguagePrefix(cType.Declaration().DisplayName())
 		typ.IsEnumLiteral = true
 		typ.IsPrimitive = true
-	case phoenix.Type_Unexposed: // There is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013 https://llvm.org/bugs/show_bug.cgi?id=15089
+	case clang.Type_Unexposed: // There is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013 https://llvm.org/bugs/show_bug.cgi?id=15089
 		subTyp, err := typeFromClangType(cType.CanonicalType())
 		if err != nil {
 			return Type{}, err
