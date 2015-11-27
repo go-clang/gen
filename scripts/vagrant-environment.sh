@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export GO_VERSION=1.4.2
+export GO_VERSION=1.4.3
 
 # Install Go
 mkdir -p $HOME/go
@@ -26,5 +26,3 @@ cd $HOME/go/src/github.com/zimmski/go-clang-phoenix-gen/
 make install-dependencies
 make install-tools
 make install
-
-cp $HOME/go/bin/go-clang-generate $HOME/go-clang-generate
