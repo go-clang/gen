@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/zimmski/go-clang-phoenix/cmd/go-clang-generate/generate"
-	generateclang "github.com/zimmski/go-clang-phoenix/cmd/go-clang-generate/generate/clang"
+	generate "github.com/zimmski/go-clang-phoenix"
+	generateclang "github.com/zimmski/go-clang-phoenix/clang"
 )
 
 func main() {
