@@ -1,8 +1,9 @@
 package generate
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUpperFirstCharacter(t *testing.T) {
