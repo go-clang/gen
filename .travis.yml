@@ -36,10 +36,6 @@ script:
   - gover
   - if [ "$TRAVIS_SECURE_ENV_VARS" = "true" ]; then goveralls -coverprofile=gover.coverprofile -service=travis-ci -repotoken $COVERALLS_TOKEN; fi
 
-  # Make sure that everything generated really builds
-  - make generate
-  - make install
-
 env:
   # Coveralls.io
   secure: "ANwnXXH/6Y8C6XKbXWxd+9HkoOcnKZOn2FGVqtffzgm1EuaOMmVjsbvbO6h499nF2zMKlZEbvol6n4XYww8J+3nts+FhTs3/d9CAKs6OxlueX1CzKVb6h3LuB8ego97mtZ4Ut2OWTjHuW5Adqm4A7m1Rk6V636K8i4iWnumwiN6vM9kQnzL1Jc1CnwO9aqPwCxsVWZGb7+UIOo1adNS1ah+cfvJMueLFTKYQLEOTc4tVNBAZiVuQQnLSM7IAYBahRILWfs11LFFLl7Zhw+2oBMRpb7NvIbaBBU8kzcDuRaDLB4rzxhYcGawPQfsdZd1ko/vxGcP3rzwUUBwGgwkH4NiFei8mLLkOg16Rig5HLv1l1ACXbmoN5RxcxYjPFGd9dV1/thmRhXFpY5rEE3IR3wXK/4RDOhv6SaEoZz/6X6MSbhzqOBRZty6a9vej8gPEE2ZIX+RTD4CAba+ayrrEOPzHANn5hn3HfOunYcvLjWYyjs66sShJmSspkq/XfVhwSv2KgD59K0Zwh40tvLvve10adUELcrtCqaHP3uGmI7ZQ2MaSZ5JYxdv18iqCiOMY6+FjeI6E1R9aX16B5gU4xqR+oeAlC4rWqkehfDgyGHnayrVeTVRr3jiCY45Mw4RK8M5isUA80nuw47l9yCOZMOO3yckM0AzVHUNbqOs9hn8="

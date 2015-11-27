@@ -15,8 +15,6 @@ branch:
 clean:
 	rm -r clang-c/
 	rm *_gen.go
-generate:
-	CGO_CFLAGS="-I`llvm-config --includedir`" CGO_LDFLAGS="-L`llvm-config --libdir`" go run cmd/go-clang-gen/main.go
 install:
 	CGO_CFLAGS="-I`llvm-config --includedir`" CGO_LDFLAGS="-L`llvm-config --libdir`" go install ./...
 install-dependencies:
