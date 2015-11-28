@@ -20,18 +20,5 @@ git reset --hard $LAST_BOOTSTRAP
 git fetch --prune bootstrap || exit
 git rebase bootstrap/master master
 
-# Generate and install new Clang version
-cd clang/ || exit
-
-rm -rf clang-c/
-rm *_gen.go
-
-go-clang-gen || exit
-
-cd ..
-
-make install || exit
-make test || exit
-
-# Show the current state of the repository
-git status
+# Generate the new Clang version
+$(dirname "$0")/generate-and-test.sh $LLVM_VERSION || exit
