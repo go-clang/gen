@@ -70,7 +70,7 @@ The following sections are specific to the maintaining process.
 
 Every now and then a new Clang version emerges which needs to be generated using `go-clang-gen`. The new version has to be available using the VM's and CI's packages. Otherwise, we cannot correctly test and therefore support the version.
 
-If a new version is available create a repository on Github named `v<MAJOR>.<MINOR>` and set the repository description to `Go bindings for Clang's C API v<MAJOR>.<MINOR>`. Disable all repository features, e.g. `Issues` and `Wiki`, and then execute the following command in the parent directory of the version repository inside the development VM.
+If a new version is available create a repository on Github named `v<MAJOR>.<MINOR>` and set the repository description to `Go bindings for Clang's C API v<MAJOR>.<MINOR>`. Disable all repository features, e.g. `Issues` and `Wiki`. Enable the repository on TravisCI before you push anything to the repository. Lastly, execute the following command in the parent directory of the version repository inside the development VM.
 
 ```bash
 $GOPATH/src/github.com/zimmski/go-clang-phoenix-gen/scripts/create-clang-version.sh 3.4
