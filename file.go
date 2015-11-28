@@ -28,7 +28,7 @@ func newFile(name string) *File {
 	}
 }
 
-var templateGenerateFile = template.Must(template.New("go-clang-generate-file").Parse(`package phoenix
+var templateGenerateFile = template.Must(template.New("go-clang-generate-file").Parse(`package clang
 
 {{range $h, $dunno := $.IncludeFiles}}// #include "{{$h}}"
 {{end}}// #include "go-clang.h"
