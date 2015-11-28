@@ -17,7 +17,7 @@ git clone https://github.com/zimmski/go-clang-phoenix-bootstrap.git . || exit
 git remote rename origin bootstrap || exit
 git remote add origin git@github.com:zimmski/go-clang-phoenix-v${LLVM_VERSION}.git || exit
 
-# Generate and install new Clang version
+# Generate the new Clang version
 cd clang/ || exit
 
 rm -rf clang-c/
@@ -27,12 +27,13 @@ go-clang-gen || exit
 
 cd ..
 
-make install || exit
-make test || exit
-
 # Change versions in files
 sed -i -e "s/3.4/${LLVM_VERSION}/g" .travis.yml
 find . -type f -not -path '*/\.*' -exec sed -i -e "s/go-clang-phoenix-bootstrap/go-clang-phoenix-v${LLVM_VERSION}/g" {} +
+
+# Install and test the version
+make install || exit
+make test || exit
 
 # Show the current state of the repository
 git status
