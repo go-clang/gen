@@ -68,7 +68,9 @@ The following sections are specific to the maintaining process.
 
 ### Create a new Clang version (VM)
 
-Every now and then a new Clang version emerges which needs to be generated using `go-clang-gen`. This can be done inside the development VM using the following statement.
+Every now and then a new Clang version emerges which needs to be generated using `go-clang-gen`. The new version has to be available using the VM's and CI's packages. Otherwise, we cannot correctly test and therefore support the version.
+
+If a new version is available create a repository on Github named `v<MAJOR>.<MINOR>` and set the repository description to `Go bindings for Clang's C API v<MAJOR>.<MINOR>`. Disable all repository features, e.g. `Issues` and `Wiki`, and then execute the following command in the parent directory of the version repository inside the development VM.
 
 ```bash
 $GOPATH/src/github.com/zimmski/go-clang-phoenix-gen/scripts/new-clang-version.sh 3.4
@@ -78,9 +80,7 @@ This will create a new repository `v3.4` in your current directory and initializ
 
 ### Update a branch with a new Clang version (VM)
 
-Every now and then a new Clang subminor version is released. The new version has to be available using the VM's and CI's packages. Otherwise, we cannot correctly test and therefore support the version.
-
-If a new version is available create a repository on Github named `v<MAJOR>.<MINOR>` and set the repository description to `Go bindings for Clang's C API v<MAJOR>.<MINOR>`. Then execute the following command in the parent directory of the version repository.
+Every now and then a new Clang subminor version is released. The given version can be supported if packages are available inside the VM and CI. The following command can then be excuted in the parent directory of the version repository inside the development VM.
 
 ```bash
 $GOPATH/src/github.com/zimmski/go-clang-phoenix-gen/scripts/update-clang-version.sh 3.4
