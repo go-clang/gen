@@ -17,8 +17,7 @@ The Go bindings are placed in their own repositories to provide the correct bind
 ## Install go-clang-phoenix-gen
 
 ```bash
-CGO_CFLAGS="-I`llvm-config --includedir`" \
-  CGO_LDFLAGS="-L`llvm-config --libdir`" \
+CGO_LDFLAGS="-L`llvm-config --libdir`" \
   go get github.com/zimmski/go-clang-phoenix-bootstrap github.com/zimmski/go-clang-phoenix-gen
 ```
 
