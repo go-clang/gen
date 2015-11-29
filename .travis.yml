@@ -24,7 +24,7 @@ install:
   - make install-dependencies
   - make install-tools
 
-  - CGO_CFLAGS="-I`llvm-config --includedir`" CGO_LDFLAGS="-L`llvm-config --libdir`" go get -u github.com/zimmski/go-clang-phoenix-bootstrap/...
+  - CGO_LDFLAGS="-L`llvm-config --libdir`" go get -u github.com/zimmski/go-clang-phoenix-bootstrap/...
 
 script:
   # Install the project
