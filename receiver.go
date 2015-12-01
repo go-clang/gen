@@ -1,4 +1,4 @@
-package generate
+package gen
 
 // Receiver TODO refactor https://github.com/go-clang/gen/issues/52
 type Receiver struct {

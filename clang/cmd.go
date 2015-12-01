@@ -8,7 +8,7 @@ import (
 
 	"github.com/termie/go-shutil"
 
-	generate "github.com/go-clang/gen"
+	"github.com/go-clang/gen"
 )
 
 // cmdFatal returns a command error
@@ -21,7 +21,7 @@ func cmdFatal(msg string, err error) error {
 }
 
 // Cmd executes a generic go-clang-generate command
-func Cmd(args []string, api *generate.API) error {
+func Cmd(args []string, api *gen.API) error {
 	rawLLVMVersion, _, err := execToBuffer("llvm-config", "--version")
 	if err != nil {
 		return cmdFatal("Cannot determine LLVM version", err)

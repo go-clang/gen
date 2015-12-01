@@ -1,4 +1,4 @@
-package generate
+package gen
 
 type includeFiles map[string]struct{}
 

@@ -5,12 +5,12 @@ import (
 	"os"
 	"strings"
 
-	generate "github.com/go-clang/gen"
-	generateclang "github.com/go-clang/gen/clang"
+	"github.com/go-clang/gen"
+	genclang "github.com/go-clang/gen/clang"
 )
 
 func main() {
-	api := &generate.API{
+	api := &gen.API{
 		PrepareFunctionName:     prepareFunctionName,
 		PrepareFunction:         prepareFunction,
 		FilterFunction:          filterFunction,
@@ -21,7 +21,7 @@ func main() {
 		FilterStructMemberGetter: filterStructMemberGetter,
 	}
 
-	err := generateclang.Cmd(os.Args[1:], api)
+	err := genclang.Cmd(os.Args[1:], api)
 	if err != nil {
 		fmt.Println(err)
 
@@ -29,7 +29,7 @@ func main() {
 	}
 }
 
-func prepareFunctionName(h *generate.HeaderFile, f *generate.Function) string {
+func prepareFunctionName(h *gen.HeaderFile, f *gen.Function) string {
 	fname := f.Name
 
 	fname = strings.TrimPrefix(fname, "clang_")
@@ -66,7 +66,7 @@ func prepareFunctionName(h *generate.HeaderFile, f *generate.Function) string {
 	return fname
 }
 
-func fixedFunctionName(f *generate.Function) string {
+func fixedFunctionName(f *gen.Function) string {
 	// Needs to be renamed manually since clang_getTranslationUnitCursor will conflict with clang_getCursor
 	if f.CName == "clang_getTranslationUnitCursor" {
 		return "TranslationUnitCursor"
@@ -75,7 +75,7 @@ func fixedFunctionName(f *generate.Function) string {
 	return ""
 }
 
-func prepareFunction(f *generate.Function) {
+func prepareFunction(f *gen.Function) {
 	for i := range f.Parameters {
 		p := &f.Parameters[i]
 
@@ -91,7 +91,7 @@ func prepareFunction(f *generate.Function) {
 		}
 
 		// Whiteflag types that are return arguments
-		if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == generate.GoInt16 || p.Type.GoName == generate.GoUInt16 || p.Type.GoName == "CompilationDatabase_Error" || p.Type.GoName == "PlatformAvailability" || p.Type.GoName == "SourceRange" || p.Type.GoName == "LoadDiag_Error") {
+		if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == gen.GoInt16 || p.Type.GoName == gen.GoUInt16 || p.Type.GoName == "CompilationDatabase_Error" || p.Type.GoName == "PlatformAvailability" || p.Type.GoName == "SourceRange" || p.Type.GoName == "LoadDiag_Error") {
 			p.Type.IsReturnArgument = true
 		}
 		if p.Type.PointerLevel == 2 && (p.Type.GoName == "Token" || p.Type.GoName == "Cursor") {
@@ -103,7 +103,7 @@ func prepareFunction(f *generate.Function) {
 		}
 
 		// If this is an array length parameter we need to find its partner
-		paCName := generate.ArrayNameFromLength(p.CName)
+		paCName := gen.ArrayNameFromLength(p.CName)
 
 		if paCName != "" {
 			for j := range f.Parameters {
@@ -113,7 +113,7 @@ func prepareFunction(f *generate.Function) {
 					if pa.Type.GoName == "struct CXUnsavedFile" || pa.Type.GoName == "UnsavedFile" {
 						pa.Type.GoName = "UnsavedFile"
 						pa.Type.CGoName = "struct_CXUnsavedFile"
-					} else if pa.Type.CGoName == generate.CSChar && pa.Type.PointerLevel == 2 {
+					} else if pa.Type.CGoName == gen.CSChar && pa.Type.PointerLevel == 2 {
 					} else if pa.Type.GoName == "CompletionResult" {
 					} else if pa.Type.GoName == "Token" {
 					} else if pa.Type.GoName == "Cursor" {
@@ -137,13 +137,13 @@ func prepareFunction(f *generate.Function) {
 	for i := range f.Parameters {
 		p := &f.Parameters[i]
 
-		if p.Type.CGoName == generate.CSChar && p.Type.PointerLevel == 2 && !p.Type.IsSlice {
+		if p.Type.CGoName == gen.CSChar && p.Type.PointerLevel == 2 && !p.Type.IsSlice {
 			p.Type.IsReturnArgument = true
 		}
 	}
 }
 
-func filterFunction(f *generate.Function) bool {
+func filterFunction(f *gen.Function) bool {
 	// Some functions are not compiled in the library see https://lists.launchpad.net/desktop-packages/msg75835.html for a never resolved bug report
 	if f.CName == "clang_CompileCommand_getMappedSourceContent" || f.CName == "clang_CompileCommand_getMappedSourcePath" || f.CName == "clang_CompileCommand_getNumMappedSources" {
 		fmt.Printf("Ignore function %q because it is not compiled within libClang\n", f.CName)
@@ -173,23 +173,23 @@ func filterFunction(f *generate.Function) bool {
 	return true
 }
 
-func filterFunctionParameter(p generate.FunctionParameter) bool {
+func filterFunctionParameter(p gen.FunctionParameter) bool {
 	// These pointers are ok
-	if p.Type.PointerLevel == 1 && (p.Type.CGoName == generate.CSChar || p.Type.GoName == "UnsavedFile" || p.Type.GoName == "CodeCompleteResults" || p.Type.GoName == "CursorKind" || p.Type.GoName == "IdxContainerInfo" || p.Type.GoName == "IdxDeclInfo" || p.Type.GoName == "IndexerCallbacks" || p.Type.GoName == "TranslationUnit" || p.Type.GoName == "IdxEntityInfo" || p.Type.GoName == "IdxAttrInfo") {
+	if p.Type.PointerLevel == 1 && (p.Type.CGoName == gen.CSChar || p.Type.GoName == "UnsavedFile" || p.Type.GoName == "CodeCompleteResults" || p.Type.GoName == "CursorKind" || p.Type.GoName == "IdxContainerInfo" || p.Type.GoName == "IdxDeclInfo" || p.Type.GoName == "IndexerCallbacks" || p.Type.GoName == "TranslationUnit" || p.Type.GoName == "IdxEntityInfo" || p.Type.GoName == "IdxAttrInfo") {
 		return false
 	}
 
 	return true
 }
 
-func prepareStructMembers(s *generate.Struct) {
+func prepareStructMembers(s *gen.Struct) {
 	for _, m := range s.Members {
-		if (strings.HasPrefix(m.CName, "has") || strings.HasPrefix(m.CName, "is")) && m.Type.GoName == generate.GoInt16 {
-			m.Type.GoName = generate.GoBool
+		if (strings.HasPrefix(m.CName, "has") || strings.HasPrefix(m.CName, "is")) && m.Type.GoName == gen.GoInt16 {
+			m.Type.GoName = gen.GoBool
 		}
 
 		// If this is an array length parameter we need to find its partner
-		maCName := generate.ArrayNameFromLength(m.CName)
+		maCName := gen.ArrayNameFromLength(m.CName)
 
 		if maCName != "" {
 			for _, ma := range s.Members {
@@ -205,7 +205,7 @@ func prepareStructMembers(s *generate.Struct) {
 	}
 }
 
-func filterStructMemberGetter(m *generate.StructMember) bool {
+func filterStructMemberGetter(m *gen.StructMember) bool {
 	// We do not want getters to *int_data members
 	if strings.HasSuffix(m.CName, "int_data") {
 		return false
