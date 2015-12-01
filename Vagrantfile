@@ -13,5 +13,5 @@ Vagrant.configure(2) do |config|
     sh.privileged = false
   end
 
-  config.vm.synced_folder "..", "/home/vagrant/go/src/github.com/zimmski"
+  config.vm.synced_folder "..", "/home/vagrant/go/src/github.com/go-clang"
 end

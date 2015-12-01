@@ -5,7 +5,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/zimmski/go-clang-phoenix-bootstrap/clang"
+	"github.com/go-clang/bootstrap/clang"
 )
 
 // Defines all available Go types
@@ -114,7 +114,7 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 	case clang.Type_Bool:
 		typ.GoName = GoBool
 	case clang.Type_Void:
-		// TODO Does not exist in Go, what should we do with it? https://github.com/zimmski/go-clang-phoenix-gen/issues/50
+		// TODO Does not exist in Go, what should we do with it? https://github.com/go-clang/gen/issues/50
 		typ.CGoName = "void"
 		typ.GoName = "void"
 	case clang.Type_ConstantArray:
@@ -132,7 +132,7 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 		typ.IsPrimitive = false
 
 		typeStr := cType.Spelling()
-		if typeStr == "CXString" { // TODO eliminate CXString from the generic code https://github.com/zimmski/go-clang-phoenix-gen/issues/25
+		if typeStr == "CXString" { // TODO eliminate CXString from the generic code https://github.com/go-clang/gen/issues/25
 			typeStr = "cxstring"
 		} else if typeStr == "time_t" {
 			typ.CGoName = typeStr

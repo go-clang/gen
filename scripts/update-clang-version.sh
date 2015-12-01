@@ -10,7 +10,7 @@ export LLVM_VERSION=$1
 $(dirname "$0")/switch-clang-version.sh $LLVM_VERSION || exit
 
 # Update the repository
-cd go-clang-phoenix-v${LLVM_VERSION} || exit
+cd v${LLVM_VERSION} || exit
 
 git checkout bootstrap/master || exit
 LAST_BOOTSTRAP=$(git rev-parse HEAD)
