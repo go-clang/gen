@@ -92,3 +92,7 @@ This will reset the commits of the `v3.4` repository to the latest commit of the
 ### Update branches with a new go-clang-gen version (VM)
 
 If `go-clang-gen` changes its generation output, all branches need to be updated which is basically just updating for a new Clang version.
+
+# License
+
+This project, like all go-clang projects, is licensed under a BSD-3 license which can be found in the [LICENSE file](https://github.com/go-clang/license/blob/master/LICENSE) in [go-clang's license repository](https://github.com/go-clang/license)
