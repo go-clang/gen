@@ -1,4 +1,4 @@
-# go-clang gen [![GoDoc](https://godoc.org/github.com/go-clang/gen?status.png)](https://godoc.org/github.com/go-clang/gen) [![Build Status](https://travis-ci.org/go-clang/gen.svg?branch=master)](https://travis-ci.org/go-clang/gen) [![Coverage Status](https://coveralls.io/repos/go-clang/gen/badge.png?branch=master)](https://coveralls.io/r/go-clang/gen?branch=master)
+# go-clang/gen [![GoDoc](https://godoc.org/github.com/go-clang/gen?status.png)](https://godoc.org/github.com/go-clang/gen) [![Build Status](https://travis-ci.org/go-clang/gen.svg?branch=master)](https://travis-ci.org/go-clang/gen) [![Coverage Status](https://coveralls.io/repos/go-clang/gen/badge.png?branch=master)](https://coveralls.io/r/go-clang/gen?branch=master)
 
 Generate native Go bindings for Clang's C API.
 
@@ -14,7 +14,7 @@ The Go bindings are placed in their own repositories to provide the correct bind
 - [v3.6](https://github.com/go-clang/v3.6)
 - [v3.7](https://github.com/go-clang/v3.7)
 
-## Install go-clang-gen to contribute to go-clang
+## Install `go-clang/gen` to contribute to go-clang
 
 ```bash
 CGO_LDFLAGS="-L`llvm-config --libdir`" \
@@ -67,7 +67,7 @@ The following sections are specific to the maintaining process.
 
 ### Create a new Clang version (VM)
 
-Every now and then a new Clang version emerges which needs to be generated using `go-clang-gen`. The new version has to be available using the VM's and CI's packages. Otherwise, we cannot correctly test and therefore support the version.
+Every now and then a new Clang version emerges which needs to be generated using the `go-clang-gen` command. The new version has to be available using the VM's and CI's packages. Otherwise, we cannot correctly test and therefore support the version.
 
 If a new version is available create a repository on GitHub named `v<MAJOR>.<MINOR>` and set the repository description to `Go bindings for Clang's C API v<MAJOR>.<MINOR>`. Disable all repository features, e.g. `Issues` and `Wiki`. Enable the repository on TravisCI before you push anything to the repository. Lastly, execute the following command in the parent directory of the version repository inside the development VM.
 
@@ -89,9 +89,9 @@ This will reset the commits of the `v3.4` repository to the latest commit of the
 
 > **Please note**, since we generate the whole binding anew we do not need the old commits and thus just throw them away.
 
-### Update branches with a new go-clang-gen version (VM)
+### Update branches with a new `go-clang/gen` version (VM)
 
-If `go-clang-gen` changes its generation output, all branches need to be updated which is basically just updating for a new Clang version.
+If the `go-clang-gen` command changes its generation output, all branches need to be updated which is basically just updating for a new Clang version.
 
 # License
 
