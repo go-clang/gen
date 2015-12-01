@@ -1,10 +1,10 @@
-# go-clang-gen [![GoDoc](https://godoc.org/github.com/go-clang/gen?status.png)](https://godoc.org/github.com/go-clang/gen) [![Build Status](https://travis-ci.org/go-clang/gen.svg?branch=master)](https://travis-ci.org/go-clang/gen) [![Coverage Status](https://coveralls.io/repos/go-clang/gen/badge.png?branch=master)](https://coveralls.io/r/go-clang/gen?branch=master)
+# go-clang gen [![GoDoc](https://godoc.org/github.com/go-clang/gen?status.png)](https://godoc.org/github.com/go-clang/gen) [![Build Status](https://travis-ci.org/go-clang/gen.svg?branch=master)](https://travis-ci.org/go-clang/gen) [![Coverage Status](https://coveralls.io/repos/go-clang/gen/badge.png?branch=master)](https://coveralls.io/r/go-clang/gen?branch=master)
 
 Generate native Go bindings for Clang's C API.
 
 ## I found a bug/missing a feature in go-clang
 
-Please go through the [open issues](/issues) in the tracker first. If you cannot find your request just open up a [new issue](/issues/new).
+Please go through the [open issues](https://github.com/go-clang/gen/issues) in the tracker first. If you cannot find your request just open up a [new issue](https://github.com/go-clang/gen/issues/new).
 
 ## Where are the bindings?
 
@@ -14,7 +14,7 @@ The Go bindings are placed in their own repositories to provide the correct bind
 - [v3.6](https://github.com/go-clang/v3.6)
 - [v3.7](https://github.com/go-clang/v3.7)
 
-## Install go-clang for development
+## Install go-clang-gen to contribute to go-clang
 
 ```bash
 CGO_LDFLAGS="-L`llvm-config --libdir`" \
@@ -23,9 +23,9 @@ CGO_LDFLAGS="-L`llvm-config --libdir`" \
 
 ## How to contribute?
 
-You want to contribute to go-clang? GREAT! If you are here because of a bug you want to fix or a feature you want to add you can just read on, otherwise we have a list of [open issues in the tracker](/issues). Just choose something you think you can work on and discuss your plans in the issue by commenting on it.
+You want to contribute to go-clang? GREAT! If you are here because of a bug you want to fix or a feature you want to add, you can just read on. Otherwise we have a list of [open issues in the tracker](https://github.com/go-clang/gen/issues). Just choose something you think you can work on and discuss your plans in the issue by commenting on it.
 
-This repository, [gen](github.com/go-clang/gen), holds the code to generate new bindings from headers of Clang's C API. These bindings are then bootstrapped using the [bootstrap](github.com/go-clang/bootstrap) repository. The `bootstrap` repository holds all basic files, like the CI configuration and a Makefile, as well as some additional code to make the bindings more complete and powerful.
+This repository, [gen](https://github.com/go-clang/gen), holds the code to generate new bindings from headers of Clang's C API. These bindings are then bootstrapped using the [bootstrap](https://github.com/go-clang/bootstrap) repository. The `bootstrap` repository holds all basic files, like the CI configuration and a Makefile, as well as some additional code to make the bindings more complete and powerful.
 
 To ease the development process we have our own development environment based on [Vagrant](https://www.vagrantup.com/). The provided Vagrantfile executed in the root of the repository will setup an Ubuntu VM with our currently used Go version as well as Clang 3.4 and will set up everything that is needed to development and handle new versions of Clang.
 
@@ -69,7 +69,7 @@ The following sections are specific to the maintaining process.
 
 Every now and then a new Clang version emerges which needs to be generated using `go-clang-gen`. The new version has to be available using the VM's and CI's packages. Otherwise, we cannot correctly test and therefore support the version.
 
-If a new version is available create a repository on Github named `v<MAJOR>.<MINOR>` and set the repository description to `Go bindings for Clang's C API v<MAJOR>.<MINOR>`. Disable all repository features, e.g. `Issues` and `Wiki`. Enable the repository on TravisCI before you push anything to the repository. Lastly, execute the following command in the parent directory of the version repository inside the development VM.
+If a new version is available create a repository on GitHub named `v<MAJOR>.<MINOR>` and set the repository description to `Go bindings for Clang's C API v<MAJOR>.<MINOR>`. Disable all repository features, e.g. `Issues` and `Wiki`. Enable the repository on TravisCI before you push anything to the repository. Lastly, execute the following command in the parent directory of the version repository inside the development VM.
 
 ```bash
 $GOPATH/src/github.com/go-clang/gen/scripts/create-clang-version.sh 3.4
@@ -79,7 +79,7 @@ This will create a new repository `v3.4` in your current directory and initializ
 
 ### Update a branch with a new Clang version (VM)
 
-Every now and then a new Clang subminor version is released. The given version can be supported if packages are available inside the VM and CI. The following command can then be excuted in the parent directory of the version repository inside the development VM.
+Every now and then a new Clang subminor version is released. The given version can be supported if packages are available inside the VM and CI. The following command can then be executed in the parent directory of the version repository inside the development VM.
 
 ```bash
 $GOPATH/src/github.com/go-clang/gen/scripts/update-clang-version.sh 3.4
