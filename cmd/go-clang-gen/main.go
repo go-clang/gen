@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	generate "github.com/zimmski/go-clang-phoenix-gen"
-	generateclang "github.com/zimmski/go-clang-phoenix-gen/clang"
+	generate "github.com/go-clang/gen"
+	generateclang "github.com/go-clang/gen/clang"
 )
 
 func main() {
@@ -163,7 +163,7 @@ func filterFunction(f *generate.Function) bool {
 		return false
 	}
 
-	// TODO if this function is from CXString.h we ignore it https://github.com/zimmski/go-clang-phoenix-gen/issues/25
+	// TODO if this function is from CXString.h we ignore it https://github.com/go-clang/gen/issues/25
 	for i := range f.IncludeFiles {
 		if strings.HasSuffix(i, "CXString.h") {
 			return false
@@ -196,7 +196,7 @@ func prepareStructMembers(s *generate.Struct) {
 				if strings.ToLower(ma.CName) == strings.ToLower(maCName) {
 					m.Type.LengthOfSlice = ma.CName
 					ma.Type.IsSlice = true
-					ma.Type.LengthOfSlice = m.CName // TODO wrong usage but needed for the getter generation... maybe refactor this LengthOfSlice alltogether? https://github.com/zimmski/go-clang-phoenix-gen/issues/49
+					ma.Type.LengthOfSlice = m.CName // TODO wrong usage but needed for the getter generation... maybe refactor this LengthOfSlice alltogether? https://github.com/go-clang/gen/issues/49
 
 					break
 				}

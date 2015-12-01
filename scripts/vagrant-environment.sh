@@ -14,13 +14,13 @@ rm go${GO_VERSION}.linux-amd64.tar.gz
 echo 'export GOPATH=$HOME/go' >> $HOME/.bashrc
 echo 'export GOROOT=$GOPATH/go' >> $HOME/.bashrc
 echo 'export PATH=$GOPATH/bin:$GOROOT/bin:$PATH' >> $HOME/.bashrc
-echo 'cd $HOME/go/src/github.com/zimmski/go-clang-phoenix-gen/' >> $HOME/.bashrc
+echo 'cd $HOME/go/src/github.com/go-clang/gen/' >> $HOME/.bashrc
 
 # TODO how can we load .bashrc at this point?
 export GOPATH=$HOME/go
 export GOROOT=$GOPATH/go
 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-cd $HOME/go/src/github.com/zimmski/go-clang-phoenix-gen/
+cd $HOME/go/src/github.com/go-clang/gen/
 
 # Install go-clang
 make install-dependencies

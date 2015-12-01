@@ -50,9 +50,9 @@ func generateFunctionString(fa *ASTFunc) string {
 }
 
 func (fa *ASTFunc) generate() {
-	// TODO maybe name the return arguments ... because of clang_getDiagnosticOption -> the normal return can be always just "o"? https://github.com/zimmski/go-clang-phoenix-gen/issues/57
+	// TODO maybe name the return arguments ... because of clang_getDiagnosticOption -> the normal return can be always just "o"? https://github.com/go-clang/gen/issues/57
 
-	// TODO reenable this, see the comment at the bottom of the generate function for details https://github.com/zimmski/go-clang-phoenix-gen/issues/54
+	// TODO reenable this, see the comment at the bottom of the generate function for details https://github.com/go-clang/gen/issues/54
 	// Add function comment
 	/*if f.Comment != "" {
 		fa.Doc = &ast.CommentGroup{
@@ -105,7 +105,7 @@ func (fa *ASTFunc) generateReceiver() {
 		return
 	}
 
-	if len(fa.f.Parameters) > 0 { // TODO maybe to not set the receiver at all? -> do this outside of the generate function? https://github.com/zimmski/go-clang-phoenix-gen/issues/52
+	if len(fa.f.Parameters) > 0 { // TODO maybe to not set the receiver at all? -> do this outside of the generate function? https://github.com/go-clang/gen/issues/52
 		fa.Recv = &ast.FieldList{
 			List: []*ast.Field{
 				doField(fa.f.Receiver.Name, fa.f.Receiver.Type),
@@ -316,7 +316,7 @@ func (fa *ASTFunc) generateParameters() []ast.Expr {
 				pf = &ast.Ident{
 					Name: "c_" + p.Name,
 				}
-			} else if p.Type.CGoName == "cxstring" { // TODO try to get cxstring and "String" completely out of this function since it is just a struct which can be handled by the struct code https://github.com/zimmski/go-clang-phoenix-gen/issues/25
+			} else if p.Type.CGoName == "cxstring" { // TODO try to get cxstring and "String" completely out of this function since it is just a struct which can be handled by the struct code https://github.com/go-clang/gen/issues/25
 				pf = accessMember(p.Name, "c")
 			} else {
 				if p.Type.IsReturnArgument {
@@ -410,7 +410,7 @@ func (fa *ASTFunc) generateReturn(call ast.Expr) {
 						doZero(),
 					),
 				})
-			} else if returnType.CGoName == CSChar && returnType.PointerLevel == 1 { // TODO refactor the const char * check so that one function is used everywhere to check for that C type https://github.com/zimmski/go-clang-phoenix-gen/issues/56
+			} else if returnType.CGoName == CSChar && returnType.PointerLevel == 1 { // TODO refactor the const char * check so that one function is used everywhere to check for that C type https://github.com/go-clang/gen/issues/56
 				// If this is a normal const char * C type there is not so much to do
 				fa.addReturnItem(doCCast(
 					"GoString",
@@ -546,7 +546,7 @@ func (fa *ASTFunc) addDefer(call *ast.CallExpr) {
 }
 
 func (fa *ASTFunc) addEmptyLine() {
-	// TODO this should be done using something else than a fake statement. https://github.com/zimmski/go-clang-phoenix-gen/issues/53
+	// TODO this should be done using something else than a fake statement. https://github.com/go-clang/gen/issues/53
 	fa.addStatement(&ast.ExprStmt{
 		X: &ast.CallExpr{
 			Fun: &ast.Ident{
