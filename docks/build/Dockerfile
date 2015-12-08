@@ -6,12 +6,13 @@ maintainer go-clang-devs@github.com/go-clang
 env LLVM_VERSION 3.4
 
 ## add repositories
-run curl -O -L http://llvm.org/apt/llvm-snapshot.gpg.key && \
+run apt-get install -y software-properties-common && \
+	curl -O -L http://llvm.org/apt/llvm-snapshot.gpg.key && \
 	apt-key add llvm-snapshot.gpg.key && \
     add-apt-repository --enable-source \
-	"deb http://llvm.org/apt/${CODENAME}/ llvm-toolchain-${CODENAME}-${LLVM_VERSION} main" && \
-	add-key adv --keyserver hkp://keyserver.ubuntu.com:80 \
-	 --recv-keys 15CF4D18AF4F7421 llvm-snapshot.gpg.key
+		"deb http://llvm.org/apt/${CODENAME}/ llvm-toolchain-${CODENAME}-${LLVM_VERSION} main" && \
+	/bin/rm llvm-snapshot.gpg.key
+
 
 ## update and upgrade
 run apt-get update -y && \
@@ -22,6 +23,9 @@ run apt-get update -y && \
 run apt-get -V install -y \
 	clang-${LLVM_VERSION} git libclang-${LLVM_VERSION}-dev \
 	llvm-${LLVM_VERSION}-tools make
+
+## cleanup
+run apt-get clean -y
 
 ## setup LLVM and CLang (TODO: remove. see go-clang/design#3 go-clang/gen#102)
 run ln -s /usr/bin/llvm-config-${LLVM_VERSION} /usr/bin/llvm-config && \

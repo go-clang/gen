@@ -6,7 +6,9 @@ maintainer go-clang-devs@github.com/go-clang
 env CODENAME trusty
 env GO_VERSION 1.4.3
 
-run apt-get update -y && apt-get install -y curl
+run apt-get update -y && \
+	apt-get install -y curl && \
+	apt-get clean -y
 
 ## install golang
 run mkdir -p /go/src
