@@ -1,4 +1,4 @@
-.PHONY: all install install-dependencies install-tools lint test test-verbose
+.PHONY: all install install-dependencies install-tools lint pr test test-verbose
 
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 export ROOT_DIR
@@ -36,4 +36,10 @@ test-verbose:
 docker-images: docks/build/Dockerfile docks/base/Dockerfile
 	docker build --rm -f ./docks/base/Dockerfile  --tag=go-clang/base .
 	docker build --rm -f ./docks/build/Dockerfile --tag=go-clang/build .
+
+pr:
+	docker run -v $(shell pwd)/..:/go/src/github.com/go-clang \
+		-w /go/src/github.com/go-clang/gen \
+		--rm \
+		go-clang/build make
 

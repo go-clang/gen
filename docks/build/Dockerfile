@@ -22,7 +22,8 @@ run apt-get update -y && \
 ## install needed packages
 run apt-get -V install -y \
 	clang-${LLVM_VERSION} git libclang-${LLVM_VERSION}-dev \
-	llvm-${LLVM_VERSION}-tools make
+	llvm-${LLVM_VERSION}-tools make \
+	gcc g++
 
 ## cleanup
 run apt-get clean -y
