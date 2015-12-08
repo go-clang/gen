@@ -32,3 +32,8 @@ test:
 	CGO_LDFLAGS="-L`llvm-config --libdir`" go test -timeout 60s -race ./...
 test-verbose:
 	CGO_LDFLAGS="-L`llvm-config --libdir`" go test -timeout 60s -race -v ./...
+
+docker-images: docks/build/Dockerfile docks/base/Dockerfile
+	docker build --rm -f ./docks/base/Dockerfile  --tag=go-clang/base .
+	docker build --rm -f ./docks/build/Dockerfile --tag=go-clang/build .
+
