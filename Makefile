@@ -41,5 +41,5 @@ pr:
 	docker run -v $(shell pwd)/..:/go/src/github.com/go-clang \
 		-w /go/src/github.com/go-clang/gen \
 		--rm \
-		go-clang/build make
+		go-clang/build make all lint
 
