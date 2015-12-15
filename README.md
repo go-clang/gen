@@ -52,7 +52,7 @@ Every PR must be prepared using the following commands:
 ```bash
 cd $GOPATH/src/github.com/go-clang/gen
 scripts/switch-clang-version.sh 3.4
-make pr
+make test-all
 ```
 
 This will switch to the current Clang version for the `go-clang-gen` command, execute all tests and process the source code with the project's linters. Make sure that you do not introduce new linting problems.
