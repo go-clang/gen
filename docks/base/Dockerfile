@@ -1,4 +1,4 @@
-## go-clang/base
+## goclang/base
 ## an ubuntu-based docker container with go.
 from ubuntu:trusty
 maintainer go-clang-devs@github.com/go-clang

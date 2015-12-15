@@ -1,6 +1,6 @@
-## go-clang/build
+## goclang/build
 ## a Docker environment to build and test go-clang
-from go-clang/base
+from goclang/base
 maintainer go-clang-devs@github.com/go-clang
 
 env LLVM_VERSION 3.4

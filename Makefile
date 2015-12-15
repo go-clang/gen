@@ -34,12 +34,12 @@ test-verbose:
 	CGO_LDFLAGS="-L`llvm-config --libdir`" go test -timeout 60s -race -v ./...
 
 docker-images: docks/build/Dockerfile docks/base/Dockerfile
-	docker build --rm -f ./docks/base/Dockerfile  --tag=go-clang/base .
-	docker build --rm -f ./docks/build/Dockerfile --tag=go-clang/build .
+	docker build --rm -f ./docks/base/Dockerfile  --tag=goclang/base .
+	docker build --rm -f ./docks/build/Dockerfile --tag=goclang/build .
 
 test-all:
 	docker run -v $(shell pwd)/..:/go/src/github.com/go-clang \
 		-w /go/src/github.com/go-clang/gen \
 		--rm \
-		go-clang/build make all lint
+		goclang/build make all lint
 
