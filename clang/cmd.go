@@ -94,7 +94,7 @@ func Cmd(args []string, api *gen.API) error {
 		}
 	}
 
-	if err := api.HandleDirectory(clangCDirectory); err != nil {
+	if _, err := api.HandleDirectory(clangCDirectory); err != nil {
 		return err
 	}
 
