@@ -38,7 +38,7 @@ func parseExpectations(file string) []string {
 				if strings.HasPrefix(ident.Name, "Test") {
 					value := x.Values[idx]
 					if _, ok := value.(*ast.BasicLit); ok && value.(*ast.BasicLit).Kind == token.STRING {
-						exp := strings.Replace(strings.Replace(value.(*ast.BasicLit).Value, "`\n", "", -1), "\n`", "", -1)
+						exp := strings.Replace(strings.Replace(value.(*ast.BasicLit).Value, "`\n", "", -1), "`", "", -1)
 						expectations = append(expectations, exp)
 					}
 				}
@@ -54,7 +54,7 @@ func VerifyExpectations(fileContent string, expectations []string) bool {
 	met := false
 	for _, expct := range expectations {
 		if !strings.Contains(fileContent, expct) {
-			fmt.Printf("Expectation not met:\n %s \n", expct)
+			fmt.Printf("Expectation not met:\n%s \n", expct)
 			met = met || true
 		}
 	}

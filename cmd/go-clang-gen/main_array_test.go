@@ -1,8 +1,9 @@
-package array
+package main
 
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -23,7 +24,7 @@ var testAPI *gen.API = &gen.API{
 	FilterStructMemberGetter: filterStructMemberGetter,
 }
 
-var testDataFolder string = "../testdata/"
+var testDataFolder string = "../../test/testdata/"
 
 func TestDriver(t *testing.T) {
 	// parse and generate test cases
@@ -45,40 +46,10 @@ func TestDriver(t *testing.T) {
 
 	for k, v := range success {
 		assert.True(t, v, fmt.Sprintf("%s did not fulfill expectations", k))
-	}
-
-}
-
-func prepareFunctionName(h *gen.HeaderFile, f *gen.Function) string {
-	return f.Name
-}
-
-func fixedFunctionName(f *gen.Function) string {
-	return ""
-}
-
-func prepareFunction(f *gen.Function) {
-	for i := range f.Parameters {
-		p := &f.Parameters[i]
-
-		if p.Type.CGoName == gen.CSChar && p.Type.PointerLevel == 2 && !p.Type.IsSlice {
-			p.Type.IsReturnArgument = true
+		err := os.Remove(fmt.Sprintf("%s_gen.go", strings.ToLower(k)))
+		if err != nil {
+			panic(err)
 		}
 	}
-}
 
-func filterFunction(f *gen.Function) bool {
-	return true
-}
-
-func filterFunctionParameter(p gen.FunctionParameter) bool {
-	return true
-}
-
-func prepareStructMembers(s *gen.Struct) {
-}
-
-func filterStructMemberGetter(m *gen.StructMember) bool {
-	// We do not want getters to *int_data member
-	return true
 }

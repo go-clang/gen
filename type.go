@@ -117,6 +117,18 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 		// TODO Does not exist in Go, what should we do with it? https://github.com/go-clang/gen/issues/50
 		typ.CGoName = "void"
 		typ.GoName = "void"
+	case clang.Type_IncompleteArray:
+		// do smth intelligent
+		subTyp, err := typeFromClangType(cType.ArrayElementType())
+		if err != nil {
+			return Type{}, err
+		}
+
+		typ.CGoName = subTyp.CGoName
+		typ.GoName = subTyp.GoName
+		typ.PointerLevel += subTyp.PointerLevel
+		typ.IsArray = true
+		typ.ArraySize = -1
 	case clang.Type_ConstantArray:
 		subTyp, err := typeFromClangType(cType.ArrayElementType())
 		if err != nil {

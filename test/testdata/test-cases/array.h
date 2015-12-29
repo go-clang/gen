@@ -23,7 +23,7 @@ typedef struct {
 	EmptyStruct structs[10];
 	unsigned long fixedSizedArray[10];
 
-	// unsigned long initArray[] = {10, 10, 10}; TODO: ask zimmski
+	//unsigned long initArray[] = {10, 10, 10}; // TODO: ask zimmski
 } TestArray;
 
 void functionWithStructArrayParam(TestArray ta, EmptyStruct earr[10]);

@@ -1,39 +1,33 @@
 package expected
 
 var TestArrayStructGo string = `
-	type TestArray struct {
-		EmptyStruct [10]structs
-		uint 		[10]fixedSizedArray
-
-		uint 		[]initArray
-	}
-`
+type TestArray struct {
+	c C.TestArray
+}`
 
 var TestStructsGetter string = `
-	func (TestArray ta) Structs() []EmptyStruct{
-		var s []EmptyStruct
-		gos_s := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-		gos_s.Cap = int(10)
-		gos_s.Len = int(10)
-		gos_s.Data = uintptr(unsafe.Pointer(ta.c.structs))
+func (ta TestArray) Structs() []EmptyStruct {
+	var s []EmptyStruct
+	gos_s := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+	gos_s.Cap = int(10)
+	gos_s.Len = int(10)
+	gos_s.Data = uintptr(unsafe.Pointer(ta.c.structs))
 
-		return s
-	}
-`
+	return s
+}`
 
 var TestFixedSizedArrayGetter string = `
-	func (TestArray ta) FixedSizedArray() []uint{
-		var s []uint
-		gos_s := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-		gos_s.Cap = int(10)
-		gos_s.Len = int(10)
-		gos_s.Data = uintptr(unsafe.Pointer(ta.c.fixedSizedArray))
+func (ta TestArray) FixedSizedArray() []uint32 {
+	var s []uint32
+	gos_s := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+	gos_s.Cap = int(10)
+	gos_s.Len = int(10)
+	gos_s.Data = uintptr(unsafe.Pointer(ta.c.fixedSizedArray))
 
-		return s
-	}
-`
+	return s
+}`
 
-var TestInitArrayGetter string = `
+/*var TestInitArrayGetter string = `
 	func (TestArray ta) InitArray() []uint{
 		var s []uint
 		gos_s := (*reflect.SliceHeader)(unsafe.Pointer(&s))
@@ -43,51 +37,60 @@ var TestInitArrayGetter string = `
 
 		return s
 	}
-`
+`*/
 
 var TestFunctionWithStructArrayParam = `
-	func (TestArray ta) FunctionWithStructArrayParam(EmptyStruct arr[10]){
-		var ca_emtysstructs [10]EmptyStruct;
-		for i := range arr {
-			ca_emtysstructs[i] = arr[i].c
-		}
-
-		C.functionWithStructArrayParam(ta.c, ca_emptystructs)
+func (ta TestArray) FunctionWithStructArrayParam(earr [10]EmptyStruct) {
+	ca_earr := make([]C.EmptyStruct, len(earr))
+	var cp_earr *C.EmptyStruct
+	if len(earr) > 0 {
+		cp_earr = &ca_earr[0]
+	}
+	for i := range earr {
+		ca_earr[i] = earr[i].c
 	}
 
-`
+	C.functionWithStructArrayParam(ta.c, cp_earr)
+}`
 
 var TestFunctionWithULongArrayParam = `
-	func (TestArray ta) FunctionWithULongArrayParam(uint32 arr[10]){
-		var ca_arr [10]uint32;
-		for i := range arr {
-			ca_arr[i] = arr[i].c
-		}
-
-		C.functionWithStructArrayParam(ta.c, ca_arr)
+func (ta TestArray) FunctionWithULongArrayParam(larr [10]uint32) {
+	ca_larr := make([]C.ulong, len(larr))
+	var cp_larr *C.ulong
+	if len(larr) > 0 {
+		cp_larr = &ca_larr[0]
 	}
-`
+	for i := range larr {
+		ca_larr[i] = larr[i].c
+	}
+
+	C.functionWithULongArrayParam(ta.c, cp_larr)
+}`
 
 var TestFunctionWithStructArrayParamNoSize = `
-	func (TestArray ta) FunctionWithStructArrayParamNoSize(EmptyStruct arr[], int size){
-		var ca_arr [10]EmptyStruct;
-		for i := range arr {
-			ca_arr[i] = arr[i].c
-		}
-
-
-		C.functionWithStructArrayParamNoSize(ta.c, ca_arr, size)
+func (ta TestArray) FunctionWithStructArrayParamNoSize(earr []EmptyStruct, size int16) {
+	ca_earr := make([]C.EmptyStruct, len(earr))
+	var cp_earr *C.EmptyStruct
+	if len(earr) > 0 {
+		cp_earr = &ca_earr[0]
 	}
-`
+	for i := range earr {
+		ca_earr[i] = earr[i].c
+	}
+
+	C.functionWithStructArrayParamNoSize(ta.c, cp_earr, C.int(size))
+}`
 
 var TestFunctionWithULongArrayParamNoSize = `
-	func (TestArray ta) FunctionWithULongArrayParamNoSize(uint arr[], int size){
-		var ca_arr [10]uint32;
-		for i := range arr {
-			ca_arr[i] = arr[i].c
-		}
-
-
-		C.functionWithULongArrayParamNoSize(arr, size)
+func (ta TestArray) FunctionWithULongArrayParamNoSize(larr []uint32, size int16) {
+	ca_larr := make([]C.ulong, len(larr))
+	var cp_larr *C.ulong
+	if len(larr) > 0 {
+		cp_larr = &ca_larr[0]
 	}
-`
+	for i := range larr {
+		ca_larr[i] = larr[i].c
+	}
+
+	C.functionWithULongArrayParamNoSize(ta.c, cp_larr, C.int(size))
+}`

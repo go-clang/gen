@@ -1,7 +1,7 @@
 package expected
 
 var TestEmptyStructGo string = `
-	type EmptyStruct struct {
-
-	}
+type EmptyStruct struct {
+	c C.EmptyStruct
+}
 `

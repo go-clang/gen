@@ -94,7 +94,6 @@ func doGoType(typ Type) ast.Expr {
 	}
 
 	pl := typ.PointerLevel
-
 	if typ.IsSlice {
 		pl--
 	}
@@ -109,9 +108,15 @@ func doGoType(typ Type) ast.Expr {
 		}
 	}
 
-	if typ.IsSlice {
+	var l ast.Expr
+	if typ.IsArray && typ.ArraySize != -1 && !typ.IsReturnArgument {
+		l = doIntegerLit(typ.ArraySize)
+	}
+
+	if typ.IsSlice || typ.IsArray {
 		r = &ast.ArrayType{
 			Elt: r,
+			Len: l,
 		}
 	}
 
@@ -162,6 +167,13 @@ func doCaseClause(clause []ast.Expr, body []ast.Stmt) *ast.CaseClause {
 	return &ast.CaseClause{
 		List: clause,
 		Body: body,
+	}
+}
+
+func doIntegerLit(value int64) *ast.BasicLit {
+	return &ast.BasicLit{
+		Kind:  token.INT,
+		Value: fmt.Sprintf("%d", value),
 	}
 }
 
