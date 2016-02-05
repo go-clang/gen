@@ -17,8 +17,8 @@ func (ta TestArray) Structs() []EmptyStruct {
 }`
 
 var TestFixedSizedArrayGetter string = `
-func (ta TestArray) FixedSizedArray() []uint32 {
-	var s []uint32
+func (ta TestArray) FixedSizedArray() []uint64 {
+	var s []uint64
 	gos_s := (*reflect.SliceHeader)(unsafe.Pointer(&s))
 	gos_s.Cap = int(10)
 	gos_s.Len = int(10)
@@ -54,7 +54,7 @@ func (ta TestArray) FunctionWithStructArrayParam(earr [10]EmptyStruct) {
 }`
 
 var TestFunctionWithULongArrayParam = `
-func (ta TestArray) FunctionWithULongArrayParam(larr [10]uint32) {
+func (ta TestArray) FunctionWithULongArrayParam(larr [10]uint64) {
 	ca_larr := make([]C.ulong, len(larr))
 	var cp_larr *C.ulong
 	if len(larr) > 0 {
@@ -68,7 +68,7 @@ func (ta TestArray) FunctionWithULongArrayParam(larr [10]uint32) {
 }`
 
 var TestFunctionWithStructArrayParamNoSize = `
-func (ta TestArray) FunctionWithStructArrayParamNoSize(earr []EmptyStruct, size int16) {
+func (ta TestArray) FunctionWithStructArrayParamNoSize(earr []EmptyStruct, size int32) {
 	ca_earr := make([]C.EmptyStruct, len(earr))
 	var cp_earr *C.EmptyStruct
 	if len(earr) > 0 {
@@ -82,7 +82,7 @@ func (ta TestArray) FunctionWithStructArrayParamNoSize(earr []EmptyStruct, size 
 }`
 
 var TestFunctionWithULongArrayParamNoSize = `
-func (ta TestArray) FunctionWithULongArrayParamNoSize(larr []uint32, size int16) {
+func (ta TestArray) FunctionWithULongArrayParamNoSize(larr []uint64, size int32) {
 	ca_larr := make([]C.ulong, len(larr))
 	var cp_larr *C.ulong
 	if len(larr) > 0 {

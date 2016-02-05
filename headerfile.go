@@ -25,15 +25,15 @@ type HeaderFile struct {
 	lookupStruct      map[string]*Struct
 }
 
-func (h *HeaderFile) GetStructs() []*Struct {
+func (h *HeaderFile) Structs() []*Struct {
 	return h.structs
 }
 
-func (h *HeaderFile) GetFunctions() []*Function {
+func (h *HeaderFile) Functions() []*Function {
 	return h.functions
 }
 
-func (h *HeaderFile) GetEnums() []*Enum {
+func (h *HeaderFile) Enums() []*Enum {
 	return h.enums
 }
 

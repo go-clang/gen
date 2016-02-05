@@ -36,7 +36,7 @@ func TestDriver(t *testing.T) {
 	expctPerConstruct := expectations.BuildUpExpectations(testDataFolder + "expected/")
 
 	success := make(map[string]bool)
-	for _, st := range h.GetStructs() {
+	for _, st := range h.Structs() {
 		dat, err := ioutil.ReadFile(fmt.Sprintf("%s_gen.go", strings.ToLower(st.Name)))
 		if err != nil {
 			panic(err)
