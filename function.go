@@ -88,7 +88,7 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 
 	numParam := int(cursor.NumArguments())
 	for i := 0; i < numParam; i++ {
-		param := cursor.Argument(uint16(i))
+		param := cursor.Argument(uint32(i))
 
 		p := FunctionParameter{
 			CName: param.DisplayName(),
