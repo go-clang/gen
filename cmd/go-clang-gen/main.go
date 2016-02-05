@@ -91,7 +91,7 @@ func prepareFunction(f *gen.Function) {
 		}
 
 		// Whiteflag types that are return arguments
-		if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == gen.GoInt16 || p.Type.GoName == gen.GoUInt16 || p.Type.GoName == "CompilationDatabase_Error" || p.Type.GoName == "PlatformAvailability" || p.Type.GoName == "SourceRange" || p.Type.GoName == "LoadDiag_Error") {
+		if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == gen.GoInt32 || p.Type.GoName == gen.GoUInt32 || p.Type.GoName == "CompilationDatabase_Error" || p.Type.GoName == "PlatformAvailability" || p.Type.GoName == "SourceRange" || p.Type.GoName == "LoadDiag_Error") {
 			p.Type.IsReturnArgument = true
 		}
 		if p.Type.PointerLevel == 2 && (p.Type.GoName == "Token" || p.Type.GoName == "Cursor") {
@@ -184,7 +184,7 @@ func filterFunctionParameter(p gen.FunctionParameter) bool {
 
 func prepareStructMembers(s *gen.Struct) {
 	for _, m := range s.Members {
-		if (strings.HasPrefix(m.CName, "has") || strings.HasPrefix(m.CName, "is")) && m.Type.GoName == gen.GoInt16 {
+		if (strings.HasPrefix(m.CName, "has") || strings.HasPrefix(m.CName, "is")) && m.Type.GoName == gen.GoInt32 {
 			m.Type.GoName = gen.GoBool
 		}
 
