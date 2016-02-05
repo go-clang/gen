@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export GO_VERSION=1.4.3
+export GO_VERSION=1.5.3
 
 # Install Go
 mkdir -p $HOME/go
