@@ -83,7 +83,7 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 		typ.GoName = GoUInt8
 	case clang.Type_Int:
 		typ.CGoName = CInt
-		typ.GoName = GoInt16
+		typ.GoName = GoInt32
 	case clang.Type_Short:
 		typ.CGoName = CShort
 		typ.GoName = GoInt16
@@ -92,13 +92,13 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 		typ.GoName = GoUInt16
 	case clang.Type_UInt:
 		typ.CGoName = CUInt
-		typ.GoName = GoUInt16
+		typ.GoName = GoUInt32
 	case clang.Type_Long:
 		typ.CGoName = CLongInt
-		typ.GoName = GoInt32
+		typ.GoName = GoInt64
 	case clang.Type_ULong:
 		typ.CGoName = CULongInt
-		typ.GoName = GoUInt32
+		typ.GoName = GoUInt64
 	case clang.Type_LongLong:
 		typ.CGoName = CLongLong
 		typ.GoName = GoInt64
