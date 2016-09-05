@@ -85,9 +85,7 @@ Every now and then a new Clang subminor version is released. The given version c
 $GOPATH/src/github.com/go-clang/gen/scripts/update-clang-version.sh 3.4
 ```
 
-This will reset the commits of the `v3.4` repository to the latest commit of the `bootstrap` repository.  The command also generates, installs, configures and tests bindings for the given Clang version. The changes must then be manually verified, added, committed and pushed to the already set up remote "origin".
-
-> **Please note**, since we generate the whole binding anew we do not need the old commits and thus just throw them away.
+This will rebase the latest commits of the `bootstrap` repository onto the commits of the `v3.4` repository.  The command also generates, installs, configures and tests bindings for the given Clang version. The changes must then be manually verified, added, committed and pushed to the already set up remote "origin".
 
 ### Update branches with a new `go-clang/gen` version (VM)
 

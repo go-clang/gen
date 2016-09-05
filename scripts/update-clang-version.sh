@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -exuo pipefail
+
 if [ -z "$1" ]; then
 	exit
 fi
@@ -7,18 +9,14 @@ fi
 export LLVM_VERSION=$1
 
 # Switch Clang version
-$(dirname "$0")/switch-clang-version.sh $LLVM_VERSION || exit
+$(dirname "$0")/switch-clang-version.sh $LLVM_VERSION
 
 # Update the repository
-cd v${LLVM_VERSION} || exit
+cd v${LLVM_VERSION}
 
-git checkout bootstrap/master || exit
-LAST_BOOTSTRAP=$(git rev-parse HEAD)
-git checkout master
-git reset --hard $LAST_BOOTSTRAP
+git fetch --prune bootstrap
 
-git fetch --prune bootstrap || exit
-git rebase bootstrap/master master
+git rebase master bootstrap/master
 
 # Generate the new Clang version
-$(dirname "$0")/generate-and-test.sh $LLVM_VERSION || exit
+$(dirname "$0")/generate-and-test.sh $LLVM_VERSION
