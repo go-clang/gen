@@ -59,6 +59,16 @@ make lint
 
 This will switch to the current Clang version for the `go-clang-gen` command, execute all tests and process the source code with the project's linters. Make sure that you do not introduce new linting problems.
 
+### Regenerate the bindings for the `bootstrap` repository
+
+The `bootstrap` repository holds the base for all version repositories it must therefore be updated if something changes in the `gen` repository to regenerate all version repositories. This tedious task is automated by the following command.
+
+```bash
+$GOPATH/src/github.com/go-clang/gen/scripts/update-bootstrap.sh
+```
+
+Any changes must be manually verified and pushed via a feature branch.
+
 ## Maintainer documentation
 
 The following sections are specific to the maintaining process.
@@ -75,7 +85,7 @@ If a new version is available create a repository on GitHub named `v<MAJOR>.<MIN
 $GOPATH/src/github.com/go-clang/gen/scripts/create-clang-version.sh 3.4
 ```
 
-This will create a new repository `v3.4` in your current directory and initialize it using the bootstrap repository. The command also generates, installs, configures and tests bindings for the given Clang version. The changes must then be manually verified, added, committed and pushed to the already set up remote "origin".
+This will create a new repository `v3.4` in your current directory and initialize it using the `bootstrap` repository. The command also generates, installs, configures and tests bindings for the given Clang version. The changes must then be manually verified, added, committed and pushed to the already set up remote "origin".
 
 ### Update a branch with a new Clang version (VM)
 
