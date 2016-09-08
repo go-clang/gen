@@ -27,15 +27,15 @@ You want to contribute to go-clang? GREAT! If you are here because of a bug you 
 
 This repository, [gen](https://github.com/go-clang/gen), holds the code to generate new bindings from headers of Clang's C API. These bindings are then bootstrapped using the [bootstrap](https://github.com/go-clang/bootstrap) repository. The `bootstrap` repository holds all basic files, like the CI configuration and a Makefile, as well as some additional code to make the bindings more complete and powerful.
 
-To ease the development process we have our own development environment based on [Vagrant](https://www.vagrantup.com/). The provided Vagrantfile executed in the root of the repository will setup an Ubuntu VM with our currently used Go version as well as Clang 3.4 and will set up everything that is needed to development and handle new versions of Clang.
+To ease the development process we have our own development environment based on [Docker](https://www.docker.com/). The provided `go-clang/build` `docker` image (located under `docks/build`) executed in the root of the repository will setup an Ubuntu image with our currently used Go version as well as Clang 3.4 and will set up everything that is needed to development and handle new versions of Clang.
 
 > **Please note**, only the major and minor version must be declared if a Clang version is needed in a command.
 
-### Generate bindings for the current Clang version (VM)
+### Generate bindings for the current Clang version (container)
 
 Make sure that the `go-clang-gen` command is up to date using `make install` in the repository's root directory. After that execute `go-clang-gen` which will generate bindings in your current directory.
 
-### Switch to a different Clang version (VM)
+### Switch to a different Clang version (container)
 
 Replace `3.4` with the Clang version you want to switch to.
 
@@ -52,9 +52,7 @@ Every PR must be prepared using the following commands:
 ```bash
 cd $GOPATH/src/github.com/go-clang/gen
 scripts/switch-clang-version.sh 3.4
-make install
-make test
-make lint
+make test-all
 ```
 
 This will switch to the current Clang version for the `go-clang-gen` command, execute all tests and process the source code with the project's linters. Make sure that you do not introduce new linting problems.
@@ -75,11 +73,11 @@ The following sections are specific to the maintaining process.
 
 > **Please note**, only the major and minor version must be declared if a Clang version is needed in a command.
 
-### Create a new Clang version (VM)
+### Create a new Clang version (container)
 
-Every now and then a new Clang version emerges which needs to be generated using the `go-clang-gen` command. The new version has to be available using the VM's and CI's packages. Otherwise, we cannot correctly test and therefore support the version.
+Every now and then a new Clang version emerges which needs to be generated using the `go-clang-gen` command. The new version has to be available using the container's and CI's packages. Otherwise, we cannot correctly test and therefore support the version.
 
-If a new version is available create a repository on GitHub named `v<MAJOR>.<MINOR>` and set the repository description to `Go bindings for Clang's C API v<MAJOR>.<MINOR>`. Disable all repository features, e.g. `Issues` and `Wiki`. Enable the repository on TravisCI before you push anything to the repository. Lastly, execute the following command in the parent directory of the version repository inside the development VM.
+If a new version is available create a repository on GitHub named `v<MAJOR>.<MINOR>` and set the repository description to `Go bindings for Clang's C API v<MAJOR>.<MINOR>`. Disable all repository features, e.g. `Issues` and `Wiki`. Enable the repository on TravisCI before you push anything to the repository. Lastly, execute the following command in the parent directory of the version repository inside the development container.
 
 ```bash
 $GOPATH/src/github.com/go-clang/gen/scripts/create-clang-version.sh 3.4
@@ -87,9 +85,9 @@ $GOPATH/src/github.com/go-clang/gen/scripts/create-clang-version.sh 3.4
 
 This will create a new repository `v3.4` in your current directory and initialize it using the `bootstrap` repository. The command also generates, installs, configures and tests bindings for the given Clang version. The changes must then be manually verified, added, committed and pushed to the already set up remote "origin".
 
-### Update a branch with a new Clang version (VM)
+### Update a branch with a new Clang version (container)
 
-Every now and then a new Clang subminor version is released. The given version can be supported if packages are available inside the VM and CI. The following command can then be executed in the parent directory of the version repository inside the development VM.
+Every now and then a new Clang subminor version is released. The given version can be supported if packages are available inside the container and CI. The following command can then be executed in the parent directory of the version repository inside the development container.
 
 ```bash
 $GOPATH/src/github.com/go-clang/gen/scripts/update-clang-version.sh 3.4
@@ -97,7 +95,7 @@ $GOPATH/src/github.com/go-clang/gen/scripts/update-clang-version.sh 3.4
 
 This will rebase the latest commits of the `bootstrap` repository onto the commits of the `v3.4` repository.  The command also generates, installs, configures and tests bindings for the given Clang version. The changes must then be manually verified, added, committed and pushed to the already set up remote "origin".
 
-### Update branches with a new `go-clang/gen` version (VM)
+### Update branches with a new `go-clang/gen` version (container)
 
 If the `go-clang-gen` command changes its generation output, all branches need to be updated which is basically just updating for a new Clang version.
 
