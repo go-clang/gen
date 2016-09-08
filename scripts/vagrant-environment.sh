@@ -2,7 +2,7 @@
 
 set -exuo pipefail
 
-export GO_VERSION=1.5.3
+export GO_VERSION=1.7.1
 
 # Install Go
 mkdir -p $HOME/go
