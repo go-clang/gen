@@ -12,7 +12,7 @@ export LLVM_VERSION=$1
 $(dirname "$0")/switch-clang-version.sh $LLVM_VERSION
 
 # Update the repository
-cd v${LLVM_VERSION}
+cd $GOPATH/src/github.com/go-clang/v${LLVM_VERSION}
 
 git fetch --prune bootstrap
 

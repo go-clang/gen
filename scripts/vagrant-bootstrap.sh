@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -exuo pipefail
+
 export CODENAME=$(lsb_release --codename --short)
 export LLVM_VERSION=3.4
 

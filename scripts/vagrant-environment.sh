@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -exuo pipefail
+
 export GO_VERSION=1.5.3
 
 # Install Go

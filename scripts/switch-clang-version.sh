@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -exuo pipefail
+
 if [ -z "$1" ]; then
 	exit
 fi
