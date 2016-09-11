@@ -79,17 +79,17 @@ The following sections are specific to the maintaining process.
 
 Every now and then a new Clang version emerges which needs to be generated using the `go-clang-gen` command. The new version has to be available using the VM's and CI's packages. Otherwise, we cannot correctly test and therefore support the version.
 
-If a new version is available create a repository on GitHub named `v<MAJOR>.<MINOR>` and set the repository description to `Go bindings for Clang's C API v<MAJOR>.<MINOR>`. Disable all repository features, e.g. `Issues` and `Wiki`. Enable the repository on TravisCI before you push anything to the repository. Lastly, execute the following command in the parent directory of the version repository inside the development VM.
+If a new version is available create a repository on GitHub named `v<MAJOR>.<MINOR>` and set the repository description to `Go bindings for Clang's C API v<MAJOR>.<MINOR>`. Disable all repository features, e.g. `Issues` and `Wiki`. Enable the repository on TravisCI before you push anything to the repository. Lastly, execute the following command inside the development VM.
 
 ```bash
 $GOPATH/src/github.com/go-clang/gen/scripts/create-clang-version.sh 3.4
 ```
 
-This will create a new repository `v3.4` in your current directory and initialize it using the `bootstrap` repository. The command also generates, installs, configures and tests bindings for the given Clang version. The changes must then be manually verified, added, committed and pushed to the already set up remote "origin".
+This will create a new repository `v3.4` in the `$GOPATH/src/github.com/go-clang` directory and initialize it using the `bootstrap` repository. The command also generates, installs, configures and tests bindings for the given Clang version. The changes must then be manually verified, added, committed and pushed to the already set up remote "origin".
 
 ### Update a branch with a new Clang version (VM)
 
-Every now and then a new Clang subminor version is released. The given version can be supported if packages are available inside the VM and CI. The following command can then be executed in the parent directory of the version repository inside the development VM.
+Every now and then a new Clang subminor version is released. The given version can be supported if packages are available inside the VM and CI. The following command can then be executed inside the development VM.
 
 ```bash
 $GOPATH/src/github.com/go-clang/gen/scripts/update-clang-version.sh 3.4
