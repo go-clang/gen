@@ -208,3 +208,12 @@ func ArrayNameFromLength(lengthCName string) string {
 
 	return ""
 }
+
+func IsInteger(typ *Type) bool {
+	switch typ.GoName {
+	case GoInt8, GoUInt8, GoInt16, GoUInt16, GoInt32, GoUInt32, GoInt64, GoUInt64:
+		return true
+	}
+
+	return false
+}
