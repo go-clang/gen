@@ -89,6 +89,8 @@ $GOPATH/src/github.com/go-clang/gen/scripts/create-clang-version.sh 3.4
 
 This will create a new repository `v3.4` in the `$GOPATH/src/github.com/go-clang` directory and initialize it using the `bootstrap` repository. The command also generates, installs, configures and tests bindings for the given Clang version. The changes must then be manually verified, added, committed and pushed to the already set up remote "origin".
 
+After the repository is online godoc.org needs to know about the new repository. This can be achieved by visiting [https://godoc.org/github.com/go-clang/v&lt;MAJOR&gt;.&lt;MINOR&gt;/clang](https://godoc.org/github.com/go-clang/v<MAJOR>.<MINOR>/clang).
+
 ### Update a branch with a new Clang version (VM)
 
 Every now and then a new Clang subminor version is released. The given version can be supported if packages are available inside the VM and CI. The following command can then be executed inside the development VM.
