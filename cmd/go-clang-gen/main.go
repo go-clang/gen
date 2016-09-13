@@ -203,6 +203,50 @@ func prepareStructMembers(s *gen.Struct) {
 			}
 		}
 	}
+
+	prepareStructMembersArrayStruct(s)
+}
+
+// prepareStructMembersArrayStruct checks if the struct has two member variables, one is an array and the other a plain int/uint with size/length/count/len as its name because then this should be an array struct, and we connect them to handle a slice.
+func prepareStructMembersArrayStruct(s *gen.Struct) {
+	if len(s.Members) != 2 {
+		return
+	}
+
+	if !arrayLengthCombination(&s.Members[0].Type, &s.Members[1].Type) && !arrayLengthCombination(&s.Members[1].Type, &s.Members[0].Type) {
+		return
+	}
+
+	// If one of the members is already marked as array/slice another heuristic has already covered both members.
+	if s.Members[0].Type.IsArray || s.Members[1].Type.IsArray ||
+		s.Members[0].Type.IsSlice || s.Members[1].Type.IsSlice {
+		return
+	}
+
+	var a *gen.StructMember
+	var c *gen.StructMember
+
+	if s.Members[0].Type.PointerLevel == 1 {
+		a = s.Members[0]
+		c = s.Members[1]
+	} else {
+		c = s.Members[0]
+		a = s.Members[1]
+	}
+
+	lengthName := strings.ToLower(c.CName)
+	if lengthName != "count" && lengthName != "len" && lengthName != "length" && lengthName != "size" {
+		return
+	}
+
+	c.Type.LengthOfSlice = a.CName
+	a.Type.IsSlice = true
+	a.Type.LengthOfSlice = c.CName // TODO wrong usage but needed for the getter generation... maybe refactor this LengthOfSlice alltogether? https://github.com/go-clang/gen/issues/49
+}
+
+func arrayLengthCombination(a *gen.Type, b *gen.Type) bool {
+	return a.PointerLevel == 1 && b.PointerLevel == 0 &&
+		!gen.IsInteger(a) && gen.IsInteger(b)
 }
 
 func filterStructMemberGetter(m *gen.StructMember) bool {
