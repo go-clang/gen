@@ -13,6 +13,8 @@ The Go bindings are placed in their own repositories to provide the correct bind
 - [v3.4](https://github.com/go-clang/v3.4)
 - [v3.6](https://github.com/go-clang/v3.6)
 - [v3.7](https://github.com/go-clang/v3.7)
+- [v3.8](https://github.com/go-clang/v3.8)
+- [v3.9](https://github.com/go-clang/v3.9)
 
 ## Install `go-clang/gen` to contribute to go-clang
 
@@ -86,6 +88,8 @@ $GOPATH/src/github.com/go-clang/gen/scripts/create-clang-version.sh 3.4
 ```
 
 This will create a new repository `v3.4` in the `$GOPATH/src/github.com/go-clang` directory and initialize it using the `bootstrap` repository. The command also generates, installs, configures and tests bindings for the given Clang version. The changes must then be manually verified, added, committed and pushed to the already set up remote "origin".
+
+After the repository is online godoc.org needs to know about the new repository. This can be achieved by visiting [https://godoc.org/github.com/go-clang/v&lt;MAJOR&gt;.&lt;MINOR&gt;/clang](https://godoc.org/github.com/go-clang/v<MAJOR>.<MINOR>/clang).
 
 ### Update a branch with a new Clang version (VM)
 
