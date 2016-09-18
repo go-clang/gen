@@ -20,7 +20,6 @@ apt-get -V install -y clang-${LLVM_VERSION} git libclang-${LLVM_VERSION}-dev llv
 
 # Setup LLVM and Clang
 ln -s /usr/bin/llvm-config-$LLVM_VERSION /usr/bin/llvm-config
-ln -s /usr/lib/x86_64-linux-gnu/libclang-$LLVM_VERSION.so /usr/lib/x86_64-linux-gnu/libclang.so
 
 # Change the owner of the go directory. This is needed because the missing parent folders up to our synced folder are created with the user "root" instead of "vagrant".
 chown -R vagrant:vagrant /home/vagrant/go

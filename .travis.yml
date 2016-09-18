@@ -16,7 +16,6 @@ addons:
 install:
   - mkdir -p /home/travis/bin
   - sudo ln -s /usr/bin/llvm-config-3.4 /home/travis/bin/llvm-config
-  - sudo ln -s /usr/lib/llvm-3.4/lib/libclang.so.1 /usr/lib/x86_64-linux-gnu/libclang.so
   - sudo ldconfig
 
   - llvm-config --version
