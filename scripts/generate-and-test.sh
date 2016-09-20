@@ -12,7 +12,7 @@ export LLVM_VERSION=$1
 cd $GOPATH/src/github.com/go-clang/v${LLVM_VERSION}/clang/
 
 rm -rf clang-c/
-rm -f *_gen.go
+rm *_gen.go
 
 go-clang-gen
 
