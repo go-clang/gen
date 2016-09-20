@@ -55,6 +55,8 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 				return clang.ChildVisit_Continue
 			}
 
+			typ.IsReturnArgument = true
+
 			s.Members = append(s.Members, &StructMember{
 				CName:   cursor.DisplayName(),
 				Comment: CleanDoxygenComment(cursor.RawCommentText()),
@@ -108,9 +110,9 @@ func (s *Struct) addMemberGetters() error {
 			continue
 		}
 
-		if m.Type.IsArray { // TODO generate arrays with the correct size and type https://github.com/go-clang/gen/issues/48
+		/*if m.Type.IsArray { // TODO generate arrays with the correct size and type https://github.com/go-clang/gen/issues/48
 			continue
-		}
+		}*/
 
 		f := newFunction(m.CName, s.CName, m.Comment, m.CName, m.Type)
 

@@ -27,10 +27,10 @@ type API struct {
 	FilterStructMemberGetter func(m *StructMember) bool
 }
 
-func (a *API) HandleDirectory(dir string) error {
+func (a *API) HandleDirectory(dir string) (*HeaderFile, error) {
 	headers, err := ioutil.ReadDir(dir)
 	if err != nil {
-		return fmt.Errorf("Cannot list clang-c directory: %v", err)
+		return nil, fmt.Errorf("Cannot list clang-c directory: %v", err)
 	}
 
 	h := &HeaderFile{
@@ -58,13 +58,13 @@ func (a *API) HandleDirectory(dir string) error {
 		h.name = dir + name
 
 		if err := h.parse(a.ClangArguments); err != nil {
-			return fmt.Errorf("Cannot handle header file %q: %v", name, err)
+			return nil, fmt.Errorf("Cannot handle header file %q: %v", name, err)
 		}
 	}
 
 	if err := h.handle(); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return h, nil
 }

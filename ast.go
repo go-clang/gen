@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/format"
 	"go/token"
+	"strconv"
 	"strings"
 )
 
@@ -67,10 +68,13 @@ func (fa *ASTFunc) generate() {
 	fa.generateReceiver()
 
 	if fa.f.Member != nil {
-		if fa.f.ReturnType.IsSlice {
+		if fa.f.ReturnType.IsSlice || fa.f.ReturnType.IsArray {
 			fa.addStatement(doDeclare("s", doGoType(fa.f.ReturnType)))
-			fa.addCToGoSliceConversion("s", fa.f.Receiver.Name+".c."+fa.f.Member.Name, fa.f.Receiver.Name+".c."+fa.f.ReturnType.LengthOfSlice)
-
+			if fa.f.ReturnType.IsSlice {
+				fa.addCToGoSliceConversion("s", fa.f.Receiver.Name+".c."+fa.f.Member.Name, fa.f.Receiver.Name+".c."+fa.f.ReturnType.LengthOfSlice)
+			} else {
+				fa.addCToGoSliceConversion("s", fa.f.Receiver.Name+".c."+fa.f.Member.Name, strconv.Itoa(int(fa.f.ReturnType.ArraySize)))
+			}
 			fa.addReturnItem(&ast.Ident{
 				Name: "s",
 			})
@@ -142,7 +146,7 @@ func (fa *ASTFunc) generateParameters() []ast.Expr {
 			continue
 		}
 
-		if p.Type.IsSlice && !p.Type.IsReturnArgument {
+		if (p.Type.IsSlice || p.Type.IsArray) && !p.Type.IsReturnArgument {
 			hasDeclaration = true
 
 			if p.Type.CGoName == CSChar && p.Type.PointerLevel >= 1 { // one pointer level from being a string, one from being an array
@@ -288,7 +292,7 @@ func (fa *ASTFunc) generateParameters() []ast.Expr {
 	for _, p := range fa.f.Parameters {
 		var pf ast.Expr
 
-		if p.Type.IsSlice {
+		if p.Type.IsSlice || p.Type.IsArray {
 			pf = &ast.Ident{
 				Name: "cp_" + p.Name,
 			}

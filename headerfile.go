@@ -25,6 +25,18 @@ type HeaderFile struct {
 	lookupStruct      map[string]*Struct
 }
 
+func (h *HeaderFile) Structs() []*Struct {
+	return h.structs
+}
+
+func (h *HeaderFile) Functions() []*Function {
+	return h.functions
+}
+
+func (h *HeaderFile) Enums() []*Enum {
+	return h.enums
+}
+
 func (h *HeaderFile) addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
 	fname = UpperFirstCharacter(fnamePrefix + UpperFirstCharacter(fname))
 
