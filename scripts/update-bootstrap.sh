@@ -12,7 +12,7 @@ make -C $GOPATH/src/github.com/go-clang/gen install
 cd $GOPATH/src/github.com/go-clang/bootstrap/clang/
 
 rm -rf clang-c/
-rm *_gen.go
+rm -f *_gen.go
 
 go-clang-gen
 
