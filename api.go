@@ -33,37 +33,20 @@ func (a *API) HandleDirectory(dir string) error {
 		return fmt.Errorf("Cannot list clang-c directory: %v", err)
 	}
 
-	h := &HeaderFile{
-		api: a,
-
-		dir: dir,
-
-		lookupEnum:        map[string]*Enum{},
-		lookupNonTypedefs: map[string]string{},
-		lookupStruct: map[string]*Struct{
-			"cxstring": &Struct{
-				Name:  "cxstring",
-				CName: "CXString",
-			},
-		},
-	}
-
 	for _, hf := range headers {
-		name := hf.Name()
-
-		if hf.IsDir() || !strings.HasSuffix(name, ".h") {
+		if hf.IsDir() || !strings.HasSuffix(hf.Name(), ".h") {
 			continue
 		}
 
-		h.name = dir + name
+		h := newHeaderFile(a, hf.Name(), dir)
 
 		if err := h.parse(a.ClangArguments); err != nil {
-			return fmt.Errorf("Cannot handle header file %q: %v", name, err)
+			return fmt.Errorf("Cannot handle header file %q: %v", h.FullPath(), err)
 		}
-	}
 
-	if err := h.handle(); err != nil {
-		return err
+		if err := h.handle(); err != nil {
+			return err
+		}
 	}
 
 	return nil

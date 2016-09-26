@@ -13,8 +13,8 @@ import (
 type HeaderFile struct {
 	api *API
 
-	name string
-	dir  string
+	Filename string
+	Path     string
 
 	enums     []*Enum
 	functions []*Function
@@ -23,6 +23,24 @@ type HeaderFile struct {
 	lookupEnum        map[string]*Enum
 	lookupNonTypedefs map[string]string
 	lookupStruct      map[string]*Struct
+}
+
+func newHeaderFile(a *API, name string, dir string) *HeaderFile {
+	return &HeaderFile{
+		api: a,
+
+		Path:     dir,
+		Filename: name,
+
+		lookupEnum:        map[string]*Enum{},
+		lookupNonTypedefs: map[string]string{},
+		lookupStruct: map[string]*Struct{
+			"cxstring": &Struct{
+				Name:  "cxstring",
+				CName: "CXString",
+			},
+		},
+	}
 }
 
 func (h *HeaderFile) addMethod(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
@@ -112,7 +130,7 @@ func (h *HeaderFile) prepareFile() error {
 		I do not know how the original author debugged this, but one thing: Thank you!
 	*/
 	findStructsRe := regexp.MustCompile(`(?s)struct[\s\w]+{.+?}`)
-	f, err := ioutil.ReadFile(h.name)
+	f, err := ioutil.ReadFile(h.FullPath())
 	if err != nil {
 		return fmt.Errorf("Cannot read Index.h: %v", err)
 	}
@@ -131,9 +149,9 @@ func (h *HeaderFile) prepareFile() error {
 	if incl := "#include <stdint.h>"; !strings.HasPrefix(fs, incl) { // Include for uintptr_t
 		fs = "#include <stdint.h>\n\n" + fs
 	}
-	err = ioutil.WriteFile(h.name, []byte(fs), 0600)
+	err = ioutil.WriteFile(h.FullPath(), []byte(fs), 0600)
 	if err != nil {
-		return fmt.Errorf("Cannot write %s: %v", h.name, err)
+		return fmt.Errorf("Cannot write %s: %v", h.FullPath(), err)
 	}
 
 	return nil
@@ -150,9 +168,9 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
 		// Only handle code of the current file
 		sourceFile, _, _, _ := cursor.Location().FileLocation()
-		isCurrentFile := sourceFile.Name() == h.name
+		isCurrentFile := sourceFile.Name() == h.FullPath()
 
-		if !strings.HasPrefix(sourceFile.Name(), h.dir) {
+		if !strings.HasPrefix(sourceFile.Name(), h.Path) {
 			return clang.ChildVisit_Continue
 		}
 
@@ -266,7 +284,7 @@ func (h *HeaderFile) parse(clangArguments []string) error {
 	idx := clang.NewIndex(0, 1)
 	defer idx.Dispose()
 
-	tu := idx.ParseTranslationUnit(h.name, clangArguments, nil, 0)
+	tu := idx.ParseTranslationUnit(h.FullPath(), clangArguments, nil, 0)
 	defer tu.Dispose()
 
 	if !tu.IsValid() {
@@ -532,4 +550,13 @@ func (h *HeaderFile) handleMethod(receiverName string, m interface{}) string {
 	}
 
 	return ""
+}
+
+func (h *HeaderFile) FullPath() string {
+    path := h.Path;
+    if !strings.HasSuffix(path, "/"){
+        path += "/";
+    }
+    
+	return path + h.Filename
 }
