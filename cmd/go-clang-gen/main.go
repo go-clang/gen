@@ -29,7 +29,7 @@ func main() {
 	}
 }
 
-func prepareFunctionName(h *gen.HeaderFile, f *gen.Function) string {
+func prepareFunctionName(g *gen.Generation, f *gen.Function) string {
 	fname := f.Name
 
 	fname = strings.TrimPrefix(fname, "clang_")
@@ -48,7 +48,7 @@ func prepareFunctionName(h *gen.HeaderFile, f *gen.Function) string {
 	}
 
 	// Trim some whitelisted prefixes by their types
-	if len(f.Parameters) > 0 && h.IsEnumOrStruct(f.Parameters[0].Type.GoName) {
+	if len(f.Parameters) > 0 && g.IsEnumOrStruct(f.Parameters[0].Type.GoName) {
 		switch f.Parameters[0].Type.GoName {
 		case "CodeCompleteResults":
 			fname = strings.TrimPrefix(fname, "codeComplete")
