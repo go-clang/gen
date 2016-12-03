@@ -10,6 +10,8 @@ export CODENAME=$(lsb_release --codename --short)
 export LLVM_VERSION=$1
 
 # Add repositories
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 15CF4D18AF4F7421
+sudo wget -q -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
 sudo add-apt-repository --enable-source "deb http://llvm.org/apt/${CODENAME}/ llvm-toolchain-${CODENAME}-${LLVM_VERSION} main"
 sudo apt-get update
 
