@@ -3,6 +3,7 @@
 set -exuo pipefail
 
 export GO_VERSION=1.7.1
+export LLVM_VERSION=3.4
 
 # Install Go
 mkdir -p $HOME/go
@@ -22,9 +23,11 @@ echo 'cd $HOME/go/src/github.com/go-clang/gen/' >> $HOME/.bashrc
 export GOPATH=$HOME/go
 export GOROOT=$GOPATH/go
 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-cd $HOME/go/src/github.com/go-clang/gen/
 
 # Install go-clang
+$GOPATH/src/github.com/go-clang/gen/scripts/switch-clang-version.sh $LLVM_VERSION
+
+cd $HOME/go/src/github.com/go-clang/gen/
 make install-dependencies
 make install-tools
 make install
