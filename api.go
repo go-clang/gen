@@ -11,7 +11,7 @@ type API struct {
 	ClangArguments []string
 
 	// PrepareFunctionName returns a prepared function name for further processing
-	PrepareFunctionName func(h *HeaderFile, f *Function) string
+	PrepareFunctionName func(g *Generation, f *Function) string
 	// PrepareFunction prepares a function for further processing
 	PrepareFunction func(f *Function)
 	// FilterFunction determines if a function is generateable
@@ -27,11 +27,13 @@ type API struct {
 	FilterStructMemberGetter func(m *StructMember) bool
 }
 
-func (a *API) HandleDirectory(dir string) error {
+func (a *API) HandleDirectory(dir string) ([]*HeaderFile, error) {
 	headers, err := ioutil.ReadDir(dir)
 	if err != nil {
-		return fmt.Errorf("Cannot list clang-c directory: %v", err)
+		return nil, fmt.Errorf("Cannot list clang-c directory: %v", err)
 	}
+
+	var headerFiles []*HeaderFile
 
 	for _, hf := range headers {
 		if hf.IsDir() || !strings.HasSuffix(hf.Name(), ".h") {
@@ -41,13 +43,11 @@ func (a *API) HandleDirectory(dir string) error {
 		h := newHeaderFile(a, hf.Name(), dir)
 
 		if err := h.parse(a.ClangArguments); err != nil {
-			return fmt.Errorf("Cannot handle header file %q: %v", h.FullPath(), err)
+			return nil, fmt.Errorf("Cannot handle header file %q: %v", h.FullPath(), err)
 		}
 
-		if err := h.handle(); err != nil {
-			return err
-		}
+		headerFiles = append(headerFiles, h)
 	}
 
-	return nil
+	return headerFiles, nil
 }

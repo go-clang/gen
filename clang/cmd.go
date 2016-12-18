@@ -94,7 +94,14 @@ func Cmd(args []string, api *gen.API) error {
 		}
 	}
 
-	if err := api.HandleDirectory(clangCDirectory); err != nil {
+	headerFiles, err := api.HandleDirectory(clangCDirectory)
+	if err != nil {
+		return err
+	}
+
+	generator := gen.NewGeneration(api)
+	generator.AddHeaderFiles(headerFiles)
+	if err = generator.Generate(); err != nil {
 		return err
 	}
 
