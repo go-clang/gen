@@ -45,6 +45,5 @@ script:
   # Do tests and code coverage
   - make test-full
 
-  - ginkgo -cover -skipPackage="testdata"
-  - gover
+  - make test-coverage
   - if [ "$TRAVIS_SECURE_ENV_VARS" = "true" ]; then goveralls -coverprofile=gover.coverprofile -service=travis-ci -repotoken $COVERALLS_TOKEN; fi

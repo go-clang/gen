@@ -1,4 +1,4 @@
-.PHONY: all install install-dependencies install-tools lint test test-full test-verbose
+.PHONY: all install install-dependencies install-tools lint test test-coverage test-full test-verbose
 
 export ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
@@ -33,6 +33,9 @@ lint: install
 	$(ROOT_DIR)/scripts/lint.sh
 test:
 	CGO_LDFLAGS="-L`llvm-config --libdir`" go test -timeout 60s ./...
+test-coverage:
+	ginkgo -cover -skipPackage="testdata"
+	gover
 test-full:
 	$(ROOT_DIR)/scripts/test-full.sh
 test-verbose:
