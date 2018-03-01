@@ -15,6 +15,7 @@ The Go bindings are placed in their own repositories to provide the correct bind
 - [v3.7](https://github.com/go-clang/v3.7)
 - [v3.8](https://github.com/go-clang/v3.8)
 - [v3.9](https://github.com/go-clang/v3.9)
+- [v4.0](https://github.com/go-clang/v4.0)
 - [v5.0](https://github.com/go-clang/v5.0)
 
 ## Install `go-clang/gen` to contribute to go-clang
