@@ -3,7 +3,7 @@ package gen
 import (
 	"strings"
 
-	"github.com/go-clang/bootstrap/clang"
+	"github.com/go-clang/clang-v3.9/clang"
 )
 
 // Struct represents a generation struct

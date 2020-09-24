@@ -4,7 +4,7 @@ import (
 	"go/ast"
 	"strings"
 
-	"github.com/go-clang/bootstrap/clang"
+	"github.com/go-clang/clang-v3.9/clang"
 )
 
 // Enum represents a generation enum
