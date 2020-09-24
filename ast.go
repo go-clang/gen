@@ -234,7 +234,7 @@ func (fa *ASTFunc) generateParameters() []ast.Expr {
 		} else if p.Type.PointerLevel > 0 && p.Type.IsPrimitive && p.Type.CGoName != CSChar {
 			hasDeclaration = true
 
-			var varType = doCType(p.Type.CGoName)
+			varType := doCType(p.Type.CGoName)
 
 			fa.addStatement(doDeclare(
 				"cp_"+p.Name,

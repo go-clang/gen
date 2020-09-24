@@ -103,12 +103,12 @@ func (f *File) generate() error {
 	out, err := imports.Process(filename, bo, nil)
 	if err != nil {
 		// Write the file anyway so we can look at the problem
-		if err := ioutil.WriteFile(filename, bo, 0600); err != nil {
+		if err := ioutil.WriteFile(filename, bo, 0o600); err != nil {
 			return err
 		}
 
 		return err
 	}
 
-	return ioutil.WriteFile(filename, out, 0600)
+	return ioutil.WriteFile(filename, out, 0o600)
 }

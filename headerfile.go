@@ -63,7 +63,7 @@ func (h *HeaderFile) prepareFile() error {
 	if incl := "#include <stdint.h>"; !strings.HasPrefix(fs, incl) { // Include for uintptr_t
 		fs = "#include <stdint.h>\n\n" + fs
 	}
-	err = ioutil.WriteFile(h.FullPath(), []byte(fs), 0600)
+	err = ioutil.WriteFile(h.FullPath(), []byte(fs), 0o600)
 	if err != nil {
 		return fmt.Errorf("Cannot write %s: %v", h.FullPath(), err)
 	}
