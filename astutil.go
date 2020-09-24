@@ -52,7 +52,7 @@ func doDeclare(name string, typ ast.Expr) *ast.DeclStmt {
 			Specs: []ast.Spec{
 				&ast.ValueSpec{
 					Names: []*ast.Ident{
-						&ast.Ident{
+						{
 							Name: name,
 						},
 					},
@@ -68,7 +68,7 @@ func doField(name string, typ Type) *ast.Field {
 
 	if name != "" {
 		f.Names = []*ast.Ident{
-			&ast.Ident{
+			{
 				Name: name,
 			},
 		}

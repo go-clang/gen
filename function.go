@@ -42,7 +42,7 @@ func newFunction(name, cname, comment, member string, typ Type) *Function {
 		IncludeFiles: newIncludeFiles(),
 
 		Parameters: []FunctionParameter{ // TODO this might not be needed if the receiver code is refactored https://github.com/go-clang/gen/issues/52
-			FunctionParameter{
+			{
 				Name:  receiverName,
 				CName: cname,
 				Type: Type{

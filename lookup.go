@@ -11,7 +11,7 @@ func NewLookup() Lookup {
 		lookupEnum:        map[string]*Enum{},
 		lookupNonTypedefs: map[string]string{},
 		lookupStruct: map[string]*Struct{
-			"cxstring": &Struct{
+			"cxstring": {
 				Name:  "cxstring",
 				CName: "CXString",
 			},
