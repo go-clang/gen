@@ -44,7 +44,7 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 	s.Name = TrimLanguagePrefix(s.CName)
 	s.Receiver.Name = commonReceiverName(s.Name)
 
-	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
+	cursor.Visit(func(cursor, _ clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {
 		case clang.Cursor_FieldDecl:
 			typ, err := typeFromClangType(cursor.Type())
