@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/go-clang/clang-v3.9/clang"
@@ -82,7 +83,7 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 
 	typ, err := typeFromClangType(cursor.ResultType())
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("unexpected cursor.ResultType: %#v: %w", cursor.ResultType(), err))
 	}
 	f.ReturnType = typ
 
@@ -96,7 +97,7 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 
 		typ, err := typeFromClangType(param.Type())
 		if err != nil {
-			panic(err)
+			panic(fmt.Errorf("unexpected error: %w, param.Type(): %#v", err, param.Type()))
 		}
 		p.Type = typ
 

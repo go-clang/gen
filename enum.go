@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"fmt"
 	"go/ast"
 	"strings"
 
@@ -86,7 +87,7 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 
 			e.Items = append(e.Items, ei)
 		default:
-			panic(cursor.Kind())
+			panic(fmt.Errorf("unexpected cursor.Kind: %#v", cursor.Kind()))
 		}
 
 		return clang.ChildVisit_Continue

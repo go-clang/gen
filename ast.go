@@ -2,6 +2,7 @@ package gen
 
 import (
 	"bytes"
+	"fmt"
 	"go/ast"
 	"go/format"
 	"go/token"
@@ -40,7 +41,7 @@ func generateFunctionString(fa *ASTFunc) string {
 	var b bytes.Buffer
 	err := format.Node(&b, token.NewFileSet(), []ast.Decl{fa.FuncDecl})
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("unexpected error: %w", err))
 	}
 
 	fStr := b.String()

@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/go-clang/clang-v3.9/clang"
@@ -48,7 +49,7 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 		case clang.Cursor_FieldDecl:
 			typ, err := typeFromClangType(cursor.Type())
 			if err != nil {
-				panic(err)
+				panic(fmt.Errorf("unexpected error: %w, cursor.Type(): %#v", err, cursor.Type()))
 			}
 
 			if typ.IsFunctionPointer {
