@@ -67,7 +67,7 @@ func Cmd(llvmConfigPath string, api *gen.API) error {
 
 	api.ClangArguments = append(clangArguments, api.ClangArguments...)
 
-	fmt.Printf("Using clang arguments: %v\n", clangArguments)
+	fmt.Printf("Using clang arguments: %v\n", api.ClangArguments)
 
 	fmt.Printf("Will generate go-clang for LLVM version %s into the current directory\n", llvmVersion.String())
 
