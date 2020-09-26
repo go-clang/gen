@@ -6,8 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/termie/go-shutil"
-
 	"github.com/go-clang/gen"
 )
 
@@ -75,7 +73,7 @@ func Cmd(llvmConfigPath string, api *gen.API) error {
 
 	// Copy the Clang-C include directory into the current directory
 	_ = os.RemoveAll(clangCDirectory)
-	if err := shutil.CopyTree(clangCIncludeDir, clangCDirectory, nil); err != nil {
+	if err := copyTree(clangCIncludeDir, clangCDirectory); err != nil {
 		return cmdFatal(fmt.Sprintf("Cannot copy Clang-C include directory %q into current directory", clangCIncludeDir), err)
 	}
 

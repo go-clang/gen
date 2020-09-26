@@ -2,8 +2,12 @@ package clang
 
 import (
 	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"syscall"
 )
 
@@ -69,6 +73,172 @@ func fileExists(filepath string) error {
 
 	if fi.Mode().IsDir() {
 		return errNotAFile
+	}
+
+	return nil
+}
+
+func isSymlink(fi os.FileInfo) bool {
+	return (fi.Mode() & os.ModeSymlink) == os.ModeSymlink
+}
+
+func copyFile(src, dst string) error {
+	srcInfo, _ := os.Stat(src)
+	dstInfo, _ := os.Stat(dst)
+	if os.SameFile(srcInfo, dstInfo) {
+		return fmt.Errorf("%q and %q are the same file", src, dst)
+	}
+
+	srcStat, err := os.Lstat(src)
+	if err != nil {
+		return err
+	}
+
+	if _, err := os.Stat(dst); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	// If we don't follow symlinks and it's a symlink, just link it and be done
+	if isSymlink(srcStat) {
+		return os.Symlink(src, dst)
+	}
+
+	// If we are a symlink, follow it
+	if isSymlink(srcStat) {
+		src, err = os.Readlink(src)
+		if err != nil {
+			return err
+		}
+		srcStat, err = os.Stat(src)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Do the actual copy
+	fsrc, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer fsrc.Close()
+
+	fdst, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer fdst.Close()
+
+	size, err := io.Copy(fdst, fsrc)
+	if err != nil {
+		return err
+	}
+
+	if size != srcStat.Size() {
+		return fmt.Errorf("%s: %d/%d copied", src, size, srcStat.Size())
+	}
+
+	return nil
+}
+
+func copyMode(src, dst string) error {
+	srcStat, err := os.Lstat(src)
+	if err != nil {
+		return err
+	}
+
+	dstStat, err := os.Lstat(dst)
+	if err != nil {
+		return err
+	}
+
+	// They are both symlinks and we can't change mode on symlinks.
+	if isSymlink(srcStat) && isSymlink(dstStat) {
+		return nil
+	}
+
+	// Atleast one is not a symlink, get the actual file stats
+	srcStat, _ = os.Stat(src)
+	err = os.Chmod(dst, srcStat.Mode())
+	return err
+}
+
+func copyFunc(src, dst string) (string, error) {
+	dstInfo, err := os.Stat(dst)
+
+	if err == nil && dstInfo.Mode().IsDir() {
+		dst = filepath.Join(dst, filepath.Base(src))
+	}
+
+	if err != nil && !os.IsNotExist(err) {
+		return dst, err
+	}
+
+	if err := copyFile(src, dst); err != nil {
+		return dst, err
+	}
+
+	if err := copyMode(src, dst); err != nil {
+		return dst, err
+	}
+
+	return dst, nil
+}
+
+func copyTree(src, dst string) error {
+	srcFileInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	if !srcFileInfo.IsDir() {
+		return fmt.Errorf("%q is not a directory", src)
+	}
+
+	if _, err := os.Open(dst); !os.IsNotExist(err) {
+		return fmt.Errorf("%q already exists", dst)
+	}
+
+	entries, err := ioutil.ReadDir(src)
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(dst, srcFileInfo.Mode()); err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		dstPath := filepath.Join(dst, entry.Name())
+
+		entryFileInfo, err := os.Lstat(srcPath)
+		if err != nil {
+			return err
+		}
+
+		switch {
+		case isSymlink(entryFileInfo):
+			linkTo, err := os.Readlink(srcPath)
+			if err != nil {
+				return err
+			}
+			// ignore dangling symlink if flag is on
+			_, err = os.Stat(linkTo)
+			_, err = copyFunc(srcPath, dstPath)
+			if err != nil {
+				return err
+			}
+		case entryFileInfo.IsDir():
+			err = copyTree(srcPath, dstPath)
+			if err != nil {
+				return err
+			}
+		default:
+			_, err = copyFunc(srcPath, dstPath)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
