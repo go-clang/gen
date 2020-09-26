@@ -21,8 +21,8 @@ func cmdFatal(msg string, err error) error {
 }
 
 // Cmd executes a generic go-clang-generate command
-func Cmd(args []string, api *gen.API) error {
-	rawLLVMVersion, _, err := execToBuffer("llvm-config", "--version")
+func Cmd(llvmConfigPath string, api *gen.API) error {
+	rawLLVMVersion, _, err := execToBuffer(llvmConfigPath, "--version")
 	if err != nil {
 		return cmdFatal("Cannot determine LLVM version", err)
 	}
@@ -34,7 +34,7 @@ func Cmd(args []string, api *gen.API) error {
 
 	fmt.Println("Found LLVM version", llvmVersion.String())
 
-	rawLLVMIncludeDir, _, err := execToBuffer("llvm-config", "--includedir")
+	rawLLVMIncludeDir, _, err := execToBuffer(llvmConfigPath, "--includedir")
 	if err != nil {
 		return cmdFatal("Cannot determine LLVM include directory", err)
 	}

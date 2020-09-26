@@ -1,15 +1,29 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/go-clang/gen"
 	genclang "github.com/go-clang/gen/clang"
 )
 
+var (
+	flagClangResourceDir string
+	flagLLVMConfigPath   string
+)
+
+func init() {
+	flag.StringVar(&flagClangResourceDir, "clang-resource-dir", "", "Clang resource directory")
+	flag.StringVar(&flagLLVMConfigPath, "llvm-config", "", "llvm-config binary path")
+}
+
 func main() {
+	flag.Parse()
+
 	api := &gen.API{
 		PrepareFunctionName:     prepareFunctionName,
 		PrepareFunction:         prepareFunction,
@@ -21,7 +35,20 @@ func main() {
 		FilterStructMemberGetter: filterStructMemberGetter,
 	}
 
-	err := genclang.Cmd(os.Args[1:], api)
+	if flagClangResourceDir != "" {
+		if resourceDir, err := os.Stat(flagClangResourceDir); err == nil && resourceDir.IsDir() {
+			api.ClangArguments = append(api.ClangArguments, "-I"+resourceDir.Name())
+		}
+	}
+
+	llvmConfig := "llvm-config"
+	if flagLLVMConfigPath != "" {
+		if bin, err := exec.LookPath(flagLLVMConfigPath); err == nil {
+			llvmConfig = bin
+		}
+	}
+
+	err := genclang.Cmd(llvmConfig, api)
 	if err != nil {
 		fmt.Println(err)
 
