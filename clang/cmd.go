@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/go-clang/gen"
@@ -90,6 +91,13 @@ func Cmd(llvmConfigPath string, api *gen.API) error {
 				}
 			}
 		}
+	}
+
+	const doc = `// Package clang-c holds clang binding C header files.
+package clang_c
+`
+	if err := ioutil.WriteFile(filepath.Join(clangCDirectory, "doc.go"), []byte(doc), 0o600); err != nil {
+		return err
 	}
 
 	headerFiles, err := api.HandleDirectory(clangCDirectory)
