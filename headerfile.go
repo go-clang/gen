@@ -3,6 +3,7 @@ package gen
 import (
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -85,6 +86,10 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 		isCurrentFile := sourceFile.Name() == h.FullPath()
 
 		if !strings.HasPrefix(sourceFile.Name(), h.Path) {
+			return clang.ChildVisit_Continue
+		}
+		// TODO(zchee): Documentation.h header haven't correct cursor information
+		if h.Filename == "Documentation.h" && filepath.Base(sourceFile.Name()) == "Index.h" {
 			return clang.ChildVisit_Continue
 		}
 
