@@ -178,6 +178,8 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 		typ.GoName = TrimLanguagePrefix(cType.Declaration().DisplayName())
 		typ.IsEnumLiteral = true
 		typ.IsPrimitive = true
+	case clang.Type_Elaborated:
+		return typeFromClangType(cType.CanonicalType())
 	case clang.Type_Unexposed: // There is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013 https://llvm.org/bugs/show_bug.cgi?id=15089
 		subTyp, err := typeFromClangType(cType.CanonicalType())
 		if err != nil {
