@@ -20,7 +20,12 @@ func cmdFatal(msg string, err error) error {
 }
 
 // Cmd executes a generic go-clang-generate command
-func Cmd(llvmConfigPath string, api *gen.API) error {
+func Cmd(llvmRoot string, api *gen.API) error {
+	llvmConfigPath := filepath.Join(llvmRoot, "bin", "llvm-config")
+	if err := fileExists(llvmConfigPath); err != nil {
+		return err
+	}
+
 	rawLLVMVersion, _, err := execToBuffer(llvmConfigPath, "--version")
 	if err != nil {
 		return cmdFatal("Cannot determine LLVM version", err)
@@ -50,18 +55,14 @@ func Cmd(llvmConfigPath string, api *gen.API) error {
 	}
 
 	// Find Clang's include directory
-	for _, d := range []string{
-		"/usr/local/lib/clang",
-		"/usr/include/clang",
-	} {
-		for _, di := range []string{
-			d + fmt.Sprintf("/%s/include", llvmVersion.String()),
-			d + fmt.Sprintf("/%s/include", llvmVersion.StringMinor()),
-		} {
-			if dirExists(di) == nil {
-				clangArguments = append(clangArguments, "-I", di)
-			}
+	clangResourceDir, _, err := execToBuffer(filepath.Join(llvmRoot, "bin", "clang"), "--print-resource-dir")
+	if err == nil { // ignore error for --print-resource-dir flag not yet implements
+		clangResourceIncludeDir := filepath.Join(strings.TrimSpace(string(clangResourceDir)), "include")
+		if err := dirExists(clangResourceIncludeDir); err != nil {
+			return cmdFatal("not fonud clang resource include directory", err)
 		}
+
+		clangArguments = append(clangArguments, "-I", clangResourceIncludeDir)
 	}
 
 	api.ClangArguments = append(clangArguments, api.ClangArguments...)

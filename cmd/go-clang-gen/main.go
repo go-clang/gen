@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -12,13 +13,11 @@ import (
 )
 
 var (
-	flagClangResourceDir string
-	flagLLVMConfigPath   string
+	flagLLVMRoot string
 )
 
 func init() {
-	flag.StringVar(&flagClangResourceDir, "clang-resource-dir", "", "Clang resource directory")
-	flag.StringVar(&flagLLVMConfigPath, "llvm-config", "", "llvm-config binary path")
+	flag.StringVar(&flagLLVMRoot, "llvm-root", "", "path of llvm root directory")
 }
 
 func main() {
@@ -35,20 +34,30 @@ func main() {
 		FilterStructMemberGetter: filterStructMemberGetter,
 	}
 
-	if flagClangResourceDir != "" {
-		if resourceDir, err := os.Stat(flagClangResourceDir); err == nil && resourceDir.IsDir() {
-			api.ClangArguments = append(api.ClangArguments, "-I"+resourceDir.Name())
+	if flagLLVMRoot == "" {
+		c := exec.Command("llvm-config", "--prefix")
+		prefix, err := c.CombinedOutput()
+		if err != nil {
+			var exitErr *exec.ExitError
+			if errors.As(err, &exitErr) {
+				err = exitErr
+			}
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		prefixDir := strings.TrimSpace(string(prefix))
+		if rootDir, err := os.Stat(prefixDir); err == nil && rootDir.IsDir() {
+			flagLLVMRoot = prefixDir
+		}
+
+		if flagLLVMRoot == "" {
+			fmt.Println("couldn't parse LLVM root directory")
+			os.Exit(1)
 		}
 	}
 
-	llvmConfig := "llvm-config"
-	if flagLLVMConfigPath != "" {
-		if bin, err := exec.LookPath(flagLLVMConfigPath); err == nil {
-			llvmConfig = bin
-		}
-	}
-
-	err := genclang.Cmd(llvmConfig, api)
+	err := genclang.Cmd(flagLLVMRoot, api)
 	if err != nil {
 		fmt.Println(err)
 
