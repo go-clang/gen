@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/go-clang/clang-v3.9/clang"
+	"github.com/go-clang/bootstrap/clang"
 )
 
 // Function represents a generation function

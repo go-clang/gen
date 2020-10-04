@@ -1,7 +1,7 @@
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/go-clang/clang-v3.9 v0.0.0-20200924085731-98695937b517 h1:6w6Fs0cbVQrR2Izm7MMzTkaH9d5t9wvPk8JFgHz+fSc=
-github.com/go-clang/clang-v3.9 v0.0.0-20200924085731-98695937b517/go.mod h1:7t/KkSk9wzoJahgW6/l67p6B109wyxcSZRlz1rmr7+A=
+github.com/go-clang/bootstrap v0.0.0-20201004201401-dad59216e055 h1:zAyXlDeM22gtwHTqgnt569O+LzOlS3S1qmEOrGwY48w=
+github.com/go-clang/bootstrap v0.0.0-20201004201401-dad59216e055/go.mod h1:dpmmKECK7R0fK/ZjJafcN2aCG2pvdyhvKM6nNlBRtPE=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
