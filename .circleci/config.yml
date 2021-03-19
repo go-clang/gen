@@ -1,0 +1,122 @@
+version: 2.1
+
+orbs:
+  codecov: codecov/codecov@1.1.3  # https://circleci.com/developer/orbs/orb/codecov/codecov
+
+executors:
+  linux:
+    parameters:
+      go_version:
+        description: "The Go version to use on the debian buster image for linux platform."
+        type: string
+    docker:
+      - image: "golang:<< parameters.go_version >>-buster"
+    resource_class: xlarge
+    working_directory: /go/src/github.com/go-clang/gen
+
+  darwin:
+    parameters:
+      go_version:
+        description: "The Go version to use on the macos executor."
+        type: string
+    macos:
+      xcode: 12.4.0
+    resource_class: medium
+    environment:
+      CI: true
+      GOLANG_VERSION: "<< parameters.go_version >>"
+    working_directory: ~/go/src/github.com/go-clang/gen
+
+aliases:
+  - params: &params
+      parameters:
+        os:
+          description: "The OS name of executor."
+          type: enum
+          enum: [ "linux", "darwin" ]
+        go_version:
+          description: "The Go version to use on executor."
+          type: string
+  - go_cache_key: &go_cache_key go<< parameters.go_version >>-{{ arch }}-{{ checksum "~/.go_version" }}
+
+commands:
+  setup_go:
+    <<: *params
+    steps:
+      - when:
+          condition:
+            equal: [ "darwin", "<< parameters.os >>" ]
+          steps:
+            - run:
+                name: Setup go runtime sha256 file
+                command: |
+                  case "<< parameters.os >>" in
+                    darwin)
+                      export GOLANG_DOWNLOAD_SHA256=c98cde81517c5daf427f3071412f39d5bc58f6120e90a0d94cc51480fa04dbc1
+                      ;;
+                  esac
+                  echo "export GOLANG_DOWNLOAD_SHA256=$GOLANG_DOWNLOAD_SHA256" >> $BASH_ENV
+                  echo $GOLANG_DOWNLOAD_SHA256 > ~/.go_version
+            - run:
+                # chown '/usr/local' needs to restore_cache for '/usr/local/go'
+                name: Set PATH and Fix directory permission
+                command: |
+                  echo 'export PATH=$HOME/go/bin:/usr/local/go/bin:$PATH' >> $BASH_ENV
+                  sudo chown distiller:staff /usr/local
+            - restore_cache:
+                name: "Restore Go runtime cache"
+                keys:
+                  - *go_cache_key
+            - run:
+                name: Install Go runnime
+                command: |
+                  if [ ! -d "/usr/local/go" ]; then
+                    /usr/bin/curl -sSL https://storage.googleapis.com/golang/go<< parameters.go_version >>.darwin-amd64.tar.gz | /usr/bin/tar xfz - -C '/usr/local'
+                  fi
+            - save_cache:
+                name: Save Go runtime cache
+                key: *go_cache_key
+                paths:
+                  - /usr/local/go
+                  - ~/.go_version
+
+  check_go:
+    <<: *params
+    steps:
+      - when:
+          condition:
+            or: [ "linux", "darwin", "<< parameters.os >>" ]
+          steps:
+            - run:
+                name: Check Go environment
+                command: |
+                  printenv | sort
+                  echo
+                  go version
+                  echo
+                  go env
+
+jobs:
+  test:
+    <<: *params
+    executor:
+      name: "<< parameters.os >>"
+      go_version: "<< parameters.go_version >>"
+    steps:
+      - checkout
+      - setup_go:
+          os: "<< parameters.os >>"
+          go_version: "<< parameters.go_version >>"
+      - check_go:
+          os: "<< parameters.os >>"
+          go_version: "<< parameters.go_version >>"
+
+workflows:
+  version: 2
+  workflows:
+    jobs:
+      - test:
+          matrix:
+            parameters:
+              os: [ "linux", "darwin" ]
+              go_version: [ "1.16.2" ]
