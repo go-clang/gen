@@ -1,9 +1,8 @@
 package gen
 
 import (
+	"reflect"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestUpperFirstCharacter(t *testing.T) {
@@ -32,6 +31,6 @@ func TestUpperFirstCharacter(t *testing.T) {
 			Expect: "ABC",
 		},
 	} {
-		assert.Equal(t, tc.Expect, UpperFirstCharacter(tc.Data))
+		reflect.DeepEqual(tc.Expect, UpperFirstCharacter(tc.Data))
 	}
 }

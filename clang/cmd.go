@@ -1,10 +1,13 @@
 package clang
 
 import (
+	"bytes"
+	"embed"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/go-clang/gen"
@@ -17,6 +20,25 @@ func cmdFatal(msg string, err error) error {
 	} else {
 		return fmt.Errorf("FATAL %s: %s", msg, err)
 	}
+}
+
+//go:embed clang/*
+var f embed.FS
+
+const embedDir = "clang"
+
+var fileList = []string{
+	"cgoflags.go.txt",
+	"cgoflags_dynamic.go.txt",
+	"cgoflags_static.go.txt",
+	"clang_test.go.txt",
+	"completion_test.go.txt",
+	"cursor.c.txt",
+	"cursor.go.txt",
+	"cxstring.go.txt",
+	"go-clang.h.txt",
+	"translationunit.go.txt",
+	"unsavedfile.go.txt",
 }
 
 // Cmd executes a generic go-clang-generate command
@@ -79,8 +101,10 @@ func Cmd(llvmRoot string, api *gen.API) error {
 		return cmdFatal(fmt.Sprintf("Cannot copy Clang-C include directory %q into current directory", clangCIncludeDir), err)
 	}
 
+	clangDirectory := "./"
+
 	// Remove all generated .go files
-	if files, err := ioutil.ReadDir("./"); err != nil {
+	if files, err := ioutil.ReadDir(clangDirectory); err != nil {
 		return cmdFatal("Cannot read current directory", err)
 	} else {
 		for _, f := range files {
@@ -94,11 +118,45 @@ func Cmd(llvmRoot string, api *gen.API) error {
 		}
 	}
 
-	const doc = `// Package clang-c holds clang binding C header files.
-package clang_c
-`
-	if err := ioutil.WriteFile(filepath.Join(clangCDirectory, "doc.go"), []byte(doc), 0o600); err != nil {
+	// write no generated file into clang directory
+	for _, file := range fileList {
+		if err := writeEmbedFile(clangDirectory, filepath.Join(embedDir, file)); err != nil {
+			return err
+		}
+	}
+
+	// write clang/doc.go
+	clangDoc, err := f.ReadFile(filepath.Join(embedDir, "doc.go.txt"))
+	if err != nil {
 		return err
+	}
+	clangDoc = bytes.ReplaceAll(clangDoc, []byte("VERSION"), []byte(strconv.FormatInt(int64(llvmVersion.Major), 10)))
+	if err := os.WriteFile(filepath.Join(clangDirectory, "doc.go"), clangDoc, 0644); err != nil {
+		return err
+	}
+
+	// write clang/clang-c/doc.go
+	clangCDoc, err := f.ReadFile(filepath.Join(embedDir, "clang_c.go.txt"))
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(filepath.Join(clangCDirectory, "doc.go"), clangCDoc, 0644); err != nil {
+		return err
+	}
+
+	// write testdata
+	dirent, err := f.ReadDir(filepath.Join(embedDir, "testdata"))
+	if err != nil {
+		return err
+	}
+	testdataDir := filepath.Join(clangDirectory, "testdata")
+	if err := os.Mkdir(testdataDir, 0755); err != nil {
+		return err
+	}
+	for _, ent := range dirent {
+		if err := writeEmbedFile(testdataDir, filepath.Join(embedDir, "testdata", ent.Name())); err != nil {
+			return err
+		}
 	}
 
 	headerFiles, err := api.HandleDirectory(clangCDirectory)
@@ -109,6 +167,20 @@ package clang_c
 	generator := gen.NewGeneration(api)
 	generator.AddHeaderFiles(headerFiles)
 	if err = generator.Generate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func writeEmbedFile(dir, name string) error {
+	data, err := f.ReadFile(name)
+	if err != nil {
+		return err
+	}
+
+	name = strings.TrimSuffix(name, ".txt")
+	if err := os.WriteFile(filepath.Join(dir, filepath.Base(name)), data, 0644); err != nil {
 		return err
 	}
 
