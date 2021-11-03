@@ -7,7 +7,7 @@ import (
 	"github.com/go-clang/bootstrap/clang"
 )
 
-// Struct represents a generation struct
+// Struct represents a generation struct.
 type Struct struct {
 	api *API
 
@@ -25,6 +25,7 @@ type Struct struct {
 	Methods []interface{}
 }
 
+// StructMember member of Struct.
 type StructMember struct {
 	CName   string
 	Comment string
@@ -70,6 +71,7 @@ func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 	return s
 }
 
+// ContainsMethod reports whether the contains name in Struct.
 func (s *Struct) ContainsMethod(name string) bool {
 	for _, m := range s.Methods {
 		switch m := m.(type) {

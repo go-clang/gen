@@ -10,6 +10,7 @@ import (
 	"github.com/go-clang/bootstrap/clang"
 )
 
+// HeaderFile represents a generation headerfile.
 type HeaderFile struct {
 	Lookup
 
@@ -209,6 +210,7 @@ func (h *HeaderFile) parse(clangArguments []string) error {
 	return nil
 }
 
+// FullPath returns the full path of h.
 func (h *HeaderFile) FullPath() string {
 	path := h.Path
 	if !strings.HasSuffix(path, "/") {

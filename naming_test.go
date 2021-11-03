@@ -2,8 +2,6 @@ package gen
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestUpperFirstCharacter(t *testing.T) {
@@ -32,6 +30,8 @@ func TestUpperFirstCharacter(t *testing.T) {
 			Expect: "ABC",
 		},
 	} {
-		assert.Equal(t, tc.Expect, UpperFirstCharacter(tc.Data))
+		if tc.Expect != UpperFirstCharacter(tc.Data) {
+			t.Fatalf("got %s but want %s", UpperFirstCharacter(tc.Data), tc.Expect)
+		}
 	}
 }

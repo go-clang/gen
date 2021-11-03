@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// ASTFunc represents a AST Func.
 type ASTFunc struct {
 	*ast.FuncDecl
 

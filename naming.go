@@ -5,6 +5,7 @@ import (
 	"unicode"
 )
 
+// LowerFirstCharacter converts first s character to lower.
 func LowerFirstCharacter(s string) string {
 	r := []rune(s)
 
@@ -13,6 +14,7 @@ func LowerFirstCharacter(s string) string {
 	return string(r)
 }
 
+// UpperFirstCharacter converts first s character to upper.
 func UpperFirstCharacter(s string) string {
 	r := []rune(s)
 
@@ -25,6 +27,7 @@ var goKeywordReplacements = map[string]string{
 	"range": "r",
 }
 
+// ReplaceGoKeywords replaces s to Go keyword.
 func ReplaceGoKeywords(s string) string {
 	if r, ok := goKeywordReplacements[s]; ok {
 		return r
@@ -33,6 +36,7 @@ func ReplaceGoKeywords(s string) string {
 	return ""
 }
 
+// TrimCommonFunctionName trims common function-name from name.
 func TrimCommonFunctionName(name string, typ Type) string {
 	name = TrimCommonFunctionNamePrefix(name)
 
@@ -59,6 +63,7 @@ func TrimCommonFunctionName(name string, typ Type) string {
 	return name
 }
 
+// TrimCommonFunctionNamePrefix trims common function-name prefix from name.
 func TrimCommonFunctionNamePrefix(name string) string {
 	name = strings.TrimPrefix(name, "create")
 	name = strings.TrimPrefix(name, "get")
@@ -71,6 +76,7 @@ func TrimCommonFunctionNamePrefix(name string) string {
 	return name
 }
 
+// TrimLanguagePrefix trims Language prefix from name.
 func TrimLanguagePrefix(name string) string {
 	name = strings.TrimPrefix(name, "CX_CXX")
 	name = strings.TrimPrefix(name, "CXX")

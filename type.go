@@ -8,7 +8,7 @@ import (
 	"github.com/go-clang/bootstrap/clang"
 )
 
-// Defines all available Go types
+// Defines all available Go types.
 const (
 	GoByte      = "byte"
 	GoInt8      = "int8"
@@ -26,7 +26,7 @@ const (
 	GoPointer   = "unsafe.Pointer"
 )
 
-// Defines all available C types
+// Defines all available C types.
 const (
 	CChar      = "char"
 	CSChar     = "schar"
@@ -43,7 +43,7 @@ const (
 	CDouble    = "double"
 )
 
-// Type represents a generation type
+// Type represents a generation type.
 type Type struct {
 	CName   string
 	CGoName string
@@ -197,6 +197,7 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 	return typ, nil
 }
 
+// ArrayNameFromLength returns the array naem from lengthCName length naming.
 func ArrayNameFromLength(lengthCName string) string {
 	if pan := strings.TrimPrefix(lengthCName, "num_"); len(pan) != len(lengthCName) {
 		return pan
@@ -211,6 +212,7 @@ func ArrayNameFromLength(lengthCName string) string {
 	return ""
 }
 
+// IsInteger reports whether the typ is Go integer type.
 func IsInteger(typ *Type) bool {
 	switch typ.GoName {
 	case GoInt8, GoUInt8, GoInt16, GoUInt16, GoInt32, GoUInt32, GoInt64, GoUInt64:

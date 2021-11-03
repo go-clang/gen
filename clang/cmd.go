@@ -10,7 +10,7 @@ import (
 	"github.com/go-clang/gen"
 )
 
-// cmdFatal returns a command error
+// cmdFatal returns a command error.
 func cmdFatal(msg string, err error) error {
 	if err == nil {
 		return fmt.Errorf("FATAL %s", msg)
@@ -19,7 +19,7 @@ func cmdFatal(msg string, err error) error {
 	}
 }
 
-// Cmd executes a generic go-clang-generate command
+// Cmd executes a generic go-clang-generate command.
 func Cmd(llvmRoot string, api *gen.API) error {
 	llvmConfigPath := filepath.Join(llvmRoot, "bin", "llvm-config")
 	if err := fileExists(llvmConfigPath); err != nil {

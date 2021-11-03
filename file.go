@@ -8,7 +8,7 @@ import (
 	"golang.org/x/tools/imports"
 )
 
-// File represents a generation file
+// File represents a generation file.
 type File struct {
 	Name string
 

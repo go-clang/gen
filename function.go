@@ -7,7 +7,7 @@ import (
 	"github.com/go-clang/bootstrap/clang"
 )
 
-// Function represents a generation function
+// Function represents a generation function.
 type Function struct {
 	IncludeFiles includeFiles
 
@@ -23,7 +23,7 @@ type Function struct {
 	Member *FunctionParameter
 }
 
-// FunctionParameter represents a generation function parameter
+// FunctionParameter represents a generation function parameter.
 type FunctionParameter struct {
 	Name  string
 	CName string

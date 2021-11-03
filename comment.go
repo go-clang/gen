@@ -10,6 +10,7 @@ var (
 	reReplaceMultilines = regexp.MustCompile(`[ \t]*\n[ \t]*`)
 )
 
+// CleanDoxygenComment converts Clang Doxygen comment to Go comment.
 func CleanDoxygenComment(comment string) string {
 	// Remove C style comment
 	comment = strings.TrimPrefix(comment, "/**")

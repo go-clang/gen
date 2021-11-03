@@ -6,6 +6,7 @@ import (
 	"unicode"
 )
 
+// Generation represents a generation entrypoint.
 type Generation struct {
 	api *API
 
@@ -16,6 +17,7 @@ type Generation struct {
 	Lookup
 }
 
+// NewGeneration returns the new *Generation from a.
 func NewGeneration(a *API) *Generation {
 	gen := &Generation{
 		api: a,
@@ -26,6 +28,7 @@ func NewGeneration(a *API) *Generation {
 	return gen
 }
 
+// AddHeaderFiles adds headerFiles to generation.
 func (g *Generation) AddHeaderFiles(headerFiles []*HeaderFile) {
 	for _, h := range headerFiles {
 		for _, e := range h.Enums {
@@ -44,6 +47,7 @@ func (g *Generation) AddHeaderFiles(headerFiles []*HeaderFile) {
 	}
 }
 
+// Generate generates Clang bindings.
 func (g *Generation) Generate() error {
 	// Prepare all functions
 	clangFile := newFile("clang")

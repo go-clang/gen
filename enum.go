@@ -8,7 +8,7 @@ import (
 	"github.com/go-clang/bootstrap/clang"
 )
 
-// Enum represents a generation enum
+// Enum represents a generation enum.
 type Enum struct {
 	IncludeFiles includeFiles
 
@@ -24,7 +24,7 @@ type Enum struct {
 	Methods []interface{}
 }
 
-// EnumItem represents a generation enum item
+// EnumItem represents a generation enum item.
 type EnumItem struct {
 	Name    string
 	CName   string
@@ -102,6 +102,7 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 	return &e
 }
 
+// ContainsMethod reports whether the contains name to Enum.Methods.
 func (e *Enum) ContainsMethod(name string) bool {
 	for _, m := range e.Methods {
 		switch m := m.(type) {
