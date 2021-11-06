@@ -3,6 +3,8 @@ package gen
 import (
 	"bytes"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"text/template"
 
 	"golang.org/x/tools/imports"
@@ -97,9 +99,14 @@ func (f *File) generate() error {
 		return err
 	}
 
-	filename := f.Name + "_gen.go"
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	filename := filepath.Join(cwd, "clang", f.Name+"_gen.go")
 
 	bo := b.Bytes()
+	bo = bytes.ReplaceAll(bo, []byte(`#include "./clang/`), []byte(`#include "./`))
 	out, err := imports.Process(filename, bo, nil)
 	if err != nil {
 		// Write the file anyway so we can look at the problem
