@@ -73,6 +73,7 @@ func doField(name string, typ Type) *ast.Field {
 			},
 		}
 	}
+
 	if typ.GoName != "" {
 		f.Type = doGoType(typ)
 	}
@@ -172,11 +173,11 @@ func doStringLit(value string) *ast.BasicLit {
 	}
 }
 
-func getSliceType(typ Type) ast.Expr {
+func sliceType(typ Type) ast.Expr {
 	var sliceType ast.Expr
 
 	if typ.PointerLevel > 0 && typ.CGoName == CSChar {
-		sliceType = doCType("char")
+		sliceType = doCType(CChar)
 	} else {
 		sliceType = doCType(typ.CGoName)
 	}

@@ -17,10 +17,8 @@ type Function struct {
 
 	Parameters []FunctionParameter
 	ReturnType Type
-
-	Receiver Receiver
-
-	Member *FunctionParameter
+	Receiver   Receiver
+	Member     *FunctionParameter
 }
 
 // FunctionParameter represents a generation function parameter.
@@ -30,19 +28,18 @@ type FunctionParameter struct {
 	Type  Type
 }
 
-func newFunction(name, cname, comment, member string, typ Type) *Function {
+// NewFunction returns the initialized *Function.
+func NewFunction(name, cname, comment, member string, typ Type) *Function {
 	functionName := UpperFirstCharacter(name)
 	receiverType := TrimLanguagePrefix(cname)
-	receiverName := commonReceiverName(receiverType)
+	receiverName := CommonReceiverName(receiverType)
 
 	f := &Function{
-		Name:    functionName,
-		CName:   cname,
-		Comment: comment,
-
-		IncludeFiles: newIncludeFiles(),
-
-		Parameters: []FunctionParameter{ // TODO this might not be needed if the receiver code is refactored https://github.com/go-clang/gen/issues/52
+		IncludeFiles: NewIncludeFiles(),
+		Name:         functionName,
+		CName:        cname,
+		Comment:      comment,
+		Parameters: []FunctionParameter{ // TODO(go-clang): this might not be needed if the receiver code is refactored: https://github.com/go-clang/gen/issues/52
 			{
 				Name:  receiverName,
 				CName: cname,
@@ -51,7 +48,6 @@ func newFunction(name, cname, comment, member string, typ Type) *Function {
 				},
 			},
 		},
-
 		ReturnType: typ,
 		Receiver: Receiver{
 			Name: receiverName,
@@ -59,7 +55,6 @@ func newFunction(name, cname, comment, member string, typ Type) *Function {
 				GoName: receiverType,
 			},
 		},
-
 		Member: &FunctionParameter{
 			Name: member,
 			Type: typ,
@@ -69,16 +64,15 @@ func newFunction(name, cname, comment, member string, typ Type) *Function {
 	return f
 }
 
-func handleFunctionCursor(cursor clang.Cursor) *Function {
+// HandleFunctionCursor handles function cursor.
+func HandleFunctionCursor(cursor clang.Cursor) *Function {
 	fname := cursor.Spelling()
 	f := Function{
-		Name:    fname,
-		CName:   fname,
-		Comment: CleanDoxygenComment(cursor.RawCommentText()),
-
-		IncludeFiles: newIncludeFiles(),
-
-		Parameters: []FunctionParameter{},
+		IncludeFiles: NewIncludeFiles(),
+		Name:         fname,
+		CName:        fname,
+		Comment:      CleanDoxygenComment(cursor.RawCommentText()),
+		Parameters:   []FunctionParameter{},
 	}
 
 	typ, err := typeFromClangType(cursor.ResultType())
@@ -103,7 +97,7 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 
 		p.Name = p.CName
 		if p.Name == "" {
-			p.Name = commonReceiverName(p.Type.GoName)
+			p.Name = CommonReceiverName(p.Type.GoName)
 		} else {
 			pns := strings.Split(p.Name, "_")
 			for i := range pns {
@@ -121,13 +115,14 @@ func handleFunctionCursor(cursor clang.Cursor) *Function {
 	return &f
 }
 
-func (f *Function) generate() string {
-	fa := newASTFunc(f)
-	fa.generate()
+// Generate generates the function.
+func (f *Function) Generate() string {
+	fa := NewASTFunc(f)
+	fa.Generate()
 
-	fStr := generateFunctionString(fa)
+	fStr := GenerateFunctionString(fa)
 
-	// TODO find out how to position the comment correctly and do this using the AST https://github.com/go-clang/gen/issues/54
+	// TODO(go-clang): find out how to position the comment correctly and do this using the AST: https://github.com/go-clang/gen/issues/54
 	if f.Comment != "" {
 		fStr = f.Comment + "\n" + fStr
 	}

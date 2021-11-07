@@ -1,8 +1,9 @@
 package gen
 
 import (
+	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -24,65 +25,72 @@ type HeaderFile struct {
 	Structs   []*Struct
 }
 
-func newHeaderFile(a *API, name string, dir string) *HeaderFile {
+// NewHeaderFile returns the new initialized HeaderFile.
+func NewHeaderFile(a *API, name string, dir string) *HeaderFile {
 	return &HeaderFile{
-		api: a,
-
-		Path:     dir,
+		Lookup:   NewLookup(),
+		api:      a,
 		Filename: name,
-
-		Lookup: NewLookup(),
+		Path:     dir,
 	}
 }
 
-func (h *HeaderFile) prepareFile() error {
+var (
+	reFindStructs     = regexp.MustCompile(`(?s)struct[\s\w]+{.+?}`)
+	reFindVoidPointer = regexp.MustCompile(`(?:const\s+)?void\s*\*\s*(\w+(\[\d+\])?;)`)
+)
+
+// PrepareFile prepares header files name.
+func (h *HeaderFile) PrepareFile() error {
 	/*
 		Hide all "void *" fields of structs by replacing the type with "uintptr_t".
 
 		To paraphrase the original go-clang source code:
-			Not hiding these fields confuses the Go GC during garbage collection and
-			pointer scanning, making it think the heap/stack has been somehow corrupted.
+		Not hiding these fields confuses the Go GC during garbage collection and
+		pointer scanning, making it think the heap/stack has been somehow corrupted.
 
 		I do not know how the original author debugged this, but one thing: Thank you!
 	*/
-	findStructsRe := regexp.MustCompile(`(?s)struct[\s\w]+{.+?}`)
-	f, err := ioutil.ReadFile(h.FullPath())
+	f, err := os.ReadFile(h.FullPath())
 	if err != nil {
-		return fmt.Errorf("Cannot read Index.h: %v", err)
+		return fmt.Errorf("cannot read Index.h: %w", err)
 	}
+
 	voidPointerReplacements := map[string]string{}
-	findVoidPointerRe := regexp.MustCompile(`(?:const\s+)?void\s*\*\s*(\w+(\[\d+\])?;)`)
-	for _, s := range findStructsRe.FindAll(f, -1) {
-		s2 := findVoidPointerRe.ReplaceAll(s, []byte("uintptr_t $1"))
+	for _, s := range reFindStructs.FindAll(f, -1) {
+		s2 := reFindVoidPointer.ReplaceAll(s, []byte("uintptr_t $1"))
 		if len(s) != len(s2) {
 			voidPointerReplacements[string(s)] = string(s2)
 		}
 	}
+
 	fs := string(f)
 	for s, r := range voidPointerReplacements {
-		fs = strings.Replace(fs, s, r, -1)
+		fs = strings.ReplaceAll(fs, s, r)
 	}
+
 	if incl := "#include <stdint.h>"; !strings.HasPrefix(fs, incl) { // Include for uintptr_t
 		fs = "#include <stdint.h>\n\n" + fs
 	}
-	err = ioutil.WriteFile(h.FullPath(), []byte(fs), 0o600)
-	if err != nil {
-		return fmt.Errorf("Cannot write %s: %v", h.FullPath(), err)
+
+	if err = os.WriteFile(h.FullPath(), []byte(fs), 0o600); err != nil {
+		return fmt.Errorf("cannot write %s: %w", h.FullPath(), err)
 	}
 
 	return nil
 }
 
-func (h *HeaderFile) handleFile(cursor clang.Cursor) {
-	/*
-		TODO mark the enum https://github.com/go-clang/gen/issues/40
-			typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor, CXCursor parent, CXClientData client_data);
-		as manually implemented
-	*/
-	// TODO report other enums like callbacks that they are not implemented https://github.com/go-clang/gen/issues/51
+// HandleFile handles header file.
+func (h *HeaderFile) HandleFile(cursor clang.Cursor) {
+	// TODO(go-clang): mark the enum https://github.com/go-clang/gen/issues/40
+	//  	typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor, CXCursor parent, CXClientData client_data);
+	// as manually implemented
+
+	// TODO(go-clang): report other enums like callbacks that they are not implemented
+	// https://github.com/go-clang/gen/issues/51
 
 	cursor.Visit(func(cursor, parent clang.Cursor) clang.ChildVisitResult {
-		// Only handle code of the current file
+		// only handle code of the current file
 		sourceFile, _, _, _ := cursor.Location().FileLocation()
 		isCurrentFile := sourceFile.Name() == h.FullPath()
 
@@ -108,8 +116,8 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 				break
 			}
 
-			e := handleEnumCursor(cursor, cname, cnameIsTypeDef)
-			e.IncludeFiles.addIncludeFile(sourceFile.Name())
+			e := HandleEnumCursor(cursor, cname, cnameIsTypeDef)
+			e.IncludeFiles.AddIncludeFile(sourceFile.Name())
 
 			if _, ok := h.HasEnum(e.Name); !ok {
 				h.Enums = append(h.Enums, e)
@@ -120,33 +128,35 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 				return clang.ChildVisit_Continue
 			}
 
-			f := handleFunctionCursor(cursor)
+			f := HandleFunctionCursor(cursor)
 			if f != nil {
-				f.IncludeFiles.addIncludeFile(sourceFile.Name())
+				f.IncludeFiles.AddIncludeFile(sourceFile.Name())
 				h.Functions = append(h.Functions, f)
 			}
+
 		case clang.Cursor_StructDecl:
 			if cname == "" {
 				break
 			}
 
-			s := handleStructCursor(cursor, cname, cnameIsTypeDef)
+			s := HandleStructCursor(cursor, cname, cnameIsTypeDef)
 			s.api = h.api
-			s.IncludeFiles.addIncludeFile(sourceFile.Name())
+			s.IncludeFiles.AddIncludeFile(sourceFile.Name())
 
 			if _, ok := h.HasStruct(s.Name); !ok {
 				h.RegisterStruct(s)
 				h.Structs = append(h.Structs, s)
 			}
+
 		case clang.Cursor_TypedefDecl:
 			underlyingType := cursor.TypedefDeclUnderlyingType().Spelling()
 			underlyingStructType := strings.TrimSuffix(strings.TrimPrefix(underlyingType, "struct "), " *")
 
 			if s, ok := h.HasStruct(underlyingStructType); ok && !s.CNameIsTypeDef && strings.HasPrefix(underlyingType, "struct "+s.CName) {
-				// Sometimes the typedef is not a parent of the struct but a sibling
-				sn := handleStructCursor(cursor, cname, true)
+				// sometimes the typedef is not a parent of the struct but a sibling
+				sn := HandleStructCursor(cursor, cname, true)
 				sn.api = h.api
-				sn.IncludeFiles.addIncludeFile(sourceFile.Name())
+				sn.IncludeFiles.AddIncludeFile(sourceFile.Name())
 
 				if sn.Comment == "" {
 					sn.Comment = s.Comment
@@ -165,9 +175,9 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 					}
 				}
 			} else if underlyingType == "void *" {
-				s := handleStructCursor(cursor, cname, true)
+				s := HandleStructCursor(cursor, cname, true)
 				s.api = h.api
-				s.IncludeFiles.addIncludeFile(sourceFile.Name())
+				s.IncludeFiles.AddIncludeFile(sourceFile.Name())
 
 				if _, ok := h.HasStruct(s.Name); !ok {
 					h.RegisterStruct(s)
@@ -180,12 +190,13 @@ func (h *HeaderFile) handleFile(cursor clang.Cursor) {
 	})
 }
 
-func (h *HeaderFile) parse(clangArguments []string) error {
-	if err := h.prepareFile(); err != nil {
+// Parse parses header file with clangArguments.
+func (h *HeaderFile) Parse(clangArguments []string) error {
+	if err := h.PrepareFile(); err != nil {
 		return err
 	}
 
-	// Parse the header file to analyse everything we need to know
+	// parse the header file to analyse everything we need to know
 	idx := clang.NewIndex(0, 1)
 	defer idx.Dispose()
 
@@ -193,19 +204,20 @@ func (h *HeaderFile) parse(clangArguments []string) error {
 	defer tu.Dispose()
 
 	if !tu.IsValid() {
-		return fmt.Errorf("Cannot parse Index.h")
+		return errors.New("cannot parse Index.h")
 	}
 
 	for _, diag := range tu.Diagnostics() {
 		switch diag.Severity() {
 		case clang.Diagnostic_Error:
-			return fmt.Errorf("Diagnostic error in Index.h: %s", diag.Spelling())
+			return fmt.Errorf("diagnostic error in Index.h: %s", diag.Spelling())
+
 		case clang.Diagnostic_Fatal:
-			return fmt.Errorf("Diagnostic fatal in Index.h: %s", diag.Spelling())
+			return fmt.Errorf("diagnostic fatal in Index.h: %s", diag.Spelling())
 		}
 	}
 
-	h.handleFile(tu.TranslationUnitCursor())
+	h.HandleFile(tu.TranslationUnitCursor())
 
 	return nil
 }

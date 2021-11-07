@@ -33,17 +33,16 @@ type StructMember struct {
 	Type Type
 }
 
-func handleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
+// HandleStructCursor handles the struct cursor.
+func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Struct {
 	s := &Struct{
+		IncludeFiles:   NewIncludeFiles(),
+		Name:           TrimLanguagePrefix(cname),
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
 		Comment:        CleanDoxygenComment(cursor.RawCommentText()),
-
-		IncludeFiles: newIncludeFiles(),
 	}
-
-	s.Name = TrimLanguagePrefix(s.CName)
-	s.Receiver.Name = commonReceiverName(s.Name)
+	s.Receiver.Name = CommonReceiverName(s.Name)
 
 	cursor.Visit(func(cursor, _ clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {
@@ -79,6 +78,7 @@ func (s *Struct) ContainsMethod(name string) bool {
 			if m.Name == name {
 				return true
 			}
+
 		case string:
 			if strings.Contains(m, ") "+name+"()") {
 				return true
@@ -89,14 +89,16 @@ func (s *Struct) ContainsMethod(name string) bool {
 	return false
 }
 
-func (s *Struct) generate() error {
-	f := newFile(strings.ToLower(s.Name))
+// Generate struct gereration.
+func (s *Struct) Generate() error {
+	f := NewFile(strings.ToLower(s.Name))
 	f.Structs = append(f.Structs, s)
 
-	return f.generate()
+	return f.Generate()
 }
 
-func (s *Struct) addMemberGetters() error {
+// AddMemberGetters adds member getters to s.
+func (s *Struct) AddMemberGetters() error {
 	if s.api.PrepareStructMembers != nil {
 		s.api.PrepareStructMembers(s)
 	}
@@ -111,11 +113,11 @@ func (s *Struct) addMemberGetters() error {
 			continue
 		}
 
-		if m.Type.IsArray { // TODO generate arrays with the correct size and type https://github.com/go-clang/gen/issues/48
+		if m.Type.IsArray { // TODO(go-clang): generate arrays with the correct size and type https://github.com/go-clang/gen/issues/48
 			continue
 		}
 
-		f := newFunction(m.CName, s.CName, m.Comment, m.CName, m.Type)
+		f := NewFunction(m.CName, s.CName, m.Comment, m.CName, m.Type)
 
 		if !s.ContainsMethod(f.Name) {
 			s.Methods = append(s.Methods, f)

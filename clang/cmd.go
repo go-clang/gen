@@ -100,7 +100,7 @@ func Cmd(llvmRoot string, api *gen.API) error {
 	for _, f := range oldGenFiles {
 		fname := f.Name()
 		if !f.IsDir() && strings.HasSuffix(fname, "_gen.go") {
-			if err := os.Remove(fname); err != nil {
+			if err := os.Remove(fname); err != nil && !os.IsNotExist(err) {
 				return fmt.Errorf("cannot remove %q generated file: %w", fname, err)
 			}
 		}

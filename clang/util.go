@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -198,7 +197,7 @@ func copyTree(src, dst string) error {
 		return fmt.Errorf("%q already exists", dst)
 	}
 
-	entries, err := ioutil.ReadDir(src)
+	entries, err := os.ReadDir(src)
 	if err != nil {
 		return err
 	}
@@ -224,6 +223,9 @@ func copyTree(src, dst string) error {
 			}
 			// ignore dangling symlink if flag is on
 			_, err = os.Stat(linkTo)
+			if err != nil {
+				return err
+			}
 			_, err = copyFunc(srcPath, dstPath)
 			if err != nil {
 				return err

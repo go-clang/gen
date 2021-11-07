@@ -45,20 +45,43 @@ const (
 
 // Type represents a generation type.
 type Type struct {
-	CName   string
+	// CName C Type name
+	CName string
+
+	// CGoName Cgo Type name
 	CGoName string
-	GoName  string
 
-	PointerLevel      int
-	IsPrimitive       bool
-	IsArray           bool
-	ArraySize         int64
-	IsEnumLiteral     bool
+	// GoName Go Type name
+	GoName string
+
+	// PointerLevel level of pointer
+	PointerLevel int
+
+	// IsPrimitive whether the this Type is primitive
+	IsPrimitive bool
+
+	// IsArray whether the this Type is array
+	IsArray bool
+
+	// ArraySize size of array
+	ArraySize int64
+
+	// IsEnumLiteral whether the this Type is enum literal
+	IsEnumLiteral bool
+
+	// IsFunctionPointer whether the this Type is function pointer
 	IsFunctionPointer bool
-	IsReturnArgument  bool
-	IsSlice           bool
-	LengthOfSlice     string
 
+	// IsReturnArgument whether the this Type is return argument
+	IsReturnArgument bool
+
+	// IsSlice whether the this Type is slice
+	IsSlice bool
+
+	// LengthOfSlice length of slice
+	LengthOfSlice string
+
+	// IsPointerComposition whether the this Type is pointer composition
 	IsPointerComposition bool
 }
 
@@ -78,45 +101,59 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 	case clang.Type_Char_S:
 		typ.CGoName = CSChar
 		typ.GoName = GoInt8
+
 	case clang.Type_Char_U:
 		typ.CGoName = CUChar
 		typ.GoName = GoUInt8
+
 	case clang.Type_Int:
 		typ.CGoName = CInt
 		typ.GoName = GoInt32
+
 	case clang.Type_Short:
 		typ.CGoName = CShort
 		typ.GoName = GoInt16
+
 	case clang.Type_UShort:
 		typ.CGoName = CUShort
 		typ.GoName = GoUInt16
+
 	case clang.Type_UInt:
 		typ.CGoName = CUInt
 		typ.GoName = GoUInt32
+
 	case clang.Type_Long:
 		typ.CGoName = CLongInt
 		typ.GoName = GoInt64
+
 	case clang.Type_ULong:
 		typ.CGoName = CULongInt
 		typ.GoName = GoUInt64
+
 	case clang.Type_LongLong:
 		typ.CGoName = CLongLong
 		typ.GoName = GoInt64
+
 	case clang.Type_ULongLong:
 		typ.CGoName = CULongLong
 		typ.GoName = GoUInt64
+
 	case clang.Type_Float:
 		typ.CGoName = CFloat
 		typ.GoName = GoFloat32
+
 	case clang.Type_Double:
 		typ.CGoName = CDouble
 		typ.GoName = GoFloat64
+
 	case clang.Type_Bool:
 		typ.GoName = GoBool
+
 	case clang.Type_Void:
-		// TODO Does not exist in Go, what should we do with it? https://github.com/go-clang/gen/issues/50
+		// TODO(go-clang): does not exist in Go, what should we do with it? https://github.com/go-clang/gen/issues/50
 		typ.CGoName = "void"
 		typ.GoName = "void"
+
 	case clang.Type_ConstantArray:
 		subTyp, err := typeFromClangType(cType.ArrayElementType())
 		if err != nil {
@@ -128,18 +165,21 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 		typ.PointerLevel += subTyp.PointerLevel
 		typ.IsArray = true
 		typ.ArraySize = cType.ArraySize()
+
 	case clang.Type_Typedef:
 		typ.IsPrimitive = false
 
 		typeStr := cType.Spelling()
-		if typeStr == "CXString" { // TODO eliminate CXString from the generic code https://github.com/go-clang/gen/issues/25
+		switch typeStr {
+		case "CXString": // TODO(go-clang): eliminate CXString from the generic code https://github.com/go-clang/gen/issues/25
 			typeStr = "cxstring"
-		} else if typeStr == "time_t" {
+
+		case "time_t":
 			typ.CGoName = typeStr
 			typeStr = "time.Time"
-
 			typ.IsPrimitive = true
-		} else {
+
+		default:
 			typeStr = TrimLanguagePrefix(cType.Declaration().Type().Spelling())
 		}
 
@@ -150,6 +190,7 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 			typ.IsEnumLiteral = true
 			typ.IsPrimitive = true
 		}
+
 	case clang.Type_Pointer:
 		typ.PointerLevel++
 
@@ -166,21 +207,26 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 		typ.GoName = subTyp.GoName
 		typ.PointerLevel += subTyp.PointerLevel
 		typ.IsPrimitive = subTyp.IsPrimitive
+
 	case clang.Type_Record:
 		typ.CGoName = cType.Declaration().Type().Spelling()
 		typ.GoName = TrimLanguagePrefix(typ.CGoName)
 		typ.IsPrimitive = false
+
 	case clang.Type_FunctionProto:
 		typ.IsFunctionPointer = true
 		typ.CGoName = cType.Declaration().Type().Spelling()
 		typ.GoName = TrimLanguagePrefix(typ.CGoName)
+
 	case clang.Type_Enum:
 		typ.GoName = TrimLanguagePrefix(cType.Declaration().DisplayName())
 		typ.IsEnumLiteral = true
 		typ.IsPrimitive = true
+
 	case clang.Type_Elaborated:
 		return typeFromClangType(cType.CanonicalType())
-	case clang.Type_Unexposed: // There is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013 https://llvm.org/bugs/show_bug.cgi?id=15089
+
+	case clang.Type_Unexposed: // there is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013 https://llvm.org/bugs/show_bug.cgi?id=15089
 		subTyp, err := typeFromClangType(cType.CanonicalType())
 		if err != nil {
 			return Type{}, err
@@ -190,6 +236,7 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 		typ.GoName = subTyp.GoName
 		typ.PointerLevel += subTyp.PointerLevel
 		typ.IsPrimitive = subTyp.IsPrimitive
+
 	default:
 		return Type{}, fmt.Errorf("unhandled type %q of kind %q", cType.Spelling(), cType.Kind().Spelling())
 	}

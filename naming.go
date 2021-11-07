@@ -87,7 +87,8 @@ func TrimLanguagePrefix(name string) string {
 	return name
 }
 
-func commonReceiverName(s string) string {
+// CommonReceiverName returns the common function reciever name.
+func CommonReceiverName(s string) string {
 	var n []rune
 
 	for _, c := range s {

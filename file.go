@@ -2,7 +2,6 @@ package gen
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -21,12 +20,12 @@ type File struct {
 	Structs   []*Struct
 }
 
-// newFile creates a new blank file
-func newFile(name string) *File {
+// NewFile creates a new blank file.
+func NewFile(name string) *File {
 	return &File{
 		Name: name,
 
-		IncludeFiles: newIncludeFiles(),
+		IncludeFiles: NewIncludeFiles(),
 	}
 }
 
@@ -66,7 +65,7 @@ type {{$s.Name}} struct {
 {{end}}
 `))
 
-func (f *File) generate() error {
+func (f *File) Generate() error {
 	for _, e := range f.Enums {
 		f.IncludeFiles.unifyIncludeFiles(e.IncludeFiles)
 
@@ -77,6 +76,7 @@ func (f *File) generate() error {
 			}
 		}
 	}
+
 	for _, s := range f.Structs {
 		f.IncludeFiles.unifyIncludeFiles(s.IncludeFiles)
 
@@ -87,6 +87,7 @@ func (f *File) generate() error {
 			}
 		}
 	}
+
 	for _, fu := range f.Functions {
 		switch fu := fu.(type) {
 		case *Function:
@@ -110,12 +111,12 @@ func (f *File) generate() error {
 	out, err := imports.Process(filename, bo, nil)
 	if err != nil {
 		// Write the file anyway so we can look at the problem
-		if err := ioutil.WriteFile(filename, bo, 0o600); err != nil {
+		if err := os.WriteFile(filename, bo, 0o600); err != nil {
 			return err
 		}
 
 		return err
 	}
 
-	return ioutil.WriteFile(filename, out, 0o600)
+	return os.WriteFile(filename, out, 0o600)
 }

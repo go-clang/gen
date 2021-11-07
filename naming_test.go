@@ -5,33 +5,47 @@ import (
 )
 
 func TestUpperFirstCharacter(t *testing.T) {
-	for _, tc := range []struct {
-		Data   string
-		Expect string
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		data   string
+		expect string
 	}{
 		{
-			Data:   "a",
-			Expect: "A",
+			name:   "lowerToUpperOneChar",
+			data:   "a",
+			expect: "A",
 		},
 		{
-			Data:   "A",
-			Expect: "A",
+			name:   "UpperToUpperOneChar",
+			data:   "A",
+			expect: "A",
 		},
 		{
-			Data:   "abc",
-			Expect: "Abc",
+			name:   "lowerCaseToUpperCase",
+			data:   "abc",
+			expect: "Abc",
 		},
 		{
-			Data:   "Abc",
-			Expect: "Abc",
+			name:   "UpperCaseToUpperCase",
+			data:   "Abc",
+			expect: "Abc",
 		},
 		{
-			Data:   "ABC",
-			Expect: "ABC",
+			name:   "UpperToUpper",
+			data:   "ABC",
+			expect: "ABC",
 		},
-	} {
-		if tc.Expect != UpperFirstCharacter(tc.Data) {
-			t.Fatalf("got %s but want %s", UpperFirstCharacter(tc.Data), tc.Expect)
-		}
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := UpperFirstCharacter(tt.data), tt.expect; got != want {
+				t.Fatalf("got %s but want %s", got, want)
+			}
+		})
 	}
 }

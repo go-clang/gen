@@ -2,11 +2,11 @@ package gen
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 )
 
-// API represents a api of generate Clang binding.
+// API represents a Clang bindings generation.
 type API struct {
 	// ClangArguments holds the command line arguments for Clang
 	ClangArguments []string
@@ -35,22 +35,21 @@ type API struct {
 
 // HandleDirectory handles header files on dir and returns the *HeaderFile slice.
 func (a *API) HandleDirectory(dir string) ([]*HeaderFile, error) {
-	headers, err := ioutil.ReadDir(dir)
+	headers, err := os.ReadDir(dir)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot list clang-c directory: %v", err)
+		return nil, fmt.Errorf("cannot read clang-c directory: %w", err)
 	}
 
-	var headerFiles []*HeaderFile
-
+	headerFiles := make([]*HeaderFile, 0, len(headers))
 	for _, hf := range headers {
 		if hf.IsDir() || !strings.HasSuffix(hf.Name(), ".h") {
 			continue
 		}
 
-		h := newHeaderFile(a, hf.Name(), dir)
+		h := NewHeaderFile(a, hf.Name(), dir)
 
-		if err := h.parse(a.ClangArguments); err != nil {
-			return nil, fmt.Errorf("Cannot handle header file %q: %v", h.FullPath(), err)
+		if err := h.Parse(a.ClangArguments); err != nil {
+			return nil, fmt.Errorf("cannot handle header file %q: %w", h.FullPath(), err)
 		}
 
 		headerFiles = append(headerFiles, h)

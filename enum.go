@@ -32,20 +32,17 @@ type EnumItem struct {
 	Value   uint64
 }
 
-func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Enum {
+// HandleEnumCursor handles enum clang.Cursor and roterns the new *Enum.
+func HandleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *Enum {
 	e := Enum{
+		IncludeFiles:   NewIncludeFiles(),
+		Name:           TrimLanguagePrefix(cname),
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
 		Comment:        CleanDoxygenComment(cursor.RawCommentText()),
-
-		IncludeFiles: newIncludeFiles(),
-
-		Items: []EnumItem{},
+		Items:          []EnumItem{},
 	}
-
-	e.Name = TrimLanguagePrefix(e.CName)
-
-	e.Receiver.Name = commonReceiverName(e.Name)
+	e.Receiver.Name = CommonReceiverName(e.Name)
 	e.Receiver.Type.GoName = e.Name
 	e.Receiver.Type.CGoName = e.CName
 	if cnameIsTypeDef {
@@ -62,13 +59,14 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 		switch cursor.Kind() {
 		case clang.Cursor_EnumConstantDecl:
 			ei := EnumItem{
-				CName:   cursor.Spelling(),
-				Comment: CleanDoxygenComment(cursor.RawCommentText()), // TODO We are always using the same comment if there is none, see "TypeKind" https://github.com/go-clang/gen/issues/58
+				CName: cursor.Spelling(),
+				// TODO(go-clang): we are always using the same comment if there is none, see "TypeKind" https://github.com/go-clang/gen/issues/58
+				Comment: CleanDoxygenComment(cursor.RawCommentText()),
 				Value:   cursor.EnumConstantDeclUnsignedValue(),
 			}
 			ei.Name = TrimLanguagePrefix(ei.CName)
 
-			// Check if the first item has an enum prefix
+			// check if the first item has an enum prefix
 			if len(e.Items) == 0 {
 				eis := strings.SplitN(ei.Name, "_", 2)
 				if len(eis) == 2 {
@@ -76,7 +74,7 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 				}
 			}
 
-			// Add the enum prefix to the item
+			// add the enum prefix to the item
 			if enumNamePrefix != "" {
 				ei.Name = strings.TrimSuffix(ei.Name, enumNamePrefix)
 
@@ -84,8 +82,8 @@ func handleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 					ei.Name = enumNamePrefix + "_" + ei.Name
 				}
 			}
-
 			e.Items = append(e.Items, ei)
+
 		default:
 			panic(fmt.Errorf("unexpected cursor.Kind: %#v", cursor.Kind()))
 		}
@@ -120,26 +118,30 @@ func (e *Enum) ContainsMethod(name string) bool {
 	return false
 }
 
-func (e *Enum) generate() error {
-	f := newFile(strings.ToLower(e.Name))
+// Generate generates enum.
+func (e *Enum) Generate() error {
+	f := NewFile(strings.ToLower(e.Name))
 	f.Enums = append(f.Enums, e)
 
-	return f.generate()
+	return f.Generate()
 }
 
-func (e *Enum) addEnumStringMethods() error {
+// AddEnumStringMethods adds Enum String methods to e.
+func (e *Enum) AddEnumStringMethods() error {
 	if !e.ContainsMethod("Spelling") {
-		if err := e.addEnumSpellingMethod(); err != nil {
+		if err := e.AddEnumSpellingMethod(); err != nil {
 			return err
 		}
 	}
+
 	if !e.ContainsMethod("String") {
-		if err := e.addSpellingMethodAlias("String"); err != nil {
+		if err := e.AddSpellingMethodAlias("String"); err != nil {
 			return err
 		}
 	}
+
 	if strings.HasSuffix(e.Name, "Error") && !e.ContainsMethod("Error") {
-		if err := e.addSpellingMethodAlias("Error"); err != nil {
+		if err := e.AddSpellingMethodAlias("Error"); err != nil {
 			return err
 		}
 	}
@@ -147,13 +149,14 @@ func (e *Enum) addEnumStringMethods() error {
 	return nil
 }
 
-func (e *Enum) addEnumSpellingMethod() error {
-	f := newFunction("Spelling", e.Name, "", "", Type{GoName: "string"})
-	fa := newASTFunc(f)
+// AddEnumSpellingMethod adds Enum spelling method to e.
+func (e *Enum) AddEnumSpellingMethod() error {
+	f := NewFunction("Spelling", e.Name, "", "", Type{GoName: "string"})
+	fa := NewASTFunc(f)
 
-	fa.generateReceiver()
+	fa.GenerateReceiver()
 
-	fa.addReturnType("", Type{
+	fa.AddReturnType("", Type{
 		GoName: "string",
 	})
 
@@ -195,43 +198,44 @@ func (e *Enum) addEnumSpellingMethod() error {
 		}
 	}
 
-	fa.addReturnItem(doCall(
+	fa.AddReturnItem(doCall(
 		"fmt",
 		"Sprintf",
 		doStringLit(f.Receiver.Type.GoName+" unkown %d"),
 		doCast("int", &ast.Ident{Name: f.Receiver.Name}),
 	))
 
-	fa.addEmptyLine()
-	fa.addStatement(fa.ret)
+	fa.AddEmptyLine()
+	fa.AddStatement(fa.ret)
 
-	e.Methods = append(e.Methods, generateFunctionString(fa))
+	e.Methods = append(e.Methods, GenerateFunctionString(fa))
 
 	return nil
 }
 
-func (e *Enum) addSpellingMethodAlias(name string) error {
+// AddSpellingMethodAlias adds spelling method alias to e.
+func (e *Enum) AddSpellingMethodAlias(name string) error {
 	returnType := Type{
 		GoName: "string",
 	}
 
-	f := newFunction(name, e.Name, "", "", returnType)
-	fa := newASTFunc(f)
+	f := NewFunction(name, e.Name, "", "", returnType)
+	fa := NewASTFunc(f)
 
-	fa.generateReceiver()
+	fa.GenerateReceiver()
 
-	fa.addReturnType("", Type{
+	fa.AddReturnType("", Type{
 		GoName: "string",
 	})
 
-	fa.addReturnItem(doCall(
+	fa.AddReturnItem(doCall(
 		e.Receiver.Name,
 		"Spelling",
 	))
 
-	fa.addStatement(fa.ret)
+	fa.AddStatement(fa.ret)
 
-	e.Methods = append(e.Methods, generateFunctionString(fa))
+	e.Methods = append(e.Methods, GenerateFunctionString(fa))
 
 	return nil
 }
