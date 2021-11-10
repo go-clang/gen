@@ -2,7 +2,6 @@ package clang
 
 // #include "go-clang.h"
 import "C"
-
 import (
 	"sync"
 	"unsafe"
