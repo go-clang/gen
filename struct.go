@@ -88,7 +88,7 @@ func (s *Struct) ContainsMethod(name string) bool {
 	return false
 }
 
-// Generate generats the estruct.
+// Generate generates the struct.
 func (s *Struct) Generate() error {
 	f := NewFile(strings.ToLower(s.Name))
 	f.Structs = append(f.Structs, s)
@@ -96,7 +96,7 @@ func (s *Struct) Generate() error {
 	return f.Generate()
 }
 
-// AddFieldGetters adds member getters to s.
+// AddFieldGetters adds field getters to s.
 func (s *Struct) AddFieldGetters() error {
 	if s.api.PrepareStructFields != nil {
 		s.api.PrepareStructFields(s)
