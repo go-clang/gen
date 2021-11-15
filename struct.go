@@ -21,12 +21,12 @@ type Struct struct {
 
 	IsPointerComposition bool
 
-	Members []*StructMember
+	Fields []*StructField
 	Methods []interface{}
 }
 
-// StructMember member of Struct.
-type StructMember struct {
+// StructField member of Struct.
+type StructField struct {
 	CName   string
 	Comment string
 
@@ -56,7 +56,7 @@ func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 				return clang.ChildVisit_Continue
 			}
 
-			s.Members = append(s.Members, &StructMember{
+			s.Fields = append(s.Fields, &StructField{
 				CName:   cursor.DisplayName(),
 				Comment: CleanDoxygenComment(cursor.RawCommentText()),
 
@@ -97,15 +97,15 @@ func (s *Struct) Generate() error {
 	return f.Generate()
 }
 
-// AddMemberGetters adds member getters to s.
-func (s *Struct) AddMemberGetters() error {
-	if s.api.PrepareStructMembers != nil {
-		s.api.PrepareStructMembers(s)
+// AddFieldGetters adds member getters to s.
+func (s *Struct) AddFieldGetters() error {
+	if s.api.PrepareStructFields != nil {
+		s.api.PrepareStructFields(s)
 	}
 
 	// Generate the getters we can handle
-	for _, m := range s.Members {
-		if s.api.FilterStructMemberGetter != nil && !s.api.FilterStructMemberGetter(m) {
+	for _, m := range s.Fields {
+		if s.api.FilterStructFieldGetter != nil && !s.api.FilterStructFieldGetter(m) {
 			continue
 		}
 

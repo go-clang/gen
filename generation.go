@@ -219,7 +219,7 @@ func (g *Generation) Generate() error {
 	}
 
 	for _, s := range g.structs {
-		if err := s.AddMemberGetters(); err != nil {
+		if err := s.AddFieldGetters(); err != nil {
 			return fmt.Errorf("cannot generate struct member getters: %w", err)
 		}
 

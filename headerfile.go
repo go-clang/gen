@@ -161,7 +161,7 @@ func (h *HeaderFile) HandleFile(cursor clang.Cursor) {
 				if sn.Comment == "" {
 					sn.Comment = s.Comment
 				}
-				sn.Members = s.Members
+				sn.Fields = s.Fields
 				sn.Methods = s.Methods
 
 				h.RemoveStruct(s)

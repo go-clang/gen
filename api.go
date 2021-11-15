@@ -26,11 +26,11 @@ type API struct {
 	// FixedFunctionName returns an unempty string if a function needs to receive a specific name
 	FixedFunctionName func(f *Function) string
 
-	// PrepareStructMembers is called before adding struct member getters
-	PrepareStructMembers func(s *Struct)
+	// PrepareStructFields is called before adding struct field getters
+	PrepareStructFields func(s *Struct)
 
-	// FilterStructMemberGetter determines if a getter should be generated for a member
-	FilterStructMemberGetter func(m *StructMember) bool
+	// FilterStructFieldGetter determines if a getter should be generated for a field
+	FilterStructFieldGetter func(m *StructField) bool
 }
 
 // HandleDirectory handles header files on dir and returns the *HeaderFile slice.

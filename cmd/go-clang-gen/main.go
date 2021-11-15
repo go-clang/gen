@@ -25,13 +25,13 @@ func main() {
 	flag.Parse()
 
 	api := &gen.API{
-		PrepareFunctionName:      runtime.PrepareFunctionName,
-		PrepareFunction:          runtime.PrepareFunction,
-		FilterFunction:           runtime.FilterFunction,
-		FilterFunctionParameter:  runtime.FilterFunctionParameter,
-		FixedFunctionName:        runtime.FixedFunctionName,
-		PrepareStructMembers:     runtime.PrepareStructMembers,
-		FilterStructMemberGetter: runtime.FilterStructMemberGetter,
+		PrepareFunctionName:     runtime.PrepareFunctionName,
+		PrepareFunction:         runtime.PrepareFunction,
+		FilterFunction:          runtime.FilterFunction,
+		FilterFunctionParameter: runtime.FilterFunctionParameter,
+		FixedFunctionName:       runtime.FixedFunctionName,
+		PrepareStructFields:     runtime.PrepareStructMembers,
+		FilterStructFieldGetter: runtime.FilterStructMemberGetter,
 	}
 
 	if flagLLVMRoot == "" {

@@ -184,7 +184,7 @@ func FixedFunctionName(f *gen.Function) string {
 
 // PrepareStructMembers prepares struct member names.
 func PrepareStructMembers(s *gen.Struct) {
-	for _, m := range s.Members {
+	for _, m := range s.Fields {
 		if (strings.HasPrefix(m.CName, "has") || strings.HasPrefix(m.CName, "is")) && m.Type.GoName == gen.GoInt32 {
 			m.Type.GoName = gen.GoBool
 		}
@@ -193,7 +193,7 @@ func PrepareStructMembers(s *gen.Struct) {
 		maCName := gen.ArrayNameFromLength(m.CName)
 
 		if maCName != "" {
-			for _, ma := range s.Members {
+			for _, ma := range s.Fields {
 				if strings.ToLower(ma.CName) == strings.ToLower(maCName) {
 					m.Type.LengthOfSlice = ma.CName
 					ma.Type.IsSlice = true
@@ -214,33 +214,33 @@ func PrepareStructMembers(s *gen.Struct) {
 // prepareStructMembersArrayStruct checks if the struct has two member variables, one is an array and the other a plain
 // int/uint with size/length/count/len is its name because then this should be an array struct, and we connect them to handle a slice.
 func prepareStructMembersArrayStruct(s *gen.Struct) {
-	if len(s.Members) != 2 {
+	if len(s.Fields) != 2 {
 		return
 	}
 
-	if !arrayLengthCombination(&s.Members[0].Type, &s.Members[1].Type) && !arrayLengthCombination(&s.Members[1].Type, &s.Members[0].Type) {
+	if !arrayLengthCombination(&s.Fields[0].Type, &s.Fields[1].Type) && !arrayLengthCombination(&s.Fields[1].Type, &s.Fields[0].Type) {
 		return
 	}
 
 	// if one of the members is already marked as array/slice another heuristic has already covered both members.
 	switch {
-	case s.Members[0].Type.IsArray,
-		s.Members[1].Type.IsArray,
-		s.Members[0].Type.IsSlice,
-		s.Members[1].Type.IsSlice:
+	case s.Fields[0].Type.IsArray,
+		s.Fields[1].Type.IsArray,
+		s.Fields[0].Type.IsSlice,
+		s.Fields[1].Type.IsSlice:
 
 		return
 	}
 
-	var a *gen.StructMember
-	var c *gen.StructMember
+	var a *gen.StructField
+	var c *gen.StructField
 
-	if s.Members[0].Type.PointerLevel == 1 {
-		a = s.Members[0]
-		c = s.Members[1]
+	if s.Fields[0].Type.PointerLevel == 1 {
+		a = s.Fields[0]
+		c = s.Fields[1]
 	} else {
-		c = s.Members[0]
-		a = s.Members[1]
+		c = s.Fields[0]
+		a = s.Fields[1]
 	}
 
 	lengthName := strings.ToLower(c.CName)
@@ -265,7 +265,7 @@ func arrayLengthCombination(x *gen.Type, y *gen.Type) bool {
 }
 
 // FilterStructMemberGetter reports whether the m struct member filtered to a particular condition.
-func FilterStructMemberGetter(m *gen.StructMember) bool {
+func FilterStructMemberGetter(m *gen.StructField) bool {
 	// we do not want getters to *int_data members
 	return !strings.HasSuffix(m.CName, "int_data")
 }
