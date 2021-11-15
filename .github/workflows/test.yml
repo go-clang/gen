@@ -1,0 +1,37 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
+
+env:
+  LLVM_VERSION: 4
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GHCR_TOKEN }}
+
+    - name: Test in Docker
+      run: |
+        docker container run -t --mount type=bind,src=$PWD,dst=/go/src/github.com/go-clang/gen -w /go/src/github.com/go-clang/gen ghcr.io/go-clang/base:${LLVM_VERSION} make coverage
+
+    - uses: codecov/codecov-action@v2
+      with:
+        files: ./coverage.out
+        fail_ci_if_error: true
