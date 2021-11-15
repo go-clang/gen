@@ -59,17 +59,16 @@ func (af *ASTFunc) Generate() {
 	// TODO(go-clang): reenable this, see the comment at the bottom of the generate function
 	// for details https://github.com/go-clang/gen/issues/54
 	// Add function comment
-	/*
-		if f.Comment != "" {
-			fa.Doc = &ast.CommentGroup{
-				List: []*ast.Comment{
-					&ast.Comment{
-						Text: f.Comment,
-					},
-				},
-			}
-		}
-	*/
+	//
+	// if f.Comment != "" {
+	// 	fa.Doc = &ast.CommentGroup{
+	// 		List: []*ast.Comment{
+	// 			&ast.Comment{
+	// 				Text: f.Comment,
+	// 			},
+	// 		},
+	// 	}
+	// }
 	af.GenerateReceiver()
 
 	if af.f.Member != nil {

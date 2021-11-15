@@ -260,8 +260,8 @@ func (g *Generation) Generate() error {
 func (g *Generation) GenerateMethod(receiverName string, m interface{}) string {
 	switch m := m.(type) {
 	case *Function:
-		if g.api.FixedFunctionName != nil {
-			if fname := g.api.FixedFunctionName(m); fname != "" {
+		if g.api.FixFunctionName != nil {
+			if fname := g.api.FixFunctionName(m); fname != "" {
 				m.Name = fname
 			}
 		}

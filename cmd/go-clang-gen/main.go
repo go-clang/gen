@@ -29,9 +29,9 @@ func main() {
 		PrepareFunction:         runtime.PrepareFunction,
 		FilterFunction:          runtime.FilterFunction,
 		FilterFunctionParameter: runtime.FilterFunctionParameter,
-		FixedFunctionName:       runtime.FixedFunctionName,
-		PrepareStructFields:     runtime.PrepareStructMembers,
-		FilterStructFieldGetter: runtime.FilterStructMemberGetter,
+		FixFunctionName:         runtime.FixFunctionName,
+		PrepareStructFields:     runtime.PrepareStructFields,
+		FilterStructFieldGetter: runtime.FilterStructFieldGetter,
 	}
 
 	if flagLLVMRoot == "" {

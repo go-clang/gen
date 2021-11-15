@@ -20,8 +20,8 @@ type API struct {
 	// FilterFunctionParameter determines if a function parameter is generateable.
 	FilterFunctionParameter func(p FunctionParameter) bool
 
-	// FixedFunctionName returns an unempty string if a function needs to receive a specific name.
-	FixedFunctionName func(f *Function) string
+	// FixFunctionName returns an unempty string if a function needs to receive a specific name.
+	FixFunctionName func(f *Function) string
 
 	// PrepareStructFields is called before adding struct field getters.
 	PrepareStructFields func(s *Struct)

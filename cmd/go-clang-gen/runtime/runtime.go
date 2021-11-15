@@ -172,8 +172,8 @@ func FilterFunctionParameter(p gen.FunctionParameter) bool {
 	return true
 }
 
-// FixedFunctionName changes the function name under certain conditions.
-func FixedFunctionName(f *gen.Function) string {
+// FixFunctionName fixes the function name under certain conditions.
+func FixFunctionName(f *gen.Function) string {
 	// needs to be renamed manually since clang_getTranslationUnitCursor will conflict with clang_getCursor
 	if f.CName == "clang_getTranslationUnitCursor" {
 		return "TranslationUnitCursor"
@@ -182,8 +182,8 @@ func FixedFunctionName(f *gen.Function) string {
 	return ""
 }
 
-// PrepareStructMembers prepares struct member names.
-func PrepareStructMembers(s *gen.Struct) {
+// PrepareStructFields prepares struct fields names.
+func PrepareStructFields(s *gen.Struct) {
 	for _, m := range s.Fields {
 		if (strings.HasPrefix(m.CName, "has") || strings.HasPrefix(m.CName, "is")) && m.Type.GoName == gen.GoInt32 {
 			m.Type.GoName = gen.GoBool
@@ -208,12 +208,12 @@ func PrepareStructMembers(s *gen.Struct) {
 		}
 	}
 
-	prepareStructMembersArrayStruct(s)
+	prepareStructFieldsArrayStruct(s)
 }
 
-// prepareStructMembersArrayStruct checks if the struct has two member variables, one is an array and the other a plain
+// prepareStructFieldsArrayStruct checks if the struct has two member variables, one is an array and the other a plain
 // int/uint with size/length/count/len is its name because then this should be an array struct, and we connect them to handle a slice.
-func prepareStructMembersArrayStruct(s *gen.Struct) {
+func prepareStructFieldsArrayStruct(s *gen.Struct) {
 	if len(s.Fields) != 2 {
 		return
 	}
@@ -264,8 +264,8 @@ func arrayLengthCombination(x *gen.Type, y *gen.Type) bool {
 		!gen.IsInteger(x) && gen.IsInteger(y)
 }
 
-// FilterStructMemberGetter reports whether the m struct member filtered to a particular condition.
-func FilterStructMemberGetter(m *gen.StructField) bool {
+// FilterStructFieldGetter reports whether the m struct member filtered to a particular condition.
+func FilterStructFieldGetter(m *gen.StructField) bool {
 	// we do not want getters to *int_data members
 	return !strings.HasSuffix(m.CName, "int_data")
 }
