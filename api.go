@@ -8,9 +8,6 @@ import (
 
 // API represents a Clang bindings generation.
 type API struct {
-	// ClangArguments holds the command line arguments for Clang
-	ClangArguments []string
-
 	// PrepareFunctionName returns a prepared function name for further processing
 	PrepareFunctionName func(g *Generation, f *Function) string
 
@@ -31,6 +28,9 @@ type API struct {
 
 	// FilterStructFieldGetter determines if a getter should be generated for a field
 	FilterStructFieldGetter func(m *StructField) bool
+
+	// ClangArguments holds the command line arguments for Clang
+	ClangArguments []string
 }
 
 // HandleDirectory handles header files on dir and returns the *HeaderFile slice.

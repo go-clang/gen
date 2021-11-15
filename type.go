@@ -54,6 +54,12 @@ type Type struct {
 	// GoName Go Type name
 	GoName string
 
+	// LengthOfSlice length of slice
+	LengthOfSlice string
+
+	// ArraySize size of array
+	ArraySize int64
+
 	// PointerLevel level of pointer
 	PointerLevel int
 
@@ -62,9 +68,6 @@ type Type struct {
 
 	// IsArray whether the this Type is array
 	IsArray bool
-
-	// ArraySize size of array
-	ArraySize int64
 
 	// IsEnumLiteral whether the this Type is enum literal
 	IsEnumLiteral bool
@@ -77,9 +80,6 @@ type Type struct {
 
 	// IsSlice whether the this Type is slice
 	IsSlice bool
-
-	// LengthOfSlice length of slice
-	LengthOfSlice string
 
 	// IsPointerComposition whether the this Type is pointer composition
 	IsPointerComposition bool
