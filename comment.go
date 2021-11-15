@@ -54,7 +54,7 @@ func CleanDoxygenComment(comment string) string {
 		comment = reReplaceMultilines.ReplaceAllString(comment, "\n\t")
 
 		return "/*\n\t" + comment + "\n*/"
-	} else {
-		return "// " + comment
 	}
+
+	return "// " + comment
 }

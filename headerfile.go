@@ -42,15 +42,13 @@ var (
 
 // PrepareFile prepares header files name.
 func (h *HeaderFile) PrepareFile() error {
-	/*
-		Hide all "void *" fields of structs by replacing the type with "uintptr_t".
-
-		To paraphrase the original go-clang source code:
-		Not hiding these fields confuses the Go GC during garbage collection and
-		pointer scanning, making it think the heap/stack has been somehow corrupted.
-
-		I do not know how the original author debugged this, but one thing: Thank you!
-	*/
+	// Hide all "void *" fields of structs by replacing the type with "uintptr_t".
+	//
+	// To paraphrase the original go-clang source code:
+	// Not hiding these fields confuses the Go GC during garbage collection and
+	// pointer scanning, making it think the heap/stack has been somehow corrupted.
+	//
+	// I do not know how the original author debugged this, but one thing: Thank you!
 	f, err := os.ReadFile(h.FullPath())
 	if err != nil {
 		return fmt.Errorf("cannot read Index.h: %w", err)
@@ -83,7 +81,7 @@ func (h *HeaderFile) PrepareFile() error {
 // HandleFile handles header file.
 func (h *HeaderFile) HandleFile(cursor clang.Cursor) {
 	// TODO(go-clang): mark the enum https://github.com/go-clang/gen/issues/40
-	//  	typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor, CXCursor parent, CXClientData client_data);
+	//  typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor, CXCursor parent, CXClientData client_data);
 	// as manually implemented
 
 	// TODO(go-clang): report other enums like callbacks that they are not implemented

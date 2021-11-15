@@ -8,21 +8,20 @@ import (
 
 // Generation represents a generation entrypoint.
 type Generation struct {
+	Lookup
+
 	api *API
 
 	enums     []*Enum
 	functions []*Function
 	structs   []*Struct
-
-	Lookup
 }
 
 // NewGeneration returns the new *Generation from a.
 func NewGeneration(a *API) *Generation {
 	gen := &Generation{
-		api: a,
-
 		Lookup: NewLookup(),
+		api:    a,
 	}
 
 	return gen

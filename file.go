@@ -13,7 +13,7 @@ import (
 type File struct {
 	Name string
 
-	IncludeFiles includeFiles
+	IncludeFiles IncludeFiles
 
 	Functions []interface{}
 	Enums     []*Enum
@@ -23,8 +23,7 @@ type File struct {
 // NewFile creates a new blank file.
 func NewFile(name string) *File {
 	return &File{
-		Name: name,
-
+		Name:         name,
 		IncludeFiles: NewIncludeFiles(),
 	}
 }
@@ -65,6 +64,7 @@ type {{$s.Name}} struct {
 {{end}}
 `))
 
+// Generate generates file.
 func (f *File) Generate() error {
 	for _, e := range f.Enums {
 		f.IncludeFiles.unifyIncludeFiles(e.IncludeFiles)

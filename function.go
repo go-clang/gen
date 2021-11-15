@@ -9,7 +9,7 @@ import (
 
 // Function represents a generation function.
 type Function struct {
-	IncludeFiles includeFiles
+	IncludeFiles IncludeFiles
 
 	Name    string
 	CName   string
@@ -72,16 +72,16 @@ func HandleFunctionCursor(cursor clang.Cursor) *Function {
 		Name:         fname,
 		CName:        fname,
 		Comment:      CleanDoxygenComment(cursor.RawCommentText()),
-		Parameters:   []FunctionParameter{},
 	}
 
-	typ, err := typeFromClangType(cursor.ResultType())
+	typ, err := TypeFromClangType(cursor.ResultType())
 	if err != nil {
 		panic(fmt.Errorf("unexpected cursor.ResultType: %#v: %w", cursor.ResultType(), err))
 	}
 	f.ReturnType = typ
 
 	numParam := int(cursor.NumArguments())
+	f.Parameters = make([]FunctionParameter, 0, numParam)
 	for i := 0; i < numParam; i++ {
 		param := cursor.Argument(uint32(i))
 
@@ -89,7 +89,7 @@ func HandleFunctionCursor(cursor clang.Cursor) *Function {
 			CName: param.DisplayName(),
 		}
 
-		typ, err := typeFromClangType(param.Type())
+		typ, err := TypeFromClangType(param.Type())
 		if err != nil {
 			panic(fmt.Errorf("unexpected error: %w, param.Type(): %#v", err, param.Type()))
 		}

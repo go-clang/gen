@@ -85,10 +85,10 @@ type Type struct {
 	IsPointerComposition bool
 }
 
-func typeFromClangType(cType clang.Type) (Type, error) {
+// TypeFromClangType returns the Type from Clang type.
+func TypeFromClangType(cType clang.Type) (Type, error) {
 	typ := Type{
-		CName: cType.Spelling(),
-
+		CName:             cType.Spelling(),
 		PointerLevel:      0,
 		IsPrimitive:       true,
 		IsArray:           false,
@@ -155,7 +155,7 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 		typ.GoName = "void"
 
 	case clang.Type_ConstantArray:
-		subTyp, err := typeFromClangType(cType.ArrayElementType())
+		subTyp, err := TypeFromClangType(cType.ArrayElementType())
 		if err != nil {
 			return Type{}, err
 		}
@@ -198,7 +198,7 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 			typ.IsFunctionPointer = true
 		}
 
-		subTyp, err := typeFromClangType(cType.PointeeType())
+		subTyp, err := TypeFromClangType(cType.PointeeType())
 		if err != nil {
 			return Type{}, err
 		}
@@ -224,10 +224,10 @@ func typeFromClangType(cType clang.Type) (Type, error) {
 		typ.IsPrimitive = true
 
 	case clang.Type_Elaborated:
-		return typeFromClangType(cType.CanonicalType())
+		return TypeFromClangType(cType.CanonicalType())
 
 	case clang.Type_Unexposed: // there is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013 https://llvm.org/bugs/show_bug.cgi?id=15089
-		subTyp, err := typeFromClangType(cType.CanonicalType())
+		subTyp, err := TypeFromClangType(cType.CanonicalType())
 		if err != nil {
 			return Type{}, err
 		}

@@ -10,7 +10,7 @@ import (
 
 // Enum represents a generation enum.
 type Enum struct {
-	IncludeFiles includeFiles
+	IncludeFiles IncludeFiles
 
 	Name           string
 	CName          string
@@ -45,6 +45,7 @@ func HandleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 	e.Receiver.Name = CommonReceiverName(e.Name)
 	e.Receiver.Type.GoName = e.Name
 	e.Receiver.Type.CGoName = e.CName
+
 	if cnameIsTypeDef {
 		e.Receiver.Type.CGoName = e.CName
 	} else {
@@ -166,26 +167,20 @@ func (e *Enum) AddEnumSpellingMethod() error {
 	m := make(map[uint64]*ast.CaseClause)
 
 	for _, enumerator := range e.Items {
-		/* 	EnumItems might have the same value:
-		 	e.g.,
-		 	enum Example {
-				aValue = 1
-				bValue = aValue
-			}
-
-			Translating each EnumItem in its own case would result in a compliation error
-			(https://code.google.com/p/go/issues/detail?id=4524).
-			Thus, all EnumItems with the same value need to be pooled.
-		*/
+		// 	EnumItems might have the same value, e.g.:
+		//   enum Example {
+		//   	aValue = 1
+		//   	bValue = aValue
+		//   }
+		//  Translating each EnumItem in its own case would result in a compliation error (https://golang.org/issues/4524).
+		//  Thus, all EnumItems with the same value need to be pooled.
 		if caseClause, ok := m[enumerator.Value]; !ok {
 			c := []ast.Expr{&ast.Ident{Name: enumerator.Name}}
-
 			ret := &ast.ReturnStmt{
 				Results: []ast.Expr{
 					doStringLit(strings.Replace(enumerator.Name, "_", "=", 1)),
 				},
 			}
-
 			b := []ast.Stmt{ret}
 
 			caseClause = doCaseClause(c, b)
@@ -224,14 +219,18 @@ func (e *Enum) AddSpellingMethodAlias(name string) error {
 
 	fa.GenerateReceiver()
 
-	fa.AddReturnType("", Type{
-		GoName: "string",
-	})
+	fa.AddReturnType("",
+		Type{
+			GoName: "string",
+		},
+	)
 
-	fa.AddReturnItem(doCall(
-		e.Receiver.Name,
-		"Spelling",
-	))
+	fa.AddReturnItem(
+		doCall(
+			e.Receiver.Name,
+			"Spelling",
+		),
+	)
 
 	fa.AddStatement(fa.ret)
 

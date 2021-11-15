@@ -9,9 +9,9 @@ import (
 
 // Struct represents a generation struct.
 type Struct struct {
-	api *API
+	IncludeFiles
 
-	IncludeFiles includeFiles
+	api *API
 
 	Name           string
 	CName          string
@@ -21,16 +21,15 @@ type Struct struct {
 
 	IsPointerComposition bool
 
-	Fields []*StructField
+	Fields  []*StructField
 	Methods []interface{}
 }
 
-// StructField member of Struct.
+// StructField field of Struct.
 type StructField struct {
 	CName   string
 	Comment string
-
-	Type Type
+	Type    Type
 }
 
 // HandleStructCursor handles the struct cursor.
@@ -47,7 +46,7 @@ func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 	cursor.Visit(func(cursor, _ clang.Cursor) clang.ChildVisitResult {
 		switch cursor.Kind() {
 		case clang.Cursor_FieldDecl:
-			typ, err := typeFromClangType(cursor.Type())
+			typ, err := TypeFromClangType(cursor.Type())
 			if err != nil {
 				panic(fmt.Errorf("unexpected error: %w, cursor.Type(): %#v", err, cursor.Type()))
 			}
@@ -89,7 +88,7 @@ func (s *Struct) ContainsMethod(name string) bool {
 	return false
 }
 
-// Generate struct gereration.
+// Generate generats the estruct.
 func (s *Struct) Generate() error {
 	f := NewFile(strings.ToLower(s.Name))
 	f.Structs = append(f.Structs, s)
@@ -103,7 +102,7 @@ func (s *Struct) AddFieldGetters() error {
 		s.api.PrepareStructFields(s)
 	}
 
-	// Generate the getters we can handle
+	// generate the getters we can handle
 	for _, m := range s.Fields {
 		if s.api.FilterStructFieldGetter != nil && !s.api.FilterStructFieldGetter(m) {
 			continue
