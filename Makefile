@@ -1,39 +1,16 @@
-.PHONY: all install install-dependencies install-tools lint test test-full test-verbose
-
-export ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+.PHONY: all test 
 
 export CC := clang
 export CXX := clang++
 
-ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-$(eval $(ARGS):;@:) # turn arguments into do-nothing targets
-export ARGS
+LLVM_CONFIG ?= llvm-config
+CGO_CFLAGS=
+CGO_LDFLAGS=$(strip -L$(shell ${LLVM_CONFIG} --libdir) -Wl,-rpath,$(shell ${LLVM_CONFIG} --libdir))
 
-all: install-dependencies install-tools install test
+all: test
 
-install:
-	CGO_LDFLAGS="-L`llvm-config --libdir`" go install ./...
-install-dependencies:
-	go get -u golang.org/x/tools/imports/...
-	go get -u github.com/stretchr/testify/...
-	go get -u github.com/termie/go-shutil/...
-
-	CGO_LDFLAGS="-L`llvm-config --libdir`" go get github.com/go-clang/bootstrap/...
-install-tools:
-	# Install linting tools
-	go get -u golang.org/x/lint/golint
-	go get -u github.com/kisielk/errcheck/...
-
-	# Install code coverage tools
-	go get -u golang.org/x/tools/cmd/cover/...
-	go get -u github.com/onsi/ginkgo/ginkgo/...
-	go get -u github.com/modocache/gover/...
-	go get -u github.com/mattn/goveralls/...
-lint: install
-	$(ROOT_DIR)/scripts/lint.sh
 test:
-	CGO_LDFLAGS="-L`llvm-config --libdir`" go test -timeout 60s ./...
-test-full:
-	$(ROOT_DIR)/scripts/test-full.sh
-test-verbose:
-	CGO_LDFLAGS="-L`llvm-config --libdir`" go test -timeout 60s -v ./...
+	CGO_CFLAGS='${CGO_CFLAGS}' CGO_LDFLAGS='${CGO_LDFLAGS}' go test -v -race ./...
+
+coverage:
+	CGO_CFLAGS='${CGO_CFLAGS}' CGO_LDFLAGS='${CGO_LDFLAGS}' go test -v -covermode=atomic -coverpkg=./... -coverprofile=coverage.out ./...
