@@ -815,11 +815,7 @@ func TestAPIPrepareFunction(t *testing.T) {
 			g.API().PrepareFunction(f)
 
 			if diff := cmp.Diff(tt.want, f,
-				cmpopts.SortSlices(
-					func(x, y gen.FunctionParameter) bool {
-						return x.Name < y.Name
-					},
-				),
+				cmpopts.SortSlices(func(x, y gen.FunctionParameter) bool { return x.Name < y.Name }),
 			); diff != "" {
 				t.Fatalf("API.PrepareFunction(): (-want +got):\n%s", diff)
 			}
