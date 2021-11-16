@@ -929,3 +929,160 @@ func TestAPIFilterFunction(t *testing.T) {
 		})
 	}
 }
+
+func TestAPIFilterFunctionParameter(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		FilterFunctionParameter func(p gen.FunctionParameter) bool
+		parameter               gen.FunctionParameter
+		want                    bool
+	}{
+		"CSChar": {
+			FilterFunctionParameter: runtime.FilterFunctionParameter,
+			parameter: gen.FunctionParameter{
+				Type: gen.Type{
+					CGoName:      "schar",
+					PointerLevel: 1,
+				},
+			},
+			want: false,
+		},
+		"UnsavedFile": {
+			FilterFunctionParameter: runtime.FilterFunctionParameter,
+			parameter: gen.FunctionParameter{
+				Type: gen.Type{
+					CName:        "struct CXUnsavedFile *",
+					CGoName:      "struct_CXUnsavedFile",
+					GoName:       "UnsavedFile",
+					PointerLevel: 1,
+				},
+			},
+			want: false,
+		},
+		"CodeCompleteResults": {
+			FilterFunctionParameter: runtime.FilterFunctionParameter,
+			parameter: gen.FunctionParameter{
+				Type: gen.Type{
+					CName:        "CXCodeCompleteResults *",
+					CGoName:      "CXCodeCompleteResults",
+					GoName:       "CodeCompleteResults",
+					PointerLevel: 1,
+				},
+			},
+			want: false,
+		},
+		"CursorKind": {
+			FilterFunctionParameter: runtime.FilterFunctionParameter,
+			parameter: gen.FunctionParameter{
+				Type: gen.Type{
+					CName:        "enum CXCursorKind *",
+					CGoName:      "enum_CXCursorKind",
+					GoName:       "CursorKind",
+					PointerLevel: 1,
+				},
+			},
+			want: false,
+		},
+		"IdxContainerInfo": {
+			FilterFunctionParameter: runtime.FilterFunctionParameter,
+			parameter: gen.FunctionParameter{
+				Type: gen.Type{
+					CName:        "const CXIdxContainerInfo *",
+					CGoName:      "CXIdxContainerInfo",
+					GoName:       "IdxContainerInfo",
+					PointerLevel: 1,
+				},
+			},
+			want: false,
+		},
+		"IdxDeclInfo": {
+			FilterFunctionParameter: runtime.FilterFunctionParameter,
+			parameter: gen.FunctionParameter{
+				Type: gen.Type{
+					CName:        "const CXIdxDeclInfo *",
+					CGoName:      "CXIdxDeclInfo",
+					GoName:       "IdxDeclInfo",
+					PointerLevel: 1,
+				},
+			},
+			want: false,
+		},
+		"IndexerCallbacks": {
+			FilterFunctionParameter: runtime.FilterFunctionParameter,
+			parameter: gen.FunctionParameter{
+				Type: gen.Type{
+					CName:        "IndexerCallbacks *",
+					CGoName:      "IndexerCallbacks",
+					GoName:       "IndexerCallbacks",
+					PointerLevel: 1,
+				},
+			},
+			want: false,
+		},
+		"TranslationUnit": {
+			FilterFunctionParameter: runtime.FilterFunctionParameter,
+			parameter: gen.FunctionParameter{
+				Type: gen.Type{
+					CName:        "CXTranslationUnit *",
+					CGoName:      "CXTranslationUnit",
+					GoName:       "TranslationUnit",
+					PointerLevel: 1,
+				},
+			},
+			want: false,
+		},
+		"IdxEntityInfo": {
+			FilterFunctionParameter: runtime.FilterFunctionParameter,
+			parameter: gen.FunctionParameter{
+				Type: gen.Type{
+					CName:        "const CXIdxEntityInfo *",
+					CGoName:      "CXIdxEntityInfo",
+					GoName:       "IdxEntityInfo",
+					PointerLevel: 1,
+				},
+			},
+			want: false,
+		},
+		"IdxAttrInfo": {
+			FilterFunctionParameter: runtime.FilterFunctionParameter,
+			parameter: gen.FunctionParameter{
+				Type: gen.Type{
+					CName:        "const CXIdxAttrInfo *",
+					CGoName:      "CXIdxAttrInfo",
+					GoName:       "IdxAttrInfo",
+					PointerLevel: 1,
+				},
+			},
+			want: false,
+		},
+		"uint32": {
+			FilterFunctionParameter: runtime.FilterFunctionParameter,
+			parameter: gen.FunctionParameter{
+				Type: gen.Type{
+					CName:        "unsigned int",
+					CGoName:      "uint",
+					GoName:       "uint32",
+					PointerLevel: 0,
+				},
+			},
+			want: true,
+		},
+	}
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			api := &gen.API{
+				FilterFunctionParameter: tt.FilterFunctionParameter,
+			}
+			g := gen.NewGeneration(api)
+
+			got := g.API().FilterFunctionParameter(tt.parameter)
+			if tt.want != got {
+				t.Fatalf("API.FilterFunction(): want: %t but got %t", tt.want, got)
+			}
+		})
+	}
+}
