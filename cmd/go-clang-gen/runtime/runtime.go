@@ -184,23 +184,23 @@ func FixFunctionName(f *gen.Function) string {
 
 // PrepareStructFields prepares struct fields names.
 func PrepareStructFields(s *gen.Struct) {
-	for _, m := range s.Fields {
-		if (strings.HasPrefix(m.CName, "has") || strings.HasPrefix(m.CName, "is")) && m.Type.GoName == gen.GoInt32 {
-			m.Type.GoName = gen.GoBool
+	for _, f := range s.Fields {
+		if (strings.HasPrefix(f.CName, "has") || strings.HasPrefix(f.CName, "is")) && f.Type.GoName == gen.GoInt32 {
+			f.Type.GoName = gen.GoBool
 		}
 
 		// if this is an array length parameter we need to find its partner
-		maCName := gen.ArrayNameFromLength(m.CName)
+		faCName := gen.ArrayNameFromLength(f.CName)
 
-		if maCName != "" {
+		if faCName != "" {
 			for _, ma := range s.Fields {
-				if strings.ToLower(ma.CName) == strings.ToLower(maCName) {
-					m.Type.LengthOfSlice = ma.CName
+				if strings.ToLower(ma.CName) == strings.ToLower(faCName) {
+					f.Type.LengthOfSlice = ma.CName
 					ma.Type.IsSlice = true
 					// TODO(go-clang): wrong usage but needed for the getter generation...
 					// maybe refactor this LengthOfSlice alltogether?
 					// https://github.com/go-clang/gen/issues/49
-					ma.Type.LengthOfSlice = m.CName
+					ma.Type.LengthOfSlice = f.CName
 
 					break
 				}
@@ -211,7 +211,7 @@ func PrepareStructFields(s *gen.Struct) {
 	prepareStructFieldsArrayStruct(s)
 }
 
-// prepareStructFieldsArrayStruct checks if the struct has two member variables, one is an array and the other a plain
+// prepareStructFieldsArrayStruct checks if the struct has two field variables, one is an array and the other a plain
 // int/uint with size/length/count/len is its name because then this should be an array struct, and we connect them to handle a slice.
 func prepareStructFieldsArrayStruct(s *gen.Struct) {
 	if len(s.Fields) != 2 {
@@ -222,7 +222,7 @@ func prepareStructFieldsArrayStruct(s *gen.Struct) {
 		return
 	}
 
-	// if one of the members is already marked as array/slice another heuristic has already covered both members.
+	// if one of the fields is already marked as array/slice another heuristic has already covered both fields
 	switch {
 	case s.Fields[0].Type.IsArray,
 		s.Fields[1].Type.IsArray,
@@ -264,8 +264,8 @@ func arrayLengthCombination(x *gen.Type, y *gen.Type) bool {
 		!gen.IsInteger(x) && gen.IsInteger(y)
 }
 
-// FilterStructFieldGetter reports whether the m struct member filtered to a particular condition.
+// FilterStructFieldGetter reports whether the m struct field filtered to a particular condition.
 func FilterStructFieldGetter(m *gen.StructField) bool {
-	// we do not want getters to *int_data members
+	// we do not want getters to *int_data fields
 	return !strings.HasSuffix(m.CName, "int_data")
 }
