@@ -1086,3 +1086,44 @@ func TestAPIFilterFunctionParameter(t *testing.T) {
 		})
 	}
 }
+
+func TestAPIFixFunctionName(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		FixFunctionName func(f *gen.Function) string
+		function        *gen.Function
+		want            string
+	}{
+		"clang_getTranslationUnitCursor": {
+			FixFunctionName: runtime.FixFunctionName,
+			function: &gen.Function{
+				CName: "clang_getTranslationUnitCursor",
+			},
+			want: "TranslationUnitCursor",
+		},
+		"struct CXUnsavedFile *": {
+			FixFunctionName: runtime.FixFunctionName,
+			function: &gen.Function{
+				CName: "struct CXUnsavedFile *",
+			},
+			want: "",
+		},
+	}
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			api := &gen.API{
+				FixFunctionName: tt.FixFunctionName,
+			}
+			g := gen.NewGeneration(api)
+
+			got := g.API().FixFunctionName(tt.function)
+			if tt.want != got {
+				t.Fatalf("API.FilterFunction(): want: %s but got %s", tt.want, got)
+			}
+		})
+	}
+}
