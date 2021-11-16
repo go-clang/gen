@@ -826,3 +826,106 @@ func TestAPIPrepareFunction(t *testing.T) {
 		})
 	}
 }
+
+func TestAPIFilterFunction(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		FilterFunction func(f *gen.Function) bool
+		function       *gen.Function
+		want           bool
+	}{
+		"clang_CompileCommand_getMappedSourceContent": {
+			FilterFunction: runtime.FilterFunction,
+			function: &gen.Function{
+				CName: "clang_CompileCommand_getMappedSourceContent",
+			},
+			want: false,
+		},
+		"clang_CompileCommand_getMappedSourcePath": {
+			FilterFunction: runtime.FilterFunction,
+			function: &gen.Function{
+				CName: "clang_CompileCommand_getMappedSourcePath",
+			},
+			want: false,
+		},
+		"clang_CompileCommand_getNumMappedSources": {
+			FilterFunction: runtime.FilterFunction,
+			function: &gen.Function{
+				CName: "clang_CompileCommand_getNumMappedSources",
+			},
+			want: false,
+		},
+		"clang_executeOnThread": {
+			FilterFunction: runtime.FilterFunction,
+			function: &gen.Function{
+				CName: "clang_executeOnThread",
+			},
+			want: false,
+		},
+		"clang_getInclusions": {
+			FilterFunction: runtime.FilterFunction,
+			function: &gen.Function{
+				CName: "clang_getInclusions",
+			},
+			want: false,
+		},
+		"clang_annotateTokens": {
+			FilterFunction: runtime.FilterFunction,
+			function: &gen.Function{
+				CName: "clang_annotateTokens",
+			},
+			want: false,
+		},
+		"clang_getCursorPlatformAvailability": {
+			FilterFunction: runtime.FilterFunction,
+			function: &gen.Function{
+				CName: "clang_getCursorPlatformAvailability",
+			},
+			want: false,
+		},
+		"clang_visitChildren": {
+			FilterFunction: runtime.FilterFunction,
+			function: &gen.Function{
+				CName: "clang_visitChildren",
+			},
+			want: false,
+		},
+		"clang_getCString": {
+			FilterFunction: runtime.FilterFunction,
+			function: &gen.Function{
+				CName: "clang_getCString",
+				IncludeFiles: gen.IncludeFiles{
+					"./clang/clang-c/CXString.h": struct{}{},
+				},
+			},
+			want: false,
+		},
+		"clang_getNumDiagnosticsInSet": {
+			FilterFunction: runtime.FilterFunction,
+			function: &gen.Function{
+				CName: "clang_getNumDiagnosticsInSet",
+				IncludeFiles: gen.IncludeFiles{
+					"./clang/clang-c/Index.h": struct{}{},
+				},
+			},
+			want: true,
+		},
+	}
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			api := &gen.API{
+				FilterFunction: tt.FilterFunction,
+			}
+			g := gen.NewGeneration(api)
+
+			got := g.API().FilterFunction(tt.function)
+			if tt.want != got {
+				t.Fatalf("API.FilterFunction(): want: %t but got %t", tt.want, got)
+			}
+		})
+	}
+}
