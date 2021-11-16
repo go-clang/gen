@@ -43,13 +43,13 @@ func CleanDoxygenComment(comment string) string {
 		return ""
 	}
 
-	// 	indent multiline comments
-	// 	if strings.ContainsRune(comment, '\n') {
-	// 		comment = reReplaceMultilines.ReplaceAllString(comment, "\n\t")
-	// 		return "/*\n\t" + comment + "\n*/"
-	// 	}
+	// indent multiline comments
+	//  if strings.ContainsRune(comment, '\n') {
+	//  	comment = reReplaceMultilines.ReplaceAllString(comment, "\n\t")
+	//  	return "/*\n\t" + comment + "\n*/"
+	//  }
 	//
-	// 	return "// " + comment
+	//  return "// " + comment
 	if strings.ContainsRune(comment, '\n') {
 		comment = reReplaceMultilines.ReplaceAllString(comment, "\n\t")
 
