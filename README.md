@@ -1,4 +1,8 @@
-# go-clang/gen [![PkgGoDev](https://pkg.go.dev/badge/github.com/go-clang/gen)](https://pkg.go.dev/github.com/go-clang/gen) [![Build Status](https://travis-ci.org/go-clang/gen.svg?branch=master)](https://travis-ci.org/go-clang/gen) [![Coverage Status](https://coveralls.io/repos/go-clang/gen/badge.png?branch=master)](https://coveralls.io/r/go-clang/gen?branch=master)
+# go-clang/gen
+
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/go-clang/gen)](https://pkg.go.dev/github.com/go-clang/gen)
+[![GitHub Workflow](https://img.shields.io/github/workflow/status/go-clang/gen/Test/main?label=test&logo=github&style=flat-square)](https://github.com/go-clang/gen/actions)
+[![Codecov branch](https://img.shields.io/codecov/c/github/go-clang/gen/main?logo=codecov&style=flat-square)](https://app.codecov.io/gh/go-clang/gen/)
 
 Generate native Go bindings for Clang's C API.
 
