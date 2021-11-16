@@ -40,23 +40,30 @@ func ReplaceGoKeywords(s string) string {
 func TrimCommonFunctionName(name string, typ Type) string {
 	name = TrimCommonFunctionNamePrefix(name)
 
-	if fn := strings.TrimPrefix(name, typ.GoName+"_"); len(fn) != len(name) {
-		name = fn
-	} else if fn := strings.TrimPrefix(name, typ.GoName); len(fn) != len(name) {
-		name = fn
+	switch {
+	case strings.HasPrefix(name, typ.GoName+"_"):
+		name = strings.TrimPrefix(name, typ.GoName+"_")
+
+	case strings.HasPrefix(name, typ.GoName):
+		name = strings.TrimPrefix(name, typ.GoName)
 	}
 
-	if tkn := strings.TrimSuffix(typ.GoName, "Kind"); len(tkn) != len(typ.GoName) {
-		if fn := strings.TrimPrefix(name, tkn+"_"); len(fn) != len(name) {
-			name = fn
-		} else if fn := strings.TrimPrefix(name, tkn); len(fn) != len(name) {
-			name = fn
+	if strings.HasSuffix(typ.GoName, "Kind") {
+		// trim Kind *suffix*
+		tkn := strings.TrimSuffix(typ.GoName, "Kind")
+
+		switch {
+		case strings.HasPrefix(name, tkn+"_"):
+			name = strings.TrimPrefix(name, tkn+"_")
+
+		case strings.HasPrefix(name, tkn):
+			name = strings.TrimPrefix(name, tkn)
 		}
 	}
 
 	name = TrimCommonFunctionNamePrefix(name)
 
-	// If the function name is empty at this point, it is a constructor
+	// if the function name is empty at this point, it is a constructor
 	if name == "" {
 		name = typ.GoName
 	}
@@ -88,7 +95,7 @@ func TrimLanguagePrefix(name string) string {
 	return name
 }
 
-// CommonReceiverName returns the common function reciever name.
+// CommonReceiverName returns the common function receiver name.
 func CommonReceiverName(s string) string {
 	var n []rune
 

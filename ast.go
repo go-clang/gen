@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+const fakeStatement = "REMOVE"
+
 // ASTFunc represents a AST Func.
 type ASTFunc struct {
 	*ast.FuncDecl
@@ -45,7 +47,7 @@ func GenerateFunctionString(af *ASTFunc) string {
 	}
 
 	fnName := b.String()
-	fnName = strings.ReplaceAll(fnName, "REMOVE()", "")
+	fnName = strings.ReplaceAll(fnName, fmt.Sprintf("%s()", fakeStatement), "")
 
 	return fnName
 }
@@ -56,7 +58,7 @@ func (af *ASTFunc) Generate() {
 	// because of clang_getDiagnosticOption -> the normal return can be always just "o"?
 	// https://github.com/go-clang/gen/issues/57
 
-	// TODO(go-clang): reenable this, see the comment at the bottom of the generate function
+	// TODO(go-clang): re-enable this, see the comment at the bottom of the generate function
 	// for details https://github.com/go-clang/gen/issues/54
 	// Add function comment
 	//
@@ -82,7 +84,7 @@ func (af *ASTFunc) Generate() {
 			af.AddReturnType("", af.f.ReturnType)
 			af.AddEmptyLine()
 
-			// Add the return statement
+			// add the return statement
 			af.AddStatement(af.ret)
 		} else {
 			af.GenerateReturn(&ast.SelectorExpr{
@@ -111,7 +113,8 @@ func (af *ASTFunc) GenerateReceiver() {
 		return
 	}
 
-	// TODO(go-clang): maybe to not set the receiver at all? -> do this outside of the generate function? https://github.com/go-clang/gen/issues/52
+	// TODO(go-clang): maybe to not set the receiver at all? -> do this outside of the generate function?
+	// https://github.com/go-clang/gen/issues/52
 	if len(af.f.Parameters) > 0 {
 		af.Recv = &ast.FieldList{
 			List: []*ast.Field{
@@ -145,12 +148,13 @@ func (af *ASTFunc) GenerateParameters() []ast.Expr {
 			continue
 		}
 
-		// Ingore length parameters since they will be filled by the slice itself
+		// ignore length parameters since they will be filled by the slice itself
 		if p.Type.LengthOfSlice != "" && !p.Type.IsReturnArgument {
 			continue
 		}
 
-		if p.Type.IsSlice && !p.Type.IsReturnArgument {
+		switch {
+		case p.Type.IsSlice && !p.Type.IsReturnArgument:
 			hasDeclaration = true
 
 			if p.Type.CGoName == CSChar && p.Type.PointerLevel >= 1 { // one pointer level from being a string, one from being an array
@@ -158,7 +162,8 @@ func (af *ASTFunc) GenerateParameters() []ast.Expr {
 			} else {
 				af.AddCArrayFromGoSlice(p.Name, p.Type)
 			}
-		} else if p.Type.IsReturnArgument {
+
+		case p.Type.IsReturnArgument:
 			if p.Type.LengthOfSlice == "" {
 				// add the return type to the function return arguments
 				retType := p.Type
@@ -176,13 +181,16 @@ func (af *ASTFunc) GenerateParameters() []ast.Expr {
 				))
 			}
 
-			// Declare the return argument's variable
+			// declare the return argument's variable
 			var varType ast.Expr
-			if p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar {
+			switch {
+			case p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar:
 				varType = doPointer(doCType("char"))
-			} else if p.Type.IsPrimitive {
+
+			case p.Type.IsPrimitive:
 				varType = doCType(p.Type.CGoName)
-			} else {
+
+			default:
 				varType = &ast.Ident{
 					Name: p.Type.GoName,
 				}
@@ -198,9 +206,11 @@ func (af *ASTFunc) GenerateParameters() []ast.Expr {
 				varType,
 			))
 
-			if p.Type.GoName == "cxstring" {
+			switch {
+			case p.Type.GoName == "cxstring":
 				af.AddDefer(doCall(p.Name, "Dispose"))
-			} else if p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar {
+
+			case p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar:
 				af.AddDefer(doCCast(
 					"free",
 					doCall(
@@ -214,32 +224,35 @@ func (af *ASTFunc) GenerateParameters() []ast.Expr {
 			}
 
 			if p.Type.LengthOfSlice == "" {
-				// Add the return argument to the return statement
-				if p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar {
+				// add the return argument to the return statement
+				switch {
+				case p.Type.PointerLevel > 0 && p.Type.CGoName == CSChar:
 					af.AddReturnItem(doCCast(
 						"GoString",
 						&ast.Ident{
 							Name: p.Name,
 						},
 					))
-				} else if p.Type.GoName == "cxstring" {
+
+				case p.Type.GoName == "cxstring":
 					af.AddReturnItem(doCall(p.Name, "String"))
-				} else if p.Type.IsPrimitive {
+
+				case p.Type.IsPrimitive:
 					af.AddReturnItem(doCast(
 						p.Type.GoName,
 						&ast.Ident{
 							Name: p.Name,
 						},
 					))
-				} else {
+				default:
 					af.AddReturnItem(&ast.Ident{
 						Name: p.Name,
 					})
 				}
 			}
-
 			continue
-		} else if p.Type.PointerLevel > 0 && p.Type.IsPrimitive && p.Type.CGoName != CSChar {
+
+		case p.Type.PointerLevel > 0 && p.Type.IsPrimitive && p.Type.CGoName != CSChar:
 			hasDeclaration = true
 
 			varType := doCType(p.Type.CGoName)
@@ -292,17 +305,20 @@ func (af *ASTFunc) GenerateParameters() []ast.Expr {
 
 	goToCTypeConversions := false
 
-	// Add arguments to the C function call
+	// add arguments to the C function call
 	for _, p := range af.f.Parameters {
 		var pf ast.Expr
 
-		if p.Type.IsSlice {
+		switch {
+		case p.Type.IsSlice:
 			pf = &ast.Ident{
 				Name: "cp_" + p.Name,
 			}
-		} else if p.Type.IsPrimitive {
-			// Handle Go type to C type conversions
-			if p.Type.PointerLevel == 1 && p.Type.CGoName == CSChar {
+
+		case p.Type.IsPrimitive:
+			// handle Go type to C type conversions
+			switch {
+			case p.Type.PointerLevel == 1 && p.Type.CGoName == CSChar:
 				goToCTypeConversions = true
 
 				af.AddAssignment(
@@ -328,15 +344,21 @@ func (af *ASTFunc) GenerateParameters() []ast.Expr {
 				pf = &ast.Ident{
 					Name: "c_" + p.Name,
 				}
-			} else if p.Type.CGoName == "cxstring" { // TODO(go-clang): try to get cxstring and "String" completely out of this function since it is just a struct which can be handled by the struct code https://github.com/go-clang/gen/issues/25
+
+			// TODO(go-clang): try to get cxstring and "String" completely out of this function since it is just a struct which can be handled by the struct code
+			// https://github.com/go-clang/gen/issues/25
+			case p.Type.CGoName == "cxstring":
 				pf = accessMember(p.Name, "c")
-			} else {
-				if p.Type.IsReturnArgument {
-					// Return arguments already have a cast
+
+			default:
+				switch {
+				case p.Type.IsReturnArgument:
+					// return arguments already have a cast
 					pf = &ast.Ident{
 						Name: p.Name,
 					}
-				} else if p.Type.LengthOfSlice != "" {
+
+				case p.Type.LengthOfSlice != "":
 					pf = doCCast(
 						p.Type.CGoName,
 						doCast(
@@ -346,11 +368,13 @@ func (af *ASTFunc) GenerateParameters() []ast.Expr {
 							},
 						),
 					)
-				} else if p.Type.PointerLevel > 0 {
+
+				case p.Type.PointerLevel > 0:
 					pf = doReference(&ast.Ident{
 						Name: "cp_" + p.Name,
 					})
-				} else {
+
+				default:
 					pf = doCCast(
 						p.Type.CGoName,
 						&ast.Ident{
@@ -359,7 +383,8 @@ func (af *ASTFunc) GenerateParameters() []ast.Expr {
 					)
 				}
 			}
-		} else {
+
+		default:
 			pf = accessMember(p.Name, "c")
 
 			if p.Type.PointerLevel > 0 && !p.Type.IsReturnArgument && !p.Type.IsPointerComposition {
@@ -385,34 +410,35 @@ func (af *ASTFunc) GenerateParameters() []ast.Expr {
 func (af *ASTFunc) GenerateReturn(call ast.Expr) {
 	returnType := af.f.ReturnType
 
-	// Check if we need to add a return
+	// check if we need to add a return
 	if returnType.GoName != "void" || len(af.ret.Results) > 0 {
 		if returnType.GoName == "cxstring" {
-			// Do the C function call and save the result into the new variable "o" while transforming it into a cxstring
+			// do the C function call and save the result into the new variable "o" while transforming it into a cxstring
 			af.AddAssignment("o", doCompose("cxstring", call))
 			af.AddDefer(doCall("o", "Dispose"))
 			af.AddEmptyLine()
 
-			// Call the String method on the cxstring instance
+			// call the String method on the cxstring instance
 			af.AddReturnItem(doCall("o", "String"))
 
-			// Change the return type to "string"
+			// change the return type to "string"
 			af.AddReturnType("", Type{
 				GoName: "string",
 			})
 		} else {
 			if returnType.GoName != "void" {
-				// Add the function return type
+				// add the function return type
 				af.AddReturnType("", returnType)
 			}
 
-			// Do we need to convert the return of the C function into a boolean?
-			if returnType.GoName == "bool" {
-				// Do the C function call and save the result into the new variable "o"
+			// do we need to convert the return of the C function into a boolean?
+			switch {
+			case returnType.GoName == "bool":
+				// do the C function call and save the result into the new variable "o"
 				af.AddAssignment("o", call)
 				af.AddEmptyLine()
 
-				// Check if o is not equal to zero and return the result
+				// check if o is not equal to zero and return the result
 				af.AddReturnItem(&ast.BinaryExpr{
 					X: &ast.Ident{
 						Name: "o",
@@ -423,29 +449,35 @@ func (af *ASTFunc) GenerateReturn(call ast.Expr) {
 						doZero(),
 					),
 				})
-			} else if returnType.CGoName == CSChar && returnType.PointerLevel == 1 { // TODO(go-clang): refactor the const char * check so that one function is used everywhere to check for that C type https://github.com/go-clang/gen/issues/56
-				// If this is a normal const char * C type there is not so much to do
+
+			// TODO(go-clang): refactor the const char * check so that one function is used everywhere to check for that C type
+			// https://github.com/go-clang/gen/issues/56
+			case returnType.CGoName == CSChar && returnType.PointerLevel == 1:
+				// if this is a normal const char * C type there is not so much to do
 				af.AddReturnItem(doCCast(
 					"GoString",
 					call,
 				))
-			} else if returnType.GoName == "time.Time" {
+
+			case returnType.GoName == "time.Time":
 				af.AddReturnItem(doCall(
 					"time",
 					"Unix",
 					doCast("int64", call),
 					doZero(),
 				))
-			} else if returnType.GoName == "void" {
-				// Handle the case where the C function has no return argument but parameters that are return arguments
 
-				// Do the C function call
+			case returnType.GoName == "void":
+				// handle the case where the C function has no return argument but parameters that are return arguments
+
+				// do the C function call
 				af.AddStatement(&ast.ExprStmt{
 					X: call,
 				})
 				af.AddEmptyLine()
-			} else if returnType.PointerLevel > 0 {
-				// Do the C function call and save the result into the new variable "o"
+
+			case returnType.PointerLevel > 0:
+				// do the C function call and save the result into the new variable "o"
 				af.AddAssignment("o", call)
 				af.AddEmptyLine()
 
@@ -495,22 +527,23 @@ func (af *ASTFunc) GenerateReturn(call ast.Expr) {
 				af.AddReturnItem(&ast.Ident{
 					Name: "gop_o",
 				})
-			} else {
+
+			default:
 				var convCall ast.Expr
 
-				// Structs are literals, everything else is a cast
-				if !returnType.IsPrimitive {
-					convCall = doCompose(returnType.GoName, call)
-				} else {
+				// structs are literals, everything else is a cast
+				if returnType.IsPrimitive {
 					convCall = doCast(returnType.GoName, call)
+				} else {
+					convCall = doCompose(returnType.GoName, call)
 				}
 
 				if len(af.ret.Results) > 0 {
-					// Do the C function call and save the result into the new variable "o"
+					// do the C function call and save the result into the new variable "o"
 					af.AddAssignment("o", convCall)
 					af.AddEmptyLine()
 
-					// Add the C function call result to the return statement
+					// add the C function call result to the return statement
 					af.AddReturnItem(&ast.Ident{
 						Name: "o",
 					})
@@ -522,12 +555,12 @@ func (af *ASTFunc) GenerateReturn(call ast.Expr) {
 
 		af.AddCToGoConversions()
 
-		// Add the return statement
+		// add the return statement
 		af.AddStatement(af.ret)
 	} else {
 		af.AddCToGoConversions()
 
-		// No return needed, just add the C function call
+		// no return needed, just add the C function call
 		af.AddStatement(&ast.ExprStmt{
 			X: call,
 		})
@@ -563,11 +596,12 @@ func (af *ASTFunc) AddDefer(call *ast.CallExpr) {
 
 // AddEmptyLine adds empty line to af.
 func (af *ASTFunc) AddEmptyLine() {
-	// TODO(go-clang): this should be done using something else than a fake statement. https://github.com/go-clang/gen/issues/53
+	// TODO(go-clang): this should be done using something else than a fakeStatement.
+	// https://github.com/go-clang/gen/issues/53
 	af.AddStatement(&ast.ExprStmt{
 		X: &ast.CallExpr{
 			Fun: &ast.Ident{
-				Name: "REMOVE",
+				Name: fakeStatement,
 			},
 		},
 	})

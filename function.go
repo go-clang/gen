@@ -122,7 +122,8 @@ func (f *Function) Generate() string {
 
 	fStr := GenerateFunctionString(fa)
 
-	// TODO(go-clang): find out how to position the comment correctly and do this using the AST: https://github.com/go-clang/gen/issues/54
+	// TODO(go-clang): find out how to position the comment correctly and do this using the AST
+	// https://github.com/go-clang/gen/issues/54
 	if f.Comment != "" {
 		fStr = f.Comment + "\n" + fStr
 	}

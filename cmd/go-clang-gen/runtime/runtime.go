@@ -10,33 +10,39 @@ import (
 
 // PrepareFunctionName prepares C function naming to Go function name.
 func PrepareFunctionName(g *gen.Generation, f *gen.Function) string {
-	fname := f.Name
-	fname = strings.TrimPrefix(fname, "clang_")
+	fname := strings.TrimPrefix(f.Name, "clang_")
 
-	// Trim some whitelisted prefixes by their function name
-	if fn := strings.TrimPrefix(fname, "indexLoc_"); len(fn) != len(fname) {
-		fname = fn
-	} else if fn := strings.TrimPrefix(fname, "index_"); len(fn) != len(fname) {
-		fname = fn
-	} else if fn := strings.TrimPrefix(fname, "Location_"); len(fn) != len(fname) {
-		fname = fn
-	} else if fn := strings.TrimPrefix(fname, "Range_"); len(fn) != len(fname) {
-		fname = fn
-	} else if fn := strings.TrimPrefix(fname, "remap_"); len(fn) != len(fname) {
-		fname = fn
+	// trim some allowlisted prefixes by their function name
+	switch {
+	case strings.HasPrefix(fname, "indexLoc_"):
+		fname = strings.TrimPrefix(fname, "indexLoc_")
+
+	case strings.HasPrefix(fname, "index_"):
+		fname = strings.TrimPrefix(fname, "index_")
+
+	case strings.HasPrefix(fname, "Location_"):
+		fname = strings.TrimPrefix(fname, "Location_")
+
+	case strings.HasPrefix(fname, "Range_"):
+		fname = strings.TrimPrefix(fname, "Range_")
+
+	case strings.HasPrefix(fname, "remap_"):
+		fname = strings.TrimPrefix(fname, "remap_")
 	}
 
-	// Trim some whitelisted prefixes by their types
+	// trim some allowlisted prefixes by their types
 	if len(f.Parameters) > 0 && g.IsEnumOrStruct(f.Parameters[0].Type.GoName) {
 		switch f.Parameters[0].Type.GoName {
 		case "CodeCompleteResults":
 			fname = strings.TrimPrefix(fname, "codeComplete")
+
 		case "CompletionString":
 			if f.CName == "clang_getNumCompletionChunks" {
 				fname = "NumChunks"
 			} else {
 				fname = strings.TrimPrefix(fname, "getCompletion")
 			}
+
 		case "SourceRange":
 			fname = strings.TrimPrefix(fname, "getRange")
 		}
@@ -54,6 +60,7 @@ func PrepareFunction(f *gen.Function) {
 			switch p.CName {
 			case "filePaths":
 				p.Type.IsSlice = true
+
 			case "numFiles":
 				p.Type.LengthOfSlice = "filePaths"
 			}
@@ -61,35 +68,59 @@ func PrepareFunction(f *gen.Function) {
 			continue
 		}
 
-		// Whiteflag types that are return arguments
-		if p.Type.PointerLevel == 1 && (p.Type.GoName == "File" || p.Type.GoName == "FileUniqueID" || p.Type.GoName == "IdxClientFile" || p.Type.GoName == "cxstring" || p.Type.GoName == gen.GoInt32 || p.Type.GoName == gen.GoUInt32 || p.Type.GoName == "CompilationDatabase_Error" || p.Type.GoName == "PlatformAvailability" || p.Type.GoName == "SourceRange" || p.Type.GoName == "LoadDiag_Error") {
-			p.Type.IsReturnArgument = true
-		}
-		if p.Type.PointerLevel == 2 && (p.Type.GoName == "Token" || p.Type.GoName == "Cursor") {
-			p.Type.IsReturnArgument = true
+		// allowflag types that are return arguments
+		switch p.Type.PointerLevel {
+		case 1:
+			switch p.Type.GoName {
+			case
+				gen.GoInt32,
+				gen.GoUInt32,
+				"File",
+				"FileUniqueID",
+				"IdxClientFile",
+				"cxstring",
+				"CompilationDatabase_Error",
+				"PlatformAvailability",
+				"SourceRange",
+				"LoadDiag_Error":
+
+				p.Type.IsReturnArgument = true
+			}
+
+		case 2:
+			switch p.Type.GoName {
+			case
+				"Token",
+				"Cursor":
+
+				p.Type.IsReturnArgument = true
+			}
 		}
 
 		if f.CName == "clang_disposeOverriddenCursors" && p.CName == "overridden" {
 			p.Type.IsSlice = true
 		}
 
-		// If this is an array length parameter we need to find its partner
+		// if this is an array length parameter we need to find its partner
 		paCName := gen.ArrayNameFromLength(p.CName)
 
 		if paCName != "" {
 			for j := range f.Parameters {
 				pa := &f.Parameters[j]
 
-				if strings.ToLower(pa.CName) == strings.ToLower(paCName) {
-					if pa.Type.GoName == "struct CXUnsavedFile" || pa.Type.GoName == "UnsavedFile" {
+				if strings.EqualFold(pa.CName, paCName) {
+					switch pa.Type.GoName {
+					case "UnsavedFile":
 						pa.Type.GoName = "UnsavedFile"
 						pa.Type.CGoName = "struct_CXUnsavedFile"
-					} else if pa.Type.CGoName == gen.CSChar && pa.Type.PointerLevel == 2 {
-					} else if pa.Type.GoName == "CompletionResult" {
-					} else if pa.Type.GoName == "Token" {
-					} else if pa.Type.GoName == "Cursor" {
-					} else {
-						break
+
+					case "CompletionResult", "Token", "Cursor":
+						// nothing to do
+
+					default:
+						if pa.Type.CGoName != gen.CSChar && pa.Type.PointerLevel != 2 {
+							break
+						}
 					}
 
 					p.Type.LengthOfSlice = pa.Name
@@ -198,7 +229,7 @@ func PrepareStructFields(s *gen.Struct) {
 					f.Type.LengthOfSlice = fa.CName
 					fa.Type.IsSlice = true
 					// TODO(go-clang): wrong usage but needed for the getter generation...
-					// maybe refactor this LengthOfSlice alltogether?
+					// maybe refactor this LengthOfSlice all together?
 					// https://github.com/go-clang/gen/issues/49
 					fa.Type.LengthOfSlice = f.CName
 
@@ -253,7 +284,7 @@ func prepareStructFieldsArrayStruct(s *gen.Struct) {
 	c.Type.LengthOfSlice = a.CName
 	a.Type.IsSlice = true
 	// TODO(go-clang): wrong usage but needed for the getter generation...
-	// maybe refactor this LengthOfSlice alltogether?
+	// maybe refactor this LengthOfSlice all together?
 	// https://github.com/go-clang/gen/issues/49
 	a.Type.LengthOfSlice = c.CName
 }

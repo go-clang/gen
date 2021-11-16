@@ -61,7 +61,8 @@ func HandleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 		case clang.Cursor_EnumConstantDecl:
 			ei := EnumItem{
 				CName: cursor.Spelling(),
-				// TODO(go-clang): we are always using the same comment if there is none, see "TypeKind" https://github.com/go-clang/gen/issues/58
+				// TODO(go-clang): we are always using the same comment if there is none, see "TypeKind"
+				// https://github.com/go-clang/gen/issues/58
 				Comment: CleanDoxygenComment(cursor.RawCommentText()),
 				Value:   cursor.EnumConstantDeclUnsignedValue(),
 			}
@@ -171,7 +172,8 @@ func (e *Enum) AddEnumSpellingMethod() error {
 		//  	aValue = 1
 		//  	bValue = aValue
 		//  }
-		// Translating each EnumItem in its own case would result in a compliation error (https://golang.org/issues/4524).
+		//
+		// translating each EnumItem in its own case would result in a compliation error (https://golang.org/issues/4524).
 		// Thus, all EnumItems with the same value need to be pooled.
 		if caseClause, ok := m[enumerator.Value]; !ok {
 			c := []ast.Expr{&ast.Ident{Name: enumerator.Name}}
@@ -195,7 +197,7 @@ func (e *Enum) AddEnumSpellingMethod() error {
 	fa.AddReturnItem(doCall(
 		"fmt",
 		"Sprintf",
-		doStringLit(f.Receiver.Type.GoName+" unkown %d"),
+		doStringLit(f.Receiver.Type.GoName+" unknown %d"),
 		doCast("int", &ast.Ident{Name: f.Receiver.Name}),
 	))
 

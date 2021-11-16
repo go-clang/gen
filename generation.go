@@ -67,6 +67,7 @@ func (g *Generation) Generate() error {
 			if n, ok := g.LookupNonTypedef(p.Type.CGoName); ok {
 				p.Type.GoName = n
 			}
+
 			if e, ok := g.HasEnum(p.Type.GoName); ok {
 				p.CName = e.Receiver.CName
 				// TODO(go-clang): remove the receiver... and copy only names here to preserve the original pointers and so https://github.com/go-clang/gen/issues/52
@@ -169,6 +170,7 @@ func (g *Generation) Generate() error {
 
 					added = g.AddMethod(f, fname, "", rtc)
 				}
+
 				if !added {
 					f.Name = UpperFirstCharacter(f.Name)
 
@@ -202,6 +204,7 @@ func (g *Generation) Generate() error {
 
 					g.SetIsPointerComposition(&m.Receiver.Type)
 				}
+
 				for i := range m.Parameters {
 					g.SetIsPointerComposition(&m.Parameters[i].Type)
 				}
@@ -274,6 +277,7 @@ func (g *Generation) GenerateMethod(receiverName string, m interface{}) string {
 
 			g.SetIsPointerComposition(&m.Receiver.Type)
 		}
+
 		for i := range m.Parameters {
 			g.SetIsPointerComposition(&m.Parameters[i].Type)
 		}
@@ -324,7 +328,8 @@ func (g *Generation) AddMethod(f *Function, fname string, fnamePrefix string, rt
 
 // AddBasicMethods adds basic methods.
 func (g *Generation) AddBasicMethods(f *Function, fname string, fnamePrefix string, rt Receiver) bool {
-	if len(f.Parameters) == 0 && g.IsEnumOrStruct(f.ReturnType.GoName) {
+	switch {
+	case len(f.Parameters) == 0 && g.IsEnumOrStruct(f.ReturnType.GoName):
 		rtc := rt
 		rtc.Type = f.ReturnType
 
@@ -339,17 +344,17 @@ func (g *Generation) AddBasicMethods(f *Function, fname string, fnamePrefix stri
 
 		return g.AddMethod(f, fname, fnamePrefix, rtc)
 
-	} else if (fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3]))) {
+	case (fname[0] == 'i' && fname[1] == 's' && unicode.IsUpper(rune(fname[2]))) || (fname[0] == 'h' && fname[1] == 'a' && fname[2] == 's' && unicode.IsUpper(rune(fname[3]))):
 		f.ReturnType.GoName = "bool"
 
 		return g.AddMethod(f, fname, fnamePrefix, rt)
 
-	} else if len(f.Parameters) == 1 && g.IsEnumOrStruct(f.Parameters[0].Type.GoName) && strings.HasPrefix(fname, "dispose") && f.ReturnType.GoName == "void" {
+	case len(f.Parameters) == 1 && g.IsEnumOrStruct(f.Parameters[0].Type.GoName) && strings.HasPrefix(fname, "dispose") && f.ReturnType.GoName == "void":
 		fname = "Dispose"
 
 		return g.AddMethod(f, fname, fnamePrefix, rt)
 
-	} else if len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && g.IsEnumOrStruct(f.Parameters[0].Type.GoName) && f.Parameters[0].Type == f.Parameters[1].Type {
+	case len(f.Parameters) == 2 && strings.HasPrefix(fname, "equal") && g.IsEnumOrStruct(f.Parameters[0].Type.GoName) && f.Parameters[0].Type == f.Parameters[1].Type:
 		fname = "Equal"
 		f.Parameters[0].Name = CommonReceiverName(f.Parameters[0].Type.GoName)
 		f.Parameters[1].Name = f.Parameters[0].Name + "2"

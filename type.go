@@ -226,7 +226,7 @@ func TypeFromClangType(cType clang.Type) (Type, error) {
 	case clang.Type_Elaborated:
 		return TypeFromClangType(cType.CanonicalType())
 
-	case clang.Type_Unexposed: // there is a bug in clang for enums the kind is set to unexposed dunno why, bug persists since 2013 https://llvm.org/bugs/show_bug.cgi?id=15089
+	case clang.Type_Unexposed: // there is a bug in clang for enums the kind is set to unexposed dunno why, bug persisted since 2013: https://llvm.org/bugs/show_bug.cgi?id=15089
 		subTyp, err := TypeFromClangType(cType.CanonicalType())
 		if err != nil {
 			return Type{}, err
@@ -244,16 +244,25 @@ func TypeFromClangType(cType clang.Type) (Type, error) {
 	return typ, nil
 }
 
-// ArrayNameFromLength returns the array naem from lengthCName length naming.
+// ArrayNameFromLength returns the array name from lengthCName length naming.
 func ArrayNameFromLength(lengthCName string) string {
-	if pan := strings.TrimPrefix(lengthCName, "num_"); len(pan) != len(lengthCName) {
-		return pan
-	} else if pan := strings.TrimPrefix(lengthCName, "num"); len(pan) != len(lengthCName) {
-		return pan
-	} else if pan := strings.TrimPrefix(lengthCName, "Num"); len(pan) != len(lengthCName) && unicode.IsUpper(rune(pan[0])) {
-		return pan
-	} else if pan := strings.TrimSuffix(lengthCName, "_size"); len(pan) != len(lengthCName) {
-		return pan
+	switch {
+	case strings.HasPrefix(lengthCName, "num_"):
+		return strings.TrimPrefix(lengthCName, "num_")
+
+	case strings.HasPrefix(lengthCName, "num"):
+		return strings.TrimPrefix(lengthCName, "num")
+
+	case strings.HasPrefix(lengthCName, "_size"):
+		return strings.TrimSuffix(lengthCName, "_size")
+
+	default:
+		if strings.HasPrefix(lengthCName, "Num") {
+			pan := strings.TrimPrefix(lengthCName, "Num")
+			if unicode.IsUpper(rune(pan[0])) {
+				return pan
+			}
+		}
 	}
 
 	return ""

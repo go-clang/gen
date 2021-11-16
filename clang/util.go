@@ -155,7 +155,7 @@ func copyMode(src, dst string) error {
 		return nil
 	}
 
-	// Atleast one is not a symlink, get the actual file stats
+	// At least one is not a symlink, get the actual file stats
 	srcStat, _ = os.Stat(src)
 	err = os.Chmod(dst, srcStat.Mode())
 	return err

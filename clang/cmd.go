@@ -75,7 +75,7 @@ func Cmd(llvmRoot string, api *gen.API) error {
 	if err == nil { // Clang have --print-resource-dir flag
 		clangResourceIncludeDir := filepath.Join(strings.TrimSpace(string(clangResourceDir)), "include")
 		if err := dirExists(clangResourceIncludeDir); err != nil {
-			return fmt.Errorf("not fonud clang resource directory: %w", err)
+			return fmt.Errorf("not found clang resource directory: %w", err)
 		}
 		clangArguments = append(clangArguments, "-I"+clangResourceIncludeDir)
 	} else {

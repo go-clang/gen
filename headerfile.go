@@ -42,10 +42,10 @@ var (
 
 // PrepareFile prepares header files name.
 func (h *HeaderFile) PrepareFile() error {
-	// Hide all "void *" fields of structs by replacing the type with "uintptr_t".
+	// hide all "void *" fields of structs by replacing the type with "uintptr_t".
 	//
-	// To paraphrase the original go-clang source code:
-	// Not hiding these fields confuses the Go GC during garbage collection and
+	// to paraphrase the original go-clang source code:
+	// not hiding these fields confuses the Go GC during garbage collection and
 	// pointer scanning, making it think the heap/stack has been somehow corrupted.
 	//
 	// I do not know how the original author debugged this, but one thing: Thank you!
@@ -67,7 +67,7 @@ func (h *HeaderFile) PrepareFile() error {
 		fs = strings.ReplaceAll(fs, s, r)
 	}
 
-	if incl := "#include <stdint.h>"; !strings.HasPrefix(fs, incl) { // Include for uintptr_t
+	if incl := "#include <stdint.h>"; !strings.HasPrefix(fs, incl) { // include for uintptr_t
 		fs = "#include <stdint.h>\n\n" + fs
 	}
 
@@ -95,6 +95,7 @@ func (h *HeaderFile) HandleFile(cursor clang.Cursor) {
 		if !strings.HasPrefix(sourceFile.Name(), h.Path) {
 			return clang.ChildVisit_Continue
 		}
+
 		// TODO(zchee): Documentation.h header haven't correct cursor information
 		if h.Filename == "Documentation.h" && filepath.Base(sourceFile.Name()) == "Index.h" {
 			return clang.ChildVisit_Continue

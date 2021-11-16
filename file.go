@@ -88,8 +88,8 @@ func (f *File) Generate() error {
 		}
 	}
 
-	for _, fu := range f.Functions {
-		switch fu := fu.(type) {
+	for _, fn := range f.Functions {
+		switch fu := fn.(type) {
 		case *Function:
 			f.IncludeFiles.unifyIncludeFiles(fu.IncludeFiles)
 		}
