@@ -225,7 +225,7 @@ func PrepareStructFields(s *gen.Struct) {
 
 		if faCName != "" {
 			for _, fa := range s.Fields {
-				if strings.ToLower(fa.CName) == strings.ToLower(faCName) {
+				if strings.EqualFold(fa.CName, faCName) {
 					f.Type.LengthOfSlice = fa.CName
 					fa.Type.IsSlice = true
 					// TODO(go-clang): wrong usage but needed for the getter generation...
