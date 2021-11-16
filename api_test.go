@@ -55,10 +55,10 @@ func TestAPIPrepareFunctionName(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			api := &gen.API{
+			a := &gen.API{
 				PrepareFunctionName: tt.PrepareFunctionName,
 			}
-			g := gen.NewGeneration(api)
+			g := gen.NewGeneration(a)
 			f := &gen.Function{
 				Name:       tt.name,
 				CName:      tt.cname,
@@ -807,10 +807,10 @@ func TestAPIPrepareFunction(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			api := &gen.API{
+			a := &gen.API{
 				PrepareFunction: tt.PrepareFunction,
 			}
-			g := gen.NewGeneration(api)
+			g := gen.NewGeneration(a)
 			f := tt.f
 			g.API().PrepareFunction(f)
 
@@ -913,10 +913,10 @@ func TestAPIFilterFunction(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			api := &gen.API{
+			a := &gen.API{
 				FilterFunction: tt.FilterFunction,
 			}
-			g := gen.NewGeneration(api)
+			g := gen.NewGeneration(a)
 
 			got := g.API().FilterFunction(tt.function)
 			if tt.want != got {
@@ -1070,10 +1070,10 @@ func TestAPIFilterFunctionParameter(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			api := &gen.API{
+			a := &gen.API{
 				FilterFunctionParameter: tt.FilterFunctionParameter,
 			}
-			g := gen.NewGeneration(api)
+			g := gen.NewGeneration(a)
 
 			got := g.API().FilterFunctionParameter(tt.parameter)
 			if tt.want != got {
@@ -1111,10 +1111,10 @@ func TestAPIFixFunctionName(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			api := &gen.API{
+			a := &gen.API{
 				FixFunctionName: tt.FixFunctionName,
 			}
-			g := gen.NewGeneration(api)
+			g := gen.NewGeneration(a)
 
 			got := g.API().FixFunctionName(tt.function)
 			if tt.want != got {
