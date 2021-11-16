@@ -1123,3 +1123,86 @@ func TestAPIFixFunctionName(t *testing.T) {
 		})
 	}
 }
+
+func TestAPI_HandleDirectory(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		ClangArguments []string
+		dir            string
+		want           []*gen.HeaderFile
+	}{
+		"testdata/api": {
+			dir: "testdata/api",
+			want: []*gen.HeaderFile{
+				{
+					Filename: "bar.h",
+					Path:     "testdata/api",
+					Functions: []*gen.Function{
+						{
+							IncludeFiles: gen.IncludeFiles{"testdata/api/bar.h": {}},
+							Name:         "bar",
+							CName:        "bar",
+							Parameters:   []gen.FunctionParameter{},
+							ReturnType: gen.Type{
+								CName:         "void",
+								CGoName:       "void",
+								GoName:        "void",
+								LengthOfSlice: "",
+								ArraySize:     -1,
+								PointerLevel:  0,
+								IsPrimitive:   true,
+								IsArray:       false,
+								IsEnumLiteral: false,
+							},
+						},
+					},
+				},
+				{
+					Filename: "foo.h",
+					Path:     "testdata/api",
+					Functions: []*gen.Function{
+						{
+							IncludeFiles: gen.IncludeFiles{"testdata/api/foo.h": {}},
+							Name:         "foo",
+							CName:        "foo",
+							Parameters:   []gen.FunctionParameter{},
+							ReturnType: gen.Type{
+								CName:         "void",
+								CGoName:       "void",
+								GoName:        "void",
+								LengthOfSlice: "",
+								ArraySize:     -1,
+								PointerLevel:  0,
+								IsPrimitive:   true,
+								IsArray:       false,
+								IsEnumLiteral: false,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			a := &gen.API{
+				ClangArguments: tt.ClangArguments,
+			}
+			got, err := a.HandleDirectory(tt.dir)
+			if err != nil {
+				t.Fatalf("API.HandleDirectory(%v) error = %v", tt.dir, err)
+			}
+
+			if diff := cmp.Diff(tt.want, got,
+				cmpopts.IgnoreUnexported(gen.HeaderFile{}, gen.Lookup{}),
+				cmpopts.SortSlices(func(x, y gen.HeaderFile) bool { return x.Filename < y.Filename }),
+			); diff != "" {
+				t.Fatalf("API.HandleDirectory(%v): (-want +got):\n%s", tt.dir, diff)
+			}
+		})
+	}
+}
