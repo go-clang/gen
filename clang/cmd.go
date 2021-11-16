@@ -136,13 +136,13 @@ func Cmd(llvmRoot string, api *gen.API) error {
 	// write clang/doc.go
 	docData := strings.ReplaceAll(clangDocTmpl, replaceMark, replaceLLVMVersion)
 	clangDocPath := filepath.Join(clangDirPath, "doc.go")
-	if err := os.WriteFile(clangDocPath, []byte(docData), 0o644); err != nil {
+	if err := os.WriteFile(clangDocPath, []byte(docData), 0644); err != nil {
 		return fmt.Errorf("could not write %s file: %w", clangDocPath, err)
 	}
 
 	// write clang/clang-c/doc.go
 	clangCDocPath := filepath.Join(clangCDirPath, "doc.go")
-	if err := os.WriteFile(clangCDocPath, []byte(clangCDocTmpl), 0o644); err != nil {
+	if err := os.WriteFile(clangCDocPath, []byte(clangCDocTmpl), 0644); err != nil {
 		return fmt.Errorf("could not write %s file: %w", clangCDocPath, err)
 	}
 
@@ -182,7 +182,7 @@ package clang_c
 //
 // The embedPath must be a full path from the embed root directory.
 func WriteEmbedFile(dstDir, embedDir string) error {
-	if err := os.MkdirAll(dstDir, 0o755); err != nil {
+	if err := os.MkdirAll(dstDir, 0755); err != nil {
 		return fmt.Errorf("make %s directory: %w", dstDir, err)
 	}
 
@@ -203,7 +203,7 @@ func WriteEmbedFile(dstDir, embedDir string) error {
 			return fmt.Errorf("could not read embedded %s file: %w", fname, err)
 		}
 
-		if err := os.WriteFile(filepath.Join(dstDir, fname), data, 0o644); err != nil {
+		if err := os.WriteFile(filepath.Join(dstDir, fname), data, 0644); err != nil {
 			return fmt.Errorf("could not write %s file: %w", fname, err)
 		}
 	}

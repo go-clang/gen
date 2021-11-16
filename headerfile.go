@@ -71,7 +71,7 @@ func (h *HeaderFile) PrepareFile() error {
 		fs = "#include <stdint.h>\n\n" + fs
 	}
 
-	if err = os.WriteFile(h.FullPath(), []byte(fs), 0o600); err != nil {
+	if err = os.WriteFile(h.FullPath(), []byte(fs), 0600); err != nil {
 		return fmt.Errorf("cannot write %s: %w", h.FullPath(), err)
 	}
 

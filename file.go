@@ -111,12 +111,12 @@ func (f *File) Generate() error {
 	out, err := imports.Process(filename, bo, nil)
 	if err != nil {
 		// Write the file anyway so we can look at the problem
-		if err := os.WriteFile(filename, bo, 0o600); err != nil {
+		if err := os.WriteFile(filename, bo, 0600); err != nil {
 			return err
 		}
 
 		return err
 	}
 
-	return os.WriteFile(filename, out, 0o600)
+	return os.WriteFile(filename, out, 0600)
 }
