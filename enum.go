@@ -109,6 +109,7 @@ func (e *Enum) ContainsMethod(name string) bool {
 			if m.Name == name {
 				return true
 			}
+
 		case string:
 			if strings.Contains(m, ") "+name+"()") {
 				return true
@@ -157,9 +158,7 @@ func (e *Enum) AddEnumSpellingMethod() error {
 
 	fa.GenerateReceiver()
 
-	fa.AddReturnType("", Type{
-		GoName: "string",
-	})
+	fa.AddReturnType("", Type{GoName: "string"})
 
 	switchStmt := doSwitchStmt(&ast.Ident{Name: f.Receiver.Name})
 	fa.Body.List = append(fa.Body.List, switchStmt)
@@ -167,13 +166,13 @@ func (e *Enum) AddEnumSpellingMethod() error {
 	m := make(map[uint64]*ast.CaseClause)
 
 	for _, enumerator := range e.Items {
-		// 	EnumItems might have the same value, e.g.:
-		//   enum Example {
-		//   	aValue = 1
-		//   	bValue = aValue
-		//   }
-		//  Translating each EnumItem in its own case would result in a compliation error (https://golang.org/issues/4524).
-		//  Thus, all EnumItems with the same value need to be pooled.
+		// EnumItems might have the same value, e.g.:
+		//  enum Example {
+		//  	aValue = 1
+		//  	bValue = aValue
+		//  }
+		// Translating each EnumItem in its own case would result in a compliation error (https://golang.org/issues/4524).
+		// Thus, all EnumItems with the same value need to be pooled.
 		if caseClause, ok := m[enumerator.Value]; !ok {
 			c := []ast.Expr{&ast.Ident{Name: enumerator.Name}}
 			ret := &ast.ReturnStmt{
@@ -219,18 +218,9 @@ func (e *Enum) AddSpellingMethodAlias(name string) error {
 
 	fa.GenerateReceiver()
 
-	fa.AddReturnType("",
-		Type{
-			GoName: "string",
-		},
-	)
+	fa.AddReturnType("", Type{GoName: "string"})
 
-	fa.AddReturnItem(
-		doCall(
-			e.Receiver.Name,
-			"Spelling",
-		),
-	)
+	fa.AddReturnItem(doCall(e.Receiver.Name, "Spelling"))
 
 	fa.AddStatement(fa.ret)
 
