@@ -265,7 +265,7 @@ func arrayLengthCombination(x *gen.Type, y *gen.Type) bool {
 }
 
 // FilterStructFieldGetter reports whether the m struct field filtered to a particular condition.
-func FilterStructFieldGetter(m *gen.StructField) bool {
+func FilterStructFieldGetter(f *gen.StructField) bool {
 	// we do not want getters to *int_data fields
-	return !strings.HasSuffix(m.CName, "int_data")
+	return !strings.HasSuffix(f.CName, "int_data")
 }

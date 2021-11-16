@@ -27,7 +27,7 @@ type API struct {
 	PrepareStructFields func(s *Struct)
 
 	// FilterStructFieldGetter determines if a getter should be generated for a field.
-	FilterStructFieldGetter func(m *StructField) bool
+	FilterStructFieldGetter func(f *StructField) bool
 
 	// ClangArguments holds the command line arguments for Clang.
 	ClangArguments []string
