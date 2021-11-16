@@ -193,14 +193,14 @@ func PrepareStructFields(s *gen.Struct) {
 		faCName := gen.ArrayNameFromLength(f.CName)
 
 		if faCName != "" {
-			for _, ma := range s.Fields {
-				if strings.ToLower(ma.CName) == strings.ToLower(faCName) {
-					f.Type.LengthOfSlice = ma.CName
-					ma.Type.IsSlice = true
+			for _, fa := range s.Fields {
+				if strings.ToLower(fa.CName) == strings.ToLower(faCName) {
+					f.Type.LengthOfSlice = fa.CName
+					fa.Type.IsSlice = true
 					// TODO(go-clang): wrong usage but needed for the getter generation...
 					// maybe refactor this LengthOfSlice alltogether?
 					// https://github.com/go-clang/gen/issues/49
-					ma.Type.LengthOfSlice = f.CName
+					fa.Type.LengthOfSlice = f.CName
 
 					break
 				}
