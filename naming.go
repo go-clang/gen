@@ -79,7 +79,13 @@ func TrimCommonFunctionNamePrefix(name string) string {
 		name = strings.TrimPrefix(name, "Get")
 	}
 
-	name = TrimLanguagePrefix(name)
+	switch name {
+	case "CXXManglings", "ObjCManglings":
+		// nothing to do
+
+	default:
+		name = TrimLanguagePrefix(name)
+	}
 
 	return name
 }
