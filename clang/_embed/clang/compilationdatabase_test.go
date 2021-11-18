@@ -26,6 +26,7 @@ func TestCompilationDatabase(t *testing.T) {
 			directory: "/home/user/llvm/build",
 			args: []string{
 				"/usr/bin/clang++",
+				"--driver-mode=g++", // workaround for the --driver-mode flag to be added automatically after the v9 or later
 				"-Irelative",
 				//FIXME: bug in clang ?
 				//`-DSOMEDEF="With spaces, quotes and \-es.`,
@@ -38,7 +39,13 @@ func TestCompilationDatabase(t *testing.T) {
 		},
 		{
 			directory: "@TESTDIR@",
-			args:      []string{"g++", "-c", "-DMYMACRO=a", "subdir/a.cpp"},
+			args: []string{
+				"g++",
+				"--driver-mode=g++", // workaround for the --driver-mode flag to be added automatically after the v9 or later
+				"-c",
+				"-DMYMACRO=a",
+				"subdir/a.cpp",
+			},
 		},
 	}
 
