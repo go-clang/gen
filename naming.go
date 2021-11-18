@@ -75,13 +75,14 @@ func TrimCommonFunctionName(name string, typ Type) string {
 func TrimCommonFunctionNamePrefix(name string) string {
 	name = strings.TrimPrefix(name, "create")
 	name = strings.TrimPrefix(name, "get")
+
 	if len(name) > 4 && unicode.IsUpper(rune(name[3])) {
 		name = strings.TrimPrefix(name, "Get")
 	}
 
 	switch name {
 	case "CXXManglings", "ObjCManglings":
-		// nothing to do
+		// conflict if trims language prefix
 
 	default:
 		name = TrimLanguagePrefix(name)
