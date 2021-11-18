@@ -9,7 +9,7 @@ on:
       - "main"
 
 env:
-  LLVM_VERSION: 8
+  LLVM_VERSION: 9
 
 jobs:
   test:
