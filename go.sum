@@ -1,5 +1,5 @@
-github.com/go-clang/bootstrap v0.11.0 h1:c34Vs7ckCpD3XYO7D4CqXzQNnq31vTZcuj+39jHtUWQ=
-github.com/go-clang/bootstrap v0.11.0/go.mod h1:a4EmDb8BXcdDBkMbvviEzrDd2LNZXqY7PwHmeyHKy1k=
+github.com/go-clang/bootstrap v0.12.0 h1:9iSDIJSnn4Jj2XsKE9XxtWV4Jtin6z1UAub2Ghi4/4Q=
+github.com/go-clang/bootstrap v0.12.0/go.mod h1:a4EmDb8BXcdDBkMbvviEzrDd2LNZXqY7PwHmeyHKy1k=
 github.com/google/go-cmp v0.5.6 h1:BKbKCqvP6I+rmFHt06ZmyQtvB8xAkWdhFyr0ZUNZcxQ=
 github.com/google/go-cmp v0.5.6/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/yuin/goldmark v1.4.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
