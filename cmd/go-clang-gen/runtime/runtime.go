@@ -28,6 +28,14 @@ func PrepareFunctionName(g *gen.Generation, f *gen.Function) string {
 
 	case strings.HasPrefix(fname, "remap_"):
 		fname = strings.TrimPrefix(fname, "remap_")
+
+	case strings.EqualFold(fname, "Install_aborting_llvm_fatal_error_handler"): // special case
+		// fname = strings.Trim(fname, "llvm_")
+		// fname = gen.ToCamelCase(fname)
+		fname = "InstallAbortingFatalErrorHandler"
+
+	case strings.EqualFold(fname, "Uninstall_llvm_fatal_error_handler"):
+		fname = "UninstallFatalErrorHandler"
 	}
 
 	// trim some allowlisted prefixes by their types
@@ -186,7 +194,8 @@ func FilterFunctionParameter(p gen.FunctionParameter) bool {
 		}
 
 		switch p.Type.GoName {
-		case "UnsavedFile",
+		case
+			"UnsavedFile",
 			"CodeCompleteResults",
 			"CursorKind",
 			"IdxContainerInfo",
