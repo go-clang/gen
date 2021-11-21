@@ -283,6 +283,8 @@ func (g *Generation) GenerateMethod(receiverName string, m interface{}) string {
 		}
 		g.SetIsPointerComposition(&m.ReturnType)
 
+		m.Comment = strings.ReplaceAll(m.Comment, strings.TrimPrefix(m.CName, "clang_"), m.Name)
+
 		return m.Generate()
 
 	case string:

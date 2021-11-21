@@ -71,7 +71,6 @@ func HandleFunctionCursor(cursor clang.Cursor) *Function {
 		IncludeFiles: NewIncludeFiles(),
 		Name:         fname,
 		CName:        fname,
-		Comment:      CleanDoxygenComment(cursor.RawCommentText()),
 	}
 
 	typ, err := TypeFromClangType(cursor.ResultType())
@@ -111,6 +110,9 @@ func HandleFunctionCursor(cursor clang.Cursor) *Function {
 
 		f.Parameters = append(f.Parameters, p)
 	}
+
+	commentFname := UpperFirstCharacter(strings.TrimPrefix(f.Name, "clang_"))
+	f.Comment = CleanDoxygenComment(commentFname, cursor.RawCommentText())
 
 	return &f
 }

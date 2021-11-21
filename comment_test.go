@@ -24,12 +24,10 @@ func TestCleanDoxygenComment(t *testing.T) {
  *
  * \param options is reserved, always pass 0.
  */`,
-			want: `/*
-	Create a CXVirtualFileOverlay object.
-	Must be disposed with clang_VirtualFileOverlay_dispose().
-	
-	Parameter options is reserved, always pass 0.
-*/`,
+			want: `// Create a CXVirtualFileOverlay object.
+// Must be disposed with clang_VirtualFileOverlay_dispose().
+//
+// Parameter options is reserved, always pass 0.`,
 		},
 		"Return the timestamp ...": {
 			comment: `/**
@@ -63,15 +61,13 @@ func TestCleanDoxygenComment(t *testing.T) {
  * \param out_buffer_size pointer to receive the buffer size.
  * \returns 0 for success, non-zero to indicate an error.
  */`,
-			want: `/*
-	Write out the CXVirtualFileOverlay object to a char buffer.
-	
-	Parameter options is reserved, always pass 0.
-	Parameter out_buffer_ptr pointer to receive the buffer pointer, which should be
-	disposed using clang_free().
-	Parameter out_buffer_size pointer to receive the buffer size.
-	Returns 0 for success, non-zero to indicate an error.
-*/`,
+			want: `// Write out the CXVirtualFileOverlay object to a char buffer.
+//
+// Parameter options is reserved, always pass 0.
+// Parameter out_buffer_ptr pointer to receive the buffer pointer, which should be
+// disposed using clang_free().
+// Parameter out_buffer_size pointer to receive the buffer size.
+// Returns 0 for success, non-zero to indicate an error.`,
 		},
 	}
 	for name, tt := range tests {
@@ -79,7 +75,7 @@ func TestCleanDoxygenComment(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			if got := gen.CleanDoxygenComment(tt.comment); got != tt.want {
+			if got := gen.CleanDoxygenComment("", tt.comment); got != tt.want {
 				t.Fatalf("CleanDoxygenComment(\n%v\n) = \n%v\nwant \n%v\n", tt.comment, got, tt.want)
 			}
 		})

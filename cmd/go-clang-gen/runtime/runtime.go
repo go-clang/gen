@@ -53,6 +53,7 @@ func PrepareFunctionName(g *gen.Generation, f *gen.Function) string {
 			fname = strings.TrimPrefix(fname, "getRange")
 		}
 	}
+	f.Comment = strings.ReplaceAll(f.Comment, f.Name, gen.UpperFirstCharacter(fname))
 
 	return fname
 }

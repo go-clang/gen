@@ -39,8 +39,8 @@ func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 		Name:           TrimLanguagePrefix(cname),
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
-		Comment:        CleanDoxygenComment(cursor.RawCommentText()),
 	}
+	s.Comment = CleanDoxygenComment(s.Name, cursor.RawCommentText())
 	s.Receiver.Name = CommonReceiverName(s.Name)
 
 	cursor.Visit(func(cursor, _ clang.Cursor) clang.ChildVisitResult {
@@ -55,12 +55,12 @@ func HandleStructCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) 
 				return clang.ChildVisit_Continue
 			}
 
-			s.Fields = append(s.Fields, &StructField{
-				CName:   cursor.DisplayName(),
-				Comment: CleanDoxygenComment(cursor.RawCommentText()),
-
-				Type: typ,
-			})
+			field := &StructField{
+				CName: cursor.DisplayName(),
+				Type:  typ,
+			}
+			field.Comment = CleanDoxygenComment(TrimCommonFunctionName(field.CName, typ), cursor.RawCommentText())
+			s.Fields = append(s.Fields, field)
 		}
 
 		return clang.ChildVisit_Continue

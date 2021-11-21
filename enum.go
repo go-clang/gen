@@ -39,9 +39,9 @@ func HandleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 		Name:           TrimLanguagePrefix(cname),
 		CName:          cname,
 		CNameIsTypeDef: cnameIsTypeDef,
-		Comment:        CleanDoxygenComment(cursor.RawCommentText()),
 		Items:          []EnumItem{},
 	}
+	e.Comment = CleanDoxygenComment(e.Name, cursor.RawCommentText())
 	e.Receiver.Name = CommonReceiverName(e.Name)
 	e.Receiver.Type.GoName = e.Name
 	e.Receiver.Type.CGoName = e.CName
@@ -61,12 +61,12 @@ func HandleEnumCursor(cursor clang.Cursor, cname string, cnameIsTypeDef bool) *E
 		case clang.Cursor_EnumConstantDecl:
 			ei := EnumItem{
 				CName: cursor.Spelling(),
-				// TODO(go-clang): we are always using the same comment if there is none, see "TypeKind"
-				// https://github.com/go-clang/gen/issues/58
-				Comment: CleanDoxygenComment(cursor.RawCommentText()),
-				Value:   cursor.EnumConstantDeclUnsignedValue(),
+				Value: cursor.EnumConstantDeclUnsignedValue(),
 			}
 			ei.Name = TrimLanguagePrefix(ei.CName)
+			// TODO(go-clang): we are always using the same comment if there is none, see "TypeKind"
+			// https://github.com/go-clang/gen/issues/58
+			ei.Comment = CleanDoxygenComment(ei.Name, cursor.RawCommentText())
 
 			// check if the first item has an enum prefix
 			if len(e.Items) == 0 {
