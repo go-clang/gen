@@ -30,8 +30,6 @@ func PrepareFunctionName(g *gen.Generation, f *gen.Function) string {
 		fname = strings.TrimPrefix(fname, "remap_")
 
 	case strings.EqualFold(fname, "Install_aborting_llvm_fatal_error_handler"): // special case
-		// fname = strings.Trim(fname, "llvm_")
-		// fname = gen.ToCamelCase(fname)
 		fname = "InstallAbortingFatalErrorHandler"
 
 	case strings.EqualFold(fname, "Uninstall_llvm_fatal_error_handler"):
