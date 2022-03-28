@@ -3,9 +3,9 @@ module github.com/go-clang/gen
 go 1.17
 
 require (
-	github.com/go-clang/bootstrap v0.13.1
+	github.com/go-clang/bootstrap v0.14.0
 	github.com/google/go-cmp v0.5.7
-	golang.org/x/tools v0.1.11-0.20220321170318-c717623e3197
+	golang.org/x/tools v0.1.11-0.20220325212234-e693fb417253
 )
 
 require (
